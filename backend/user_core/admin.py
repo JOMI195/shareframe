@@ -8,7 +8,15 @@ from django.utils.translation import gettext_lazy as _
 from .forms import UserChangeForm, UserCreationForm
 
 from .choices import RANDOM_USERNAMES
+from user_accounts.models import Account
 from .models import User
+
+
+class AccountInline(admin.TabularInline):
+    model = Account
+    list_display = ["friendship_user_searchable"]
+    extra = 0
+    max_num = 1
 
 
 @admin.register(User)
@@ -16,6 +24,7 @@ class UserAdmin(BaseUserAdmin):
     model = User
     form = UserChangeForm
     add_form = UserCreationForm
+    inlines = (AccountInline,)
     list_display = (
         "id",
         "email",
@@ -93,6 +102,7 @@ class UserAdmin(BaseUserAdmin):
     def save_model(self, request, obj, form, change):
         if not change:
             obj.save()
+            Account.objects.create(user=obj)
         else:
             obj.save()
 
@@ -115,6 +125,10 @@ class UserAdmin(BaseUserAdmin):
         obj.is_staff = False
 
         obj.is_superuser = False
+
+        if hasattr(obj, "account"):
+            obj.account.friendship_user_searchable = False
+            obj.account.save()
 
         obj.save()
 

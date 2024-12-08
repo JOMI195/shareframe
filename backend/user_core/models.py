@@ -10,6 +10,7 @@ from django.contrib.auth.models import (
 from django.db import models, transaction
 from .validation import is_username_allowed
 from .choices import RANDOM_USERNAMES
+from user_accounts.models import Account
 
 
 class CustomUserManager(BaseUserManager):
@@ -30,6 +31,9 @@ class CustomUserManager(BaseUserManager):
 
         user.set_password(password)
         user.save(using=self._db)
+
+        account = Account.objects.create(user=user)
+        account.save()
 
         return user
 
@@ -106,5 +110,9 @@ class User(AbstractBaseUser, PermissionsMixin):
         self.is_superuser = False
 
         self.is_deleted = True
+
+        if hasattr(self, "account"):
+            self.account.friendship_user_searchable = False
+            self.account.save()
 
         self.save()

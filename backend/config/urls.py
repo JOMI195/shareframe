@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/auth/", include("djoser.urls.jwt")),
     # apps
     path("api/", include("images.urls")),
+    path("api/", include("friendships.urls")),
 ]
 
 if not bool(settings.DEBUG):

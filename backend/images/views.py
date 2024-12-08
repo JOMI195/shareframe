@@ -79,7 +79,7 @@ class ImagesViewSet(ModelViewSet):
         element = serializer.save()
         serializer = ImageRetrieveSerializer(element)
 
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         request=ImageDestroySerializer,

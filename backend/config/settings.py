@@ -61,7 +61,9 @@ INSTALLED_APPS = [
     "authentication",
     "appEmail",
     "user_core",
+    "user_accounts",
     "images",
+    "friendships",
 ]
 
 MIDDLEWARE = [
