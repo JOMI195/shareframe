@@ -22,6 +22,10 @@ beat_schedule = {
         "task": "user_core.tasks.delete_inactive_users",
         "schedule": crontab(minute=0, hour=0),  # Runs daily at midnight
     },
+    "reject-long-pending-friendship-requestes-every-24-hours": {
+        "task": "friendships.tasks.reject_long_pending_friendship_requestes",
+        "schedule": crontab(minute=0, hour=0),  # Runs daily at midnight
+    },
 }
 
 # Check for production environment

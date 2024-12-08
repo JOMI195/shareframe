@@ -166,7 +166,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             existing_request.save()
             return Response(
                 {
-                    "detail": "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it."
+                    "detail": "You are already friends with this user. The friendship request is not valid anymore has been rejected."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
@@ -205,7 +205,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             existing_request.save()
             return Response(
                 {
-                    "detail": "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it."
+                    "detail": "You are already friends with this user. The friendship request is not valid anymore has been rejected."
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
