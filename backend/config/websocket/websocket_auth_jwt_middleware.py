@@ -9,22 +9,21 @@ class JWTAuthMiddleware(BaseMiddleware):
 
     async def __call__(self, scope, receive, send):
         token = self.get_token_from_scope(scope)
-
-        if token:
-            try:
-                user = await self.get_user_from_token(token)
-                if user:
-                    scope["user"] = user
-                else:
-                    raise TokenError()
-            except TokenError:
-                await self.send_error_message(send, "Token is invalid or expired")
-                await self.close_connection(send)
-                return
-        else:
+        if not token:
             await self.send_error_message(send, "Authentication token is required.")
             await self.close_connection(send)
-            return
+            return None
+
+        try:
+            user = await self.get_user_from_token(token)
+            if user:
+                scope["user"] = user
+            else:
+                raise TokenError("Token Invalid or expired")
+        except (TokenError, Exception) as e:
+            await self.send_error_message(send, f"Authentication failed: {str(e)}")
+            await self.close_connection(send)
+            return None
 
         return await super().__call__(scope, receive, send)
 
