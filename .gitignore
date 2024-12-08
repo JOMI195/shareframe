@@ -182,14 +182,3 @@ lerna-debug.log*
 # docker build specific
 backend_db_data/
 .backend_db_data/
-
-umami_db_data/
-.umami_db_data/
-
-/database/data
-/database/backups/*
-
-/data/certbot
-
-# app related 
-.recievers.txt

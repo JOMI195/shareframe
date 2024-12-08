@@ -1,0 +1,17 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}Dein Konto ist jetzt ready! 🎉{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Yes, dein Konto ist
+    aktiviert! 🚀</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Hey {{ user.username }},
+</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Cool, dein Konto ist jetzt
+    aktiviert! Du kannst dich jetzt einloggen und die Community mit deinen besten Witzen
+    zum Lachen bringen.</p>
+<a style="background-color: #8b5cf6; padding: 10px 20px; color: #ffffff; border-radius: 5px; display: inline-block; text-decoration: none;"
+    href="{{ protocol }}://{{ domain }}" class="button">Zur Webseite</a>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Wir freuen uns schon auf
+    deine lustigen Beiträge!</p>
+{% endblock %}

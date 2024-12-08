@@ -1,0 +1,24 @@
+FROM python:3.11.4-slim-buster
+
+WORKDIR /app/backend
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && \
+    apt-get install -y netcat && \
+    apt-get install -y libjpeg-dev && \
+    apt-get install -y zlib1g-dev && \
+    apt-get install -y libpng-dev
+
+RUN pip install --upgrade pip
+COPY ./requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY ./bin/entrypoint.sh ./bin/
+RUN sed -i 's/\r$//g' /app/backend/bin/entrypoint.sh
+RUN chmod +x /app/backend/bin/entrypoint.sh
+
+COPY . .
+
+ENTRYPOINT ["/app/backend/bin/entrypoint.sh"]

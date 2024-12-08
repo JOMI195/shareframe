@@ -1,0 +1,20 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}Aktiviere dein Konto und leg los!{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Willkommen bei
+    Der-Witz-Des-Tages! 🤙🏼🎉</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Hey {{ user.username }},
+</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Cool, dass du dabei
+    bist! Bevor es losgehen kann, musst du noch dein Konto aktivieren. Klicke einfach auf den
+    Button unten und los geht's:</p>
+<a style="background-color: #8b5cf6; padding: 10px 20px; color: #ffffff; border-radius: 5px; display: inline-block; text-decoration: none;"
+    href="{{ protocol }}://{{ domain }}/{{ url|safe }}" class="button">Konto aktivieren und Spaß haben!</a>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Dieser Aktivierungslink
+    verliert nach 24 Stunden seine Gültigkeit. Nach Ablauf dieser Zeit ohne Aktivierung des
+    Kontos muss ein neues Nutzerkonto muss erstellt werden.</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Wenn du diese Anmeldung
+    nicht selbst gemacht hast, ignorier einfach diese E-Mail. Kein Stress!</p>
+{% endblock %}

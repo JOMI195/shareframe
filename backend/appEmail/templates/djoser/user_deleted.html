@@ -1,0 +1,17 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}Bye Bye, Konto gelöscht! 👋{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Dein Konto ist jetzt
+    Geschichte! 🗑️</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Hey {{ user.username }},
+</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Schade, dass du gehst! Dein
+    Konto wurde erfolgreich gelöscht. Wenn du's dir anders überlegst, bist du jederzeit
+    willkommen wieder mitzumachen und die Community mit deinen Witzen zum Lachen zu bringen.</p>
+<a style="background-color: #8b5cf6; padding: 10px 20px; color: #ffffff; border-radius: 5px; display: inline-block; text-decoration: none;"
+    href="{{ protocol }}://{{ domain }}" class="button">Zur Webseite</a>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Vielleicht sieht man sich
+    ja bald wieder – bleib locker und alles Gute!</p>
+{% endblock %}

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de" data-theme="light">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ block.super }}{% endblock %}</title>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Roboto&display=swap"
+        rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Inter, Roboto, Arial, sans-serif;
+            background-color: #f4f4f4 !important;
+            color: #333333;
+        }
+
+        table {
+            border-collapse: collapse;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            margin: auto;
+        }
+
+        /* Responsive design */
+        @media only screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+                border-radius: 0 !important;
+            }
+
+            .header,
+            .footer {
+                padding: 20px !important;
+            }
+
+            .logo {
+                max-height: 50px !important;
+            }
+
+            .body-content {
+                padding: 20px !important;
+            }
+
+            .table-cell {
+                padding: 0 !important;
+            }
+
+            .stacked {
+                width: 100% !important;
+                display: block !important;
+                margin-bottom: 10px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background-color: #f4f4f4 !important;">
+        <tr>
+            <td align="center" style="padding: 20px 0;">
+                <table cellpadding="0" cellspacing="0" border="0" width="600" class="container">
+                    <!-- Header -->
+                    <tr>
+                        <td class="header"
+                            style="padding: 20px 40px; background-color: #ffffff !important; border-top-left-radius: 8px; border-top-right-radius: 8px;">
+                            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                                <tr>
+                                    <td align="center">
+                                        <img src="cid:{{ logo_image_cid }}" alt="Der-Witz-des-Tages-Logo" class="logo"
+                                            style="display: block; max-height: 50px; width: auto;">
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+
+                    <!-- Body -->
+                    <tr>
+                        <td class="body-content" style="padding: 40px;">
+                            {% block content %}{% endblock %}
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td class="footer"
+                            style="padding: 20px 40px; background-color: #f8f8f8 !important; border-top: 1px solid #eeeeee !important; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;">
+                            {% block footer %}{% endblock %}
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
