@@ -1,4 +1,5 @@
 from django.db import transaction
+from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -71,10 +72,12 @@ class ImagesViewSet(ModelViewSet):
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         request_data_updated = request.data.dict()
+        request_data_updated = {
+            **request_data_updated,
+            "image": request.FILES.get("image"),
+        }
 
-        serializer = self.get_serializer(
-            data={**request_data_updated, "image": request.FILES.get("image")}
-        )
+        serializer = self.get_serializer(data=request_data_updated)
         serializer.is_valid(raise_exception=True)
         element = serializer.save()
         serializer = ImageRetrieveSerializer(element)

@@ -2,24 +2,63 @@ from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.exceptions import MethodNotAllowed
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
+from django.db.models import Q
+from asgiref.sync import async_to_sync
+
 
 from .models import Frame
+from .serializers import FrameRetrieveSerializer
+from .consumers import FrameWebSocketConsumer
+from user_core.models import User
+from friendships.models import Friendship
+from images.models import Image
 
 
 class FramesViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
     queryset = Frame.objects.all().order_by("-registered_at")
 
-    @extend_schema(exclude=True)
-    def list(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def get_serializer_class(self):
+        if self.action == "list":
+            return FrameRetrieveSerializer
+        if self.action == "retrieve":
+            return FrameRetrieveSerializer
+        return self.serializer_class
 
-    @extend_schema(exclude=True)
+    def get_permissions(self):
+        if self.action == "list":
+            self.permission_classes = [IsAuthenticated]
+        elif self.action == "retrieve":
+            self.permission_classes = [IsAuthenticated]
+        return super().get_permissions()
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+    @extend_schema(
+        responses={200: FrameRetrieveSerializer(many=True)},
+    )
+    def list(self, request, *args, **kwargs):
+        queryset = self.filter_queryset(self.get_queryset())
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    @extend_schema(
+        responses={200: FrameRetrieveSerializer},
+    )
     def retrieve(self, request, *args, **kwargs):
-        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+        try:
+            element = Frame.objects.get(pk=self.kwargs["pk"], user=request.user)
+        except Frame.DoesNotExist:
+            return Response(
+                {"detail": "Frame not found or you don't have permissions to view it."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = self.get_serializer(element)
+        return Response(serializer.data)
 
     @extend_schema(exclude=True)
     def update(self, request, *args, **kwargs):
@@ -64,6 +103,34 @@ class FramesViewSet(viewsets.ModelViewSet):
             {"message": "Frame successfully registered"}, status=status.HTTP_200_OK
         )
 
+    @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
+    def unregister_user(self, request):
+        public_serial_number = request.data.get("public_serial_number")
+
+        if not public_serial_number:
+            return Response(
+                {"error": "Public serial number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            frame = Frame.objects.get(
+                public_serial_number=public_serial_number, user=request.user
+            )
+        except Frame.DoesNotExist:
+            return Response(
+                {"error": "Frame not found or invalid serial number."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        frame.user = None
+        frame.save()
+
+        return Response(
+            {"message": "Frame successfully unregistered from user."},
+            status=status.HTTP_200_OK,
+        )
+
     @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
     def obtain_frame_ws_auth_token(self, request):
         private_serial_number = request.data.get("private_serial_number")
@@ -91,4 +158,70 @@ class FramesViewSet(viewsets.ModelViewSet):
                 "access_token": frame_token.access_token,
                 "expires_at": frame_token.access_token_expires_at,
             }
+        )
+
+    @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
+    def send_image(self, request):
+        reciever_id = request.data.get("reciever_id")
+        image_id = request.data.get("image_id")
+        user = request.user
+
+        if not reciever_id:
+            return Response(
+                {"error": "Reciever id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not image_id:
+            return Response(
+                {"error": "Image id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            image = Image.objects.get(id=image_id, user=user)
+        except Image.DoesNotExist:
+            return Response(
+                {
+                    "error": "Image not found, invalid image id, or no permission to access."
+                },
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        not_found_error_message = (
+            "Reciever not found, invalid reciever id, or non existing friendship."
+        )
+
+        try:
+            reciever = User.objects.get(id=reciever_id)
+        except User.DoesNotExist:
+            return Response(
+                {"error": not_found_error_message},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            Friendship.objects.get(
+                (Q(sender=user) & Q(reciever=reciever))
+                | (Q(sender=reciever) & Q(reciever=user)),
+                status="accepted",
+            )
+        except Friendship.DoesNotExist:
+            return Response(
+                {"error": not_found_error_message},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        try:
+            async_to_sync(FrameWebSocketConsumer.send_picture_to_user_frames)(
+                user, reciever, image
+            )
+        except:
+            return Response(
+                {"error": "Error sending the image."},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        return Response(
+            {"message": "Image sent successfully."}, status=status.HTTP_200_OK
         )

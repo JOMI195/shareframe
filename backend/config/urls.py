@@ -13,6 +13,7 @@ urlpatterns = [
     path("api/auth/", include("authentication.urls")),
     path("api/auth/", include("djoser.urls.jwt")),
     # apps
+    path("api/", include("user_core.urls")),
     path("api/", include("frames.urls")),
     path("api/", include("images.urls")),
     path("api/", include("friendships.urls")),

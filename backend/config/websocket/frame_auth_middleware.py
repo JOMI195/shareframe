@@ -35,7 +35,10 @@ class FrameAuthMiddleware(BaseMiddleware):
                 frame__is_active=True,
                 access_token_expires_at__gt=timezone.now(),
             )
-            return frame_token.frame
+            frame = frame_token.frame
+            if frame.user:
+                return frame
+            return None
         except FrameToken.DoesNotExist:
             return None
 
