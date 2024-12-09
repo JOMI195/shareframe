@@ -16,14 +16,14 @@ from django.core.asgi import get_asgi_application
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django_asgi_application = get_asgi_application()
 
-from config.websocket.websocket_auth_jwt_middleware import JWTAuthMiddleware
-from frame_ws import routing
+from config.websocket.frame_auth_middleware import FrameAuthMiddleware
+from frames import routing
 
 application = ProtocolTypeRouter(
     {
         "http": django_asgi_application,
         "websocket": AllowedHostsOriginValidator(
-            JWTAuthMiddleware(URLRouter(routing.websocket_urlpatterns))
+            FrameAuthMiddleware(URLRouter(routing.websocket_urlpatterns))
         ),
     }
 )
