@@ -1,8 +1,6 @@
 from django.contrib import admin
 from .models import Image
 from django.utils.html import format_html
-from django.contrib import messages
-from django.utils.translation import gettext_lazy as _
 
 
 @admin.register(Image)
@@ -30,9 +28,9 @@ class ImagesAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "user",
-                    "created_at",
                     "image_display",
                 )
             },
         ),
+        ("Timespamps", {"fields": ("created_at",)}),
     )

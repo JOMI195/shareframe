@@ -15,6 +15,7 @@ urlpatterns = [
     # apps
     path("api/", include("frames.urls")),
     path("api/", include("images.urls")),
+    path("api/", include("sent_images.urls")),
     path("api/", include("friendships.urls")),
 ]
 

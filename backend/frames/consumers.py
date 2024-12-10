@@ -5,6 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
 
+from sent_images.models import SentImage
 from images.models import Image
 from user_core.models import User
 
@@ -38,12 +39,16 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             )
         )
 
+    @database_sync_to_async
+    def create_sent_image_entry(self, sender, reciever, image):
+        SentImage.objects.create(sender=sender, reciever=reciever, image=image)
+
     @classmethod
     async def send_picture_to_user_frames(
-        cls, sender: User, receiver: User, image: Image
+        cls, sender: User, reciever: User, image: Image
     ):
         channel_layer = get_channel_layer()
-        connections = await cls.get_user_frame_connections(receiver)
+        connections = await cls.get_user_frame_connections(reciever)
 
         with open(image.image.path, "rb") as image_file:
             picture_data = base64.b64encode(image_file.read()).decode("utf-8")
@@ -55,6 +60,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 connection.channel_name,
                 {"type": "send_picture", "picture_data": json.dumps(message)},
             )
+
+        await cls.create_sent_image_entry(sender, reciever, image)
 
     # ------------------------------
     async def connect(self):

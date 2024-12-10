@@ -64,6 +64,7 @@ INSTALLED_APPS = [
     "user_accounts",
     "images",
     "friendships",
+    "sent_images",
 ]
 
 MIDDLEWARE = [
