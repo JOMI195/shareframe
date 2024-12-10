@@ -14,7 +14,8 @@ from .models import User
 
 class AccountInline(admin.TabularInline):
     model = Account
-    list_display = ["friendship_user_searchable"]
+    list_display = ["friendship_user_searchable", "friendship_user_search_code"]
+    readonly_fields = ("friendship_user_search_code",)
     extra = 0
     max_num = 1
 
@@ -102,7 +103,7 @@ class UserAdmin(BaseUserAdmin):
     def save_model(self, request, obj, form, change):
         if not change:
             obj.save()
-            Account.objects.create(user=obj)
+            Account.objects.create_account(user=obj)
         else:
             obj.save()
 

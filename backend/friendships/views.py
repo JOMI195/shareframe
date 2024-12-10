@@ -25,8 +25,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             return FriendshipRetrieveSerializer
         if self.action == "retrieve":
             return FriendshipRetrieveSerializer
-        elif self.action == "create":
-            return FriendshipCreateSerializer
         elif self.action == "destroy":
             return FriendshipDestroySerializer
         return self.serializer_class
@@ -61,61 +59,9 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(element)
         return Response(serializer.data)
 
-    @extend_schema(
-        request=FriendshipCreateSerializer,
-        responses={201: FriendshipRetrieveSerializer},
-    )
-    @transaction.atomic
+    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
-        reciever_id = request.data.get("reciever_id")
-
-        existing_requests = Friendship.objects.filter(
-            sender=request.user, reciever_id=reciever_id
-        )
-
-        existing_pending_request = existing_requests.filter(status="pending").exists()
-        if existing_pending_request:
-            return Response(
-                {"detail": "Friendship request already sent"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            reciever = User.objects.get(
-                pk=reciever_id, account__friendship_user_searchable=True
-            )
-        except User.DoesNotExist:
-            return Response(
-                {"detail": "Reciever not found."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        if reciever == request.user:
-            return Response(
-                {"detail": "Friendship request to yourself not possible"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        existing_friendship = self.queryset.filter(
-            (Q(sender=self.request.user) & Q(reciever=reciever))
-            | (Q(sender=reciever) & Q(reciever=self.request.user)),
-            status="accepted",
-        ).exists()
-        if existing_friendship:
-            return Response(
-                {"detail": "Friendship allready created and accepted"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = self.get_serializer(
-            data={**request.data},
-            context={"reciever": reciever, "sender": request.user},
-        )
-        serializer.is_valid(raise_exception=True)
-        element = serializer.save()
-        serializer = FriendshipRetrieveSerializer(element)
-
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @extend_schema(
         request=FriendshipDestroySerializer,
@@ -138,6 +84,67 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         response_data["id"] = pk_to_delete
         element.delete()
         return Response(response_data)
+
+    @extend_schema(
+        request=FriendshipCreateSerializer,
+        responses={201: FriendshipRetrieveSerializer},
+    )
+    @action(detail=False, methods=["POST"])
+    def send_request(self, request):
+        reciever_friendship_user_search_code = request.data.get(
+            "reciever_friendship_user_search_code"
+        )
+
+        try:
+            reciever = User.objects.get(
+                account__friendship_user_searchable=True,
+                account__friendship_user_search_code=reciever_friendship_user_search_code,
+            )
+        except User.DoesNotExist:
+            return Response(
+                {
+                    "detail": "Reciever not found or invalid reciever friendship user search code."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if reciever == request.user:
+            return Response(
+                {"detail": "Friendship request to yourself not possible"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing_requests = Friendship.objects.filter(
+            sender=request.user, reciever=reciever
+        )
+
+        existing_pending_request = existing_requests.filter(status="pending").exists()
+        if existing_pending_request:
+            return Response(
+                {"detail": "Friendship request already sent"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        existing_friendship = self.queryset.filter(
+            (Q(sender=self.request.user) & Q(reciever=reciever))
+            | (Q(sender=reciever) & Q(reciever=self.request.user)),
+            status="accepted",
+        ).exists()
+        if existing_friendship:
+            return Response(
+                {"detail": "Friendship allready created and accepted"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        serializer = FriendshipCreateSerializer(
+            data={**request.data},
+            context={"reciever": reciever, "sender": request.user},
+        )
+        serializer.is_valid(raise_exception=True)
+        element = serializer.save()
+        serializer = FriendshipRetrieveSerializer(element)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
         responses={200: FriendshipRetrieveSerializer},

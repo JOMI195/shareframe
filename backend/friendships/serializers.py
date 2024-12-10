@@ -7,17 +7,11 @@ class FriendshipRetrieveSerializer(serializers.ModelSerializer):
     reciever = serializers.SerializerMethodField()
 
     def get_sender(self, obj):
-        sender = {
-            "id": obj.sender.id,
-            "username": obj.sender.username,
-        }
+        sender = obj.sender.username
         return sender
 
     def get_reciever(self, obj):
-        reciever = {
-            "id": obj.reciever.id,
-            "username": obj.reciever.username,
-        }
+        reciever = obj.reciever.username
         return reciever
 
     class Meta:
@@ -32,17 +26,17 @@ class FriendshipRetrieveSerializer(serializers.ModelSerializer):
 
 
 class FriendshipCreateSerializer(serializers.ModelSerializer):
-    reciever_id = serializers.CharField()
+    reciever_friendship_user_search_code = serializers.CharField()
 
     class Meta:
         model = Friendship
         fields = [
-            "reciever_id",
+            "reciever_friendship_user_search_code",
         ]
         read_only_fields = ("created_at", "updated_at")
 
     def create(self, validated_data):
-        validated_data.pop("reciever_id", None)
+        validated_data.pop("reciever_friendship_user_search_code", None)
 
         validated_data["sender"] = self.context["sender"]
         validated_data["reciever"] = self.context["reciever"]

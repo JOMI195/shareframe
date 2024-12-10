@@ -1,4 +1,4 @@
-from user_accounts.serializers import AccountRetrieveSerializer
+from user_accounts.serializers import AccountRetrieveSerializer, AccountUpdateSerializer
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 
@@ -24,7 +24,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
 
 
 class UserRetrievePatchSerializer(BaseUserSerializer):
-    account = AccountRetrieveSerializer()
+    account = AccountUpdateSerializer()
 
     class Meta(BaseUserSerializer.Meta):
         model = User
@@ -37,7 +37,7 @@ class UserRetrievePatchSerializer(BaseUserSerializer):
         user = super().update(instance, validated_data)
 
         if account_data:
-            account_serializer = AccountRetrieveSerializer(
+            account_serializer = AccountUpdateSerializer(
                 instance=user.account, data=account_data, partial=True
             )
             account_serializer.is_valid(raise_exception=True)

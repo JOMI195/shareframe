@@ -162,13 +162,13 @@ class FramesViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
     def send_image(self, request):
-        reciever_id = request.data.get("reciever_id")
+        reciever_username = request.data.get("reciever_username")
         image_id = request.data.get("image_id")
         user = request.user
 
-        if not reciever_id:
+        if not reciever_username:
             return Response(
-                {"error": "Reciever id is required."},
+                {"error": "Reciever username is required."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -193,7 +193,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         )
 
         try:
-            reciever = User.objects.get(id=reciever_id)
+            reciever = User.objects.get(username=reciever_username)
         except User.DoesNotExist:
             return Response(
                 {"error": not_found_error_message},

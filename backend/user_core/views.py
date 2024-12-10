@@ -19,7 +19,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         is_deleted=False,
         is_superuser=False,
         account__friendship_user_searchable=True,
-    ).exclude(username__iexact="admin")
+    )
 
     serializer_class = UserSearchSerializer
     permission_classes = [IsAuthenticated]

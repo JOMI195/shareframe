@@ -32,7 +32,7 @@ class CustomUserManager(BaseUserManager):
         user.set_password(password)
         user.save(using=self._db)
 
-        account = Account.objects.create(user=user)
+        account = Account.objects.create_account(user=user)
         account.save()
 
         return user
@@ -59,7 +59,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         max_length=255,
         unique=True,
     )
-    username = models.CharField(max_length=25, unique=False)
+    username = models.CharField(max_length=25, unique=True)
     date_joined = models.DateTimeField(default=timezone.now)
 
     is_active = models.BooleanField(default=False)
@@ -94,7 +94,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Custom delete method to handle soft deletion and updates."""
 
         if anonymize:
-            new_username = random.choice(RANDOM_USERNAMES)
+            new_username = f"{random.choice(RANDOM_USERNAMES)}-{uuid.uuid4()}"
             self.username = new_username
 
         new_email = f"{uuid.uuid4()}@deleted.de"
