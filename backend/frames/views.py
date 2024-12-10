@@ -6,6 +6,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from django.db.models import Q
 from asgiref.sync import async_to_sync
+from django.core.cache import cache
+from django.conf import settings
 
 
 from .models import Frame
@@ -162,6 +164,21 @@ class FramesViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
     def send_image(self, request):
+        COOLDOWN_PERIOD = settings.FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS
+
+        cache_key = f"image_send_cooldown_{request.user.id}"
+
+        last_send_time = cache.get(cache_key)
+        if last_send_time:
+            time_since_last_send = (timezone.now() - last_send_time).total_seconds()
+            if time_since_last_send < COOLDOWN_PERIOD:
+                return Response(
+                    {
+                        "error": f"Please wait {COOLDOWN_PERIOD - int(time_since_last_send)} seconds before sending another image."
+                    },
+                    status=status.HTTP_429_TOO_MANY_REQUESTS,
+                )
+
         reciever_username = request.data.get("reciever_username")
         image_id = request.data.get("image_id")
         user = request.user
@@ -216,6 +233,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             async_to_sync(FrameWebSocketConsumer.send_picture_to_user_frames)(
                 user, reciever, image
             )
+            cache.set(cache_key, timezone.now(), COOLDOWN_PERIOD)
         except:
             return Response(
                 {"error": "Error sending the image."},

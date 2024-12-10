@@ -29,7 +29,7 @@ class SentImageAdmin(admin.ModelAdmin):
     def image_display(self, obj):
         if obj.image:
             return format_html(
-                '<img src="{}" width="200" height="200" />', obj.image.url
+                '<img src="{}" width="200" height="200" />', obj.image.image.url
             )
         return "Something went wrong - no picture"
 
