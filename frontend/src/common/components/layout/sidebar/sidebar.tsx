@@ -66,7 +66,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             url: getSettingsUrl() + getUserSettingsUrl()
         },
         { name: 'Einstellungen', icon: <SettingsIcon />, url: getSettingsUrl() + getAppSettingsUrl() },
-        { name: 'FAQ', icon: <HelpOutlineIcon />, url: getSettingsUrl() + getAppSettingsUrl() }
+        { name: 'Hilfe', icon: <HelpOutlineIcon />, url: getSettingsUrl() + getAppSettingsUrl() }
     ];
 
     return (

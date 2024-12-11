@@ -90,7 +90,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         request=FriendshipCreateSerializer,
         responses={201: FriendshipRetrieveSerializer},
     )
-    @action(detail=False, methods=["POST"])
+    @action(detail=False, methods=["POST"], url_path="send-request")
     def send_request(self, request):
         reciever_friendship_user_search_code = request.data.get(
             "reciever_friendship_user_search_code"
@@ -150,7 +150,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @extend_schema(
         responses={200: FriendshipRetrieveSerializer},
     )
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], url_path="accept-request")
     def accept_request(self, request, pk):
         try:
             existing_request = Friendship.objects.get(
@@ -189,7 +189,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @extend_schema(
         responses={200: FriendshipRetrieveSerializer},
     )
-    @action(detail=True, methods=["POST"])
+    @action(detail=True, methods=["POST"], url_path="reject-request")
     def reject_request(self, request, pk=None):
         try:
             existing_request = Friendship.objects.get(

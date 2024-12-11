@@ -28,6 +28,7 @@ export const isICoreUserCredentials = (obj: any): obj is ICoreUserCredentials =>
 
 export interface IUserAccount {
     friendship_user_searchable: boolean;
+    friendship_user_search_code: string;
 }
 
 export interface IUser extends ICoreUser {

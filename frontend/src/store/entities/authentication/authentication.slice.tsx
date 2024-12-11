@@ -28,7 +28,8 @@ const initialState: SliceState = {
     email: "",
     username: "",
     account: {
-      friendship_user_searchable: false
+      friendship_user_searchable: false,
+      friendship_user_search_code: ""
     }
   },
 };
@@ -180,7 +181,8 @@ const userSlice = createSlice({
         email: "",
         username: "",
         account: {
-          friendship_user_searchable: false
+          friendship_user_searchable: false,
+          friendship_user_search_code: ""
         }
       };
       localStorage.removeItem("loggedIn");

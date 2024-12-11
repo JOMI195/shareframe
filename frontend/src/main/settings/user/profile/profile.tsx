@@ -29,7 +29,10 @@ const Profile = () => {
 
     const [initialUserPatchValues, setInitialUserPatchValues] = useState<IPatchUserForm>({
         username: me.username,
-        account: { friendship_user_searchable: me.account.friendship_user_searchable }
+        account: {
+            friendship_user_searchable: me.account.friendship_user_searchable,
+            friendship_user_search_code: me.account.friendship_user_search_code
+        }
     });
 
     const userPatchForm = useFormik({
@@ -45,7 +48,10 @@ const Profile = () => {
         setInitialUserPatchValues(
             {
                 username: me.username,
-                account: { friendship_user_searchable: me.account.friendship_user_searchable }
+                account: {
+                    friendship_user_searchable: me.account.friendship_user_searchable,
+                    friendship_user_search_code: me.account.friendship_user_search_code
+                }
             }
         );
     }, [me]);
