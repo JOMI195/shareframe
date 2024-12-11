@@ -1,9 +1,12 @@
 import base64
+from datetime import datetime
+from typing import Optional
 from django.utils import timezone
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
+
 
 from sent_images.models import SentImage
 from images.models import Image
@@ -40,12 +43,22 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def create_sent_image_entry(self, sender, reciever, image):
-        SentImage.objects.create(sender=sender, reciever=reciever, image=image)
+    def create_sent_image_entry(self, sender, reciever, image, expiry_datetime=None):
+        SentImage.objects.create(
+            sender=sender,
+            reciever=reciever,
+            image=image,
+            expires_at=expiry_datetime,
+        )
 
     @classmethod
     async def send_picture_to_user_frames(
-        cls, sender: User, reciever: User, image: Image
+        cls,
+        sender: User,
+        reciever: User,
+        image: Image,
+        expiry_unix_timestamp: Optional[int] = None,
+        expiry_datetime: Optional[datetime] = None,
     ):
         channel_layer = get_channel_layer()
         connections = await cls.get_user_frame_connections(reciever)
@@ -53,7 +66,12 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         with open(image.image.path, "rb") as image_file:
             picture_data = base64.b64encode(image_file.read()).decode("utf-8")
 
-        message = {"type": "picture", "sender": sender.username, "data": picture_data}
+        message = {
+            "type": "picture",
+            "sender": sender.username,
+            "data": picture_data,
+            "expiry_unix_timestamp": expiry_unix_timestamp,
+        }
 
         for connection in connections:
             await channel_layer.send(
@@ -61,7 +79,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 {"type": "send_picture", "picture_data": json.dumps(message)},
             )
 
-        await cls.create_sent_image_entry(sender, reciever, image)
+        await cls.create_sent_image_entry(sender, reciever, image, expiry_datetime)
 
     # ------------------------------
     async def connect(self):

@@ -9,7 +9,13 @@ class SentImageAdmin(admin.ModelAdmin):
     list_filter = ("sent_at",)
     search_fields = ("sender__username", "reciever__username")
     ordering = ("-sent_at",)
-    readonly_fields = ("sender", "reciever", "sent_at", "image_display")
+    readonly_fields = (
+        "sender",
+        "reciever",
+        "sent_at",
+        "image_display",
+        "expires_at",
+    )
 
     fieldsets = (
         (
@@ -21,7 +27,7 @@ class SentImageAdmin(admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("sent_at",),
+                "fields": ("sent_at", "expires_at"),
             },
         ),
     )

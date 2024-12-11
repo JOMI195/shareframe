@@ -23,6 +23,8 @@ class SentImage(models.Model):
         on_delete=models.CASCADE,
     )
 
+    expires_at = models.DateTimeField(null=True, blank=True)
+
     sent_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
