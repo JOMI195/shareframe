@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Dialog, DialogContent, TextField, Typography, Box, Grid, FormControlLabel, Checkbox } from "@mui/material";
+import { Button, Dialog, DialogContent, TextField, Typography, Box, Grid } from "@mui/material";
 import { useAppDispatch } from "@/store";
 import { deleteMyUserProfile } from "@/store/entities/authentication/authentication.actions"; // Adjust the import path as necessary
 import { useNavigate } from "react-router-dom";
@@ -11,7 +11,7 @@ const Delete = () => {
 
     const [openDialog, setOpenDialog] = useState(false);
     const [password, setPassword] = useState("");
-    const [keepUserName, setKeepUserName] = useState(false);
+    const [keepUserName] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleDeleteClick = () => {
@@ -25,10 +25,6 @@ const Delete = () => {
 
     const handlePasswordChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         setPassword(event.target.value);
-    };
-
-    const handleAnonymizeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setKeepUserName(event.target.checked);
     };
 
     const handleConfirmDelete = async () => {
@@ -53,9 +49,6 @@ const Delete = () => {
                     </Typography>
                     <Typography variant="body1" color="textSecondary">
                         Hier kannst du dein Konto löschen.
-                    </Typography>
-                    <Typography variant="body1" color="textSecondary" sx={{ mt: 1, mb: 1 }}>
-                        Mit dem löschen deines Kontos wirst du bei selber Emailadresse für den Newsletter automatisch aus diesem entfernt.
                     </Typography>
                     <Typography variant="body1" color="textSecondary" sx={{ mt: 1, mb: 1 }}>
                         Diese Aktion ist unwiderruflich.
@@ -92,25 +85,7 @@ const Delete = () => {
                             display={"flex"} justifyContent={"space-between"} alignItems={"center"}
                             spacing={2}
                         >
-                            <Grid item xs={12}>
-                                <Typography variant="h6" gutterBottom>
-                                    Erhaltung des Nutzernamens
-                                </Typography>
-                                <Typography variant="body2" gutterBottom>
-                                    Deine persöhnlichen Nutzerdaten werden beim Löschen des Accounts komplett entfernt. Wenn du diese Option allerdings aktivierst, wird dein Benutzername nach der Löschung erhalten. So können deine erstellten Witze weiterhin mit deinem Nutzernamen angezeigt werden. Andernfalls wird dein Name anonymisiert, indem dieser durch einen zufällig generierten, nicht auf dich zurückführbaren Namen ersetzt wird.
-                                </Typography>
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={keepUserName}
-                                            onChange={handleAnonymizeChange}
-                                            color="primary"
-                                        />
-                                    }
-                                    label="Nutzername erhalten"
-                                />
-                            </Grid>
-                            <Grid item xs={12} sx={{ order: { xs: 1, md: 1 }, mt: 5 }}>
+                            <Grid item xs={12} sx={{ order: { xs: 1, md: 1 } }}>
                                 <Typography variant="h6">
                                     Bitte bestätige die Löschung deines Kontos mit deinem Passwort.
                                 </Typography>

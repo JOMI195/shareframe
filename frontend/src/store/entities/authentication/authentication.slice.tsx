@@ -28,7 +28,7 @@ const initialState: SliceState = {
     email: "",
     username: "",
     account: {
-      recieves_newsletter: false
+      friendship_user_searchable: false
     }
   },
 };
@@ -180,7 +180,7 @@ const userSlice = createSlice({
         email: "",
         username: "",
         account: {
-          recieves_newsletter: false
+          friendship_user_searchable: false
         }
       };
       localStorage.removeItem("loggedIn");

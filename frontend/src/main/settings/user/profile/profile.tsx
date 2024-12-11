@@ -21,7 +21,7 @@ const Profile = () => {
             .max(50, "Dein Nutzername darf maximal 50 Zeichen enthalten")
             .required("Dieses Feld wird benötigt"),
         account: yup.object().shape({
-            recieves_newsletter: yup
+            friendship_user_searchable: yup
                 .boolean()
                 .required("Dieses Feld wird benötigt")
         })
@@ -29,7 +29,7 @@ const Profile = () => {
 
     const [initialUserPatchValues, setInitialUserPatchValues] = useState<IPatchUserForm>({
         username: me.username,
-        account: { recieves_newsletter: me.account.recieves_newsletter }
+        account: { friendship_user_searchable: me.account.friendship_user_searchable }
     });
 
     const userPatchForm = useFormik({
@@ -45,7 +45,7 @@ const Profile = () => {
         setInitialUserPatchValues(
             {
                 username: me.username,
-                account: { recieves_newsletter: me.account.recieves_newsletter }
+                account: { friendship_user_searchable: me.account.friendship_user_searchable }
             }
         );
     }, [me]);
@@ -90,19 +90,19 @@ const Profile = () => {
                         <FormControlLabel
                             control={
                                 <Checkbox
-                                    checked={userPatchForm.values.account.recieves_newsletter}
+                                    checked={userPatchForm.values.account.friendship_user_searchable}
                                     onChange={userPatchForm.handleChange}
                                     onBlur={userPatchForm.handleBlur}
-                                    name="account.recieves_newsletter"
+                                    name="account.friendship_user_searchable"
                                     size={"medium"}
                                 />
                             }
-                            label="Täglichen Witz-des-Tages als Newsletter erhalten"
+                            label="Freundschaftsanfragen erhalten"
                         />
-                        {getIn(userPatchForm.touched, "account.recieves_newsletter") &&
-                            getIn(userPatchForm.errors, "account.recieves_newsletter") && (
+                        {getIn(userPatchForm.touched, "account.friendship_user_searchable") &&
+                            getIn(userPatchForm.errors, "account.friendship_user_searchable") && (
                                 <FormHelperText error>
-                                    {getIn(userPatchForm.errors, "account.recieves_newsletter")}
+                                    {getIn(userPatchForm.errors, "account.friendship_user_searchable")}
                                 </FormHelperText>
                             )}
                     </FormGroup>

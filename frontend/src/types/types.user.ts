@@ -27,7 +27,7 @@ export const isICoreUserCredentials = (obj: any): obj is ICoreUserCredentials =>
 }
 
 export interface IUserAccount {
-    recieves_newsletter: boolean;
+    friendship_user_searchable: boolean;
 }
 
 export interface IUser extends ICoreUser {
