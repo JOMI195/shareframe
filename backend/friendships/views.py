@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
 from django.db.models import Q
-from django.db import transaction
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 
 from .models import Friendship
 from .serializers import (
@@ -19,6 +19,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     queryset = Friendship.objects.all()
     http_method_names = ["get", "post", "delete", "head", "options"]
     permission_classes = [IsAuthenticated]
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_serializer_class(self):
         if self.action == "list":

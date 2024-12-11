@@ -7,6 +7,7 @@ from rest_framework.permissions import IsAdminUser
 from .models import Account
 from .permissions import CurrentUserOrAdmin
 from .serializers import AccountRetrieveSerializer, AccountUpdateSerializer
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 
 
 class AccountsViewSet(
@@ -14,6 +15,7 @@ class AccountsViewSet(
 ):
     http_method_names = ["get", "patch", "options", "head"]
     queryset = Account.objects.all()
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_queryset(self):
         user = self.request.user

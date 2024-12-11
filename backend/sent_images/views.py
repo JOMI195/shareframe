@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from drf_spectacular.utils import extend_schema
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 
 from .models import SentImage
 from .serializers import (
@@ -14,6 +15,7 @@ class SentImagesViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "head", "options"]
     permission_classes = [IsAuthenticated]
     serializer_class = SentImagesRetrieveSerializer
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_queryset(self):
         return self.queryset.filter(sender=self.request.user)

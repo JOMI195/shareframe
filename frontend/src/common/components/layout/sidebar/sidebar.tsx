@@ -1,0 +1,164 @@
+import React from 'react';
+import {
+    Drawer,
+    List,
+    ListItem,
+    ListItemIcon,
+    ListItemText,
+    Box,
+    ClickAwayListener,
+    useTheme,
+    Avatar
+} from '@mui/material';
+import {
+    Settings as SettingsIcon,
+} from '@mui/icons-material';
+import LogoutIcon from '@mui/icons-material/Logout';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { closeSidebar, getSidebar } from '@/store/ui/navigation/navigation.slice';
+import { Link, useLocation } from 'react-router-dom';
+import { getUser } from '@/store/entities/authentication/authentication.slice';
+import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
+import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
+import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
+import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+
+
+interface SidebarProps {
+    width?: number;
+}
+
+const Sidebar: React.FC<SidebarProps> = ({
+    width = 240,
+}) => {
+    const dispatch = useAppDispatch();
+    const open = useAppSelector(getSidebar).open;
+    const theme = useTheme();
+    const location = useLocation();
+    const user = useAppSelector(getUser);
+
+    const handleSidebarClose = (event: MouseEvent | TouchEvent | React.MouseEvent) => {
+        const target = event.target as HTMLElement;
+        if (target && target.closest('.ignore-clickaway')) {
+            return;
+        }
+        if (open) {
+            dispatch(closeSidebar());
+        }
+    };
+
+    const sidebarBottomItems = [
+        { name: 'Abmelden', icon: <LogoutIcon />, url: getAuthenticationUrl() + getSignOutUrl() },
+        {
+            name: "Account",
+            icon: (
+                <Avatar
+                    sx={{
+                        width: 25,
+                        height: 25,
+                    }}
+                    alt="Account"
+                >
+                    {`${user.me.username.slice(0, 1).toUpperCase()}`}
+                </Avatar>
+            ),
+            url: getSettingsUrl() + getUserSettingsUrl()
+        },
+        { name: 'Einstellungen', icon: <SettingsIcon />, url: getSettingsUrl() + getAppSettingsUrl() },
+        { name: 'FAQ', icon: <HelpOutlineIcon />, url: getSettingsUrl() + getAppSettingsUrl() }
+    ];
+
+    return (
+        <ClickAwayListener
+            mouseEvent="onMouseUp"
+            touchEvent="onTouchStart"
+            onClickAway={handleSidebarClose}
+        >
+            <Drawer
+                variant={"persistent"}
+                open={open}
+                sx={{
+                    width,
+                    '& .MuiDrawer-paper': {
+                        top: theme => theme.layout.appbar.height,
+                        height: `calc(100% - ${theme.layout.appbar.height}px)`,
+                    },
+                }}
+            >
+                <Box
+                    sx={{
+                        width,
+                        height: '100%',
+                        backgroundColor: 'background.paper',
+                        p: 1,
+                        borderRadius: 1
+                    }}
+                    role="sidebar"
+                >
+                    <Box
+                        sx={{
+                            height: '100%',
+                            display: "flex",
+                            flexDirection: "column",
+                        }}
+                    >
+                        <List
+                            sx={{
+                                flex: 1
+                            }}
+                        >
+                            {sidebarMenuItems.map((item) => {
+                                const homeUrl = getHomeUrl()
+                                const itemUrl = location.pathname === homeUrl ? item.url : `/${item.url}`
+                                const isActive = location.pathname === itemUrl;
+                                return (
+                                    <ListItem
+                                        component={Link}
+                                        to={item.url}
+                                        key={item.name}
+                                        onClick={handleSidebarClose}
+                                        sx={{
+                                            backgroundColor: isActive ? 'primary.light' : 'inherit',
+                                            color: isActive ? 'primary.contrastText' : 'inherit',
+                                            borderRadius: 0.5,
+                                            '&:hover': {
+                                                backgroundColor: isActive ? 'primary.main' : 'action.hover',
+                                            },
+                                        }}
+                                    >
+                                        <ListItemIcon><item.icon /></ListItemIcon>
+                                        <ListItemText primary={item.name} />
+                                    </ListItem>
+                                );
+                            })}
+                        </List>
+                        <List>
+                            {sidebarBottomItems.map((item) => (
+                                <ListItem
+                                    component={Link}
+                                    to={item.url}
+                                    key={item.name}
+                                    onClick={handleSidebarClose}
+                                    sx={{
+                                        color: 'inherit',
+                                        borderRadius: 0.5,
+                                        '&:hover': {
+                                            backgroundColor: 'action.hover',
+                                        },
+                                    }}
+                                >
+                                    <ListItemIcon>{item.icon}</ListItemIcon>
+                                    <ListItemText primary={item.name} />
+                                </ListItem>
+                            ))}
+                        </List>
+                    </Box>
+
+                </Box>
+            </Drawer>
+        </ClickAwayListener >
+    );
+};
+
+export default Sidebar;

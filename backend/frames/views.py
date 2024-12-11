@@ -10,6 +10,7 @@ from django.conf import settings
 from datetime import datetime
 from django.utils.timezone import make_aware, now
 
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 from utils.endpoint_request_cooldown import (
     check_endpoint_request_cooldown,
     set_endpoint_request_cooldown,
@@ -25,6 +26,7 @@ from images.models import Image
 class FramesViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
     queryset = Frame.objects.all().order_by("-registered_at")
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -214,6 +216,9 @@ class FramesViewSet(viewsets.ModelViewSet):
                     {"error": "Invalid Unix timestamp provided."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+        else:
+            expiry_unix_timestamp = None
+            expiry_datetime = None
 
         try:
             image = Image.objects.get(id=image_id, user=user)

@@ -185,7 +185,7 @@ REST_FRAMEWORK = {
         "config.throttles.BurstRateThrottle",
         "config.throttles.SustainedRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"burst": "60/min", "sustained": "1000/day"},
+    "DEFAULT_THROTTLE_RATES": {"burst": "30/min", "sustained": "1000/day"},
 }
 
 SIMPLE_JWT = {
@@ -283,4 +283,7 @@ IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = None
 
 FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 120  # seconds
+
+
 # Frontend URLS
+FRONTEND_CONTACT_URL = "kontakt/"

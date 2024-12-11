@@ -5,8 +5,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 from drf_spectacular.utils import extend_schema
-from rest_framework.exceptions import ValidationError
 from rest_framework.exceptions import NotFound
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 
 from .models import Image
 from .serializers import (
@@ -19,6 +19,7 @@ from .serializers import (
 class ImagesViewSet(ModelViewSet):
     http_method_names = ["get", "post", "delete", "head", "options"]
     parser_classes = (MultiPartParser, FormParser)
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_serializer_class(self):
         if self.action == "list":

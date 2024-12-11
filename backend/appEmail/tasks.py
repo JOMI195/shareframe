@@ -88,11 +88,11 @@ def send_django_mail_with_logo(
                     settings.BASE_DIR,
                     "mediafiles",
                     "brand",
-                    "witz-des-tages-logo-light-full.png",
+                    "logo-email-light-full-shareframe.png",
                 ),
                 "cid": "logo_image",
                 "template_identifier": "logo_image_cid",
-                "filename": "witz-des-tages-logo.png",
+                "filename": "shareframe-logo.png",
             }
         ]
         + images,

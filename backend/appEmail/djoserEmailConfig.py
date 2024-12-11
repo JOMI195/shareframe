@@ -15,7 +15,7 @@ class DjoserActivationEmail(ActivationEmail):
     def get_context_data(self):
         context = super().get_context_data()
         context["subject"] = (
-            "Willkommen bei Der-Witz-Des-Tages.de! Wir freuen uns, dich an Bord zu haben."
+            "Willkommen bei ShareFrame.de! Wir freuen uns, dich an Bord zu haben."
         )
         return context
 
@@ -35,7 +35,7 @@ class DjoserConfirmationEmail(ConfirmationEmail):
     def get_context_data(self):
         context = super().get_context_data()
         context["subject"] = (
-            "Dein Konto ist jetzt aktiv. Wir freuen uns auf deine Witze!"
+            "Dein Konto ist jetzt aktiv. Viel Spaß beim Teilen deiner schönsten Momente!"
         )
         return context
 

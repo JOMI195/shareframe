@@ -1,0 +1,11 @@
+User-agent: *
+Disallow: /api
+Disallow: /api?*
+Disallow: /analytics
+Disallow: /analytics?*
+Disallow: /settings
+Disallow: /settings?*
+Disallow: /auth
+Disallow: /auth?*
+
+Sitemap: https://www.shareframe.de/sitemap.xml

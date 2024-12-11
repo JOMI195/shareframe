@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from drf_spectacular.utils import extend_schema
 from django.db.models import Q
 from .models import User
+from config.throttles import BurstRateThrottle, SustainedRateThrottle
 
 
 class UserSearchSerializer(serializers.ModelSerializer):
@@ -23,6 +24,7 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
 
     serializer_class = UserSearchSerializer
     permission_classes = [IsAuthenticated]
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     @extend_schema(exclude=True)
     def list(self, request, *args, **kwargs):
