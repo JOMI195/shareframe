@@ -5,8 +5,11 @@ import Dialogs from "./dialogs/dialogs";
 import FriendshipsTable from "./tables/friendshipsTable";
 import CustomTabPanel, { a11yProps } from "./tabs/tabs";
 import FriendshipRequestTable from "./tables/friendshipRequestsTable";
+import { useAppDispatch } from "@/store";
+import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 
 const Friendships: React.FC = () => {
+    const dispatch = useAppDispatch();
     const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
 
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
@@ -15,6 +18,10 @@ const Friendships: React.FC = () => {
 
     useEffect(() => {
         setSelectedTabIndex(0);
+    }, []);
+
+    useEffect(() => {
+        dispatch(fetchFriendships());
     }, []);
 
     return (

@@ -51,7 +51,6 @@ const FriendshipCreateDialog: React.FC = () => {
     enableReinitialize: true,
     onSubmit: async (values: IFriendshipCreateForm) => {
       const newFriendshipRequest = await dispatch(sendFrindshipRequest(values.reciever_friendship_user_search_code));
-      console.log(newFriendshipRequest);
       if (isIFriendship(newFriendshipRequest)) {
         dispatch(closeCreateFriendshipsDialog());
         form.resetForm();

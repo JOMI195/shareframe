@@ -25,7 +25,6 @@ class Friendship(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ("sender", "reciever")
         ordering = ["-created_at"]
 
     def __str__(self):

@@ -80,7 +80,12 @@ class FramesViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+        url_path="register-user",
+    )
     def register_user(self, request):
         public_serial_number = request.data.get("public_serial_number")
 
@@ -107,11 +112,16 @@ class FramesViewSet(viewsets.ModelViewSet):
         frame.user = request.user
         frame.save()
 
-        return Response(
-            {"message": "Frame successfully registered"}, status=status.HTTP_200_OK
-        )
+        serializer = FrameRetrieveSerializer(frame)
 
-    @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+        url_path="unregister-user",
+    )
     def unregister_user(self, request):
         public_serial_number = request.data.get("public_serial_number")
 
@@ -134,12 +144,16 @@ class FramesViewSet(viewsets.ModelViewSet):
         frame.user = None
         frame.save()
 
-        return Response(
-            {"message": "Frame successfully unregistered from user."},
-            status=status.HTTP_200_OK,
-        )
+        serializer = FrameRetrieveSerializer(frame)
 
-    @action(detail=False, methods=["POST"], permission_classes=[AllowAny])
+        return Response(serializer.data)
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+        url_path="obtain-frame-ws-auth-token",
+    )
     def obtain_frame_ws_auth_token(self, request):
         private_serial_number = request.data.get("private_serial_number")
 
@@ -168,7 +182,12 @@ class FramesViewSet(viewsets.ModelViewSet):
             }
         )
 
-    @action(detail=False, methods=["POST"], permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+        url_path="send-image",
+    )
     def send_image(self, request):
         COOLDOWN_PERIOD = settings.FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS
 

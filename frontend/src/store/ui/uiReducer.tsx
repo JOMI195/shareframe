@@ -5,6 +5,7 @@ import navigationReducer from "./navigation/navigation.slice";
 import settingsReducer from "./settings/settings.slice";
 import contactReducer from "./contact/contact.slice";
 import friendshipsReducer from "./friendships/friendships.slice";
+import framesReducer from "./frames/frames.slice";
 
 export default combineReducers({
   navigation: navigationReducer,
@@ -12,4 +13,5 @@ export default combineReducers({
   settings: settingsReducer,
   auth: authReducer,
   contact: contactReducer,
+  frames: framesReducer
 });

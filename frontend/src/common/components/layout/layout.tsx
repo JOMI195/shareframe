@@ -19,7 +19,7 @@ const MainLayout: React.FC = () => {
                     display: 'flex',
                     alignItems: "center",
                     flexDirection: 'column',
-                    pt: isSmallScreen ? 0 : 5,
+                    pt: isSmallScreen ? 2 : 5,
                     pb: 10,
                 }}
             >

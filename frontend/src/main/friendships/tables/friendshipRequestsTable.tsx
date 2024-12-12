@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
-import { getFriendships } from "@/store/entities/friendships/friendships.slice";
+import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { Box, Stack, Tooltip, IconButton, useMediaQuery, useTheme, Chip } from "@mui/material";
-import { getApi, getUser } from "@/store/entities/authentication/authentication.slice";
+import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { IFriendship } from "@/types";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -187,10 +187,6 @@ const FriendshipRequestTable: React.FC<FriendshipRequestTableProps> = () => {
             });
         }
     }, [matches]);
-
-    useEffect(() => {
-        dispatch(fetchFriendships());
-    }, []);
 
     return (
         <DataGrid

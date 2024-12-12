@@ -67,7 +67,7 @@ const friendshipsSlice = createSlice({
       .addCase(sendFriendshipRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage fehlgeschlagen",
+          message: "Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -259,4 +259,4 @@ export default friendshipsSlice.reducer;
 export const getDialogs = (state: RootState) =>
   state.ui.friendships.dialogs;
 
-export const getSnackbar = (state: RootState) => state.ui.friendships.snackbar;
+export const getFriendshipsSnackbar = (state: RootState) => state.ui.friendships.snackbar;
