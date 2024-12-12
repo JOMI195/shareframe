@@ -36,7 +36,8 @@ const friendshipsSlice = createSlice({
     sendFriendshipRequestPending: (sliceState) => {
       sliceState.api.loading = true;
     },
-    sendFriendshipRequestFulfilled: (sliceState) => {
+    sendFriendshipRequestFulfilled: (sliceState, action) => {
+      sliceState.friendships.unshift(action.payload);
       sliceState.api.lastFetch = Date.now();
       sliceState.api.loading = false;
     },
@@ -63,6 +64,20 @@ const friendshipsSlice = createSlice({
     rejectFriendshipRequestFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    friendshipDeleteRequested: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    friendshipDeleteDeleteFulfilled: (sliceState, action) => {
+      const oldCreation = action.payload;
+      const index = sliceState.friendships.findIndex(
+        (friendship) => friendship.created_at === oldCreation.created_at
+      );
+      sliceState.friendships.splice(index, 1);
+      sliceState.api.loading = false;
+    },
+    friendshipDeleteDeleteFailed: (sliceState) => {
+      sliceState.api.loading = false;
+    },
   },
 });
 
@@ -79,6 +94,9 @@ export const {
   rejectFriendshipRequestFailed,
   rejectFriendshipRequestFulfilled,
   rejectFriendshipRequestPending,
+  friendshipDeleteDeleteFailed,
+  friendshipDeleteDeleteFulfilled,
+  friendshipDeleteRequested
 } = friendshipsSlice.actions;
 export default friendshipsSlice.reducer;
 

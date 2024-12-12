@@ -4,6 +4,7 @@ export interface IFriendship {
     reciever: string;
     status: "pending" | "rejected" | "accepted";
     created_at: string;
+    updated_at: string;
 }
 
 export interface IFriendshipCreateForm {
@@ -17,6 +18,7 @@ export const isIFriendship = (obj: any): obj is IFriendship => {
         typeof obj.sender === 'string' &&
         typeof obj.reciever === 'string' &&
         typeof obj.status === 'string' &&
-        typeof obj.created_at === 'string'
+        typeof obj.created_at === 'string' &&
+        typeof obj.updated_at === 'string'
     );
 }

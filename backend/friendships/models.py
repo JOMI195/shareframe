@@ -26,6 +26,7 @@ class Friendship(models.Model):
 
     class Meta:
         unique_together = ("sender", "reciever")
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.sender.username}->{self.reciever.username}({self.status})"

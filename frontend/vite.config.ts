@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ['@mui/material/Tooltip', '@emotion/styled', '@mui/material/Unstable_Grid2', '@emotion/react'],
+      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react', '@mui/x-data-grid'],
     },
     define: {
       'process.env': {

@@ -39,3 +39,12 @@ export const rejectFrindshipRequest = (friendshipId: number) =>
     onError: friendshipsSlice.rejectFriendshipRequestFailed.type,
     data: {}
   });
+
+export const deleteFriendship = (friendshipId: number) =>
+  apiRequest({
+    url: friendshipsEndpoints.getFriendshipsDeleteRequestUrl(friendshipId),
+    method: "delete",
+    onStart: friendshipsSlice.friendshipDeleteRequested.type,
+    onSuccess: friendshipsSlice.friendshipDeleteDeleteFulfilled.type,
+    onError: friendshipsSlice.friendshipDeleteDeleteFailed.type,
+  });

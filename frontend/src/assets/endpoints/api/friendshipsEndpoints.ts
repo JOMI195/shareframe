@@ -5,3 +5,5 @@ export const getFriendshipsSendRequestUrl = () => `${getFriendshipsUrl()}send-re
 export const getFriendshipsAcceptRequestUrl = (friendshipId: number) => `${getFriendshipsUrl()}${friendshipId}/accept-request/`
 
 export const getFriendshipsRejectRequestUrl = (friendshipId: number) => `${getFriendshipsUrl()}${friendshipId}/reject-request/`
+
+export const getFriendshipsDeleteRequestUrl = (friendshipId: number) => `${getFriendshipsUrl()}${friendshipId}/`
