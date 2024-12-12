@@ -177,12 +177,14 @@ const FriendshipRequestTable: React.FC<FriendshipRequestTableProps> = () => {
             setColumnVisibilityModel({
                 request: true,
                 status: true,
+                updated_at: false,
                 actions: true
             });
         } else {
             setColumnVisibilityModel({
                 request: true,
                 status: true,
+                updated_at: true,
                 actions: true
             });
         }

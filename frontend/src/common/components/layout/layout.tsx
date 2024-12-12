@@ -14,6 +14,7 @@ const MainLayout: React.FC = () => {
             <ScrollRestoration />
             <Container
                 maxWidth="xl"
+                disableGutters
                 sx={{
                     flex: '1 1 auto',
                     display: 'flex',

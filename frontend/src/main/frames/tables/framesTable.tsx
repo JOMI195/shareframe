@@ -97,7 +97,7 @@ const FramesTable: React.FC<FramesTableProps> = () => {
             setColumnVisibilityModel({
                 public_serial_number: true,
                 is_active: true,
-                registered_at: true
+                registered_at: false
             });
         } else {
             setColumnVisibilityModel({

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Drawer,
     List,
@@ -8,7 +8,8 @@ import {
     Box,
     ClickAwayListener,
     useTheme,
-    Avatar
+    Avatar,
+    useMediaQuery
 } from '@mui/material';
 import {
     Settings as SettingsIcon,
@@ -16,7 +17,7 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { closeSidebar, getSidebar } from '@/store/ui/navigation/navigation.slice';
+import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import { Link, useLocation } from 'react-router-dom';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
@@ -26,17 +27,37 @@ import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 
 
 interface SidebarProps {
-    width?: number;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({
-    width = 240,
-}) => {
+const Sidebar: React.FC<SidebarProps> = () => {
     const dispatch = useAppDispatch();
     const open = useAppSelector(getSidebar).open;
     const theme = useTheme();
     const location = useLocation();
     const user = useAppSelector(getUser);
+
+    const matches = useMediaQuery(theme.breakpoints.up('xl'));
+    const width = 240;
+    const openSidebarEdgeDetectionWidth = 50;
+
+    useEffect(() => {
+        const handleMouseMove = (event: MouseEvent) => {
+            if (matches) {
+                if (!open && event.clientX <= openSidebarEdgeDetectionWidth) {
+                    dispatch(openSidedbar());
+                }
+                else if (open && event.clientX >= width) {
+                    dispatch(closeSidebar());
+                }
+            }
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove);
+        };
+    }, [dispatch, open, openSidebarEdgeDetectionWidth, width, matches]);
 
     const handleSidebarClose = (event: MouseEvent | TouchEvent | React.MouseEvent) => {
         const target = event.target as HTMLElement;

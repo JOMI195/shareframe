@@ -130,13 +130,13 @@ const FriendshipsTable: React.FC<FriendshipsTableProps> = () => {
         if (!matches) {
             setColumnVisibilityModel({
                 friend: true,
-                created_at: false,
+                updated_at: false,
                 actions: true
             });
         } else {
             setColumnVisibilityModel({
                 friend: true,
-                created_at: true,
+                updated_at: true,
                 actions: true
             });
         }

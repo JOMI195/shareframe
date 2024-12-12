@@ -4,7 +4,7 @@ import NotFound from '@/common/components/error/notFound/notFound';
 import Home from '@/main/home/home';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
-import { getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getActivityUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
@@ -16,6 +16,7 @@ import settingsRoutes from '@/main/settings/settings';
 import ProtectedRoute from '@/common/components/protectedRoute';
 import Friendships from '@/main/friendships/friendships';
 import Frames from '@/main/frames/frames';
+import SentImages from '@/main/sentImages/sentImages';
 
 const Routing = createBrowserRouter([
   {
@@ -50,6 +51,10 @@ const Routing = createBrowserRouter([
                   {
                     path: getFramesUrl(),
                     element: <Frames />
+                  },
+                  {
+                    path: getActivityUrl(),
+                    element: <SentImages />
                   }
                 ]
               },

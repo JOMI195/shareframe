@@ -1,10 +1,8 @@
 import React from "react";
 import { Box, Container } from "@mui/material";
-import { AddButton } from "./buttons/addButton";
-import Dialogs from "./dialogs/dialogs";
-import FramesTable from "./tables/framesTable";
+import SentImagesTable from "./tables/sentImagesTable";
 
-const Frames: React.FC = () => {
+const SentImages: React.FC = () => {
     return (
         <Container maxWidth={"md"} disableGutters>
             <Box sx={{
@@ -13,12 +11,10 @@ const Frames: React.FC = () => {
                 display: "flex",
                 flexDirection: "column"
             }}>
-                <FramesTable />
+                <SentImagesTable />
             </Box>
-            <AddButton />
-            <Dialogs />
         </Container>
     );
 }
 
-export default Frames;
+export default SentImages;

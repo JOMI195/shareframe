@@ -25,7 +25,7 @@ const Friendships: React.FC = () => {
     }, []);
 
     return (
-        <Container maxWidth={"md"} >
+        <Container maxWidth={"md"} disableGutters>
             <Box sx={{
                 height: "100%",
                 flexGrow: 1,
