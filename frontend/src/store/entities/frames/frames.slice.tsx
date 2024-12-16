@@ -70,7 +70,7 @@ export const {
   registerFrameFulfilled,
   unregisterFrameFailed,
   unregisterFrameFulfilled,
-  unregisterFramePending
+  unregisterFramePending,
 } = framesSlice.actions;
 export default framesSlice.reducer;
 

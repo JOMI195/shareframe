@@ -6,12 +6,15 @@ import FriendshipsAlertSnackbar from "../snackbars/alertSnackbar";
 import FriendshipsLoadingSnackbar from "../snackbars/loadingSnackbar";
 import FramesAlertSnackbar from "../snackbars/alertSnackbar";
 import FramesLoadingSnackbar from "../snackbars/loadingSnackbar";
+import ImagesAlertSnackbar from "../snackbars/alertSnackbar";
+import ImagesLoadingSnackbar from "../snackbars/loadingSnackbar";
 import { closeAuthAlertSnackbar, closeAuthLoadingSnackbar, getAuthSnackbar } from "@/store/ui/authentication/authentication.slice";
 import { Box } from "@mui/material";
 import { Outlet } from "react-router-dom";
 import { closeContactAlertSnackbar, closeContactLoadingSnackbar, getContactSnackbar } from "@/store/ui/contact/contact.slice";
 import { closeFriendshipsAlertSnackbar, closeFriendshipsLoadingSnackbar, getFriendshipsSnackbar } from "@/store/ui/friendships/friendships.slice";
 import { closeFramesAlertSnackbar, closeFramesLoadingSnackbar, getFramesSnackbar } from "@/store/ui/frames/frames.slice";
+import { closeImagesAlertSnackbar, closeImagesLoadingSnackbar, getImagesSnackbar } from "@/store/ui/images/images.slice";
 
 export const Snackbars = () => {
     return (
@@ -48,6 +51,14 @@ export const Snackbars = () => {
             <FramesLoadingSnackbar
                 getSnackbar={getFramesSnackbar}
                 closeSnackbar={closeFramesLoadingSnackbar}
+            />
+            <ImagesAlertSnackbar
+                getSnackbar={getImagesSnackbar}
+                closeSnackbar={closeImagesAlertSnackbar}
+            />
+            <ImagesLoadingSnackbar
+                getSnackbar={getImagesSnackbar}
+                closeSnackbar={closeImagesLoadingSnackbar}
             />
         </Box>
     );

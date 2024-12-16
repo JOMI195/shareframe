@@ -5,31 +5,43 @@ import { Link as RouterLink } from "react-router-dom";
 import { Outlet } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Logo from "@/common/components/logo";
+import { getImprintUrl, getPrivacyPolicyUrl } from "@/assets/endpoints/app/legalEndpoints";
+import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 
 function Copyright(props: any) {
   return (
     <Typography
-      variant="body2"
+      variant="caption"
       color="text.secondary"
       align="center"
       {...props}
     >
-      {"Copyright © "}
-      <Link component={RouterLink} to={"/"} color="inherit">
-        {"shareframe.de"}
-      </Link>{" "}
-      {new Date().getFullYear()}
-      {"."}
+      <Box>
+        <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
+          {"Datenschutzerklärung"}
+        </Link>{" "}
+        <Link component={RouterLink} to={getImprintUrl()} color="inherit">
+          {"Impressum"}
+        </Link>
+      </Box>
+      <Box>
+        {"Copyright © "}
+        <Link component={RouterLink} to={getHomeUrl()} color="inherit">
+          {"shareframe.de"}
+        </Link>{" "}
+        {new Date().getFullYear()}
+        {"."}
+      </Box>
     </Typography>
   );
 }
 
 export default function Layout() {
   return (
-    <Container component="main" maxWidth="xs">
+    <Container component="main" maxWidth="xs" disableGutters>
       <Box
         sx={{
-          marginTop: 5,
+          my: 5,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -46,7 +58,7 @@ export default function Layout() {
         </Box>
         <Outlet />
       </Box>
-      <Copyright sx={{ mt: 5 }} />
+      <Copyright />
     </Container>
   );
 }

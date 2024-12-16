@@ -17,6 +17,11 @@ export const isIImage = (obj: any): obj is IImage => {
     );
 }
 
+export interface IImageValidationResponse {
+    valid: boolean;
+    errors: string[];
+}
+
 export interface ISentImage {
     id: number;
     sender: string;

@@ -44,7 +44,7 @@ const FriendshipsTable: React.FC<FriendshipsTableProps> = () => {
             align: 'left',
             headerAlign: 'left',
             renderCell: ({ row }) => {
-                const friend = row.sender === user.me.username ? row.sender : row.reciever;
+                const friend = row.sender !== user.me.username ? row.sender : row.reciever;
                 return (
                     <Box sx={{
                         display: "flex",

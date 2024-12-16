@@ -185,15 +185,18 @@ REST_FRAMEWORK = {
         "config.throttles.BurstRateThrottle",
         "config.throttles.SustainedRateThrottle",
     ],
-    "DEFAULT_THROTTLE_RATES": {"burst": "30/min", "sustained": "1000/day"},
+    "DEFAULT_THROTTLE_RATES": {
+        "burst": "10000/min",
+        "sustained": "10000/day",
+    },  # "DEFAULT_THROTTLE_RATES": {"burst": "30/min", "sustained": "1000/day"},
 }
 
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(days=10),
-    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=30),
     "ROTATE_REFRESH_TOKENS": False,
     "BLACKLIST_AFTER_ROTATION": True,
-    "UPDATE_LAST_LOGIN": False,
+    "UPDATE_LAST_LOGIN": True,
     "ALGORITHM": "HS256",
     "SIGNING_KEY": os.environ.get("SECRET_KEY"),
     "VERIFYING_KEY": None,
@@ -209,7 +212,7 @@ SIMPLE_JWT = {
     "JTI_CLAIM": "jti",
     "SLIDING_TOKEN_REFRESH_EXP_CLAIM": "refresh_exp",
     "SLIDING_TOKEN_LIFETIME": timedelta(days=10),
-    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=1),
+    "SLIDING_TOKEN_REFRESH_LIFETIME": timedelta(days=30),
 }
 
 PASSWORD_HASHERS = [

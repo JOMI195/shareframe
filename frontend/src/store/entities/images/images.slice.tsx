@@ -52,7 +52,7 @@ const imagesSlice = createSlice({
     deleteImageFulfilled: (sliceState, action) => {
       const oldCreation = action.payload;
       const index = sliceState.images.findIndex(
-        (image) => image.id === oldCreation.id
+        (image) => image.created_at === oldCreation.created_at
       );
       sliceState.images.splice(index, 1);
       sliceState.api.loading = false;
@@ -72,6 +72,15 @@ const imagesSlice = createSlice({
     sentImagesRequestFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    sendImageToUserFramePending: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    sendImageToUserFrameFulfilled: (sliceState) => {
+      sliceState.api.loading = false;
+    },
+    sendImageToUserFrameFailed: (sliceState) => {
+      sliceState.api.loading = false;
+    },
   },
 });
 
@@ -87,7 +96,10 @@ export const {
   deleteImagePending,
   sentImagesReceived,
   sentImagesRequestFailed,
-  sentImagesRequested
+  sentImagesRequested,
+  sendImageToUserFrameFailed,
+  sendImageToUserFrameFulfilled,
+  sendImageToUserFramePending
 } = imagesSlice.actions;
 export default imagesSlice.reducer;
 

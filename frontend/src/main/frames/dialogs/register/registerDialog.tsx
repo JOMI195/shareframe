@@ -2,29 +2,23 @@ import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
-import Zoom from "@mui/material/Zoom";
-import { TransitionProps } from "@mui/material/transitions";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IRegisterFrameForm, isIFrameResponse } from "@/types";
-import { Box, Grid, Stack, TextField, Typography } from "@mui/material";
+import { AppBar, Box, DialogTitle, Grid, IconButton, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { closeRegisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.slice";
 import { registerFrame } from "@/store/entities/frames/frames.actions";
-
-const ZoomTransition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Zoom ref={ref} {...props} />;
-});
+import CloseIcon from '@mui/icons-material/Close';
+import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 
 const RegisterFrameDialog: React.FC = () => {
+  const theme = useTheme();
   const dispatch = useAppDispatch();
 
   const open = useAppSelector(getDialogs).register.open;
+
+  const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
   const [initialValues] = useState<IRegisterFrameForm>({
     public_serial_number: "",
@@ -61,13 +55,33 @@ const RegisterFrameDialog: React.FC = () => {
 
   return (
     <Dialog
+      fullScreen={matches ? false : true}
       open={open}
+      TransitionComponent={matches ? ZoomTransition : SlideTransition}
       onClose={handleDialogClose}
-      TransitionComponent={ZoomTransition}
-      aria-labelledby="register-frame-dialog"
-      fullWidth
+      aria-describedby='dialog-slide-upload'
       maxWidth="xs"
+      fullWidth
     >
+      {!matches ? (
+        <AppBar sx={{ position: 'relative' }} color='inherit'>
+          <Toolbar>
+            <IconButton
+              edge='start'
+              color='inherit'
+              onClick={handleDialogClose}
+              aria-label='cancel'
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
+              Bilderrahmen hinzufügen
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      ) : (
+        <DialogTitle>Bilderrahmen hinzufügen</DialogTitle>
+      )}
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -76,9 +90,6 @@ const RegisterFrameDialog: React.FC = () => {
           p: 2
         }}>
           <Stack spacing={2}>
-            <Typography variant="subtitle1" fontWeight="bold">
-              Bilderrahmen hinzufügen
-            </Typography>
             <Typography variant="body2" color="text.secondary">
               Bitte gebe hier die Seriennummer des Bilderrahmens ein, welchen du hinzufügen möchtest
             </Typography>

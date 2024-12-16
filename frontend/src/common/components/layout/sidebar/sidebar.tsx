@@ -9,21 +9,23 @@ import {
     ClickAwayListener,
     useTheme,
     Avatar,
-    useMediaQuery
+    useMediaQuery,
+    Typography,
+    Link
 } from '@mui/material';
 import {
     Settings as SettingsIcon,
 } from '@mui/icons-material';
 import LogoutIcon from '@mui/icons-material/Logout';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
-import { Link, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
 import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 
 
 interface SidebarProps {
@@ -87,8 +89,35 @@ const Sidebar: React.FC<SidebarProps> = () => {
             url: getSettingsUrl() + getUserSettingsUrl()
         },
         { name: 'Einstellungen', icon: <SettingsIcon />, url: getSettingsUrl() + getAppSettingsUrl() },
-        { name: 'Hilfe', icon: <HelpOutlineIcon />, url: getSettingsUrl() + getAppSettingsUrl() }
     ];
+
+    const SidebarBottomLegals = () => {
+        return (
+            <Typography
+                variant="caption"
+                color="text.secondary"
+                align="left"
+                sx={{ mt: 1 }}
+            >
+                <Box>
+                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                        {"Datenschutzerklärung"}
+                    </Link>{" "}
+                    <Link component={RouterLink} to={getImprintUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                        {"Impressum"}
+                    </Link>
+                </Box>
+                <Box>
+                    {"Copyright © "}
+                    <Link component={RouterLink} to={getHomeUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                        {"shareframe.de"}
+                    </Link>{" "}
+                    {new Date().getFullYear()}
+                    {"."}
+                </Box>
+            </Typography>
+        );
+    }
 
     return (
         <ClickAwayListener
@@ -135,7 +164,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                                 const isActive = location.pathname === itemUrl;
                                 return (
                                     <ListItem
-                                        component={Link}
+                                        component={RouterLink}
                                         to={item.url}
                                         key={item.name}
                                         onClick={handleSidebarClose}
@@ -157,7 +186,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
                         <List>
                             {sidebarBottomItems.map((item) => (
                                 <ListItem
-                                    component={Link}
+                                    component={RouterLink}
                                     to={item.url}
                                     key={item.name}
                                     onClick={handleSidebarClose}
@@ -174,8 +203,8 @@ const Sidebar: React.FC<SidebarProps> = () => {
                                 </ListItem>
                             ))}
                         </List>
+                        <SidebarBottomLegals />
                     </Box>
-
                 </Box>
             </Drawer>
         </ClickAwayListener >

@@ -15,5 +15,5 @@ export default combineReducers({
   auth: authReducer,
   contact: contactReducer,
   frames: framesReducer,
-  images: imagesReducer
+  images: imagesReducer,
 });

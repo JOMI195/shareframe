@@ -2,33 +2,27 @@ import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
-import Zoom from "@mui/material/Zoom";
-import { TransitionProps } from "@mui/material/transitions";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closeCreateFriendshipsDialog, getDialogs } from "@/store/ui/friendships/friendships.slice";
 import { IFriendshipCreateForm, isIFriendship } from "@/types";
 import { sendFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
-import { Box, Divider, Grid, Paper, Stack, TextField, Typography } from "@mui/material";
+import { AppBar, Box, Divider, Grid, IconButton, Paper, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
-
-const ZoomTransition = React.forwardRef(function Transition(
-  props: TransitionProps & {
-    children: React.ReactElement<any, any>;
-  },
-  ref: React.Ref<unknown>
-) {
-  return <Zoom ref={ref} {...props} />;
-});
+import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
+import CloseIcon from '@mui/icons-material/Close';
 
 const FriendshipCreateDialog: React.FC = () => {
+  const theme = useTheme();
   const dispatch = useAppDispatch();
 
   const open = useAppSelector(getDialogs).create.open;
   const user = useAppSelector(getUser);
   const friendshipCode = user.me.account.friendship_user_search_code;
+
+  const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
   const [initialValues] = useState<IFriendshipCreateForm>({
     reciever_friendship_user_search_code: "",
@@ -69,13 +63,31 @@ const FriendshipCreateDialog: React.FC = () => {
 
   return (
     <Dialog
+      fullScreen={matches ? false : true}
       open={open}
+      TransitionComponent={matches ? ZoomTransition : SlideTransition}
       onClose={handleDialogClose}
-      TransitionComponent={ZoomTransition}
-      aria-labelledby="friendship-create-dialog"
-      fullWidth
+      aria-describedby="friendship-create-dialog"
       maxWidth="xs"
+      fullWidth
     >
+      {!matches && (
+        <AppBar sx={{ position: 'relative' }} color='inherit'>
+          <Toolbar>
+            <IconButton
+              edge='start'
+              color='inherit'
+              onClick={handleDialogClose}
+              aria-label='cancel'
+            >
+              <CloseIcon />
+            </IconButton>
+            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
+              Freund hinzufügen
+            </Typography>
+          </Toolbar>
+        </AppBar>
+      )}
       <DialogContent>
         <Box sx={{
           display: 'flex',

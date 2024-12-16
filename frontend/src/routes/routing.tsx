@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
-import Home from '@/main/home/home';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
 import { getActivityUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
@@ -17,6 +16,7 @@ import ProtectedRoute from '@/common/components/protectedRoute';
 import Friendships from '@/main/friendships/friendships';
 import Frames from '@/main/frames/frames';
 import SentImages from '@/main/sentImages/sentImages';
+import Images from '@/main/images/images';
 
 const Routing = createBrowserRouter([
   {
@@ -42,7 +42,7 @@ const Routing = createBrowserRouter([
                 children: [
                   {
                     path: getHomeUrl(),
-                    element: <Home />,
+                    element: <Images />,
                   },
                   {
                     path: getFriendsUrl(),
