@@ -5,13 +5,11 @@ import {
   getSignInUrl,
   getSignOutUrl,
   getSignUpConfirmationUrl,
-  getSignUpUrl,
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
 import Layout from "./layout";
 import SignIn from "./signIn/signIn";
 import SignOut from "./signOut/signOut";
-import SignUp from "./signUp/signUp";
 import Activation from "./users/activation";
 import PasswordReset from "./users/passwordReset";
 import PasswordResetConfirmation from "./users/passwordResetConfirmation";
@@ -34,10 +32,10 @@ const authenticationRoutes = [
         path: getSignOutUrl(),
         element: <SignOut />,
       },
-      {
-        path: getSignUpUrl(),
-        element: <SignUp />,
-      },
+      // {
+      //   path: getSignUpUrl(),
+      //   element: <SignUp />,
+      // },
       {
         path: getUsersUrl(),
         children: [

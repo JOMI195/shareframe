@@ -12,7 +12,7 @@ const localStorageBuildVersionUpdate = () => {
         return;
     }
     else if (buildVersionStorageValue !== currentBuildVersion) {
-        localStorage.removeItem("persist:der-witz-des-tages-data");
+        localStorage.removeItem("persist:shareframe-data");
         localStorage.setItem(BUILD_VERSION_STORAGE_KEY, currentBuildVersion);
         window.location.reload();
     };

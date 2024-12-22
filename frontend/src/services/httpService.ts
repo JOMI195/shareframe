@@ -3,6 +3,11 @@ import axiosInstance from "./api";
 import { refreshToken } from "@/store/entities/authentication/authentication.actions";
 import { RootState } from "@/store";
 
+const handleLogout = () => {
+  localStorage.clear();
+  window.location.reload();
+};
+
 const apiSetup = (store: Store<RootState>) => {
   const { dispatch } = store;
   axiosInstance.interceptors.request.use(
@@ -35,9 +40,13 @@ const apiSetup = (store: Store<RootState>) => {
           try {
             if (token !== null) {
               await dispatch(refreshToken(token));
+              return axiosInstance(originalConfig);
+            } else {
+              handleLogout();
+              return Promise.reject(error);
             }
-            return axiosInstance(originalConfig);
           } catch (_error) {
+            handleLogout();
             return Promise.reject(_error);
           }
         }

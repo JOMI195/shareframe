@@ -63,7 +63,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         // On first error: reload page
         if (errorCount < 1) {
             setTimeout(() => {
-                localStorage.removeItem("persist:der-witz-des-tages-data");
+                localStorage.removeItem("persist:shareframe-data");
                 window.location.reload();
             }, 2000);
         } else {

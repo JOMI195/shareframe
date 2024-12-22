@@ -37,7 +37,7 @@ const PrivacyPolicy = () => {
                     70736 Fellbach<br />
                     DE - Deutschland<br />
                 </p>
-                <p>E-Mail-Adresse: <a href="mailto:info@der-witz-des-tages.de">info@der-witz-des-tages.de</a></p>
+                <p>E-Mail-Adresse: <a href="mailto:info@shareframe.de">info@shareframe.de</a></p>
 
 
                 <h2 id="mOverview">Übersicht der Verarbeitungen</h2><p>Die nachfolgende Übersicht fasst die Arten der verarbeiteten Daten und die Zwecke ihrer Verarbeitung zusammen und verweist auf die betroffenen Personen.</p><h3>Arten der verarbeiteten Daten</h3>

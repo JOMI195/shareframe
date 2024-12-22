@@ -14,7 +14,7 @@ class FrameAuthMiddleware(BaseMiddleware):
         if auth_header:
             auth_header = auth_header.decode("utf-8")
 
-            if auth_header.startswith("Frame-access-token "):
+            if auth_header.startswith("Frame-Access-Token "):
                 access_token = auth_header.split(" ")[1]
 
                 frame = await self.get_frame_from_token(access_token)

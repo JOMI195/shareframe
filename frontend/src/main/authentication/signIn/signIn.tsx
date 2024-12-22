@@ -26,7 +26,6 @@ import { useAppSelector } from "@/store";
 import {
   getAuthenticationUrl,
   getResetPasswordUrl,
-  getSignUpUrl,
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
@@ -189,7 +188,7 @@ export default function SignIn() {
               {"anmelden"}
             </Button>
           </Grid>
-          <Grid item xs={12} display="flex" justifyContent="space-between">
+          <Grid item xs={12} display="flex" justifyContent="center">
             <Link
               component={RouterLink}
               to={
@@ -199,13 +198,13 @@ export default function SignIn() {
             >
               {"Passwort vergessen?"}
             </Link>
-            <Link
+            {/* <Link
               component={RouterLink}
               to={getAuthenticationUrl() + getSignUpUrl()}
               variant="body2"
             >
               {"Kein Konto? Registriere dich"}
-            </Link>
+            </Link> */}
           </Grid>
         </Grid>
       </Box>

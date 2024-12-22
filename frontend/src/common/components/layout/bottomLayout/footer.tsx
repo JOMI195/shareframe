@@ -69,7 +69,7 @@ const Footer: React.FC = () => {
                         <Typography variant="body1">
                             {"Copyright © "}
                             <StyledLink to="/" color="inherit">
-                                der-witz-des-tages.de
+                                shareframe.de
                             </StyledLink>
                             {" "}
                             {new Date().getFullYear()}

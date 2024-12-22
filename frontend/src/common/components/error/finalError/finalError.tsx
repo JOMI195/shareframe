@@ -53,11 +53,11 @@ const FinalError: React.FC = ({
                 <Typography>
                     Support-Email:
                     <Link
-                        href="mailto:info@der-witz-des-tages.de"
+                        href="mailto:info@shareframe.de"
                         color="primary"
                         sx={{ pl: 1 }}
                     >
-                        info@der-witz-des-tages.de
+                        info@shareframe.de
                     </Link>
                 </Typography>
             </Box>

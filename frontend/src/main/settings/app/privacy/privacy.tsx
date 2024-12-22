@@ -37,7 +37,7 @@ const PrivacySettings: React.FC = () => {
                 Cookies
             </Typography>
             <Typography variant="body1" paragraph>
-                Du kannst mehr über die auf der-witz-des-tages.de verwendeten Cookies in den Datenschutzbestimmungen erfahren.
+                Du kannst mehr über die auf shareframe.de verwendeten Cookies in den Datenschutzbestimmungen erfahren.
             </Typography>
             <Typography variant="body1" paragraph>
                 Um weitere Informationen zu erhalten, kontaktiere uns einfach.

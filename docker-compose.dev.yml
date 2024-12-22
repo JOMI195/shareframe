@@ -4,7 +4,7 @@ services:
     build:
       context: ./backend
       dockerfile: ./Dockerfile.dev
-    command: daphne -b 0.0.0.0 -p 8000 config.asgi:application
+    command: python manage.py runserver 0.0.0.0:8000
     volumes:
       - ./backend/:/app/backend
     ports:
@@ -16,6 +16,25 @@ services:
         condition: service_healthy
       redis:
         condition: service_started
+
+  websockets:
+    container_name: websockets
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 config.asgi:application
+    entrypoint: []
+    volumes:
+      - ./backend/:/app/backend
+    ports:
+      - 9000:9000
+    env_file:
+      - ./.env.dev
+    depends_on:
+      backend_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
 
   backend_db:
     container_name: backend_db

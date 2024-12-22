@@ -34,8 +34,6 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS").split(" ")
 CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS").split(" ")
 
 PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
-if PRODUCTION == True:
-    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # Application definition
 
@@ -285,7 +283,7 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = None
 
-FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 120  # seconds
+FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 300  # seconds
 
 
 # Frontend URLS

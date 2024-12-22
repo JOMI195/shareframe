@@ -81,7 +81,7 @@ export default function ContactForm() {
                 <Grid item xs={12} lg={7}>
                     <Typography variant="body1" sx={{ mt: 2, mb: 5 }}>
                         Alternativ kannst du uns auch direkt eine E-Mail an{" "}
-                        <a href="mailto:info@der-witz-des-tages.de">info@der-witz-des-tages.de</a> senden.
+                        <a href="mailto:info@shareframe.de">info@shareframe.de</a> senden.
                     </Typography>
                 </Grid>
                 <Grid item xs={12} lg={7}>

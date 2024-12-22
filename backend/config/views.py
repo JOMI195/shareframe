@@ -41,7 +41,7 @@ class MediaAccessView(APIView):
         if access_granted:
             response = Response(status=200)
             # nginx proxy_pass: /app/backend/mediafiles/private/
-            response["X-Accel-Redirect"] = "api/media/protected/" + path
+            response["X-Accel-Redirect"] = "/api/media/protected/" + path
             return response
         else:
             raise PermissionDenied("Not authorized to access this media.")

@@ -1,3 +1,4 @@
+import os
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
@@ -35,9 +36,13 @@ class FrameToken(models.Model):
 
     @classmethod
     def generate_tokens(cls, frame):
+        access_token_lifetime_days = os.environ.get(
+            "DJANGO_FRAME_ACCESSTOKEN_LIFETIME_DAYS", 7
+        )
         return {
             "access_token": str(uuid.uuid4()),
-            "access_token_expires_at": timezone.now() + timezone.timedelta(days=7),
+            "access_token_expires_at": timezone.now()
+            + timezone.timedelta(days=int(access_token_lifetime_days)),
         }
 
     def is_access_token_valid(self):

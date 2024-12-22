@@ -1,6 +1,7 @@
 import { Dialog, Box } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
+import AuthenticatedImage from "@/common/components/authenticatedImage";
 
 
 const ImagePreviewDialog = () => {
@@ -27,8 +28,8 @@ const ImagePreviewDialog = () => {
                         height: "100%",
                     }}
                 >
-                    <img
-                        src={dialog.url}
+                    <AuthenticatedImage
+                        url={dialog.url}
                         alt="Preview"
                         style={{
                             maxWidth: "100%",

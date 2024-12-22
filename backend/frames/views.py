@@ -15,7 +15,7 @@ from utils.endpoint_request_cooldown import (
     check_endpoint_request_cooldown,
     set_endpoint_request_cooldown,
 )
-from .models import Frame
+from .models import Frame, FrameToken
 from .serializers import FrameRetrieveSerializer
 from .consumers import FrameWebSocketConsumer
 from user_core.models import User
@@ -292,4 +292,39 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         return Response(
             {"message": "Image sent successfully."}, status=status.HTTP_200_OK
+        )
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+        url_path="verify-frame-token",
+    )
+    def verify_frame_token(self, request):
+        access_token = request.data.get("access_token")
+
+        if not access_token:
+            return Response(
+                {"error": "Access token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            frame_token = FrameToken.objects.get(access_token=access_token)
+        except FrameToken.DoesNotExist:
+            return Response(
+                {"error": "Invalid access token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not frame_token.is_access_token_valid():
+            return Response(
+                {"error": "Access token has expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response(
+            {
+                "valid": True,
+            }
         )

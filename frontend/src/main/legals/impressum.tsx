@@ -16,7 +16,7 @@ const Impressum = () => {
                 Stuttgarter Str. 106<br />
                 70736 Fellbach<br />
                 DE - Deutschland<br />
-                E-Mail: <Link href="mailto:info@der-witz-des-tages.de">info@der-witz-des-tages.de</Link><br />
+                E-Mail: <Link href="mailto:info@shareframe.de">info@shareframe.de</Link><br />
             </Typography>
 
             <Typography sx={{ mt: 5 }} variant="h6" gutterBottom>

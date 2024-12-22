@@ -43,5 +43,9 @@ class CustomUserViewSet(BaseUserViewSet):
         return super().me(request, *args, **kwargs)
 
     @extend_schema(exclude=True)
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @extend_schema(exclude=True)
     def destroy(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

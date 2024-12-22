@@ -9,6 +9,7 @@ import { DataGrid, GridColDef, GridColumnVisibilityModel } from "@mui/x-data-gri
 import { openDeleteImageDialog, openPreviewImageDialog, openSendImageToUserFrameDialog } from "@/store/ui/images/images.slice";
 import { getApi, getImages } from "@/store/entities/images/images.slice";
 import SendIcon from '@mui/icons-material/Send';
+import AuthenticatedImage from "@/common/components/authenticatedImage";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -47,8 +48,8 @@ const ImagesTable: React.FC<ImagesTableProps> = () => {
             sortable: false,
             renderCell: ({ row }) => (
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
-                    <img
-                        src={MEDIA_BASE_URL + row.url}
+                    <AuthenticatedImage
+                        url={MEDIA_BASE_URL + row.url}
                         alt={row.name}
                         style={{ maxWidth: "80px", maxHeight: "80px", objectFit: "contain" }}
                         onClick={() => dispatch(openPreviewImageDialog({ url: MEDIA_BASE_URL + row.url }))}
