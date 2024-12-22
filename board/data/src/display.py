@@ -2,6 +2,7 @@ import asyncio
 import os
 import sys
 import time
+import logging
 from PIL import Image
 from datetime import datetime, timedelta, timezone
 from config import settings
@@ -17,36 +18,51 @@ from waveshare_epd import epd7in5_V2
 
 class Display:
     def __init__(self):
-        self.epd = epd7in5_V2.EPD()
-        self._initialize_display()
+        self.logger = logging.getLogger(__name__)
+        self.logger.info("Initializing display controller")
 
-        self.last_refresh_time = datetime.now()
-        self.current_image_path = None
-
-        self.static_image_paths = []
-        self.user_image_paths = []
-        self._load_static_images()
+        try:
+            self.epd = epd7in5_V2.EPD()
+            self._initialize_display()
+            self.last_refresh_time = datetime.now()
+            self.current_image_path = None
+            self.static_image_paths = []
+            self.user_image_paths = []
+            self._load_static_images()
+            self.logger.info("Display controller initialized successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to initialize display: {str(e)}", exc_info=True)
+            raise
 
     def _initialize_display(self):
-        self.epd.init()
-        self.epd.Clear()
-        self.last_refresh_time = datetime.now()
-        time.sleep(2)
-        self.epd.sleep()
+        self.logger.info("Initializing e-paper display")
+        try:
+            self.epd.init()
+            self.epd.Clear()
+            self.last_refresh_time = datetime.now()
+            time.sleep(2)
+            self.epd.sleep()
+            self.logger.info("E-paper display initialized and cleared")
+        except Exception as e:
+            self.logger.error(f"Display initialization failed: {str(e)}", exc_info=True)
+            raise
 
     def _load_static_images(self):
         static_folder = os.path.join(
             os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
             settings.STATIC_IMAGES_DIR,
         )
-        print(f"static folder path: {static_folder}")
+        self.logger.info(f"Loading static images from: {static_folder}")
+
         if os.path.exists(static_folder):
             self.static_image_paths = [
                 os.path.join(static_folder, f)
                 for f in os.listdir(static_folder)
                 if os.path.isfile(os.path.join(static_folder, f))
             ]
-            print(f"{len(self.static_image_paths)} static images loaded")
+            self.logger.info(f"Loaded {len(self.static_image_paths)} static images")
+        else:
+            self.logger.warning(f"Static images directory not found: {static_folder}")
 
     def _can_refresh(self):
         now = datetime.now()
@@ -54,33 +70,43 @@ class Display:
         time_until_next_refresh = timedelta(
             minutes=settings.NEXT_REFRESH_WAITING_INTERVALL_MINUTES
         )
-        return interval_since_last_refresh >= time_until_next_refresh
+        can_refresh = interval_since_last_refresh >= time_until_next_refresh
+        self.logger.debug(
+            f"Refresh check: interval={interval_since_last_refresh.total_seconds()}s, "
+            f"required={time_until_next_refresh.total_seconds()}s, can_refresh={can_refresh}"
+        )
+        return can_refresh
 
     async def _wait_until_can_refresh(self):
+        if not self._can_refresh():
+            wait_time = (
+                self.last_refresh_time
+                + timedelta(minutes=settings.NEXT_REFRESH_WAITING_INTERVALL_MINUTES)
+                - datetime.now()
+            )
+            self.logger.info(f"Waiting {wait_time.total_seconds()}s until next refresh")
         while not self._can_refresh():
             await asyncio.sleep(10)
 
     async def display_images_in_loop(self, interval: int):
-        print("starting displaying images in a loop")
+        self.logger.info(f"Starting display loop with interval: {interval}s")
+
         while True:
             images_to_display = (
                 self.user_image_paths
                 if self.user_image_paths
                 else self.static_image_paths
             )
-
-            print(f"images to display in loop {len(images_to_display)}")
+            self.logger.debug(f"Current display queue: {len(images_to_display)} images")
 
             for image_data in list(images_to_display):
-
                 if (
                     images_to_display == self.static_image_paths
                     and self.user_image_paths
                 ):
-                    print("User images available, restarting display loop")
+                    self.logger.info("User images available, restarting display loop")
                     break
 
-                print(f"display image data: {image_data}")
                 image_path = (
                     image_data["path"] if isinstance(image_data, dict) else image_data
                 )
@@ -94,47 +120,59 @@ class Display:
                     expires_at = datetime.fromtimestamp(
                         int(expires_at), tz=timezone.utc
                     )
-
-                if expires_at and datetime.now().timestamp() > expires_at:
-                    self.user_image_paths.remove(image_data)
-                    if os.path.exists(image_path):
-                        os.remove(image_path)
-                    continue
+                    if datetime.now(timezone.utc) > expires_at:
+                        self.logger.info(f"Removing expired image: {image_path}")
+                        self.user_image_paths.remove(image_data)
+                        if os.path.exists(image_path):
+                            try:
+                                os.remove(image_path)
+                                self.logger.debug(
+                                    f"Deleted expired image file: {image_path}"
+                                )
+                            except OSError as e:
+                                self.logger.error(
+                                    f"Failed to delete expired image: {str(e)}"
+                                )
+                        continue
 
                 await self._wait_until_can_refresh()
                 await self.display_image(image_path)
-
                 await asyncio.sleep(interval)
 
     async def display_image(self, image_path: str):
-        await self._wait_until_can_refresh()
-        self.epd.init_fast()
-        image = Image.open(image_path)
-        image = image.resize((self.epd.width, self.epd.height))
-        self.epd.Clear()
-        print(f"displaying {image_path}")
-        self.epd.display(self.epd.getbuffer(image))
-        time.sleep(60)
-        self.epd.sleep()
+        self.logger.info(f"Preparing to display image: {image_path}")
 
-        self.last_refresh_time = datetime.now()
-        self.current_image_path = image_path
+        try:
+            await self._wait_until_can_refresh()
+            self.epd.init_fast()
+
+            image = Image.open(image_path)
+            image = image.resize((self.epd.width, self.epd.height))
+            self.epd.Clear()
+
+            self.logger.debug("Sending image to display")
+            self.epd.display(self.epd.getbuffer(image))
+
+            time.sleep(60)
+            self.epd.sleep()
+            self.last_refresh_time = datetime.now()
+            self.current_image_path = image_path
+            self.logger.info("Image displayed successfully")
+
+        except Exception as e:
+            self.logger.error(f"Failed to display image: {str(e)}", exc_info=True)
+            raise
 
     async def clear_display(self):
-        await self._wait_until_can_refresh()
-        self.epd.init()
-        print("clearing display")
-        self.epd.Clear()
-        time.sleep(10)
-        self.epd.sleep()
-        self.last_refresh_time = datetime.now()
-
-    # async def refresh_if_needed(self):
-    #     while True:
-    #         if self.current_image_path:
-    #             now = datetime.now()
-    #             if now - self.last_refresh_time >= timedelta(
-    #                 hours=settings.REFRESH_INTERVAL_HOURS
-    #             ):
-    #                 self.display_image(self.current_image_path)
-    #         await asyncio.sleep(3600)  # Check every hour
+        self.logger.info("Clearing display")
+        try:
+            await self._wait_until_can_refresh()
+            self.epd.init()
+            self.epd.Clear()
+            time.sleep(10)
+            self.epd.sleep()
+            self.last_refresh_time = datetime.now()
+            self.logger.info("Display cleared successfully")
+        except Exception as e:
+            self.logger.error(f"Failed to clear display: {str(e)}", exc_info=True)
+            raise

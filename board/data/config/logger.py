@@ -1,0 +1,33 @@
+import logging
+import sys
+from pathlib import Path
+from logging.handlers import RotatingFileHandler
+from config import settings
+
+
+def setup_logging(log_level: str = "INFO") -> None:
+    log_dir = settings.LOGGING_SAVE_DIR
+
+    Path(log_dir).mkdir(exist_ok=True)
+
+    logger = logging.getLogger()
+    logger.setLevel(log_level)
+
+    file_formatter = logging.Formatter(
+        "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    )
+    console_formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+
+    # File handler (rotating log files)
+    file_handler = RotatingFileHandler(
+        settings.LOGGING_FULL_FILE_PATH, maxBytes=5 * 1024 * 1024, backupCount=5  # 5MB
+    )
+    file_handler.setFormatter(file_formatter)
+    file_handler.setLevel(log_level)
+
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(console_formatter)
+    console_handler.setLevel(log_level)
+
+    logger.addHandler(file_handler)
+    logger.addHandler(console_handler)

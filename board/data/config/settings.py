@@ -1,5 +1,9 @@
 import os
 
+# Logging config
+LOGGING_SAVE_DIR = "logs"
+LOGGING_FILE = "frame_logs.log"
+LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 
 # Client config
 BASE_URL = os.getenv("BASE_URL")

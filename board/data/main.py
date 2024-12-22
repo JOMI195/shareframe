@@ -7,10 +7,13 @@ from src.client import WebsocketClient
 from src.image import ImageProcessor
 from src.display import Display
 from config import settings
+from config.logger import setup_logging
+import logging
 
 
 class FrameApplication:
     def __init__(self):
+        self.logger = logging.getLogger(__name__)
         self.image_processor = ImageProcessor()
         self.display = Display()
         self.websocket_client = WebsocketClient(
@@ -22,7 +25,8 @@ class FrameApplication:
 
     async def handle_websocket_picture_message(self, message: dict):
         if message.get("type") == "picture":
-            print("Picture recieved")
+            sender = message.get("sender")
+            self.logger.info(f"Image recieved from {sender}")
             saved_image_path = self.image_processor.process_image_message(message)
             expires_at = message.get("expiry_unix_timestamp")
             if saved_image_path:
@@ -45,12 +49,12 @@ class FrameApplication:
 
 
 async def main():
-    print("Starting application")
+    setup_logging()
+    logging.info("Starting application")
     app = FrameApplication()
     await app.run()
 
 
 if __name__ == "__main__":
-    print("Loading env")
     load_dotenv()
     asyncio.run(main())
