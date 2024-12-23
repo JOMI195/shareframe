@@ -136,7 +136,7 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
                 reciever: true,
                 sent_at: false,
                 isExpired: true,
-                expires_at: false,
+                expires_at: true,
             });
         } else {
             setColumnVisibilityModel({

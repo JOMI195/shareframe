@@ -25,12 +25,7 @@ import { SlideTransition, ZoomTransition } from "@/common/components/dialogTrans
 import CloseIcon from '@mui/icons-material/Close';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
-
-const EXPIRATION_OPTIONS = [
-    { label: '24 Stunden', hours: 24 },
-    { label: '10 Tage', hours: 240 },
-    { label: '30 Tage', hours: 720 }
-];
+import ExpirationSelector from './expirationSelector';
 
 const SendImageToUserFrameDialog = () => {
     const theme = useTheme();
@@ -48,7 +43,7 @@ const SendImageToUserFrameDialog = () => {
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [receiverUsername, setReceiverUsername] = useState('');
-    const [expirationOption, setExpirationOption] = useState(EXPIRATION_OPTIONS[1].hours);
+    const [expirationOption, setExpirationOption] = useState<number>(24);
 
     const handleDialogClose = () => {
         dispatch(closeSendImageToUserFrameDialog());
@@ -105,7 +100,7 @@ const SendImageToUserFrameDialog = () => {
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>Wähle den Empfänger und die Ablaufzeit. Das Foto wird an alle Bilderrahmen des Empfängers geschickt und dort bis zu der angegebenen Ablaufzeit angezeigt.</Typography>
 
-                <FormControl fullWidth sx={{ mb: 2 }}>
+                <FormControl fullWidth sx={{ mb: 1 }}>
                     <InputLabel>Empfänger</InputLabel>
                     <Select
                         value={receiverUsername}
@@ -127,23 +122,10 @@ const SendImageToUserFrameDialog = () => {
                     </Select>
                 </FormControl>
 
-                <FormControl fullWidth sx={{ mb: 3 }}>
-                    <InputLabel>Ablaufzeit</InputLabel>
-                    <Select
-                        value={expirationOption}
-                        label="Ablaufzeit"
-                        onChange={(e) => setExpirationOption(Number(e.target.value))}
-                    >
-                        {EXPIRATION_OPTIONS.map((option) => (
-                            <MenuItem
-                                key={option.hours}
-                                value={option.hours}
-                            >
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
+                <ExpirationSelector
+                    value={expirationOption}
+                    onChange={setExpirationOption}
+                />
 
                 <Grid
                     container
@@ -151,6 +133,9 @@ const SendImageToUserFrameDialog = () => {
                     justifyContent={"space-between"}
                     alignItems={"center"}
                     spacing={2}
+                    sx={{
+                        mt: 3
+                    }}
                 >
                     <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
                         <Button
