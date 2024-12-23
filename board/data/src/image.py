@@ -32,7 +32,7 @@ class ImageProcessor:
 
         try:
             image_data = base64.b64decode(message["data"])
-            filename = f"{message['sender']}_{int(time.time())}.jpg"
+            filename = f"{message['sender']}_{int(time.time())}_{message['expiry_unix_timestamp']}_{message['sent_image_id']}.jpg"
             filepath = os.path.join(self.save_directory, filename)
 
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -40,14 +40,7 @@ class ImageProcessor:
             with open(filepath, "wb") as f:
                 f.write(image_data)
 
-            self.logger.info(
-                "Image saved successfully",
-                extra={
-                    "filepath": filepath,
-                    "sender": message["sender"],
-                    "size_bytes": len(image_data),
-                },
-            )
+            self.logger.info(f"Image {filepath} saved successfully")
             return filepath
 
         except base64.binascii.Error as e:

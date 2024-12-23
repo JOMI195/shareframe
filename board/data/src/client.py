@@ -14,10 +14,12 @@ class WebsocketClient:
     def __init__(
         self,
         message_handlers: Optional[Union[Callable, List[Callable]]],
+        get_sent_image_ids: Optional[Callable[[], List[int]]] = None,
     ):
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing WebSocket client")
 
+        self.get_sent_image_ids = get_sent_image_ids or (lambda: [])
         self.message_handlers = []
         if message_handlers is not None:
             if callable(message_handlers):
@@ -151,6 +153,26 @@ class WebsocketClient:
             self.logger.error(f"Failed to obtain new token: {str(e)}", exc_info=True)
             return False
 
+    async def _check_sent_images_status(self, websocket):
+        try:
+            sent_image_ids = self.get_sent_image_ids()
+            if not sent_image_ids:
+                self.logger.info("No sent image IDs to check status for")
+                return
+
+            status_message = {
+                "type": "check_sent_images",
+                "sent_image_ids": sent_image_ids,
+            }
+
+            self.logger.info(f"Sending status check for {len(sent_image_ids)} images")
+            await websocket.send(json.dumps(status_message))
+
+        except Exception as e:
+            self.logger.error(
+                f"Error sending image status check: {str(e)}", exc_info=True
+            )
+
     async def _connect_websocket(self) -> bool:
         if not self._is_token_valid():
             self.logger.info("Token invalid or expired, obtaining new token")
@@ -167,6 +189,8 @@ class WebsocketClient:
             self.logger.info(f"Establishing WebSocket connection to {url}")
             async with websockets.connect(url, additional_headers=headers) as websocket:
                 self.logger.info("WebSocket connection established successfully")
+
+                await self._check_sent_images_status(websocket)
 
                 while True:
                     try:

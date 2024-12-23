@@ -25,7 +25,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
-    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 config.asgi:application
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application
     entrypoint: []
     volumes:
       - media_volume:/home/app/backend/mediafiles
@@ -107,6 +107,8 @@ services:
       - media_volume:/home/app/backend/mediafiles
     depends_on:
       backend:
+        condition: service_started
+      websockets:
         condition: service_started
     ports:
       - 80:80

@@ -1,8 +1,9 @@
+from typing import List
+import asyncio
 from dotenv import load_dotenv
 
 load_dotenv()
 
-import asyncio
 from src.client import WebsocketClient
 from src.image import ImageProcessor
 from src.display import Display
@@ -21,17 +22,33 @@ class FrameApplication:
                 self.handle_websocket_picture_message,
                 self.handle_websocket_reset_frame_message,
             ],
+            get_sent_image_ids=self._get_sent_image_ids,
         )
+
+    def _get_sent_image_ids(self) -> List[int]:
+        images = [
+            img["sent_image_id"]
+            for img in self.display.user_image_paths
+            if isinstance(img, dict) and "sent_image_id" in img
+        ]
+        return images
 
     async def handle_websocket_picture_message(self, message: dict):
         if message.get("type") == "picture":
             sender = message.get("sender")
+            sent_image_id = message.get("sent_image_id")
+
             self.logger.info(f"Image recieved from {sender}")
             saved_image_path = self.image_processor.process_image_message(message)
             expires_at = message.get("expiry_unix_timestamp")
             if saved_image_path:
-                self.display.user_image_paths.append(
-                    {"path": saved_image_path, "expires_at": expires_at}
+                self.display.user_image_paths.insert(
+                    0,
+                    {
+                        "path": saved_image_path,
+                        "expires_at": expires_at,
+                        "sent_image_id": sent_image_id,
+                    },
                 )
 
     async def handle_websocket_reset_frame_message(self, message: dict):

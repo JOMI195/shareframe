@@ -1,0 +1,16 @@
+[Unit]
+Description=ShareFrame Python Application
+After=network.target pigpiod.service
+Wants=pigpiod.service
+
+[Service]
+Type=simple
+User=jomi
+WorkingDirectory=/home/jomi/Documents/shareframe/data
+EnvironmentFile=/home/jomi/Documents/shareframe/data/.env
+ExecStart=/home/jomi/Documents/shareframe/.venv/bin/python /home/jomi/Documents/shareframe/data/main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

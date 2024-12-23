@@ -6,15 +6,10 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_spectacular.utils import extend_schema
 from django.db.models import Q
 from asgiref.sync import async_to_sync
-from django.conf import settings
 from datetime import datetime
 from django.utils.timezone import make_aware, now
 
 from config.throttles import BurstRateThrottle, SustainedRateThrottle
-from utils.endpoint_request_cooldown import (
-    check_endpoint_request_cooldown,
-    set_endpoint_request_cooldown,
-)
 from .models import Frame, FrameToken
 from .serializers import FrameRetrieveSerializer
 from .consumers import FrameWebSocketConsumer
@@ -189,20 +184,6 @@ class FramesViewSet(viewsets.ModelViewSet):
         url_path="send-image",
     )
     def send_image(self, request):
-        COOLDOWN_PERIOD = settings.FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS
-
-        cache_key = f"frame_send_image_endpoint_cooldown_{request.user.id}"
-        is_allowed, remaining_time = check_endpoint_request_cooldown(
-            cache_key, COOLDOWN_PERIOD
-        )
-        if not is_allowed:
-            return Response(
-                {
-                    "error": f"Please wait {int(remaining_time)} seconds before sending another image."
-                },
-                status=status.HTTP_429_TOO_MANY_REQUESTS,
-            )
-
         reciever_username = request.data.get("reciever_username")
         image_id = request.data.get("image_id")
         expiry_unix_timestamp = request.data.get("expiry_unix_timestamp")
@@ -281,8 +262,6 @@ class FramesViewSet(viewsets.ModelViewSet):
                 expiry_unix_timestamp=expiry_unix_timestamp,
                 expiry_datetime=expiry_datetime,
             )
-
-            set_endpoint_request_cooldown(cache_key, COOLDOWN_PERIOD)
 
         except:
             return Response(

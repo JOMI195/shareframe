@@ -24,10 +24,13 @@ class Display:
         try:
             self.epd = epd7in5_V2.EPD()
             self._initialize_display()
+
             self.last_refresh_time = datetime.now()
             self.current_image_path = None
             self.static_image_paths = []
             self.user_image_paths = []
+
+            self._load_user_images()
             self._load_static_images()
             self.logger.info("Display controller initialized successfully")
         except Exception as e:
@@ -46,6 +49,54 @@ class Display:
         except Exception as e:
             self.logger.error(f"Display initialization failed: {str(e)}", exc_info=True)
             raise
+
+    def _load_user_images(self):
+        save_directory = settings.IMAGES_SAVE_DIR
+        self.logger.info(f"Loading user images from: {save_directory}")
+
+        if not os.path.exists(save_directory):
+            self.logger.warning(f"User images directory not found: {save_directory}")
+            return
+
+        for filename in os.listdir(save_directory):
+            filepath = os.path.join(save_directory, filename)
+            if not os.path.isfile(filepath):
+                continue
+
+            try:
+                parts = filename.split("_")
+                if len(parts) < 4:
+                    self.logger.info(
+                        f"Skipping invalid filename {filepath}. Removing image"
+                    )
+                    os.remove(filepath)
+                    continue
+
+                sent_image_id = int(parts[-1].replace(".jpg", ""))
+                expiry_timestamp = int(parts[-2])
+                expiry_time = datetime.fromtimestamp(expiry_timestamp, tz=timezone.utc)
+
+                if datetime.now(timezone.utc) > expiry_time:
+                    self.logger.info(f"Removing expired image on init: {filepath}")
+                    os.remove(filepath)
+                    continue
+
+                self.user_image_paths.append(
+                    {
+                        "path": filepath,
+                        "expires_at": expiry_timestamp,
+                        "sent_image_id": sent_image_id,
+                    }
+                )
+                self.logger.info(f"Loaded user image: {filepath}")
+
+            except Exception as e:
+                self.logger.error(
+                    f"Failed to process user image file: {filename}, Error: {str(e)}",
+                    exc_info=True,
+                )
+
+        self.logger.info(f"Loaded {len(self.user_image_paths)} user images")
 
     def _load_static_images(self):
         static_folder = os.path.join(
@@ -104,7 +155,9 @@ class Display:
                     images_to_display == self.static_image_paths
                     and self.user_image_paths
                 ):
-                    self.logger.info("User images available, restarting display loop")
+                    self.logger.info(
+                        "User images available while displaying static images, restarting display loop"
+                    )
                     break
 
                 image_path = (
@@ -136,10 +189,10 @@ class Display:
                         continue
 
                 await self._wait_until_can_refresh()
-                await self.display_image(image_path)
+                await self._display_image(image_path)
                 await asyncio.sleep(interval)
 
-    async def display_image(self, image_path: str):
+    async def _display_image(self, image_path: str):
         self.logger.info(f"Preparing to display image: {image_path}")
 
         try:
@@ -149,11 +202,11 @@ class Display:
             image = Image.open(image_path)
             image = image.resize((self.epd.width, self.epd.height))
             self.epd.Clear()
+            time.sleep(2)
 
             self.logger.debug("Sending image to display")
             self.epd.display(self.epd.getbuffer(image))
 
-            time.sleep(60)
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
             self.current_image_path = image_path
@@ -169,7 +222,7 @@ class Display:
             await self._wait_until_can_refresh()
             self.epd.init()
             self.epd.Clear()
-            time.sleep(10)
+            time.sleep(2)
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
             self.logger.info("Display cleared successfully")

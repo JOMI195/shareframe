@@ -11,7 +11,7 @@ from .serializers import (
 
 
 class SentImagesViewSet(viewsets.ModelViewSet):
-    queryset = SentImage.objects.all()
+    queryset = SentImage.objects.all().order_by("-sent_at")
     http_method_names = ["get", "head", "options"]
     permission_classes = [IsAuthenticated]
     serializer_class = SentImagesRetrieveSerializer
