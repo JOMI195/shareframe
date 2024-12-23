@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 import Typography from "@mui/material/Typography";
 import Logo from "@/common/components/logo";
 import { getImprintUrl, getPrivacyPolicyUrl } from "@/assets/endpoints/app/legalEndpoints";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getContactUrl, getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 
 function Copyright(props: any) {
   return (
@@ -17,6 +17,9 @@ function Copyright(props: any) {
       {...props}
     >
       <Box>
+        <Link component={RouterLink} to={"/" + getContactUrl()} color="inherit">
+          {"Kontakt"}
+        </Link>{" "}
         <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
           {"Datenschutzerklärung"}
         </Link>{" "}

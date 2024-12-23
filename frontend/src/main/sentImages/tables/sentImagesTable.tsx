@@ -1,12 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { useMediaQuery, useTheme } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { ISentImage } from "@/types";
 import { LoadingSkeletonOverly, NoRowsOverlay } from "./common/overlays";
 import { DataGrid, GridColDef, GridColumnVisibilityModel } from "@mui/x-data-grid";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { fetchSentImages } from "@/store/entities/images/images.actions";
+import Tooltip from '@mui/material/Tooltip';
+import AuthenticatedImage from "@/common/components/authenticatedImage";
+import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
 export interface ISentImagesTableRowData extends ISentImage {
     table_id: number;
@@ -31,19 +37,24 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
         {
             field: 'image',
             headerName: "Bild",
-            type: 'string',
-            minWidth: 250,
-            flex: 1,
-            align: 'left',
-            headerAlign: 'left',
-            valueGetter: (_value, row) =>
-                `${row.image.name}`,
+            width: 100,
+            sortable: false,
+            renderCell: ({ row }) => (
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100%" }}>
+                    <AuthenticatedImage
+                        url={MEDIA_BASE_URL + row.image.url}
+                        alt={row.image.name}
+                        style={{ maxWidth: "80px", maxHeight: "80px", objectFit: "contain" }}
+                        onClick={() => dispatch(openPreviewImageDialog({ url: MEDIA_BASE_URL + row.image.url }))}
+                    />
+                </Box>
+            ),
         },
         {
             field: 'reciever',
             headerName: "Empfänger",
             type: 'string',
-            minWidth: 100,
+            minWidth: 160,
             flex: 1,
             align: 'left',
             headerAlign: 'left',
@@ -58,10 +69,48 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             headerAlign: 'left',
         },
         {
+            field: 'isExpired',
+            headerName: "Status",
+            type: 'boolean',
+            minWidth: 150,
+            flex: 0.5,
+            align: 'left',
+            headerAlign: 'center',
+            renderCell: (params) => {
+                const isExpired = params.row.isExpired;
+                return (
+                    <Tooltip title={isExpired ? "Abgelaufen" : "Aktiv"}>
+                        {isExpired ? (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }}
+                            >
+                                <VisibilityOffIcon sx={{ color: theme.palette.error.main, mr: 1 }} />
+                                <Typography>{"Abgelaufen"}</Typography>
+                            </Box>
+                        ) : (
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center"
+                                }}
+                            >
+                                <VisibilityIcon sx={{ color: theme.palette.success.main, mr: 1 }} />
+                                <Typography>{"Aktiv"}</Typography>
+                            </Box>
+
+                        )}
+                    </Tooltip>
+                );
+            },
+        },
+        {
             field: 'expires_at',
             headerName: "Läuft ab am",
             type: 'string',
-            minWidth: 160,
+            minWidth: 170,
             flex: 1,
             align: 'left',
             headerAlign: 'left',
@@ -83,15 +132,19 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
     useEffect(() => {
         if (!matches) {
             setColumnVisibilityModel({
-                public_serial_number: true,
-                is_active: true,
-                registered_at: true
+                image: true,
+                reciever: true,
+                sent_at: false,
+                isExpired: true,
+                expires_at: false,
             });
         } else {
             setColumnVisibilityModel({
-                public_serial_number: true,
-                is_active: true,
-                registered_at: true
+                image: true,
+                reciever: true,
+                sent_at: true,
+                isExpired: true,
+                expires_at: true,
             });
         }
     }, [matches]);

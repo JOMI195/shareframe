@@ -41,7 +41,7 @@ function TopAppBar() {
                     aria-haspopup="true"
                     onClick={handleSidebarButtonClick}
                     className='ignore-clickaway'
-                    sx={{ mr: 1 }}
+                    sx={{ mr: 2 }}
                 >
                     {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
                 </IconButton>

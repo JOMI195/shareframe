@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Container } from "@mui/material";
 import SentImagesTable from "./tables/sentImagesTable";
+import Dialogs from "./dialogs/dialogs";
 
 const SentImages: React.FC = () => {
     return (
@@ -13,6 +14,7 @@ const SentImages: React.FC = () => {
             }}>
                 <SentImagesTable />
             </Box>
+            <Dialogs />
         </Container>
     );
 }

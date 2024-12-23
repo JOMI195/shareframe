@@ -24,7 +24,7 @@ import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
-import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getContactUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 
 
@@ -99,12 +99,21 @@ const Sidebar: React.FC<SidebarProps> = () => {
                 align="left"
                 sx={{ mt: 1 }}
             >
-                <Box>
-                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
-                        {"Datenschutzerklärung"}
-                    </Link>{" "}
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "flex-start"
+                    }}
+                >
+                    <Link component={RouterLink} to={getContactUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                        {"Kontakt"}
+                    </Link>
                     <Link component={RouterLink} to={getImprintUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
                         {"Impressum"}
+                    </Link>
+                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                        {"Datenschutzerklärung"}
                     </Link>
                 </Box>
                 <Box>

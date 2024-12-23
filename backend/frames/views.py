@@ -148,6 +148,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="obtain-frame-ws-auth-token",
+        throttle_classes=[],
     )
     def obtain_frame_ws_auth_token(self, request):
         private_serial_number = request.data.get("private_serial_number")
@@ -278,6 +279,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="verify-frame-token",
+        throttle_classes=[],
     )
     def verify_frame_token(self, request):
         access_token = request.data.get("access_token")
