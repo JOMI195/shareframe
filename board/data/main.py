@@ -24,14 +24,14 @@ class FrameApplication:
                 self.handle_websocket_clear_specific_images_message,
                 self.handle_websocket_reset_frame_message,
             ],
-            get_sent_image_ids=self._get_sent_image_ids,
+            get_user_frame_images_info=self._get_user_frame_images_info,
         )
 
-    def _get_sent_image_ids(self) -> List[int]:
+    def _get_user_frame_images_info(self) -> List[dict]:
         images = [
-            img["sent_image_id"]
+            {"sent_image_id": img["sent_image_id"], "expires_at": img["expires_at"]}
             for img in self.display.user_image_paths
-            if isinstance(img, dict) and "sent_image_id" in img
+            if isinstance(img, dict) and "sent_image_id" in img and "expires_at" in img
         ]
         return images
 
@@ -40,7 +40,19 @@ class FrameApplication:
             sender = message.get("sender")
             sent_image_id = message.get("sent_image_id")
 
-            self.logger.info(f"Image recieved from {sender}")
+            self.logger.info(f"Image received from {sender}")
+
+            # Check if sent_image_id already exists in self.display.user_image_paths
+            for image_entry in self.display.user_image_paths:
+                if image_entry.get("sent_image_id") == sent_image_id:
+                    # Update expires_at if sent_image_id exists
+                    image_entry["expires_at"] = message.get("expiry_unix_timestamp")
+                    self.logger.info(
+                        f"Updated expiry for image {sent_image_id} from {sender}"
+                    )
+                    return  # Exit early to avoid further processing
+
+            # Process the image only if sent_image_id is not found
             saved_image_path = self.image_processor.process_image_message(message)
             expires_at = message.get("expiry_unix_timestamp")
             if saved_image_path:

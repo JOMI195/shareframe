@@ -16,12 +16,12 @@ class WebsocketClient:
     def __init__(
         self,
         message_handlers: Optional[Union[Callable, List[Callable]]],
-        get_sent_image_ids: Optional[Callable[[], List[int]]] = None,
+        get_user_frame_images_info: Optional[Callable[[], List[dict]]] = None,
     ):
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing WebSocket client")
 
-        self.get_sent_image_ids = get_sent_image_ids or (lambda: [])
+        self.get_user_frame_images_info = get_user_frame_images_info or (lambda: [])
         self.message_handlers = []
         if message_handlers is not None:
             if callable(message_handlers):
@@ -155,24 +155,26 @@ class WebsocketClient:
             self.logger.error(f"Failed to obtain new token: {str(e)}", exc_info=True)
             return False
 
-    async def _check_sent_images_status(self, websocket):
+    async def _check_user_frame_images_status(self, websocket):
         try:
-            sent_image_ids = self.get_sent_image_ids()
-            if not sent_image_ids:
-                self.logger.info("No sent image IDs to check status for")
+            user_frame_images = self.get_user_frame_images_info()
+            if not user_frame_images:
+                self.logger.info("No user frame images to check status for")
                 return
 
             status_message = {
                 "type": "check_sent_images",
-                "sent_image_ids": sent_image_ids,
+                "user_frame_images": user_frame_images,
             }
 
-            self.logger.info(f"Sending status check for {len(sent_image_ids)} images")
+            self.logger.info(
+                f"Aksing for status check for {len(user_frame_images)} images"
+            )
             await websocket.send(json.dumps(status_message))
 
         except Exception as e:
             self.logger.error(
-                f"Error sending image status check: {str(e)}", exc_info=True
+                f"Error sending user frame images status check: {str(e)}", exc_info=True
             )
 
     async def _connect_websocket(self) -> bool:
@@ -197,11 +199,11 @@ class WebsocketClient:
                 url,
                 additional_headers=headers,
                 open_timeout=3600,
-                ssl=ssl_context if settings.PRODUCTION == True else False,
+                ssl=ssl_context if settings.PRODUCTION == True else None,
             ) as websocket:
                 self.logger.info("WebSocket connection established successfully")
 
-                await self._check_sent_images_status(websocket)
+                await self._check_user_frame_images_status(websocket)
 
                 while True:
                     try:

@@ -54,7 +54,16 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         )
 
     @database_sync_to_async
-    def prepare_image_data(self, sent_image: Image):
+    def get_sent_image(self, frame_user: User, sent_image_id: int):
+        try:
+            return SentImage.objects.get(reciever=frame_user, id=sent_image_id)
+        except SentImage.DoesNotExist:
+            return None
+        except SentImage.MultipleObjectsReturned:
+            return None
+
+    @database_sync_to_async
+    def prepare_image_data(self, sent_image: SentImage):
         with open(sent_image.image.image.path, "rb") as image_file:
             picture_data = base64.b64encode(image_file.read()).decode("utf-8")
 
@@ -72,26 +81,49 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             "sent_image_id": sent_image.id,
         }
 
-    async def handle_check_sent_images(self, message_data: dict):
+    async def handle_check_user_frame_images(self, message_data: dict):
         try:
             frame = self.scope.get("frame")
             if not frame or not frame.user:
                 print("No frame or user found in scope")
                 return
 
-            sent_image_ids = message_data.get("sent_image_ids", [])
+            # Expect a list of dicts with sent_image_id and expires_at
+            current_images = message_data.get("user_frame_images", [])
+            current_image_ids = [img["sent_image_id"] for img in current_images]
+            current_expiry_map = {
+                img["sent_image_id"]: img["expires_at"] for img in current_images
+            }
+
             print(
-                f"Checking for missing images for user {frame.user.username}, "
-                f"excluding {len(sent_image_ids)} existing IDs"
+                f"Checking images for user {frame.user.username}, "
+                f"comparing {len(current_image_ids)} existing images"
             )
 
             missing_images = await self.get_missing_sent_images(
-                frame.user, sent_image_ids
+                frame.user, current_image_ids
             )
 
-            print(f"Found {len(missing_images)} missing images to send")
-
+            images_to_send = []
             for sent_image in missing_images:
+                if sent_image.id not in current_image_ids:
+                    images_to_send.append(sent_image)
+
+            for board_image_id, board_image_expires_at in current_expiry_map.items():
+                sent_image = await self.get_sent_image(frame.user, board_image_id)
+                if sent_image != None:
+                    sent_image_expiry = (
+                        int(sent_image.expires_at.timestamp())
+                        if sent_image.expires_at
+                        else None
+                    )
+
+                    if board_image_expires_at != sent_image_expiry:
+                        images_to_send.append(sent_image)
+
+            print(f"Found {len(images_to_send)} images to send (missing or expired)")
+
+            for sent_image in images_to_send:
                 image_data = await self.prepare_image_data(sent_image)
 
                 await self.__class__.send_picture_to_user_frames(
@@ -108,6 +140,24 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             import traceback
 
             traceback.print_exc()
+
+    @classmethod
+    async def send_clear_specific_images_to_user_frames(
+        cls, receiver: User, sent_image_ids: list[int]
+    ):
+        channel_layer = get_channel_layer()
+        connections = await cls.get_user_frame_connections(receiver)
+
+        message = {
+            "type": "clear_specific_sent_images",
+            "sent_image_ids": sent_image_ids,
+        }
+
+        for connection in connections:
+            await channel_layer.send(
+                connection.channel_name,
+                {"type": "clear_specific_sent_images", "data": json.dumps(message)},
+            )
 
     @classmethod
     async def send_picture_to_user_frames(
@@ -181,7 +231,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 content = message.get("content", "")
                 print(f"Received text message: {content}")
             elif message_type == "check_sent_images":
-                await self.handle_check_sent_images(message)
+                await self.handle_check_user_frame_images(message)
             else:
                 print(f"Received unknown message type: {message_type}")
 
@@ -192,3 +242,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def send_picture(self, event):
         await self.send(text_data=event["picture_data"])
+
+    async def clear_specific_sent_images(self, event):
+        await self.send(text_data=event["data"])

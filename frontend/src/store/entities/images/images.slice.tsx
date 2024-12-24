@@ -81,6 +81,22 @@ const imagesSlice = createSlice({
     sendImageToUserFrameFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    deactivateSentImagePending: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    deactivateSentImageFulfilled: (sliceState, action) => {
+      const updatedImage = action.payload;
+      const index = sliceState.sentImages.findIndex(
+        (image) => image.sent_at === updatedImage.sent_at
+      );
+      if (index !== -1) {
+        sliceState.sentImages[index] = updatedImage;
+      }
+      sliceState.api.loading = false;
+    },
+    deactivateSentImageFailed: (sliceState) => {
+      sliceState.api.loading = false;
+    },
   },
 });
 
@@ -99,7 +115,10 @@ export const {
   sentImagesRequested,
   sendImageToUserFrameFailed,
   sendImageToUserFrameFulfilled,
-  sendImageToUserFramePending
+  sendImageToUserFramePending,
+  deactivateSentImageFailed,
+  deactivateSentImageFulfilled,
+  deactivateSentImagePending
 } = imagesSlice.actions;
 export default imagesSlice.reducer;
 

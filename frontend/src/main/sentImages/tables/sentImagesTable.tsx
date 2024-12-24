@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, IconButton, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { ISentImage } from "@/types";
 import { LoadingSkeletonOverly, NoRowsOverlay } from "./common/overlays";
 import { DataGrid, GridColDef, GridColumnVisibilityModel } from "@mui/x-data-grid";
@@ -9,13 +9,16 @@ import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { fetchSentImages } from "@/store/entities/images/images.actions";
 import Tooltip from '@mui/material/Tooltip';
 import AuthenticatedImage from "@/common/components/authenticatedImage";
-import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
+import { openDeactivateSendImageFrameDialog, openPreviewImageDialog } from "@/store/ui/images/images.slice";
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import HideImageIcon from '@mui/icons-material/HideImage';
+
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
 export interface ISentImagesTableRowData extends ISentImage {
     table_id: number;
+    isExpired: boolean;
 }
 
 interface SentImagesTableProps {
@@ -32,6 +35,10 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
     const matches = useMediaQuery(theme.breakpoints.up('md'));
 
     const [columnVisibilityModel, setColumnVisibilityModel] = useState<GridColumnVisibilityModel>({});
+
+    const disableSentImageButtonClickHandle = (row: ISentImagesTableRowData) => {
+        dispatch(openDeactivateSendImageFrameDialog({ sentImageId: row.id }))
+    }
 
     const tableColumns: GridColDef[] = [
         {
@@ -115,9 +122,43 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             align: 'left',
             headerAlign: 'left',
         },
+        {
+            field: "actions",
+            headerName: "Aktionen",
+            width: 100,
+            align: "center",
+            headerAlign: 'center',
+            sortable: false,
+            renderCell: ({ row }) => (
+                <Box sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    height: "100%",
+                    width: "100%"
+                }}>
+                    <Stack direction="row">
+                        {!row.isExpired && (
+                            <Tooltip title={"Foto deaktivieren"}>
+                                <IconButton
+                                    onClick={() => { disableSentImageButtonClickHandle(row) }}
+                                    aria-label="delete"
+                                    size="medium"
+                                >
+                                    <HideImageIcon fontSize="inherit" />
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </Stack>
+                </Box>
+            )
+        },
     ];
 
     const tableRows = sentImages.map((sentImage: ISentImage, index: number): ISentImagesTableRowData => {
+        const expiryDate = new Date(sentImage.expires_at);
+        const isExpired = expiryDate < new Date();
+
         return ({
             table_id: index + 1,
             id: sentImage.id,
@@ -125,7 +166,8 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             reciever: sentImage.reciever,
             image: sentImage.image,
             sent_at: formatGermanDateTime(new Date(sentImage.sent_at)),
-            expires_at: formatGermanDateTime(new Date(sentImage.expires_at))
+            expires_at: formatGermanDateTime(new Date(sentImage.expires_at)),
+            isExpired
         })
     });
 

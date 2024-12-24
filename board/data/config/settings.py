@@ -16,8 +16,8 @@ if PRODUCTION == True:
     WS_BASE_URL = f"wss://{BASE_URL}"
     WS_ORIGIN_URL = f"{WS_BASE_URL}"
 else:
-    HTTP_BASE_URL = f"http://{BASE_URL}"
-    WS_BASE_URL = f"ws://{BASE_URL}"
+    HTTP_BASE_URL = f"http://{BASE_URL}:8000"
+    WS_BASE_URL = f"ws://{BASE_URL}:9000"
     WS_ORIGIN_URL = f"ws://127.0.0.1"
 
 WS_FRAME_URL = f"{WS_BASE_URL}/ws/frames/"
@@ -30,7 +30,7 @@ TOKEN_CACHE_DIR = "/tmp/frame_access_token"
 TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
 
 # Display config
-IMAGES_SAVE_DIR = "/tmp/received_images"
+IMAGES_SAVE_DIR = "/home/board_data/recieved_images"
 STATIC_IMAGES_DIR = "fixtures"
 
 REFRESH_INTERVAL_HOURS = 12

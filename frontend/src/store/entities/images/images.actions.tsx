@@ -67,3 +67,12 @@ export const sendImageToUserFrames = (
       "expiry_unix_timestamp": expiry_unix_timestamp
     }
   });
+
+export const deactivateSentImage = (sentImageId: number) =>
+  apiRequest({
+    url: ImagesEndpoints.getSentImagesDeactivateUrl(sentImageId),
+    method: "post",
+    onStart: ImagesSlice.deactivateSentImagePending.type,
+    onSuccess: ImagesSlice.deactivateSentImageFulfilled.type,
+    onError: ImagesSlice.deactivateSentImageFailed.type,
+  });

@@ -5,3 +5,5 @@ export const getImagesDetailUrl = (imageId: number) => `${getImagesUrl()}${image
 export const getSentImagesUrl = () => "sent-images/"
 
 export const getSentImagesDetailUrl = (sentImageId: number) => `${getSentImagesUrl()}${sentImageId}/`
+
+export const getSentImagesDeactivateUrl = (sentImageId: number) => `${getSentImagesDetailUrl(sentImageId)}deactivate-sent-image/`
