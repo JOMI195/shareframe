@@ -1,5 +1,8 @@
 import os
 
+DEBUG = os.getenv("DEBUG", False) == "True"
+PRODUCTION = os.getenv("PRODUCTION", False) == "True"
+
 # Logging config
 LOGGING_SAVE_DIR = "logs"
 LOGGING_FILE = "frame_logs.log"
@@ -7,9 +10,15 @@ LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 
 # Client config
 BASE_URL = os.getenv("BASE_URL")
-HTTP_BASE_URL = f"http://{BASE_URL}"
-WS_BASE_URL = f"ws://{BASE_URL}"
-WS_ORIGIN_URL = f"ws://127.0.0.1"
+
+if PRODUCTION == True:
+    HTTP_BASE_URL = f"https://{BASE_URL}"
+    WS_BASE_URL = f"wss://{BASE_URL}"
+    WS_ORIGIN_URL = f"{WS_BASE_URL}"
+else:
+    HTTP_BASE_URL = f"http://{BASE_URL}"
+    WS_BASE_URL = f"ws://{BASE_URL}"
+    WS_ORIGIN_URL = f"ws://127.0.0.1"
 
 WS_FRAME_URL = f"{WS_BASE_URL}/ws/frames/"
 HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-ws-auth-token/"

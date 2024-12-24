@@ -5,10 +5,10 @@ Wants=pigpiod.service
 
 [Service]
 Type=simple
-User=jomi
-WorkingDirectory=/home/jomi/Documents/shareframe/data
-EnvironmentFile=/home/jomi/Documents/shareframe/data/.env
-ExecStart=/home/jomi/Documents/shareframe/.venv/bin/python /home/jomi/Documents/shareframe/data/main.py
+User=frame
+WorkingDirectory=/home/frame/Documents/shareframe/data
+EnvironmentFile=/home/frame/Documents/shareframe/data/.env
+ExecStart=/home/frame/Documents/shareframe/.venv/bin/python /home/frame/Documents/shareframe/data/main.py
 Restart=always
 RestartSec=10
 

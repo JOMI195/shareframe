@@ -1,6 +1,10 @@
 import asyncio
 import json
+import os
+import ssl
 import time
+import certifi
+from dotenv import load_dotenv
 import requests
 import websockets
 
@@ -8,13 +12,12 @@ import websockets
 class FrameWebSocketClient:
     def __init__(
         self,
-        base_url="http://127.0.0.1",
-        websocket_url="ws://127.0.0.1/ws/frames/",
-        private_serial_number="L1GX1-Z79JY-Z6C9T-4HV84-XJPQO",
     ):
-        self.base_url = base_url
-        self.websocket_url = websocket_url
-        self.private_serial_number = private_serial_number
+        base_url = os.getenv("BASE_URL", "127.0.0.1")
+        self.http_base_url = f"https://{base_url}"
+        self.websocket_url = f"wss://{base_url}"
+
+        self.private_serial_number = os.getenv("SERIAL_NUMBER")
         self.access_token = None
         self.token_expires_at = None
 
@@ -24,7 +27,7 @@ class FrameWebSocketClient:
 
         try:
             response = requests.post(
-                f"{self.base_url}/api/frames/verify-frame-token/",
+                f"{self.http_base_url}/api/frames/verify-frame-token/",
                 json={"access_token": self.access_token},
                 timeout=10,
             )
@@ -47,7 +50,7 @@ class FrameWebSocketClient:
     def obtain_token(self):
         try:
             response = requests.post(
-                f"{self.base_url}/api/frames/obtain-frame-ws-auth-token/",
+                f"{self.http_base_url}/api/frames/obtain-frame-ws-auth-token/",
                 data={"private_serial_number": self.private_serial_number},
                 timeout=10,
             )
@@ -71,13 +74,17 @@ class FrameWebSocketClient:
 
         headers = {
             "Authorization": f"Frame-Access-Token {self.access_token}",
-            "Origin": "ws://127.0.0.1",
+            "Origin": self.websocket_url,
         }
+        ssl_context = ssl.create_default_context()
+        ssl_context.load_verify_locations(certifi.where())
 
         try:
             async with websockets.connect(
-                self.websocket_url,
+                self.websocket_url + "/ws/frames/",
+                open_timeout=3600,
                 additional_headers=headers,
+                ssl=ssl_context,
             ) as websocket:
                 print("WebSocket connection established")
                 try:
@@ -113,4 +120,5 @@ async def main():
 
 
 if __name__ == "__main__":
+    load_dotenv()
     asyncio.run(main())

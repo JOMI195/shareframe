@@ -1,3 +1,4 @@
+import os
 from typing import List
 import asyncio
 from dotenv import load_dotenv
@@ -20,6 +21,7 @@ class FrameApplication:
         self.websocket_client = WebsocketClient(
             message_handlers=[
                 self.handle_websocket_picture_message,
+                self.handle_websocket_clear_specific_images_message,
                 self.handle_websocket_reset_frame_message,
             ],
             get_sent_image_ids=self._get_sent_image_ids,
@@ -51,6 +53,32 @@ class FrameApplication:
                     },
                 )
 
+    async def handle_websocket_clear_specific_images_message(self, message: dict):
+        if message.get("type") == "clear_specific_sent_images":
+            sent_image_ids = message.get("sent_image_ids", [])
+            self.logger.info(f"Clearing specific images with IDs: {sent_image_ids}")
+
+            paths_to_remove = []
+            updated_image_paths = []
+
+            for image in self.display.user_image_paths:
+                if (
+                    isinstance(image, dict)
+                    and image.get("sent_image_id") in sent_image_ids
+                ):
+                    paths_to_remove.append(image["path"])
+                else:
+                    updated_image_paths.append(image)
+
+            self.display.user_image_paths = updated_image_paths
+
+            for path in paths_to_remove:
+                try:
+                    os.remove(path)
+                    self.logger.info(f"Removed file: {path}")
+                except Exception as e:
+                    self.logger.error(f"Failed to remove file {path}: {str(e)}")
+
     async def handle_websocket_reset_frame_message(self, message: dict):
         if message.get("type") == "clear_display":
             await self.display.clear_display()
@@ -68,6 +96,7 @@ class FrameApplication:
 async def main():
     setup_logging()
     logging.info("Starting application")
+    logging.info(f"Settings: Production={settings.PRODUCTION}, Debug={settings.DEBUG}")
     app = FrameApplication()
     await app.run()
 

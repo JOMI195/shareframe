@@ -4,6 +4,8 @@ import inspect
 import os
 import json
 import logging
+import ssl
+import certifi
 import requests
 import websockets
 from typing import List, Optional, Callable, Union
@@ -184,10 +186,19 @@ class WebsocketClient:
             "Authorization": f"Frame-Access-Token {self.access_token}",
             "Origin": settings.WS_ORIGIN_URL,
         }
+        ssl_context = None
+        if settings.PRODUCTION:
+            ssl_context = ssl.create_default_context()
+            ssl_context.load_verify_locations(certifi.where())
 
         try:
             self.logger.info(f"Establishing WebSocket connection to {url}")
-            async with websockets.connect(url, additional_headers=headers) as websocket:
+            async with websockets.connect(
+                url,
+                additional_headers=headers,
+                open_timeout=3600,
+                ssl=ssl_context if settings.PRODUCTION == True else False,
+            ) as websocket:
                 self.logger.info("WebSocket connection established successfully")
 
                 await self._check_sent_images_status(websocket)
