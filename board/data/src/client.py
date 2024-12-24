@@ -158,9 +158,6 @@ class WebsocketClient:
     async def _check_user_frame_images_status(self, websocket):
         try:
             user_frame_images = self.get_user_frame_images_info()
-            if not user_frame_images:
-                self.logger.info("No user frame images to check status for")
-                return
 
             status_message = {
                 "type": "check_sent_images",

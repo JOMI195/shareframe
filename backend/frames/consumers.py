@@ -121,6 +121,12 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                     if board_image_expires_at != sent_image_expiry:
                         images_to_send.append(sent_image)
 
+            images_to_delete = []
+            for board_image_id in current_image_ids:
+                sent_image = await self.get_sent_image(frame.user, board_image_id)
+                if sent_image == None:
+                    images_to_delete.append(board_image_id)
+
             print(f"Found {len(images_to_send)} images to send (missing or expired)")
 
             for sent_image in images_to_send:
@@ -133,6 +139,11 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                     expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
                     expiry_datetime=image_data["expiry_datetime"],
                     sent_image_id=image_data["sent_image_id"],
+                )
+
+            if len(images_to_delete) > 0:
+                await self.__class__.send_clear_specific_images_to_user_frames(
+                    frame.User, images_to_delete
                 )
 
         except Exception as e:
