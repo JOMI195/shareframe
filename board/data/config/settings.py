@@ -31,6 +31,8 @@ TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
 
 IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
 
+WEBSOCKET_MESSAGE_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+
 # Display config
 IMAGES_SAVE_DIR = "/home/frame/Documents/board_data/recieved_images"
 STATIC_IMAGES_DIR = "fixtures"

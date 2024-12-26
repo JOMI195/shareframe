@@ -5,6 +5,7 @@ import os
 import json
 import logging
 import ssl
+import sys
 import certifi
 import requests
 import websockets
@@ -16,13 +17,13 @@ class WebsocketClient:
     def __init__(
         self,
         message_handlers: Optional[Union[Callable, List[Callable]]],
-        get_user_frame_images_info: Optional[Callable[[], List[dict]]] = None,
-        get_user_frame_images_ids_info: Optional[Callable[[], List[int]]] = None,
+        get_user_frame_images_info: Optional[Callable[[], dict]] = None,
+        get_user_frame_images_ids_info: Optional[Callable[[], List[dict]]] = None,
     ):
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing WebSocket client")
 
-        self.get_user_frame_images_info = get_user_frame_images_info or (lambda: [])
+        self.get_user_frame_images_info = get_user_frame_images_info or (lambda: {})
         self.get_user_frame_images_ids_info = get_user_frame_images_ids_info or (
             lambda: []
         )
@@ -182,29 +183,20 @@ class WebsocketClient:
             user_frame_images = self.get_user_frame_images_info()
 
             self.logger.info(
-                f"Asking for status check for {len(user_frame_images)} images"
+                f"#1 - Asking for status check for {len(user_frame_images)} images: {str(user_frame_images)}"
             )
 
-            for idx, image_info in enumerate(user_frame_images):
-                status_message = {
-                    "type": "check_sent_images_expiry",
-                    "user_frame_images": [image_info],
-                }
+            status_message = {
+                "type": "check_sent_images_expiry",
+                "user_frame_images": user_frame_images,
+            }
 
-                try:
-                    await websocket.send(json.dumps(status_message))
-                    self.logger.info(
-                        f"Sent status check for image {idx + 1}/{len(user_frame_images)}"
-                    )
-                except Exception as e:
-                    self.logger.error(
-                        f"Error sending status check for image {image_info['sent_image_id']}: {str(e)}",
-                        exc_info=True,
-                    )
+            await websocket.send(json.dumps(status_message), text=True)
+            self.logger.info(f"#1 - Asking Asking for status check done")
 
         except Exception as e:
             self.logger.error(
-                f"Error preparing user frame images status check: {str(e)}",
+                f"Error asking for images status check: {str(e)}",
                 exc_info=True,
             )
 
@@ -213,7 +205,7 @@ class WebsocketClient:
             user_frame_images = self.get_user_frame_images_ids_info()
 
             self.logger.info(
-                f"Asking for status check for {len(user_frame_images)} images"
+                f"#2 - Asking for missing images check for {len(user_frame_images)} images: {user_frame_images}"
             )
 
             status_message = {
@@ -221,7 +213,8 @@ class WebsocketClient:
                 "sent_image_ids": user_frame_images,
             }
 
-            await websocket.send(json.dumps(status_message))
+            await websocket.send(json.dumps(status_message), text=True)
+            self.logger.info(f"#2 - Asking for missing images check done")
 
         except Exception as e:
             self.logger.error(
@@ -252,6 +245,7 @@ class WebsocketClient:
                 additional_headers=headers,
                 open_timeout=3600,
                 ssl=ssl_context if settings.PRODUCTION == True else None,
+                max_size=settings.WEBSOCKET_MESSAGE_MAX_SIZE,
             ) as websocket:
                 self.logger.info("WebSocket connection established successfully")
 

@@ -131,19 +131,17 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 print("No frame or user found in scope")
                 return
 
-            current_images = message_data.get("user_frame_images", [])
-            current_image_ids = [img["sent_image_id"] for img in current_images]
-            current_expiry_map = {
-                img["sent_image_id"]: img["expires_at"] for img in current_images
-            }
+            current_images = message_data.get("user_frame_images", {})
 
             print(
                 f"Checking images for user {frame.user.username}, "
-                f"comparing {len(current_image_ids)} existing images"
+                f"comparing {len(current_images)} existing images"
             )
 
             images_to_send = []
-            for board_image_id, board_image_expires_at in current_expiry_map.items():
+            images_to_delete = []
+
+            for board_image_id, board_image_expires_at in current_images.items():
                 sent_image = await self.get_sent_image(frame.user, board_image_id)
                 if sent_image != None:
                     sent_image_expiry = (
@@ -155,13 +153,11 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                     if board_image_expires_at != sent_image_expiry:
                         images_to_send.append(sent_image)
 
-            images_to_delete = []
-            for board_image_id in current_image_ids:
-                sent_image = await self.get_sent_image(frame.user, board_image_id)
-                if sent_image == None:
+                else:  # when not found, delete it.
                     images_to_delete.append(board_image_id)
 
-            print(f"Found {len(images_to_send)} images to send (missing or expired)")
+            print(f"Found {len(images_to_send)} expired images to send.")
+            print(f"Found {len(images_to_delete)} expired images to delete.")
 
             for sent_image in images_to_send:
                 image_data = await self.prepare_image_data(sent_image)
