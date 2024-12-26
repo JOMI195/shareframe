@@ -1,6 +1,6 @@
 import base64
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from django.utils import timezone
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
@@ -131,7 +131,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 print("No frame or user found in scope")
                 return
 
-            current_images: dict = message_data.get("user_frame_images", {})
+            current_images: List[dict] = message_data.get("user_frame_images", [])
 
             print(
                 f"Checking images for user {frame.user.username}, "
@@ -141,8 +141,15 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             images_to_send = []
             images_to_delete = []
 
-            for board_image_id, board_image_expires_at in current_images.items():
-                sent_image = await self.get_sent_image(frame.user, board_image_id)
+            for image_entry in current_images:
+                board_image_id = image_entry.get("sent_image_id")
+                board_image_expires_at = image_entry.get("expires_at")
+
+                if board_image_id is None or board_image_expires_at is None:
+                    # Skip malformed entries
+                    continue
+
+                sent_image = await self.get_sent_image(frame.user, int(board_image_id))
                 if sent_image != None:
                     sent_image_expiry = int(sent_image.expires_at.timestamp())
 
@@ -151,7 +158,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                         images_to_delete.append(board_image_id)
 
                     # Case 2: Mismatched expiry timestamps
-                    elif board_image_expires_at != sent_image_expiry:
+                    elif int(board_image_expires_at) != sent_image_expiry:
                         images_to_send.append(sent_image)
 
                 else:  # Case 3: When not found, delete it

@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List
 import asyncio
 from dotenv import load_dotenv
 
@@ -28,16 +28,13 @@ class FrameApplication:
             get_user_frame_images_ids_info=self._get_user_frame_images_ids_info,
         )
 
-    def _get_user_frame_images_info(self) -> Optional[dict]:
-        for img in self.display.user_image_paths:
-            if isinstance(img, dict) and all(
-                key in img for key in ["sent_image_id", "expires_at"]
-            ):
-                return {
-                    "sent_image_id": img["sent_image_id"],
-                    "expires_at": img["expires_at"],
-                }
-        return None
+    def _get_user_frame_images_info(self) -> List[dict]:
+        images = [
+            {"sent_image_id": img["sent_image_id"], "expires_at": img["expires_at"]}
+            for img in self.display.user_image_paths
+            if isinstance(img, dict) and "sent_image_id" in img and "expires_at" in img
+        ]
+        return images
 
     def _get_user_frame_images_ids_info(self) -> List[str]:
         ids = [

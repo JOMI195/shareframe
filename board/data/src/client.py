@@ -17,7 +17,7 @@ class WebsocketClient:
     def __init__(
         self,
         message_handlers: Optional[Union[Callable, List[Callable]]],
-        get_user_frame_images_info: Optional[Callable[[], dict]] = None,
+        get_user_frame_images_info: Optional[Callable[[], List[dict]]] = None,
         get_user_frame_images_ids_info: Optional[Callable[[], List[dict]]] = None,
     ):
         self.logger = logging.getLogger(__name__)
