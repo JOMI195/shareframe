@@ -25,6 +25,7 @@ class FrameApplication:
                 self.handle_websocket_reset_frame_message,
             ],
             get_user_frame_images_info=self._get_user_frame_images_info,
+            get_user_frame_images_ids_info=self._get_user_frame_images_ids_info,
         )
 
     def _get_user_frame_images_info(self) -> List[dict]:
@@ -34,6 +35,14 @@ class FrameApplication:
             if isinstance(img, dict) and "sent_image_id" in img and "expires_at" in img
         ]
         return images
+
+    def _get_user_frame_images_ids_info(self) -> List[str]:
+        ids = [
+            img["sent_image_id"]
+            for img in self.display.user_image_paths
+            if isinstance(img, dict) and "sent_image_id" in img
+        ]
+        return ids
 
     async def handle_websocket_picture_message(self, message: dict):
         if message.get("type") == "picture":

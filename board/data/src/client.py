@@ -17,11 +17,15 @@ class WebsocketClient:
         self,
         message_handlers: Optional[Union[Callable, List[Callable]]],
         get_user_frame_images_info: Optional[Callable[[], List[dict]]] = None,
+        get_user_frame_images_ids_info: Optional[Callable[[], List[int]]] = None,
     ):
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing WebSocket client")
 
         self.get_user_frame_images_info = get_user_frame_images_info or (lambda: [])
+        self.get_user_frame_images_ids_info = get_user_frame_images_ids_info or (
+            lambda: []
+        )
         self.message_handlers = []
         if message_handlers is not None:
             if callable(message_handlers):
@@ -165,14 +169,15 @@ class WebsocketClient:
     async def _periodic_status_check(self, websocket):
         try:
             while True:
-                await self._check_user_frame_images_status(websocket)
+                await self._check_user_frame_images_expiry(websocket)
+                await self._check_user_frame_missing_images(websocket)
                 await asyncio.sleep(settings.IMAGES_STATUS_CHECK_INTERVAL_MINUTES * 60)
         except websockets.exceptions.ConnectionClosed as e:
             self.logger.info(
                 f"WebSocket connection closed: {e}, stopping periodic status check"
             )
 
-    async def _check_user_frame_images_status(self, websocket):
+    async def _check_user_frame_images_expiry(self, websocket):
         try:
             user_frame_images = self.get_user_frame_images_info()
 
@@ -182,8 +187,8 @@ class WebsocketClient:
 
             for idx, image_info in enumerate(user_frame_images):
                 status_message = {
-                    "type": "check_sent_image",
-                    "user_frame_image": [image_info],
+                    "type": "check_sent_images_expiry",
+                    "user_frame_images": [image_info],
                 }
 
                 try:
@@ -200,6 +205,27 @@ class WebsocketClient:
         except Exception as e:
             self.logger.error(
                 f"Error preparing user frame images status check: {str(e)}",
+                exc_info=True,
+            )
+
+    async def _check_user_frame_missing_images(self, websocket):
+        try:
+            user_frame_images = self.get_user_frame_images_ids_info()
+
+            self.logger.info(
+                f"Asking for status check for {len(user_frame_images)} images"
+            )
+
+            status_message = {
+                "type": "check_mssing_images",
+                "sent_image_ids": user_frame_images,
+            }
+
+            await websocket.send(json.dumps(status_message))
+
+        except Exception as e:
+            self.logger.error(
+                f"Error asking for images status check: {str(e)}",
                 exc_info=True,
             )
 
