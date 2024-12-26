@@ -131,7 +131,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 print("No frame or user found in scope")
                 return
 
-            current_images = message_data.get("user_frame_images", {})
+            current_images: dict = message_data.get("user_frame_images", {})
 
             print(
                 f"Checking images for user {frame.user.username}, "
@@ -144,16 +144,17 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             for board_image_id, board_image_expires_at in current_images.items():
                 sent_image = await self.get_sent_image(frame.user, board_image_id)
                 if sent_image != None:
-                    sent_image_expiry = (
-                        int(sent_image.expires_at.timestamp())
-                        if sent_image.expires_at
-                        else None
-                    )
+                    sent_image_expiry = int(sent_image.expires_at.timestamp())
 
-                    if board_image_expires_at != sent_image_expiry:
+                    # Case 1: Expired images
+                    if sent_image_expiry < int(datetime.now().timestamp()):
+                        images_to_delete.append(board_image_id)
+
+                    # Case 2: Mismatched expiry timestamps
+                    elif board_image_expires_at != sent_image_expiry:
                         images_to_send.append(sent_image)
 
-                else:  # when not found, delete it.
+                else:  # Case 3: When not found, delete it
                     images_to_delete.append(board_image_id)
 
             print(f"Found {len(images_to_send)} expired images to send.")
