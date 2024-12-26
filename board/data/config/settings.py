@@ -29,6 +29,8 @@ SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
 TOKEN_CACHE_DIR = "/tmp/frame_access_token"
 TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
 
+IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
+
 # Display config
 IMAGES_SAVE_DIR = "/home/frame/Documents/board_data/recieved_images"
 STATIC_IMAGES_DIR = "fixtures"

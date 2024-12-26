@@ -163,6 +163,13 @@ class Display:
                 image_path = (
                     image_data["path"] if isinstance(image_data, dict) else image_data
                 )
+
+                if not os.path.exists(image_path):
+                    self.logger.warning(
+                        f"Image path does not exist: {image_path}, skipping..."
+                    )
+                    continue
+
                 expires_at = (
                     image_data.get("expires_at")
                     if isinstance(image_data, dict)

@@ -44,6 +44,8 @@ class WebsocketClient:
         self.token_expires_at: Optional[float] = None
         self._load_cached_token()
 
+        self._status_check_task: Optional[asyncio.Task] = None
+
     def _default_message_handler(self, message: dict):
         self.logger.info(f"Default handler received message: {message}")
 
@@ -155,23 +157,50 @@ class WebsocketClient:
             self.logger.error(f"Failed to obtain new token: {str(e)}", exc_info=True)
             return False
 
+    def _cancel_status_check_task(self):
+        if self._status_check_task and not self._status_check_task.done():
+            self.logger.debug("Cancelling existing status check task")
+            self._status_check_task.cancel()
+
+    async def _periodic_status_check(self, websocket):
+        try:
+            while True:
+                await self._check_user_frame_images_status(websocket)
+                await asyncio.sleep(settings.IMAGES_STATUS_CHECK_INTERVAL_MINUTES * 60)
+        except websockets.exceptions.ConnectionClosed as e:
+            self.logger.info(
+                f"WebSocket connection closed: {e}, stopping periodic status check"
+            )
+
     async def _check_user_frame_images_status(self, websocket):
         try:
             user_frame_images = self.get_user_frame_images_info()
 
-            status_message = {
-                "type": "check_sent_images",
-                "user_frame_images": user_frame_images,
-            }
-
             self.logger.info(
-                f"Aksing for status check for {len(user_frame_images)} images"
+                f"Asking for status check for {len(user_frame_images)} images"
             )
-            await websocket.send(json.dumps(status_message))
+
+            for idx, image_info in enumerate(user_frame_images):
+                status_message = {
+                    "type": "check_sent_image",
+                    "user_frame_image": [image_info],
+                }
+
+                try:
+                    await websocket.send(json.dumps(status_message))
+                    self.logger.info(
+                        f"Sent status check for image {idx + 1}/{len(user_frame_images)}"
+                    )
+                except Exception as e:
+                    self.logger.error(
+                        f"Error sending status check for image {image_info['sent_image_id']}: {str(e)}",
+                        exc_info=True,
+                    )
 
         except Exception as e:
             self.logger.error(
-                f"Error sending user frame images status check: {str(e)}", exc_info=True
+                f"Error preparing user frame images status check: {str(e)}",
+                exc_info=True,
             )
 
     async def _connect_websocket(self) -> bool:
@@ -200,7 +229,10 @@ class WebsocketClient:
             ) as websocket:
                 self.logger.info("WebSocket connection established successfully")
 
-                await self._check_user_frame_images_status(websocket)
+                self._cancel_status_check_task()
+                self._status_check_task = asyncio.create_task(
+                    self._periodic_status_check(websocket)
+                )
 
                 while True:
                     try:
@@ -210,8 +242,8 @@ class WebsocketClient:
                             self._process_message(parsed_message)
                         except json.JSONDecodeError:
                             self.logger.warning(f"Received non-JSON message: {message}")
-                    except websockets.ConnectionClosed:
-                        self.logger.warning("WebSocket connection closed")
+                    except websockets.ConnectionClosed as e:
+                        self.logger.warning(f"WebSocket connection closed: {e}")
                         return False
 
         except Exception as e:

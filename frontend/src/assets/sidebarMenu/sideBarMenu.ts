@@ -12,6 +12,11 @@ export const sidebarMenuItems: IAppBarMenuItem[] = [
         icon: ImageIcon
     },
     {
+        name: "Aktivität",
+        url: getActivityUrl(),
+        icon: NoteIcon
+    },
+    {
         name: "Freunde",
         url: getFriendsUrl(),
         icon: GroupIcon
@@ -20,10 +25,5 @@ export const sidebarMenuItems: IAppBarMenuItem[] = [
         name: "Bilderrahmen",
         url: getFramesUrl(),
         icon: FilterFramesIcon
-    },
-    {
-        name: "Aktivität",
-        url: getActivityUrl(),
-        icon: NoteIcon
     },
 ];
