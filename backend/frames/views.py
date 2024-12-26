@@ -243,17 +243,18 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        try:
-            Friendship.objects.get(
-                (Q(sender=user) & Q(reciever=reciever))
-                | (Q(sender=reciever) & Q(reciever=user)),
-                status="accepted",
-            )
-        except Friendship.DoesNotExist:
-            return Response(
-                {"error": not_found_error_message},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        if reciever != user:
+            try:
+                Friendship.objects.get(
+                    (Q(sender=user) & Q(reciever=reciever))
+                    | (Q(sender=reciever) & Q(reciever=user)),
+                    status="accepted",
+                )
+            except Friendship.DoesNotExist:
+                return Response(
+                    {"error": not_found_error_message},
+                    status=status.HTTP_404_NOT_FOUND,
+                )
 
         try:
             async_to_sync(FrameWebSocketConsumer.send_picture_to_user_frames)(

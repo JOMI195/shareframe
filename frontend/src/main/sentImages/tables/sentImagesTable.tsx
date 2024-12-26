@@ -13,6 +13,7 @@ import { openDeactivateSendImageFrameDialog, openPreviewImageDialog } from "@/st
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import HideImageIcon from '@mui/icons-material/HideImage';
+import { getUser } from "@/store/entities/authentication/authentication.slice";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -30,6 +31,7 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
     const theme = useTheme();
 
     const sentImages = useAppSelector(getSentImages);
+    const user = useAppSelector(getUser);
     const loading = useAppSelector(getApi).loading;
 
     const matches = useMediaQuery(theme.breakpoints.up('md'));
@@ -65,15 +67,23 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             flex: 1,
             align: 'left',
             headerAlign: 'left',
+            renderCell: ({ row }) => {
+                const isMySentImage = row.reciever === user.me.username;
+                return isMySentImage ? "Du" : row.reciever
+            }
         },
         {
-            field: 'sent_at',
-            headerName: "Gesendet am",
+            field: 'sender',
+            headerName: "Versender",
             type: 'string',
             minWidth: 160,
             flex: 1,
             align: 'left',
             headerAlign: 'left',
+            renderCell: ({ row }) => {
+                const isMySentImage = row.sender === user.me.username;
+                return isMySentImage ? "Du" : row.sender
+            }
         },
         {
             field: 'isExpired',
@@ -112,6 +122,15 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
                     </Tooltip>
                 );
             },
+        },
+        {
+            field: 'sent_at',
+            headerName: "Gesendet am",
+            type: 'string',
+            minWidth: 160,
+            flex: 1,
+            align: 'left',
+            headerAlign: 'left',
         },
         {
             field: 'expires_at',
@@ -176,6 +195,7 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             setColumnVisibilityModel({
                 image: true,
                 reciever: true,
+                sender: true,
                 sent_at: false,
                 isExpired: true,
                 expires_at: true,
@@ -184,6 +204,7 @@ const SentImagesTable: React.FC<SentImagesTableProps> = () => {
             setColumnVisibilityModel({
                 image: true,
                 reciever: true,
+                sender: true,
                 sent_at: true,
                 isExpired: true,
                 expires_at: true,

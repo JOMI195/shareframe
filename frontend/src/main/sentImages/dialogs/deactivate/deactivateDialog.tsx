@@ -6,6 +6,7 @@ import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { deactivateSentImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
+import { getUser } from "@/store/entities/authentication/authentication.slice";
 
 const SentImageDeactivateDialog = () => {
     const theme = useTheme();
@@ -13,6 +14,7 @@ const SentImageDeactivateDialog = () => {
 
     const { deactivate: deactivateDialog } = useAppSelector(getDialogs);
     const sentImages = useAppSelector(getSentImages);
+    const user = useAppSelector(getUser);
     const loading = useAppSelector(getApi).loading
     const sentImageToDeactivate = sentImages.find((sentImage => sentImage.id === deactivateDialog.sentImageId)) as ISentImage | undefined;
 
@@ -60,7 +62,7 @@ const SentImageDeactivateDialog = () => {
             )}
             <DialogTitle>{`Gesendetes Foto ${sentImageToDeactivate?.image.name} wirklich deaktivieren?`}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von den Bilderrahmen von ${sentImageToDeactivate?.reciever} entfernt und dort nicht mehr angezeigt. Du kannst es anschließend erneut senden.`}</Typography>
+                <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von den Bilderrahmen von ${sentImageToDeactivate?.reciever === user.me.username ? "dir" : sentImageToDeactivate?.reciever} entfernt und dort nicht mehr angezeigt.`}</Typography>
                 <Grid
                     container
                     display={"flex"} justifyContent={"space-between"} alignItems={"center"}

@@ -5,6 +5,7 @@ from drf_spectacular.utils import extend_schema
 from rest_framework.decorators import action
 from django.utils import timezone
 from asgiref.sync import async_to_sync
+from django.db.models import Q
 from config.throttles import BurstRateThrottle, SustainedRateThrottle
 from frames.consumers import FrameWebSocketConsumer
 from .models import SentImage
@@ -21,7 +22,9 @@ class SentImagesViewSet(viewsets.ModelViewSet):
     throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
 
     def get_queryset(self):
-        return self.queryset.filter(sender=self.request.user)
+        return self.queryset.filter(
+            Q(sender=self.request.user) | Q(reciever=self.request.user)
+        )
 
     @extend_schema(
         responses={200: SentImagesRetrieveSerializer(many=True)},

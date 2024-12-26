@@ -119,6 +119,12 @@ const SendImageToUserFrameDialog = () => {
                             );
                         }
                         )}
+                        <MenuItem
+                            key={user.me.username}
+                            value={user.me.username}
+                        >
+                            {"deine eigenen Bilderrahmen"}
+                        </MenuItem>
                     </Select>
                 </FormControl>
 
