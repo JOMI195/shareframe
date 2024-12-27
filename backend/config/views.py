@@ -4,8 +4,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.conf import settings
+from django.db.models import Q
 
 from images.models import Image
+from friendships.models import Friendship
 
 
 class MediaAccessView(APIView):
@@ -25,18 +27,29 @@ class MediaAccessView(APIView):
         if user.is_staff:
             access_granted = True
         else:
-            user_images: List[Image] = user.images.all()
-
-            for image in user_images:
-
+            images: List[Image] = Image.objects.all()
+            for image in images:
                 doc_path = image.image.url
                 doc_path = doc_path.replace(settings.MEDIA_URL + "private/", "")
                 if path.endswith("/"):
                     doc_path = doc_path + "/"
 
                 if path == doc_path:
-                    access_granted = True
-                    break
+                    if image.user == user:
+                        access_granted = True
+                        break
+
+                    friendship_exists = Friendship.objects.filter(
+                        (
+                            (Q(sender=user) & Q(reciever=image.user))
+                            | (Q(sender=image.user) & Q(reciever=user))
+                        )
+                        & Q(status="accepted")
+                    ).exists()
+
+                    if friendship_exists:
+                        access_granted = True
+                        break
 
         if access_granted:
             response = Response(status=200)

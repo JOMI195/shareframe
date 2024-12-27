@@ -28,24 +28,17 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
+sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" $INSTALL_DIR/data/.env
+chmod 600 $INSTALL_DIR/data/.env
+
 apt-get update
 apt-get upgrade -y
 apt-get install -y python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
 
-mkdir -p $INSTALL_DIR
 cd $INSTALL_DIR
-
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
-
-sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" $INSTALL_DIR/data/.env
-chmod 600 $INSTALL_DIR/data/.env
-
-if [ -f "$INSTALL_DIR/data/requirements.txt" ]; then
-    pip install -r $INSTALL_DIR/data/requirements.txt
-else
-    echo "Warning: requirements.txt not found in data folder!"
-fi
+pip install spidev gpiozero python-dotenv asyncio websockets requests
 
 if [ -f "$INSTALL_DIR/data/shareframe.service" ]; then
     cp $INSTALL_DIR/data/shareframe.service /etc/systemd/system/shareframe.service

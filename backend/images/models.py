@@ -6,8 +6,9 @@ from django.core.files.storage import default_storage
 
 
 def get_image_upload_path(instance, filename):
-    obfuscated_dirname = str(uuid.uuid4())
-    return os.path.join("private", "images", obfuscated_dirname, filename)
+    ext = filename.split(".")[-1].lower() if "." in filename else ""
+    unique_filename = f"{uuid.uuid4()}.{ext}" if ext else str(uuid.uuid4())
+    return os.path.join("private", "images", unique_filename)
 
 
 class Image(models.Model):
@@ -54,8 +55,8 @@ class Image(models.Model):
 
         super().delete(*args, **kwargs)
 
-        if image_path and os.path.isfile(image_path):
-            default_storage.delete(image_path)
+        # if image_path and os.path.isfile(image_path):
+        #     default_storage.delete(image_path)
 
-        if dir_path and os.path.exists(dir_path) and not os.listdir(dir_path):
-            os.rmdir(dir_path)
+        # if dir_path and os.path.exists(dir_path) and not os.listdir(dir_path):
+        #     os.rmdir(dir_path)
