@@ -1,4 +1,5 @@
 from typing import List
+
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -7,7 +8,7 @@ from django.conf import settings
 from django.db.models import Q
 
 from images.models import Image
-from friendships.models import Friendship
+from sent_images.models import SentImage
 
 
 class MediaAccessView(APIView):
@@ -39,15 +40,15 @@ class MediaAccessView(APIView):
                         access_granted = True
                         break
 
-                    friendship_exists = Friendship.objects.filter(
+                    sentImage_exists = SentImage.objects.filter(
                         (
                             (Q(sender=user) & Q(reciever=image.user))
                             | (Q(sender=image.user) & Q(reciever=user))
                         )
-                        & Q(status="accepted")
+                        & Q(image=image)
                     ).exists()
 
-                    if friendship_exists:
+                    if sentImage_exists:
                         access_granted = True
                         break
 
