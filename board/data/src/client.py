@@ -112,7 +112,7 @@ class WebsocketClient:
             response = requests.post(
                 settings.HTTP_VERIFY_TOKEN_URL,
                 json={"access_token": self.access_token},
-                timeout=100,
+                timeout=600,
             )
             is_valid = response.status_code == 200
             self.logger.info(f"Token verification result: {is_valid}")
@@ -147,7 +147,7 @@ class WebsocketClient:
             response = requests.post(
                 settings.HTTP_OBTAIN_TOKEN_URL,
                 data={"private_serial_number": settings.SERIAL_NUMBER},
-                timeout=100,
+                timeout=600,
             )
             response.raise_for_status()
             token_data = response.json()
