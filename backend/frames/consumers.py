@@ -181,7 +181,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             if len(images_to_delete) > 0:
                 await self.__class__.send_clear_specific_images_to_user_frames(
-                    frame.User, images_to_delete
+                    frame.user, images_to_delete
                 )
 
         except Exception as e:
