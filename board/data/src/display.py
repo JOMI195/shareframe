@@ -40,11 +40,10 @@ class Display:
     def _initialize_display(self):
         self.logger.info("Initializing e-paper display")
         try:
-            self.epd.init()
+            self.epd.init_4Gray()
             self.epd.Clear()
-            self.last_refresh_time = datetime.now()
-            time.sleep(2)
             self.epd.sleep()
+            self.last_refresh_time = datetime.now()
             self.logger.info("E-paper display initialized and cleared")
         except Exception as e:
             self.logger.error(f"Display initialization failed: {str(e)}", exc_info=True)
@@ -204,15 +203,14 @@ class Display:
 
         try:
             await self._wait_until_can_refresh()
-            self.epd.init_fast()
+            self.epd.init_4Gray()
 
             image = Image.open(image_path)
             image = image.resize((self.epd.width, self.epd.height))
             self.epd.Clear()
-            time.sleep(2)
 
             self.logger.debug("Sending image to display")
-            self.epd.display(self.epd.getbuffer(image))
+            self.epd.display_4Gray(self.epd.getbuffer_4Gray(image))
 
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
@@ -227,9 +225,8 @@ class Display:
         self.logger.info("Clearing display")
         try:
             await self._wait_until_can_refresh()
-            self.epd.init()
+            self.epd.init_4Gray()
             self.epd.Clear()
-            time.sleep(2)
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
             self.logger.info("Display cleared successfully")

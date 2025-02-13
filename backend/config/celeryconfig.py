@@ -26,12 +26,8 @@ beat_schedule = {
         "task": "friendships.tasks.reject_long_pending_friendship_requestes",
         "schedule": crontab(minute=0, hour=0),  # Runs daily at midnight
     },
+    "delete-long-expired-sent-images-every-24-hours": {
+        "task": "sent_images.tasks.delete_long_expired_sent_images",
+        "schedule": crontab(minute=0, hour=0),  # Runs daily at midnight
+    },
 }
-
-# Check for production environment
-# PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
-# if PRODUCTION:
-#     beat_schedule["joke-of-the-day-full-workflow"] = {
-#         "task": "workflows.tasks.joke_of_the_day_full_workflow",
-#         "schedule": crontab(hour=5, minute=0),  # Runs daily at 5 AM
-#     }

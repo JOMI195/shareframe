@@ -243,7 +243,7 @@ class WebsocketClient:
             async with websockets.connect(
                 url,
                 additional_headers=headers,
-                open_timeout=3600,
+                open_timeout=900,
                 ssl=ssl_context if settings.PRODUCTION == True else None,
                 max_size=settings.WEBSOCKET_MESSAGE_MAX_SIZE,
             ) as websocket:

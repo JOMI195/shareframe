@@ -280,11 +280,17 @@ EMAIL_USE_SSL = False
 
 DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 
+#### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = None
 
+#### Frames
 FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 300  # seconds
 
 
-# Frontend URLS
+#### Frontend URLS
 FRONTEND_CONTACT_URL = "kontakt/"
+
+#### Sent_Images
+# Number of days after expiration before deleting sent images
+SENT_IMAGE_DELETE_DAYS = 30  # days
