@@ -4,6 +4,9 @@ import { refreshToken } from "@/store/entities/authentication/authentication.act
 import { RootState } from "@/store";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 
+const MAX_AUTH_FAILURES = 3;
+let authFailureCount = 0;
+
 const handleLogout = () => {
   localStorage.clear();
   window.location.href = getHomeUrl();
@@ -11,26 +14,27 @@ const handleLogout = () => {
 
 const apiSetup = (store: Store<RootState>) => {
   const { dispatch } = store;
+
   axiosInstance.interceptors.request.use(
-    function (config) {
+    (config) => {
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
       return config;
     },
-    function (error) {
-      return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
   );
 
   axiosInstance.interceptors.response.use(
-    function (response) {
+    (response) => {
+      authFailureCount = 0; // Reset counter on success
       return response;
     },
-    async function (error) {
+    async (error) => {
       const token = localStorage.getItem("refreshToken");
       const originalConfig = error.config;
+
       if (
         originalConfig.url !== "auth/jwt/create/" &&
         originalConfig.url !== "auth/jwt/refresh/" &&
@@ -41,18 +45,29 @@ const apiSetup = (store: Store<RootState>) => {
           try {
             if (token !== null) {
               await dispatch(refreshToken(token));
+              authFailureCount = 0; // Reset on successful refresh
               return axiosInstance(originalConfig);
             } else {
-              handleLogout();
+              authFailureCount++;
+              if (authFailureCount >= MAX_AUTH_FAILURES) {
+                handleLogout();
+              }
               return Promise.reject(error);
             }
           } catch (_error) {
-            handleLogout();
+            authFailureCount++;
+            if (authFailureCount >= MAX_AUTH_FAILURES) {
+              handleLogout();
+            }
             return Promise.reject(_error);
           }
         }
       }
-      handleLogout();
+
+      authFailureCount++;
+      if (authFailureCount >= MAX_AUTH_FAILURES) {
+        handleLogout();
+      }
       return Promise.reject(error);
     }
   );
