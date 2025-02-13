@@ -40,7 +40,7 @@ class Display:
     def _initialize_display(self):
         self.logger.info("Initializing e-paper display")
         try:
-            self.epd.init_4Gray()
+            self.epd.init()
             self.epd.Clear()
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
@@ -203,16 +203,19 @@ class Display:
 
         try:
             await self._wait_until_can_refresh()
-            self.epd.init_4Gray()
 
             image = Image.open(image_path)
             image = image.resize((self.epd.width, self.epd.height))
+
+            self.epd.init()
             self.epd.Clear()
-
-            self.logger.debug("Sending image to display")
-            self.epd.display_4Gray(self.epd.getbuffer_4Gray(image))
-
             self.epd.sleep()
+            await asyncio.sleep(120)
+
+            self.epd.init()
+            self.epd.display(self.epd.getbuffer(image))
+            self.epd.sleep()
+
             self.last_refresh_time = datetime.now()
             self.current_image_path = image_path
             self.logger.info("Image displayed successfully")
@@ -225,7 +228,7 @@ class Display:
         self.logger.info("Clearing display")
         try:
             await self._wait_until_can_refresh()
-            self.epd.init_4Gray()
+            self.epd.init()
             self.epd.Clear()
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
