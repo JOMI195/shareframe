@@ -7,6 +7,7 @@ import { SlideTransition, ZoomTransition } from "@/common/components/dialogTrans
 import HideImageIcon from '@mui/icons-material/HideImage';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { formatGermanDateTime } from "@/common/components/dateUtils";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -63,7 +64,7 @@ const ImagePreviewDialog = () => {
                                     Gesendet am: {selectedImage?.sent_at}
                                 </Typography>
                                 <Typography variant='subtitle2' component='div'>
-                                    Läuft ab am: {selectedImage?.expires_at}
+                                    Läuft ab am: {(selectedImage && selectedImage.expires_at !== null) && formatGermanDateTime(new Date(selectedImage.expires_at))}
                                 </Typography>
                                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                     {getStatusIcon(isExpired)}
