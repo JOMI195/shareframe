@@ -318,7 +318,9 @@ const SentImagesGallery = () => {
                                     page={currentPage}
                                     onChange={handlePageChange}
                                     color="primary"
-                                    size={isSmallScreen ? "small" : "medium"}
+                                    size={"large"}
+                                    showFirstButton
+                                    showLastButton
                                 />
                             )}
 

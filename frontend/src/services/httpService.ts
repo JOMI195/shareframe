@@ -52,6 +52,7 @@ const apiSetup = (store: Store<RootState>) => {
           }
         }
       }
+      handleLogout();
       return Promise.reject(error);
     }
   );
