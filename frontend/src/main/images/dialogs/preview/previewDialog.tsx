@@ -16,7 +16,12 @@ const ImagePreviewDialog = () => {
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
-    const selectedImage = dialog.selectedImage;
+    const selectedImage = dialog.selectedImage !== null ? dialog.selectedImage : {
+        id: 0,
+        name: "",
+        url: "",
+        created_at: "",
+    };
 
     const handleCloseImagePreview = () => {
         dispatch(closePreviewImageDialog());
