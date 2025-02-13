@@ -2,10 +2,11 @@ import { Store } from "redux";
 import axiosInstance from "./api";
 import { refreshToken } from "@/store/entities/authentication/authentication.actions";
 import { RootState } from "@/store";
+import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 
 const handleLogout = () => {
   localStorage.clear();
-  window.location.reload();
+  window.location.href = getHomeUrl();
 };
 
 const apiSetup = (store: Store<RootState>) => {
