@@ -45,10 +45,10 @@ const ImagePreviewDialog = () => {
                         <Toolbar>
                             <Box sx={{ flex: 1 }}>
                                 <Typography variant='h6' component='div'>
-                                    {selectedImage.name}
+                                    {selectedImage?.name}
                                 </Typography>
                                 <Typography variant='subtitle2' component='div'>
-                                    {selectedImage.created_at}
+                                    {selectedImage?.created_at}
                                 </Typography>
                             </Box>
 
@@ -79,8 +79,8 @@ const ImagePreviewDialog = () => {
                     <DialogContent>
                         <Box display="flex" flexDirection="column" alignItems="center">
                             <AuthenticatedImage
-                                url={`${MEDIA_BASE_URL}${selectedImage.url}`}
-                                alt={selectedImage.name}
+                                url={`${MEDIA_BASE_URL}${selectedImage?.url}`}
+                                alt={selectedImage?.name}
                                 style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
                             />
                             <Box mt={2}>
