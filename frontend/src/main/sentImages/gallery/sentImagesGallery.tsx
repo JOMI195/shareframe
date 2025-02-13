@@ -1,0 +1,283 @@
+import React, { useEffect, useState } from "react";
+import {
+    Box,
+    ImageList,
+    ImageListItem,
+    Typography,
+    useMediaQuery,
+    useTheme,
+    ImageListItemBar,
+    Grid,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    TextField,
+    Button
+} from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
+import { getSentImages } from "@/store/entities/images/images.slice";
+import { getUser } from "@/store/entities/authentication/authentication.slice";
+import AuthenticatedImage from "@/common/components/authenticatedImage";
+import { formatGermanDateTime } from "@/common/components/dateUtils";
+import HideImageIcon from '@mui/icons-material/HideImage';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import { fetchSentImages } from "@/store/entities/images/images.actions";
+import SendIcon from '@mui/icons-material/Send';
+import PanoramaIcon from '@mui/icons-material/Panorama';
+import { ISentImage } from "@/types";
+
+
+const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
+
+type StatusFilter = 'all' | 'active' | 'expired';
+
+interface FilterControlsProps {
+    statusFilter: StatusFilter;
+    senderFilter: string;
+    receiverFilter: string;
+    onStatusFilterChange: (value: StatusFilter) => void;
+    onSenderFilterChange: (value: string) => void;
+    onReceiverFilterChange: (value: string) => void;
+    onClearFilters: () => void;
+}
+
+const FilterControls: React.FC<FilterControlsProps> = ({
+    statusFilter,
+    senderFilter,
+    receiverFilter,
+    onStatusFilterChange,
+    onSenderFilterChange,
+    onReceiverFilterChange,
+    onClearFilters
+}) => (
+    <Box sx={{ width: '100%', mb: 2 }}>
+        <Grid container spacing={2}>
+            <Grid item xs={12} md={3}>
+                <FormControl fullWidth>
+                    <InputLabel id="status-filter-label">Status Filter</InputLabel>
+                    <Select
+                        labelId="status-filter-label"
+                        value={statusFilter}
+                        label="Status Filter"
+                        onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
+                    >
+                        <MenuItem value="all">Alle Bilder</MenuItem>
+                        <MenuItem value="active">Nur aktive</MenuItem>
+                        <MenuItem value="expired">Nur abgelaufene</MenuItem>
+                    </Select>
+                </FormControl>
+            </Grid>
+            <Grid item xs={12} md={3}>
+                <TextField
+                    fullWidth
+                    label="Suche Empfänger"
+                    value={receiverFilter}
+                    onChange={(e) => onReceiverFilterChange(e.target.value)}
+                />
+            </Grid>
+            <Grid item xs={12} md={3}>
+                <TextField
+                    fullWidth
+                    label="Suche Versender"
+                    value={senderFilter}
+                    onChange={(e) => onSenderFilterChange(e.target.value)}
+                />
+            </Grid>
+            <Grid item xs={12} md={3}>
+                <Button
+                    fullWidth
+                    variant="outlined"
+                    onClick={onClearFilters}
+                    startIcon={<HideImageIcon />}
+                    sx={{ height: '56px' }}
+                >
+                    Zurücksetzen
+                </Button>
+            </Grid>
+        </Grid>
+    </Box>
+);
+
+const SentImagesGallery = () => {
+    const dispatch = useAppDispatch();
+    const sentImages = useAppSelector(getSentImages);
+    const user = useAppSelector(getUser);
+    const theme = useTheme();
+
+    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
+    const [senderFilter, setSenderFilter] = useState('');
+    const [receiverFilter, setReceiverFilter] = useState('');
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
+
+    // Adjust columns based on screen size
+    let cols = 3;
+    if (isSmallScreen) {
+        cols = 1;
+    } else if (isMediumUp) {
+        cols = 3;
+    }
+
+    const handleImageClick = (sentImage: ISentImage) => {
+        dispatch(openPreviewImageDialog({
+            id: sentImage.id,
+            name: sentImage.image.name,
+            url: sentImage.image.url,
+            created_at: formatGermanDateTime(new Date(sentImage.image.created_at)),
+            sender: sentImage.sender,
+            reciever: sentImage.reciever,
+            expires_at: sentImage.expires_at,
+            sent_at: formatGermanDateTime(new Date(sentImage.sent_at)),
+        }));
+    };
+
+    const getStatusIcon = (isExpired: boolean) => {
+        return isExpired ? (
+            <VisibilityOffIcon sx={{ color: theme.palette.error.main, fontSize: '1rem' }} />
+        ) : (
+            <VisibilityIcon sx={{ color: theme.palette.success.main, fontSize: '1rem' }} />
+        );
+    };
+
+    const handleClearFilters = () => {
+        setStatusFilter('all');
+        setSenderFilter('');
+        setReceiverFilter('');
+    };
+
+    const filteredImages = sentImages.filter(sentImage => {
+        const expiryDate = new Date(sentImage.expires_at);
+        const isExpired = expiryDate < new Date();
+
+        const matchesStatus =
+            statusFilter === 'all' ? true :
+                statusFilter === 'active' ? !isExpired :
+                    isExpired;
+
+        const matchesSender =
+            !senderFilter ||
+            (sentImage.sender === user.me.username && "Du".toLowerCase().includes(senderFilter.toLowerCase())) ||
+            sentImage.sender.toLowerCase().includes(senderFilter.toLowerCase());
+
+        const matchesReceiver =
+            !receiverFilter ||
+            (sentImage.reciever === user.me.username && "Du".toLowerCase().includes(receiverFilter.toLowerCase())) ||
+            sentImage.reciever.toLowerCase().includes(receiverFilter.toLowerCase());
+
+        return matchesStatus && matchesSender && matchesReceiver;
+    });
+
+    const renderSenderReceiverInfo = (sentImage: ISentImage) => {
+        const isSender = sentImage.sender === user.me.username;
+        const isReceiver = sentImage.reciever === user.me.username;
+
+        return (
+            <Box sx={{
+                display: 'flex',
+                flexDirection: "column",
+                alignItems: 'flex-start',
+                justifyContent: "center",
+                width: '100%',
+                overflow: 'hidden'
+            }}>
+                <Box display={"flex"} alignItems={"center"}>
+                    <SendIcon sx={{ fontSize: '1rem' }} />
+                    <Typography
+                        noWrap
+                        component="span"
+                        sx={{
+                            ml: 1
+                        }}
+                    >
+                        {isSender ? 'Du' : sentImage.sender}
+                    </Typography>
+                </Box>
+                <Box display={"flex"} alignItems={"center"}>
+                    <PanoramaIcon sx={{ fontSize: '1rem' }} />
+                    <Typography
+                        noWrap
+                        component="span"
+                        sx={{
+                            ml: 1
+                        }}
+                    >
+                        {isReceiver ? 'Du' : sentImage.reciever}
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    };
+
+
+    useEffect(() => {
+        dispatch(fetchSentImages());
+    }, []);
+
+    return (
+        <Box sx={{ width: '100%' }}>
+            <FilterControls
+                statusFilter={statusFilter}
+                senderFilter={senderFilter}
+                receiverFilter={receiverFilter}
+                onStatusFilterChange={setStatusFilter}
+                onSenderFilterChange={setSenderFilter}
+                onReceiverFilterChange={setReceiverFilter}
+                onClearFilters={handleClearFilters}
+            />
+
+            <ImageList cols={cols} gap={8}>
+                {filteredImages.map((sentImage) => {
+                    const expiryDate = new Date(sentImage.expires_at);
+                    const isExpired = expiryDate < new Date();
+
+                    return (
+                        <ImageListItem
+                            key={sentImage.id}
+                            onClick={() => handleImageClick(sentImage)}
+                            style={{ cursor: "pointer" }}
+                        >
+                            <AuthenticatedImage
+                                url={`${MEDIA_BASE_URL}${sentImage.image.url}`}
+                                alt={sentImage.image.name}
+                                style={{
+                                    width: "100%",
+                                    height: "100%",
+                                    objectFit: "cover",
+                                    borderRadius: 8
+                                }}
+                            />
+                            <ImageListItemBar
+                                sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
+                                title={
+                                    renderSenderReceiverInfo(sentImage)
+                                }
+                                subtitle={
+                                    <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
+                                        {formatGermanDateTime(new Date(sentImage.sent_at))}
+                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                            {getStatusIcon(isExpired)}
+                                            <Typography variant="caption">
+                                                {isExpired ? 'Abgelaufen' : 'Aktiv'}
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                }
+                            />
+                        </ImageListItem>
+                    );
+                })}
+            </ImageList>
+            <Box sx={{ textAlign: "center", mt: 2 }}>
+                <Typography variant="subtitle2" color="textSecondary">
+                    {filteredImages.length} insgesamt geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
+                </Typography>
+            </Box>
+        </Box>
+    );
+};
+
+export default SentImagesGallery;

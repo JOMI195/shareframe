@@ -14,6 +14,10 @@ type SliceState = {
         name: string;
         url: string;
         created_at: string;
+        sender: string | null;
+        reciever: string | null;
+        expires_at: string | null;
+        sent_at: string | null;
       } | null
     },
     sendToFrame: { open: boolean, imageId: number | null },
@@ -231,6 +235,10 @@ const imagesSlice = createSlice({
         name: action.payload.name,
         url: action.payload.url,
         created_at: action.payload.created_at,
+        sender: action.payload.sender,
+        reciever: action.payload.reciever,
+        expires_at: action.payload.expires_at,
+        sent_at: action.payload.sent_at,
       }
     },
     previewImageDialogClosed: (sliceState) => {
@@ -298,9 +306,31 @@ export const closeDeleteImageDialog = () => ({
   type: deleteImageDialogClosed.type,
 });
 
-export const openPreviewImageDialog = (payload: { id: number, name: string, url: string, created_at: string }) => ({
+interface PreviewImagePayload {
+  id: number;
+  name: string;
+  url: string;
+  created_at: string;
+  sender?: string | null;
+  reciever?: string | null;
+  expires_at?: string | null;
+  sent_at?: string | null;
+}
+
+const defaultPayload: PreviewImagePayload = {
+  id: 0,
+  name: '',
+  url: '',
+  created_at: '',
+  sender: null,
+  reciever: null,
+  expires_at: null,
+  sent_at: null,
+};
+
+export const openPreviewImageDialog = (payload: Partial<PreviewImagePayload> = defaultPayload) => ({
   type: previewImageDialogOpened.type,
-  payload
+  payload: { ...defaultPayload, ...payload }
 });
 
 export const closePreviewImageDialog = () => ({

@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ISentImage } from "@/types";
-import { closeDeactivateSendImageFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { closeDeactivateSendImageFrameDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
 import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { deactivateSentImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
@@ -26,7 +26,10 @@ const SentImageDeactivateDialog = () => {
 
     const handleConfirmDeactivate = async () => {
         try {
-            if (sentImageToDeactivate !== undefined) await dispatch(deactivateSentImage(sentImageToDeactivate.id))
+            if (sentImageToDeactivate !== undefined) {
+                await dispatch(deactivateSentImage(sentImageToDeactivate.id));
+                dispatch(closePreviewImageDialog());
+            }
         } catch (error) {
         } finally {
             handleDialogClose();
@@ -46,6 +49,9 @@ const SentImageDeactivateDialog = () => {
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
                     <Toolbar>
+                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
+                            Foto deaktivieren
+                        </Typography>
                         <IconButton
                             edge='start'
                             color='inherit'
@@ -54,9 +60,6 @@ const SentImageDeactivateDialog = () => {
                         >
                             <CloseIcon />
                         </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Foto löschen
-                        </Typography>
                     </Toolbar>
                 </AppBar>
             )}

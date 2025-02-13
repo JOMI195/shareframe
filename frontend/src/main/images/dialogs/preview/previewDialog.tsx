@@ -1,4 +1,4 @@
-import { Dialog, Box, useMediaQuery, useTheme, IconButton, Typography, AppBar, Toolbar, DialogTitle, DialogContent, Tooltip } from "@mui/material";
+import { Dialog, Box, useMediaQuery, useTheme, IconButton, Typography, AppBar, Toolbar, DialogContent, Tooltip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog } from "@/store/ui/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -12,10 +12,10 @@ const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const ImagePreviewDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
-    const dialog = useAppSelector(getDialogs).preview;
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const dialog = useAppSelector(getDialogs).preview;
     const selectedImage = dialog.selectedImage;
 
     const handleCloseImagePreview = () => {
@@ -57,25 +57,12 @@ const ImagePreviewDialog = () => {
                                 color='inherit'
                                 onClick={handleCloseImagePreview}
                                 aria-label='cancel'
+                                sx={{ alignSelf: "flex-start" }}
                             >
                                 <CloseIcon />
                             </IconButton>
                         </Toolbar>
                     </AppBar>
-                    <DialogTitle sx={{ m: 0, pl: 3, pr: 5 }}>
-                        <IconButton
-                            aria-label="close"
-                            onClick={closePreviewImageDialog}
-                            sx={{
-                                position: "absolute",
-                                right: 8,
-                                top: 8,
-                                color: (theme) => theme.palette.grey[500],
-                            }}
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </DialogTitle>
                     <DialogContent>
                         <Box display="flex" flexDirection="column" alignItems="center">
                             <AuthenticatedImage

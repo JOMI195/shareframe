@@ -1,7 +1,7 @@
 import React from "react";
 import { Box, Container } from "@mui/material";
-import SentImagesTable from "./tables/sentImagesTable";
 import Dialogs from "./dialogs/dialogs";
+import SentImagesGallery from "./gallery/sentImagesGallery";
 
 const SentImages: React.FC = () => {
     return (
@@ -12,7 +12,7 @@ const SentImages: React.FC = () => {
                 display: "flex",
                 flexDirection: "column"
             }}>
-                <SentImagesTable />
+                <SentImagesGallery />
             </Box>
             <Dialogs />
         </Container>
