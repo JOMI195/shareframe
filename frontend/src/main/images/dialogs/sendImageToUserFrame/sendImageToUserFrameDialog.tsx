@@ -82,6 +82,9 @@ const SendImageToUserFrameDialog = () => {
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
                     <Toolbar>
+                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
+                            Foto senden
+                        </Typography>
                         <IconButton
                             edge='start'
                             color='inherit'
@@ -90,9 +93,6 @@ const SendImageToUserFrameDialog = () => {
                         >
                             <CloseIcon />
                         </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Foto senden
-                        </Typography>
                     </Toolbar>
                 </AppBar>
             )}

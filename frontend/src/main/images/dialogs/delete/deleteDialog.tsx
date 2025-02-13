@@ -1,7 +1,7 @@
 import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IImage } from "@/types";
-import { closeDeleteImageDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { closeDeleteImageDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
 import { getApi, getImages } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
@@ -24,7 +24,10 @@ const ImageDeleteDialog = () => {
 
     const handleConfirmDelete = async () => {
         try {
-            if (imageToDelete !== undefined) await dispatch(deleteImage(imageToDelete.id, imageToDelete.name))
+            if (imageToDelete !== undefined) {
+                await dispatch(deleteImage(imageToDelete.id, imageToDelete.name));
+                dispatch(closePreviewImageDialog());
+            }
         } catch (error) {
         } finally {
             handleDialogClose();
@@ -44,6 +47,9 @@ const ImageDeleteDialog = () => {
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
                     <Toolbar>
+                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
+                            Foto löschen
+                        </Typography>
                         <IconButton
                             edge='start'
                             color='inherit'
@@ -52,9 +58,6 @@ const ImageDeleteDialog = () => {
                         >
                             <CloseIcon />
                         </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Foto löschen
-                        </Typography>
                     </Toolbar>
                 </AppBar>
             )}

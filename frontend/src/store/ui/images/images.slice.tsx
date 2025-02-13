@@ -7,7 +7,15 @@ type SliceState = {
   dialogs: {
     create: { open: boolean },
     delete: { open: boolean, imageId: number | null },
-    preview: { open: boolean, url: string | null },
+    preview: {
+      open: boolean;
+      selectedImage: {
+        id: number;
+        name: string;
+        url: string;
+        created_at: string;
+      } | null
+    },
     sendToFrame: { open: boolean, imageId: number | null },
 
     deactivate: { open: boolean, sentImageId: number | null },
@@ -22,7 +30,10 @@ const initialState: SliceState = {
   dialogs: {
     create: { open: false },
     delete: { open: false, imageId: null },
-    preview: { open: false, url: null },
+    preview: {
+      open: false,
+      selectedImage: null
+    },
     sendToFrame: { open: false, imageId: null },
 
     deactivate: { open: false, sentImageId: null },
@@ -214,11 +225,17 @@ const imagesSlice = createSlice({
     },
     previewImageDialogOpened: (sliceState, action) => {
       sliceState.dialogs.preview.open = true;
-      sliceState.dialogs.preview.url = action.payload.url;
+      sliceState.dialogs.preview.selectedImage =
+      {
+        id: action.payload.id,
+        name: action.payload.name,
+        url: action.payload.url,
+        created_at: action.payload.created_at,
+      }
     },
     previewImageDialogClosed: (sliceState) => {
       sliceState.dialogs.preview.open = false;
-      sliceState.dialogs.preview.url = null;
+      sliceState.dialogs.preview.selectedImage = null;
     },
     sendImageToUserFrameDialogOpened: (sliceState, action) => {
       sliceState.dialogs.sendToFrame.open = true;
@@ -281,7 +298,7 @@ export const closeDeleteImageDialog = () => ({
   type: deleteImageDialogClosed.type,
 });
 
-export const openPreviewImageDialog = (payload: { url: string }) => ({
+export const openPreviewImageDialog = (payload: { id: number, name: string, url: string, created_at: string }) => ({
   type: previewImageDialogOpened.type,
   payload
 });
