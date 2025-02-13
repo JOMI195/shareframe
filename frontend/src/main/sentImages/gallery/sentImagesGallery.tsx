@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     Box,
     ImageList,
@@ -13,24 +13,28 @@ import {
     Select,
     MenuItem,
     TextField,
-    Button
+    Button,
+    Stack,
+    Pagination,
+    Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
-import { getSentImages } from "@/store/entities/images/images.slice";
+import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import HideImageIcon from '@mui/icons-material/HideImage';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
-import { fetchSentImages } from "@/store/entities/images/images.actions";
 import SendIcon from '@mui/icons-material/Send';
 import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage } from "@/types";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
+const ITEMS_PER_PAGE = 12;
+const SKELETON_COLS = 3;
 
 type StatusFilter = 'all' | 'active' | 'expired';
 
@@ -105,6 +109,7 @@ const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
     const sentImages = useAppSelector(getSentImages);
     const user = useAppSelector(getUser);
+    const loading = useAppSelector(getApi).loading;
     const theme = useTheme();
 
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
@@ -171,6 +176,18 @@ const SentImagesGallery = () => {
         return matchesStatus && matchesSender && matchesReceiver;
     });
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(filteredImages.length / ITEMS_PER_PAGE);
+    const currentImages = filteredImages.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
     const renderSenderReceiverInfo = (sentImage: ISentImage) => {
         const isSender = sentImage.sender === user.me.username;
         const isReceiver = sentImage.reciever === user.me.username;
@@ -212,10 +229,23 @@ const SentImagesGallery = () => {
         );
     };
 
-
-    useEffect(() => {
-        dispatch(fetchSentImages());
-    }, []);
+    const LoadingSkeleton = () => (
+        <ImageList cols={cols} gap={8}>
+            {[...Array(cols * SKELETON_COLS)].map((_, index) => (
+                <ImageListItem key={index}>
+                    <Skeleton
+                        variant="rectangular"
+                        width="100%"
+                        height={200}
+                        sx={{
+                            borderRadius: 1,
+                            backgroundColor: theme.palette.action.hover
+                        }}
+                    />
+                </ImageListItem>
+            ))}
+        </ImageList>
+    );
 
     return (
         <Box sx={{ width: '100%' }}>
@@ -228,54 +258,77 @@ const SentImagesGallery = () => {
                 onReceiverFilterChange={setReceiverFilter}
                 onClearFilters={handleClearFilters}
             />
+            <Stack spacing={2}>
+                {loading ? (
+                    <LoadingSkeleton />
+                ) : (
+                    <ImageList cols={cols} gap={8}>
+                        {currentImages.map((sentImage) => {
+                            const expiryDate = new Date(sentImage.expires_at);
+                            const isExpired = expiryDate < new Date();
 
-            <ImageList cols={cols} gap={8}>
-                {filteredImages.map((sentImage) => {
-                    const expiryDate = new Date(sentImage.expires_at);
-                    const isExpired = expiryDate < new Date();
+                            return (
+                                <ImageListItem
+                                    key={sentImage.id}
+                                    onClick={() => handleImageClick(sentImage)}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <AuthenticatedImage
+                                        url={`${MEDIA_BASE_URL}${sentImage.image.url}`}
+                                        alt={sentImage.image.name}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            borderRadius: 8
+                                        }}
+                                    />
+                                    <ImageListItemBar
+                                        sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
+                                        title={
+                                            renderSenderReceiverInfo(sentImage)
+                                        }
+                                        subtitle={
+                                            <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
+                                                {formatGermanDateTime(new Date(sentImage.sent_at))}
+                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                    {getStatusIcon(isExpired)}
+                                                    <Typography variant="caption">
+                                                        {isExpired ? 'Abgelaufen' : 'Aktiv'}
+                                                    </Typography>
+                                                </Box>
+                                            </Box>
+                                        }
+                                    />
+                                </ImageListItem>
+                            );
+                        })}
+                    </ImageList>
+                )}
 
-                    return (
-                        <ImageListItem
-                            key={sentImage.id}
-                            onClick={() => handleImageClick(sentImage)}
-                            style={{ cursor: "pointer" }}
-                        >
-                            <AuthenticatedImage
-                                url={`${MEDIA_BASE_URL}${sentImage.image.url}`}
-                                alt={sentImage.image.name}
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    borderRadius: 8
-                                }}
-                            />
-                            <ImageListItemBar
-                                sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
-                                title={
-                                    renderSenderReceiverInfo(sentImage)
-                                }
-                                subtitle={
-                                    <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
-                                        {formatGermanDateTime(new Date(sentImage.sent_at))}
-                                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                            {getStatusIcon(isExpired)}
-                                            <Typography variant="caption">
-                                                {isExpired ? 'Abgelaufen' : 'Aktiv'}
-                                            </Typography>
-                                        </Box>
-                                    </Box>
-                                }
-                            />
-                        </ImageListItem>
-                    );
-                })}
-            </ImageList>
-            <Box sx={{ textAlign: "center", mt: 2 }}>
-                <Typography variant="subtitle2" color="textSecondary">
-                    {filteredImages.length} insgesamt geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
-                </Typography>
-            </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
+                    {loading ? (
+                        <Skeleton width={200} height={40} />
+                    ) : (
+                        <>
+                            {totalPages > 1 && (
+                                <Pagination
+                                    count={totalPages}
+                                    page={currentPage}
+                                    onChange={handlePageChange}
+                                    color="primary"
+                                    size={isSmallScreen ? "small" : "medium"}
+                                />
+                            )}
+
+                            <Typography variant="subtitle2" color="textSecondary">
+                                {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
+                            </Typography>
+                        </>
+                    )}
+                </Box>
+            </Stack >
         </Box>
     );
 };
