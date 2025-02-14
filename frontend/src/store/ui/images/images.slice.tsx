@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesReceived, imagesRequested, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesReceived, sentImagesRequested, sentImagesRequestFailed } from "@/store/entities/images/images.slice";
+import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed } from "@/store/entities/images/images.slice";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 

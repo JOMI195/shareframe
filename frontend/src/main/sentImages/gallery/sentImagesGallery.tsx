@@ -177,7 +177,7 @@ const SentImagesGallery = () => {
                                             objectFit: "cover",
                                             borderRadius: 8,
                                         }}
-                                        hideToYouFilter={hideToYouFilter}
+                                        hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username) : false}
                                     />
                                     <ImageListItemBar
                                         sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}

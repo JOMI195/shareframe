@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipsReceived, friendshipsRequested, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
+import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 
