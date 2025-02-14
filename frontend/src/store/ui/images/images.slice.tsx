@@ -53,18 +53,18 @@ const imagesSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
-      .addCase(imagesRequested, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: true,
-          message: "Bilder laden",
-        };
-      })
-      .addCase(imagesReceived, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
+      // .addCase(imagesRequested, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: true,
+      //     message: "Bilder laden",
+      //   };
+      // })
+      // .addCase(imagesReceived, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: false,
+      //     message: "",
+      //   };
+      // })
       .addCase(imagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
@@ -132,18 +132,18 @@ const imagesSlice = createSlice({
           message: "",
         };
       })
-      .addCase(sentImagesRequested, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: true,
-          message: "Gesendete Bilder laden",
-        };
-      })
-      .addCase(sentImagesReceived, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
+      // .addCase(sentImagesRequested, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: true,
+      //     message: "Gesendete Bilder laden",
+      //   };
+      // })
+      // .addCase(sentImagesReceived, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: false,
+      //     message: "",
+      //   };
+      // })
       .addCase(sentImagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,

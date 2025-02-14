@@ -24,18 +24,18 @@ const friendshipsSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
-      .addCase(friendshipsRequested, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: true,
-          message: "Freundesdaten laden",
-        };
-      })
-      .addCase(friendshipsReceived, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
+      // .addCase(friendshipsRequested, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: true,
+      //     message: "Freundesdaten laden",
+      //   };
+      // })
+      // .addCase(friendshipsReceived, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: false,
+      //     message: "",
+      //   };
+      // })
       .addCase(friendshipsRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,

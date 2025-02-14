@@ -12,7 +12,8 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
-import { getApi, getImages } from "@/store/entities/images/images.slice";
+import { getApi as imagesApi, getImages } from "@/store/entities/images/images.slice";
+import { getApi as friendshipsApi } from "@/store/entities/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 
@@ -23,7 +24,8 @@ const SKELETON_COLS = 3;
 const ImagesGallery: React.FC = () => {
     const dispatch = useAppDispatch();
     const images = useAppSelector(getImages);
-    const loading = useAppSelector(getApi).loading;
+    const imagesLoading = useAppSelector(imagesApi).loading;
+    const friendshipsLoading = useAppSelector(friendshipsApi).loading;
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -77,7 +79,7 @@ const ImagesGallery: React.FC = () => {
 
     return (
         <Stack spacing={2}>
-            {loading ? (
+            {(imagesLoading && friendshipsLoading) ? (
                 <LoadingSkeleton />
             ) : (
                 <ImageList cols={cols} gap={8}>
@@ -103,7 +105,7 @@ const ImagesGallery: React.FC = () => {
             )}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
-                {loading ? (
+                {(imagesLoading && friendshipsLoading) ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
