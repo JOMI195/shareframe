@@ -9,6 +9,7 @@ interface AuthenticatedImageProps {
     style?: React.CSSProperties;
     onClick?: () => void;
     onError?: (error: Error) => void;
+    hideToYouFilter?: boolean;
 }
 
 const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
@@ -17,7 +18,8 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     className,
     style,
     onClick,
-    onError
+    onError,
+    hideToYouFilter
 }) => {
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -82,13 +84,23 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     }
 
     return imageSrc ? (
-        <img
-            src={imageSrc}
-            alt={alt}
-            className={className}
-            style={style}
-            onClick={onClick}
-        />
+        <div
+            style={{
+                ...style,
+                overflow: 'hidden',
+            }}
+        >
+            <img
+                src={imageSrc}
+                alt={alt}
+                className={className}
+                style={{
+                    ...style,
+                    filter: hideToYouFilter ? 'blur(10px)' : 'none'
+                }}
+                onClick={onClick}
+            />
+        </div>
     ) : null;
 };
 

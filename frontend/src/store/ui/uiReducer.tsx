@@ -7,6 +7,7 @@ import contactReducer from "./contact/contact.slice";
 import friendshipsReducer from "./friendships/friendships.slice";
 import framesReducer from "./frames/frames.slice";
 import imagesReducer from "./images/images.slice";
+import sentImagesReducer from "./sentImages/sentImages.slice";
 
 export default combineReducers({
   navigation: navigationReducer,
@@ -16,4 +17,5 @@ export default combineReducers({
   contact: contactReducer,
   frames: framesReducer,
   images: imagesReducer,
+  sentImages: sentImagesReducer,
 });

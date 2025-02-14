@@ -7,13 +7,6 @@ import {
     useMediaQuery,
     useTheme,
     ImageListItemBar,
-    Grid,
-    FormControl,
-    InputLabel,
-    Select,
-    MenuItem,
-    TextField,
-    Button,
     Stack,
     Pagination,
     Skeleton
@@ -24,86 +17,18 @@ import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
-import HideImageIcon from '@mui/icons-material/HideImage';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SendIcon from '@mui/icons-material/Send';
 import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage } from "@/types";
+import FilterControls from "./filters/filters";
+import { getDialogs } from "@/store/ui/sentImages/sentImages.slice";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const ITEMS_PER_PAGE = 12;
 const SKELETON_COLS = 3;
-
-type StatusFilter = 'all' | 'active' | 'expired';
-
-interface FilterControlsProps {
-    statusFilter: StatusFilter;
-    senderFilter: string;
-    receiverFilter: string;
-    onStatusFilterChange: (value: StatusFilter) => void;
-    onSenderFilterChange: (value: string) => void;
-    onReceiverFilterChange: (value: string) => void;
-    onClearFilters: () => void;
-}
-
-const FilterControls: React.FC<FilterControlsProps> = ({
-    statusFilter,
-    senderFilter,
-    receiverFilter,
-    onStatusFilterChange,
-    onSenderFilterChange,
-    onReceiverFilterChange,
-    onClearFilters
-}) => (
-    <Box sx={{ width: '100%', mb: 2 }}>
-        <Grid container spacing={2}>
-            <Grid item xs={12} md={3}>
-                <FormControl fullWidth>
-                    <InputLabel id="status-filter-label">Status Filter</InputLabel>
-                    <Select
-                        labelId="status-filter-label"
-                        value={statusFilter}
-                        label="Status Filter"
-                        onChange={(e) => onStatusFilterChange(e.target.value as StatusFilter)}
-                    >
-                        <MenuItem value="all">Alle Bilder</MenuItem>
-                        <MenuItem value="active">Nur aktive</MenuItem>
-                        <MenuItem value="expired">Nur abgelaufene</MenuItem>
-                    </Select>
-                </FormControl>
-            </Grid>
-            <Grid item xs={12} md={3}>
-                <TextField
-                    fullWidth
-                    label="Suche Empfänger"
-                    value={receiverFilter}
-                    onChange={(e) => onReceiverFilterChange(e.target.value)}
-                />
-            </Grid>
-            <Grid item xs={12} md={3}>
-                <TextField
-                    fullWidth
-                    label="Suche Versender"
-                    value={senderFilter}
-                    onChange={(e) => onSenderFilterChange(e.target.value)}
-                />
-            </Grid>
-            <Grid item xs={12} md={3}>
-                <Button
-                    fullWidth
-                    variant="outlined"
-                    onClick={onClearFilters}
-                    startIcon={<HideImageIcon />}
-                    sx={{ height: '56px' }}
-                >
-                    Zurücksetzen
-                </Button>
-            </Grid>
-        </Grid>
-    </Box>
-);
 
 const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
@@ -112,9 +37,10 @@ const SentImagesGallery = () => {
     const loading = useAppSelector(getApi).loading;
     const theme = useTheme();
 
-    const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-    const [senderFilter, setSenderFilter] = useState('');
-    const [receiverFilter, setReceiverFilter] = useState('');
+    const { filter: filterDialog } = useAppSelector(getDialogs);
+    const hideToYouFilter = filterDialog.hideToYouFilter;
+
+    const [filteredImages, setFilteredImages] = useState<ISentImage[]>(sentImages);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -147,34 +73,6 @@ const SentImagesGallery = () => {
             <VisibilityIcon sx={{ color: theme.palette.success.main, fontSize: '1rem' }} />
         );
     };
-
-    const handleClearFilters = () => {
-        setStatusFilter('all');
-        setSenderFilter('');
-        setReceiverFilter('');
-    };
-
-    const filteredImages = sentImages.filter(sentImage => {
-        const expiryDate = new Date(sentImage.expires_at);
-        const isExpired = expiryDate < new Date();
-
-        const matchesStatus =
-            statusFilter === 'all' ? true :
-                statusFilter === 'active' ? !isExpired :
-                    isExpired;
-
-        const matchesSender =
-            !senderFilter ||
-            (sentImage.sender === user.me.username && "Du".toLowerCase().includes(senderFilter.toLowerCase())) ||
-            sentImage.sender.toLowerCase().includes(senderFilter.toLowerCase());
-
-        const matchesReceiver =
-            !receiverFilter ||
-            (sentImage.reciever === user.me.username && "Du".toLowerCase().includes(receiverFilter.toLowerCase())) ||
-            sentImage.reciever.toLowerCase().includes(receiverFilter.toLowerCase());
-
-        return matchesStatus && matchesSender && matchesReceiver;
-    });
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(filteredImages.length / ITEMS_PER_PAGE);
@@ -250,13 +148,10 @@ const SentImagesGallery = () => {
     return (
         <Box sx={{ width: '100%' }}>
             <FilterControls
-                statusFilter={statusFilter}
-                senderFilter={senderFilter}
-                receiverFilter={receiverFilter}
-                onStatusFilterChange={setStatusFilter}
-                onSenderFilterChange={setSenderFilter}
-                onReceiverFilterChange={setReceiverFilter}
-                onClearFilters={handleClearFilters}
+                images={sentImages}
+                currentUser={user.me}
+                onFilteredImagesChange={setFilteredImages}
+                disabled={loading}
             />
             <Stack spacing={2}>
                 {loading ? (
@@ -280,8 +175,9 @@ const SentImagesGallery = () => {
                                             width: "100%",
                                             height: "100%",
                                             objectFit: "cover",
-                                            borderRadius: 8
+                                            borderRadius: 8,
                                         }}
+                                        hideToYouFilter={hideToYouFilter}
                                     />
                                     <ImageListItemBar
                                         sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}

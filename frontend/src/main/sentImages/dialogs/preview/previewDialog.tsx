@@ -119,6 +119,7 @@ const ImagePreviewDialog = () => {
                                         <IconButton
                                             onClick={disableSentImageButtonClickHandle}
                                             disabled={isExpired}
+                                            color="error"
                                         >
                                             <HideImageIcon />
                                         </IconButton>
