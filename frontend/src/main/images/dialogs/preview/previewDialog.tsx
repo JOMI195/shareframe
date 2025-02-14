@@ -5,7 +5,9 @@ import AuthenticatedImage from "@/common/components/authenticatedImage";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
+import { downloadImage } from "@/store/entities/images/images.actions";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -22,13 +24,23 @@ const ImagePreviewDialog = () => {
         dispatch(closePreviewImageDialog());
     }
 
-    const handleDelete = (image: { id: number }) => {
-        dispatch(openDeleteImageDialog({ imageId: image.id }));
+    const handleDelete = () => {
+        if (selectedImage !== null) {
+            dispatch(openDeleteImageDialog({ imageId: selectedImage.id }));
+        }
     };
 
-    const handleSend = (image: { id: number }) => {
-        dispatch(openSendImageToUserFrameDialog({ imageId: image.id }));
+    const handleSend = () => {
+        if (selectedImage !== null) {
+            dispatch(openSendImageToUserFrameDialog({ imageId: selectedImage.id }));
+        }
     };
+
+    const handleDownloadFileButtonClick = () => {
+        if (selectedImage !== null) {
+            dispatch(downloadImage(`${MEDIA_BASE_URL}${selectedImage.url}`, selectedImage.name))
+        }
+    }
 
     return (
         <Dialog
@@ -78,14 +90,19 @@ const ImagePreviewDialog = () => {
                                         borderRadius: 1,
                                     }}
                                 >
-                                    <Tooltip title="Foto löschen">
-                                        <IconButton onClick={() => handleDelete(selectedImage)}>
-                                            <DeleteIcon />
+                                    <Tooltip title="Foto senden">
+                                        <IconButton onClick={handleSend}>
+                                            <SendIcon />
                                         </IconButton>
                                     </Tooltip>
-                                    <Tooltip title="Foto senden">
-                                        <IconButton onClick={() => handleSend(selectedImage)}>
-                                            <SendIcon />
+                                    <Tooltip title={"Foto herunterladen"}>
+                                        <IconButton onClick={handleDownloadFileButtonClick}>
+                                            <DownloadIcon />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Foto löschen">
+                                        <IconButton color="error" onClick={handleDelete}>
+                                            <DeleteIcon />
                                         </IconButton>
                                     </Tooltip>
                                 </Toolbar>

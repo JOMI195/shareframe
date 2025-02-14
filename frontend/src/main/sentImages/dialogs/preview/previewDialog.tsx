@@ -5,9 +5,11 @@ import AuthenticatedImage from "@/common/components/authenticatedImage";
 import CloseIcon from '@mui/icons-material/Close';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import HideImageIcon from '@mui/icons-material/HideImage';
+import DownloadIcon from '@mui/icons-material/Download';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import { formatGermanDateTime } from "@/common/components/dateUtils";
+import { downloadImage } from "@/store/entities/images/images.actions";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -25,8 +27,16 @@ const ImagePreviewDialog = () => {
         dispatch(closePreviewImageDialog());
     }
 
-    const disableSentImageButtonClickHandle = (sentImageId: number) => {
-        dispatch(openDeactivateSendImageFrameDialog({ sentImageId: sentImageId }))
+    const disableSentImageButtonClickHandle = () => {
+        if (selectedImage !== null) {
+            dispatch(openDeactivateSendImageFrameDialog({ sentImageId: selectedImage.id }))
+        }
+    }
+
+    const handleDownloadFileButtonClick = () => {
+        if (selectedImage !== null) {
+            dispatch(downloadImage(`${MEDIA_BASE_URL}${selectedImage.url}`, selectedImage.name))
+        }
     }
 
     const getStatusIcon = (isExpired: boolean) => {
@@ -100,14 +110,17 @@ const ImagePreviewDialog = () => {
                                         borderRadius: 1,
                                     }}
                                 >
+                                    <Tooltip title={"Foto herunterladen"}>
+                                        <IconButton onClick={handleDownloadFileButtonClick}>
+                                            <DownloadIcon />
+                                        </IconButton>
+                                    </Tooltip>
                                     <Tooltip title={"Foto deaktivieren"}>
                                         <IconButton
-                                            onClick={() => { disableSentImageButtonClickHandle(selectedImage?.id) }}
-                                            aria-label="delete"
-                                            size="medium"
+                                            onClick={disableSentImageButtonClickHandle}
                                             disabled={isExpired}
                                         >
-                                            <HideImageIcon fontSize="inherit" />
+                                            <HideImageIcon />
                                         </IconButton>
                                     </Tooltip>
                                 </Toolbar>

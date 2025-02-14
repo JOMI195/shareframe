@@ -2,6 +2,8 @@ import * as ImagesSlice from "./images.slice";
 import { apiRequest } from "@/common/utils/constants/api.constants";
 import * as ImagesEndpoints from "@/assets/endpoints/api/imagesEndpoints";
 import * as FramesEndpoints from "@/assets/endpoints/api/framesEndpoints";
+import { AppDispatch } from "@/store";
+import http from "@/services/httpService";
 
 export const fetchImages = () =>
   apiRequest({
@@ -76,3 +78,34 @@ export const deactivateSentImage = (sentImageId: number) =>
     onSuccess: ImagesSlice.deactivateSentImageFulfilled.type,
     onError: ImagesSlice.deactivateSentImageFailed.type,
   });
+
+export const downloadImage = (url: string, fileName: string) => {
+  return async (dispatch: AppDispatch) => {
+    try {
+      dispatch({ type: ImagesSlice.downloadImageRequested.type });
+      await http.get(
+        url,
+        {
+          responseType: "blob",
+        }
+      ).then(response => {
+        const type = response.headers['content-type']
+        const blob = new Blob([response.data], { type: type })
+        const file_url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = file_url;
+        a.download = fileName;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(file_url);
+        dispatch({
+          type: ImagesSlice.downloadImageReceived.type,
+        });
+      })
+    } catch (error) {
+      dispatch({ type: ImagesSlice.downloadImageFailed.type });
+      console.error('Error downloading file:', error);
+    }
+  }
+}

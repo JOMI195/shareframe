@@ -60,6 +60,16 @@ const imagesSlice = createSlice({
     deleteImageFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    downloadImageRequested: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    downloadImageReceived: (sliceState) => {
+      sliceState.api.lastFetch = Date.now();
+      sliceState.api.loading = false;
+    },
+    downloadImageFailed: (sliceState) => {
+      sliceState.api.loading = false;
+    },
 
     sentImagesRequested: (sliceState) => {
       sliceState.api.loading = true;
@@ -110,6 +120,9 @@ export const {
   deleteImageFailed,
   deleteImageFulfilled,
   deleteImagePending,
+  downloadImageRequested,
+  downloadImageReceived,
+  downloadImageFailed,
   sentImagesReceived,
   sentImagesRequestFailed,
   sentImagesRequested,
