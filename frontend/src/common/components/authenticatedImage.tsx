@@ -80,7 +80,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             <Box
                 sx={{
                     bgcolor: 'grey.200',
-                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    animation: 'pulse 2s infinite',
                     borderRadius: 1,
                     '@keyframes pulse': {
                         '0%, 100%': {
