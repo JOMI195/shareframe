@@ -11,8 +11,8 @@ const Images: React.FC = () => {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        dispatch(fetchImages());
         dispatch(fetchFriendships());
+        dispatch(fetchImages());
     }, []);
 
     return (

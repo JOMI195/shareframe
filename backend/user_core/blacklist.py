@@ -1,4 +1,7 @@
 USERNAME_BLACKLIST = [
+    "Du",
+    "Ich",
+    "Dich",
     "Adolf Hitler",
     "Nazis",
     "SS",

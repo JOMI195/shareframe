@@ -171,17 +171,41 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                     </FormControl>
                 </Grid>
                 <Grid item xs={12} md={3}>
-                    <FormGroup>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={hideToYouFilter}
-                                    onChange={handleHideToYouChange}
-                                />
+                    <FormControl
+                        fullWidth
+                        disabled={disabled}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "center",
+                            alignItems: "center",
+                            border: (theme) => `1px solid ${theme.palette.action.disabled}`,
+                            borderRadius: 1,
+                            padding: '8px 14px',
+                            height: '56px',
+                            '&:hover': {
+                                borderColor: (theme) => theme.palette.text.primary,
+                            },
+                            '& .MuiFormControlLabel-root': {
+                                marginLeft: 0,
+                                marginRight: 0,
+                            },
+                            '& .MuiSwitch-root': {
+                                marginRight: (theme) => theme.spacing(1),
                             }
-                            label="Fotos an dich verbergen"
-                        />
-                    </FormGroup>
+                        }}
+                    >
+                        <FormGroup>
+                            <FormControlLabel
+                                control={
+                                    <Switch
+                                        checked={hideToYouFilter}
+                                        onChange={handleHideToYouChange}
+                                    />
+                                }
+                                label="Fotos an dich verbergen"
+                            />
+                        </FormGroup>
+                    </FormControl>
                 </Grid>
                 <Grid item xs={12} md={3}>
                     <Button

@@ -74,7 +74,7 @@ const FiltersDialog = () => {
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                         Verfeinerne deine Suche nach geteilten Fotos.
                     </Typography>
-                    <Grid container spacing={3}>
+                    <Grid container spacing={1}>
                         <Grid item xs={12}>
                             <TextField
                                 fullWidth

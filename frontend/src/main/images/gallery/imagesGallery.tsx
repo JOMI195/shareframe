@@ -79,7 +79,7 @@ const ImagesGallery: React.FC = () => {
 
     return (
         <Stack spacing={2}>
-            {(imagesLoading && friendshipsLoading) ? (
+            {(imagesLoading || friendshipsLoading) ? (
                 <LoadingSkeleton />
             ) : (
                 <ImageList cols={cols} gap={8}>
@@ -104,7 +104,7 @@ const ImagesGallery: React.FC = () => {
                 </ImageList>
             )}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
                 {(imagesLoading && friendshipsLoading) ? (
                     <Skeleton width={200} height={40} />
                 ) : (
@@ -124,6 +124,7 @@ const ImagesGallery: React.FC = () => {
                         <Typography
                             variant="subtitle2"
                             color="textSecondary"
+                            textAlign={"center"}
                         >
                             {images.length} Foto{images.length !== 1 ? "s" : ""}
                         </Typography>

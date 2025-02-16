@@ -177,7 +177,7 @@ const SentImagesGallery = () => {
                                             objectFit: "cover",
                                             borderRadius: 8,
                                         }}
-                                        hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username) : false}
+                                        hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username) : false}
                                     />
                                     <ImageListItemBar
                                         sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
@@ -203,7 +203,7 @@ const SentImagesGallery = () => {
                 )}
 
 
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2, py: 2 }}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
                     {loading ? (
                         <Skeleton width={200} height={40} />
                     ) : (
@@ -220,8 +220,11 @@ const SentImagesGallery = () => {
                                 />
                             )}
 
-                            <Typography variant="subtitle2" color="textSecondary">
+                            <Typography textAlign={"center"} variant="subtitle2" color="textSecondary">
                                 {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
+                            </Typography>
+                            <Typography textAlign={"center"} variant="caption" color="textSecondary">
+                                (Abgelaufene Aktivität wird nach 30 Tagen gelöscht)
                             </Typography>
                         </>
                     )}

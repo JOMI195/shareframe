@@ -1,5 +1,6 @@
 import { useAppSelector } from '@/store';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
+import { Box } from '@mui/material';
 import React, { useState, useEffect } from 'react';
 
 interface AuthenticatedImageProps {
@@ -76,9 +77,21 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
 
     if (isLoading) {
         return (
-            <div
-                className="w-20 h-20 bg-gray-200 animate-pulse rounded"
-                style={style}
+            <Box
+                sx={{
+                    bgcolor: 'grey.200',
+                    animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    borderRadius: 1,
+                    '@keyframes pulse': {
+                        '0%, 100%': {
+                            opacity: 1
+                        },
+                        '50%': {
+                            opacity: .5
+                        }
+                    },
+                    ...style
+                }}
             />
         );
     }
@@ -96,7 +109,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 className={className}
                 style={{
                     ...style,
-                    filter: hideToYouFilter ? 'blur(10px)' : 'none'
+                    filter: hideToYouFilter ? 'blur(20px)' : 'none'
                 }}
                 onClick={onClick}
             />
