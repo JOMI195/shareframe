@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { framesReceived, framesRequested, framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed } from "@/store/entities/frames/frames.slice";
+import { framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed } from "@/store/entities/frames/frames.slice";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -24,18 +24,18 @@ const framesSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
-      .addCase(framesRequested, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: true,
-          message: "Bilderrahmen laden",
-        };
-      })
-      .addCase(framesReceived, (sliceState) => {
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
+      // .addCase(framesRequested, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: true,
+      //     message: "Bilderrahmen laden",
+      //   };
+      // })
+      // .addCase(framesReceived, (sliceState) => {
+      //   sliceState.snackbar.loading = {
+      //     open: false,
+      //     message: "",
+      //   };
+      // })
       .addCase(framesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
