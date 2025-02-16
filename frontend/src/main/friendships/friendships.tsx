@@ -2,13 +2,13 @@ import React, { useEffect } from "react";
 import { Badge, Box, Container, Divider, Tab, Tabs } from "@mui/material";
 import { AddButton } from "./buttons/addButton";
 import Dialogs from "./dialogs/dialogs";
-import FriendshipsTable from "./tables/friendshipsTable";
 import CustomTabPanel, { a11yProps } from "./tabs/tabs";
-import FriendshipRequestTable from "./tables/friendshipRequestsTable";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
+import FriendshipsGallery from "./gallery/friendshipsGallery";
+import FriendshipRequestsGallery from "./gallery/friendshipRequestsGallery";
 
 const Friendships: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -17,7 +17,29 @@ const Friendships: React.FC = () => {
     const user = useAppSelector(getUser);
     const friendships = useAppSelector(getFriendships);
 
-    const pendingRequests = friendships.filter(friendship => friendship.status === "pending" && friendship.reciever === user.me.username).length;
+    const pendingRequests = friendships.filter(
+        (friendship) =>
+            friendship.status === "pending"
+    )
+        // Only show friend requests received by the current user
+        .filter((friendship) => friendship.reciever === user.me.username)
+        // Exclude friend requests if an accepted friendship already exists between user and friend
+        .filter((friendship) => {
+            // For a friend request received by the user, the friend is the sender
+            const friend = friendship.sender;
+            // Check in the complete friendships array for an accepted friendship with that friend
+            const acceptedExists = friendships.some(
+                (f) =>
+                    f.status === "accepted" &&
+                    (
+                        // Either the current user sent the accepted request...
+                        (f.sender === user.me.username && f.reciever === friend) ||
+                        // ...or the current user received the accepted request.
+                        (f.reciever === user.me.username && f.sender === friend)
+                    )
+            );
+            return !acceptedExists;
+        }).length;
 
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setSelectedTabIndex(newValue);
@@ -49,7 +71,6 @@ const Friendships: React.FC = () => {
                 <Tabs
                     value={selectedTabIndex}
                     onChange={handleChange}
-                    aria-label="ifcmodelcreation request tabs"
                     orientation="horizontal"
                     sx={{ borderColor: 'divider', minWidth: 200 }}
                 >
@@ -75,10 +96,10 @@ const Friendships: React.FC = () => {
                 </Tabs>
                 <Divider sx={{ mb: 5 }} />
                 <CustomTabPanel value={selectedTabIndex} index={0}>
-                    <FriendshipsTable />
+                    <FriendshipsGallery />
                 </CustomTabPanel>
                 <CustomTabPanel value={selectedTabIndex} index={1}>
-                    <FriendshipRequestTable />
+                    <FriendshipRequestsGallery />
                 </CustomTabPanel>
             </Box>
             <AddButton />

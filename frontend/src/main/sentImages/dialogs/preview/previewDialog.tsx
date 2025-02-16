@@ -85,7 +85,7 @@ const ImagePreviewDialog = () => {
                                                 fontSize: 17
                                             }}
                                         >
-                                            {selectedImage.sender?.slice(0, 1)}
+                                            {selectedImage.sender?.toUpperCase().slice(0, 1)}
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText
@@ -106,7 +106,7 @@ const ImagePreviewDialog = () => {
                                                 fontSize: 17
                                             }}
                                         >
-                                            {selectedImage.reciever?.slice(0, 1)}
+                                            {selectedImage.reciever?.toUpperCase().slice(0, 1)}
                                         </Avatar>
                                     </ListItemAvatar>
                                     <ListItemText

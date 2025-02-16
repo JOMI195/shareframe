@@ -17,7 +17,7 @@ const FriendshipDeleteDialog = () => {
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getApi).loading
     const friendshipToDelete = friendships.find((friendship => friendship.id === deleteDialog.friendshipId)) as IFriendship | undefined;
-    const friendToDelete = friendshipToDelete ? (friendshipToDelete.sender === user.me.username ? friendshipToDelete.sender : friendshipToDelete.reciever) : undefined;
+    const friendToDelete = friendshipToDelete ? (friendshipToDelete.sender === user.me.username ? friendshipToDelete.reciever : friendshipToDelete.sender) : undefined;
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 

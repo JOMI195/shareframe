@@ -13,8 +13,9 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
 import { getApi as imagesApi, getImages } from "@/store/entities/images/images.slice";
-import { getApi as friendshipsApi } from "@/store/entities/images/images.slice";
+import { getApi as friendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
+import { IImage } from "@/types";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const ITEMS_PER_PAGE = 12;
@@ -44,7 +45,7 @@ const ImagesGallery: React.FC = () => {
         cols = 4;
     }
 
-    const handleImageClick = (image: any) => {
+    const handleImageClick = (image: IImage) => {
         dispatch(openPreviewImageDialog({ image: image }));
     };
 
