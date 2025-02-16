@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed } from "@/store/entities/images/images.slice";
+import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 
@@ -9,16 +10,7 @@ type SliceState = {
     delete: { open: boolean, imageId: number | null },
     preview: {
       open: boolean;
-      selectedImage: {
-        id: number;
-        name: string;
-        url: string;
-        created_at: string;
-        sender: string | null;
-        reciever: string | null;
-        expires_at: string | null;
-        sent_at: string | null;
-      } | null
+      selectedImage: IImage | null
     },
     sendToFrame: { open: boolean, imageId: number | null },
 
@@ -229,17 +221,7 @@ const imagesSlice = createSlice({
     },
     previewImageDialogOpened: (sliceState, action) => {
       sliceState.dialogs.preview.open = true;
-      sliceState.dialogs.preview.selectedImage =
-      {
-        id: action.payload.id,
-        name: action.payload.name,
-        url: action.payload.url,
-        created_at: action.payload.created_at,
-        sender: action.payload.sender,
-        reciever: action.payload.reciever,
-        expires_at: action.payload.expires_at,
-        sent_at: action.payload.sent_at,
-      }
+      sliceState.dialogs.preview.selectedImage = action.payload.image
     },
     previewImageDialogClosed: (sliceState) => {
       sliceState.dialogs.preview.open = false;
@@ -306,31 +288,9 @@ export const closeDeleteImageDialog = () => ({
   type: deleteImageDialogClosed.type,
 });
 
-interface PreviewImagePayload {
-  id: number;
-  name: string;
-  url: string;
-  created_at: string;
-  sender?: string | null;
-  reciever?: string | null;
-  expires_at?: string | null;
-  sent_at?: string | null;
-}
-
-const defaultPayload: PreviewImagePayload = {
-  id: 0,
-  name: '',
-  url: '',
-  created_at: '',
-  sender: null,
-  reciever: null,
-  expires_at: null,
-  sent_at: null,
-};
-
-export const openPreviewImageDialog = (payload: Partial<PreviewImagePayload> = defaultPayload) => ({
+export const openPreviewImageDialog = (payload: { image: IImage }) => ({
   type: previewImageDialogOpened.type,
-  payload: { ...defaultPayload, ...payload }
+  payload
 });
 
 export const closePreviewImageDialog = () => ({

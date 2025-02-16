@@ -15,7 +15,6 @@ import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
 import { getApi as imagesApi, getImages } from "@/store/entities/images/images.slice";
 import { getApi as friendshipsApi } from "@/store/entities/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
-import { formatGermanDateTime } from "@/common/components/dateUtils";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const ITEMS_PER_PAGE = 12;
@@ -46,12 +45,7 @@ const ImagesGallery: React.FC = () => {
     }
 
     const handleImageClick = (image: any) => {
-        dispatch(openPreviewImageDialog({
-            id: image.id,
-            name: image.name,
-            url: image.url,
-            created_at: formatGermanDateTime(new Date(image.created_at))
-        }));
+        dispatch(openPreviewImageDialog({ image: image }));
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {

@@ -12,7 +12,6 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
 import { getApi, getSentImages } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -23,7 +22,7 @@ import SendIcon from '@mui/icons-material/Send';
 import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage } from "@/types";
 import FilterControls from "./filters/filters";
-import { getDialogs } from "@/store/ui/sentImages/sentImages.slice";
+import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
@@ -54,16 +53,7 @@ const SentImagesGallery = () => {
     }
 
     const handleImageClick = (sentImage: ISentImage) => {
-        dispatch(openPreviewImageDialog({
-            id: sentImage.id,
-            name: sentImage.image.name,
-            url: sentImage.image.url,
-            created_at: formatGermanDateTime(new Date(sentImage.image.created_at)),
-            sender: sentImage.sender,
-            reciever: sentImage.reciever,
-            expires_at: sentImage.expires_at,
-            sent_at: formatGermanDateTime(new Date(sentImage.sent_at)),
-        }));
+        dispatch(openPreviewSentImageDialog({ sentImage: sentImage }));
     };
 
     const getStatusIcon = (isExpired: boolean) => {
@@ -105,7 +95,9 @@ const SentImagesGallery = () => {
                         noWrap
                         component="span"
                         sx={{
-                            ml: 1
+                            ml: 1,
+                            fontWeight: isSender ? 700 : "inherit",
+                            color: isSender ? "secondary.main" : "inherit",
                         }}
                     >
                         {isSender ? 'Du' : sentImage.sender}
@@ -117,7 +109,9 @@ const SentImagesGallery = () => {
                         noWrap
                         component="span"
                         sx={{
-                            ml: 1
+                            ml: 1,
+                            fontWeight: isReceiver ? 700 : "inherit",
+                            color: isReceiver ? "secondary.main" : "inherit",
                         }}
                     >
                         {isReceiver ? 'Du' : sentImage.reciever}

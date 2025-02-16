@@ -59,7 +59,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             } catch (error) {
                 setIsLoading(false);
                 if (error instanceof Error) {
-                    console.error('Error loading image:', error.message);
+                    //console.error('Error loading image:', error.message);
                     onError?.(error);
                 }
             }

@@ -1,9 +1,13 @@
 import { RootState } from "@/store";
-import { ShippingFilter, StatusFilter } from "@/types";
+import { ISentImage, ShippingFilter, StatusFilter } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
   dialogs: {
+    preview: {
+      open: boolean;
+      selectedSentImage: ISentImage | null
+    },
     filter: {
       open: boolean;
       statusFilter: StatusFilter;
@@ -17,6 +21,10 @@ type SliceState = {
 
 const initialState: SliceState = {
   dialogs: {
+    preview: {
+      open: false,
+      selectedSentImage: null
+    },
     filter: {
       open: false,
       statusFilter: 'all',
@@ -32,6 +40,14 @@ const sentImagesSlice = createSlice({
   name: "sentImages",
   initialState,
   reducers: {
+    previewSentImageDialogOpened: (sliceState, action) => {
+      sliceState.dialogs.preview.open = true;
+      sliceState.dialogs.preview.selectedSentImage = action.payload.sentImage
+    },
+    previewSentImageDialogClosed: (sliceState) => {
+      sliceState.dialogs.preview.open = false;
+      sliceState.dialogs.preview.selectedSentImage = null;
+    },
     filterDialogOpened: (sliceState) => {
       sliceState.dialogs.filter.open = true;
     },
@@ -61,6 +77,15 @@ const sentImagesSlice = createSlice({
       sliceState.dialogs.filter.hideToYouFilter = true;
     },
   },
+});
+
+export const openPreviewSentImageDialog = (payload: { sentImage: ISentImage }) => ({
+  type: previewSentImageDialogOpened.type,
+  payload
+});
+
+export const closePreviewSentImageDialog = () => ({
+  type: previewSentImageDialogClosed.type,
 });
 
 export const openFilterDialog = () => ({
@@ -101,6 +126,8 @@ export const resetFilters = () => ({
 });
 
 export const {
+  previewSentImageDialogOpened,
+  previewSentImageDialogClosed,
   filterDialogOpened,
   filterDialogClosed,
   statusFilterSet,
