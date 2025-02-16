@@ -1,0 +1,173 @@
+import React, { useState } from "react";
+import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    useTheme,
+    Pagination,
+    Stack,
+    Skeleton,
+    Grid,
+    CardActions,
+    Tooltip,
+    IconButton,
+} from "@mui/material";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { IFrame } from "@/types";
+import DeleteIcon from '@mui/icons-material/Delete';
+import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
+import { openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+
+const ITEMS_PER_PAGE = 6;
+
+const FramesGallery: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const theme = useTheme();
+
+    const frames = useAppSelector(getFrames);
+    const loading = useAppSelector(getApi).loading;
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(frames.length / ITEMS_PER_PAGE);
+    const currentFrames = frames.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const unregisterFrameButtonClickHandle = (frame: IFrame) => {
+        dispatch(openUnregisterFrameDialog({ frameId: frame.id }))
+    }
+
+    const handlePageChange = (
+        _event: React.ChangeEvent<unknown>,
+        page: number
+    ) => {
+        setCurrentPage(page);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const LoadingSkeletonCard = () => (
+        <Card
+            sx={{
+                position: "relative",
+                width: "100%",
+                paddingTop: "100%",
+                boxSizing: "border-box",
+            }}
+        >
+            <Skeleton
+                variant="rectangular"
+                sx={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    borderRadius: 1,
+                    backgroundColor: theme.palette.action.hover,
+                }}
+            />
+        </Card>
+    );
+
+    const FrameCard = ({ frame }: { frame: IFrame }) => {
+        return (
+            <Card>
+                <CardContent
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        p: 2,
+                    }}
+                >
+                    <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                        {frame.public_serial_number}
+                    </Typography>
+                </CardContent>
+                <CardActions>
+                    <Box sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        height: "100%",
+                        width: "100%"
+                    }}>
+                        <Stack direction="row">
+                            <Tooltip title={"Bilderrahmen abmelden"}>
+                                <IconButton
+                                    onClick={() => { unregisterFrameButtonClickHandle(frame) }}
+                                    aria-label="delete"
+                                    color="error"
+                                >
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Tooltip>
+                        </Stack>
+                    </Box>
+                </CardActions>
+            </Card>
+        );
+    };
+
+
+    return (
+        <Stack spacing={2}>
+            <Box sx={{ px: 2 }}>
+                {loading ? (
+                    <Grid container spacing={2}>
+                        {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+                            <Grid item key={index} xs={12} md={4}>
+                                <LoadingSkeletonCard />
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : (
+                    <Grid container spacing={2}>
+                        {currentFrames
+                            .map((frame) => (
+                                <Grid item key={frame.id} xs={12} md={4}>
+                                    <FrameCard frame={frame} />
+                                </Grid>
+                            ))}
+                    </Grid>
+                )}
+            </Box>
+
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    py: 2,
+                }}
+            >
+                {loading ? (
+                    <Skeleton width={200} height={40} />
+                ) : (
+                    <>
+                        {totalPages > 1 && (
+                            <Pagination
+                                count={totalPages}
+                                page={currentPage}
+                                onChange={handlePageChange}
+                                color="primary"
+                                size="large"
+                                showFirstButton
+                                showLastButton
+                            />
+                        )}
+
+                        <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                            {frames.length} Bilderrahmen
+                        </Typography>
+                    </>
+                )}
+            </Box>
+        </Stack>
+    );
+};
+
+export default FramesGallery;

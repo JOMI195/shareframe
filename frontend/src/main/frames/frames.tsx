@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Container } from "@mui/material";
 import { AddButton } from "./buttons/addButton";
 import Dialogs from "./dialogs/dialogs";
-import FramesTable from "./tables/framesTable";
+import FramesGallery from "./gallery/framesGallery";
 
 const Frames: React.FC = () => {
     return (
@@ -13,7 +13,7 @@ const Frames: React.FC = () => {
                 display: "flex",
                 flexDirection: "column"
             }}>
-                <FramesTable />
+                <FramesGallery />
             </Box>
             <AddButton />
             <Dialogs />
