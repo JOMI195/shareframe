@@ -12,7 +12,9 @@ import {
     DialogContent,
     Theme,
     SxProps,
-    Tooltip
+    Tooltip,
+    Button,
+    Grid
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { SlideTransition, ZoomTransition } from "./dialogTransitions";
@@ -109,6 +111,24 @@ const CustomDialog: React.FC<ReusableDialogProps> = ({
                             </Toolbar>
                         </Box>
                     )}
+
+                    <Grid
+                        container
+                        display={"flex"} justifyContent={"center"} alignItems={"center"}
+                        sx={{ mt: 2 }}
+                    >
+                        <Grid item xs={6} >
+                            <Button
+                                onClick={onClose}
+                                color="primary"
+                                variant="outlined"
+                                fullWidth
+                                sx={{ display: { xs: "block", sm: "none" } }}
+                            >
+                                Zurück
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </Box>
             </DialogContent>
         </Dialog>
