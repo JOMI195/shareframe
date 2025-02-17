@@ -79,9 +79,10 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         return (
             <Box
                 sx={{
+                    width: "100%",
+                    height: "100%",
                     bgcolor: 'grey.200',
                     animation: 'pulse 2s infinite',
-                    borderRadius: 1,
                     '@keyframes pulse': {
                         '0%, 100%': {
                             opacity: 1
