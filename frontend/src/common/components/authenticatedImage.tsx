@@ -110,7 +110,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 className={className}
                 style={{
                     ...style,
-                    filter: hideToYouFilter ? 'blur(20px)' : 'none'
+                    filter: hideToYouFilter ? 'blur(25px)' : 'none'
                 }}
                 onClick={onClick}
             />

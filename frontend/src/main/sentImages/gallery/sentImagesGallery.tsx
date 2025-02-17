@@ -169,7 +169,7 @@ const SentImagesGallery = () => {
                                             width: "100%",
                                             height: "100%",
                                             objectFit: "cover",
-                                            borderRadius: 8,
+                                            borderRadius: 1,
                                         }}
                                         hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username) : false}
                                     />
