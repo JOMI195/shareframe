@@ -1,26 +1,29 @@
 import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import { Provider } from 'react-redux';
-import { store } from './store/index.ts';
+import { persistor, store } from './store/index.ts';
 import http from "./services/httpService";
 import '@fontsource/inter';
-import StoreGate from './common/components/storeGate.tsx';
 import { Suspense } from 'react';
 import ErrorBoundary from './common/components/error/errorBoundary/errorBoundary.tsx';
 import LoadingFallback from './common/components/loadingFallback.tsx';
+import { PersistGate } from 'redux-persist/integration/react';
+import localStorageBuildVersionUpdate from './common/components/localStorageBuildVersionUpdateService.ts';
 
 const AppWrapper = () => {
   return (
     <ErrorBoundary>
       <Provider store={store}>
-        <StoreGate>
+        <PersistGate loading={null} persistor={persistor}>
           <App />
-        </StoreGate>
+        </PersistGate>
       </Provider>
     </ErrorBoundary>
   );
 };
 
+localStorageBuildVersionUpdate();
+http.apiSetup(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);
 
@@ -29,5 +32,3 @@ root.render(
     <AppWrapper />
   </Suspense>
 );
-
-http.apiSetup(store);
