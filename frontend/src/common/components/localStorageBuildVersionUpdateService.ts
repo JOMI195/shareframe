@@ -11,11 +11,11 @@ const localStorageBuildVersionUpdate = () => {
         localStorage.setItem(BUILD_VERSION_STORAGE_KEY, currentBuildVersion);
         return;
     }
-    // else if (buildVersionStorageValue !== currentBuildVersion) {
-    //     localStorage.removeItem("persist:shareframe-data");
-    //     localStorage.setItem(BUILD_VERSION_STORAGE_KEY, currentBuildVersion);
-    //     window.location.reload();
-    // };
+    else if (buildVersionStorageValue !== currentBuildVersion) {
+        //localStorage.removeItem("persist:shareframe-data");
+        localStorage.setItem(BUILD_VERSION_STORAGE_KEY, currentBuildVersion);
+        //window.location.reload();
+    };
 }
 
 export default localStorageBuildVersionUpdate;
