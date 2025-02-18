@@ -65,7 +65,7 @@ const ImagePreviewDialog = () => {
         <CustomDialog
             open={dialog.open}
             onClose={handleCloseImagePreview}
-            title={selectedImage?.image.name}
+            title={"Gesendetes Foto"}
             //subtitle="Optional subtitle or description"
             actions={dialogActions}
             contentSx={{ padding: 2 }}
