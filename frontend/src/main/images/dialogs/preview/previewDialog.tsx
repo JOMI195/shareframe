@@ -81,7 +81,7 @@ const ImagePreviewDialog = () => {
                     <AuthenticatedImage
                         url={`${MEDIA_BASE_URL}${selectedImage.url}`}
                         alt={selectedImage?.name}
-                        style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 1 }}
+                        style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
                     />
                 )}
 

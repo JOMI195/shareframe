@@ -91,7 +91,8 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                             opacity: .5
                         }
                     },
-                    ...style
+                    ...style,
+                    borderRadius: 0,
                 }}
             />
         );
