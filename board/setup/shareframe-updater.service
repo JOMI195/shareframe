@@ -1,0 +1,16 @@
+[Unit]
+Description=ShareFrame Python Updater
+After=network.target
+
+[Service]
+Type=oneshot
+User=frame
+WorkingDirectory=/home/frame/Documents/shareframe/updater
+ExecStart=/home/frame/Documents/shareframe/.venv/bin/python /home/frame/Documents/shareframe/updater/updater.py
+Environment=PYTHONUNBUFFERED=1
+
+# Don't restart for oneshot services
+Restart=no
+
+[Install]
+WantedBy=multi-user.target

@@ -1,9 +1,15 @@
 import os
+from pathlib import Path
 from typing import List
 import asyncio
 from dotenv import load_dotenv
 
-load_dotenv()
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
+env_serial_path = parent_dir / ".env.serial-number"
+
+load_dotenv(current_dir / ".env")
+load_dotenv(env_serial_path, override=True)
 
 from src.client import WebsocketClient
 from src.image import ImageProcessor

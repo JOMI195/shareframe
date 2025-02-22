@@ -9,7 +9,7 @@ from config import settings
 class ImageProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.save_directory = settings.IMAGES_SAVE_DIR
+        self.save_directory = settings.USER_IMAGES_SAVE_DIR
         try:
             os.makedirs(self.save_directory, exist_ok=True)
             self.logger.info(f"Initialized image save directory: {self.save_directory}")

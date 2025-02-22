@@ -92,7 +92,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                         }
                     },
                     ...style,
-                    borderRadius: 0,
+                    borderRadius: 1,
                 }}
             />
         );

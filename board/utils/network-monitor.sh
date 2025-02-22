@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Set up logging
-LOG_DIR="/var/log/network-monitor"
-LOG_FILE="${LOG_DIR}/network.log"
-COUNTER_FILE="${LOG_DIR}/down_counter"
+LOG_DIR="/var/log/shareframe"
+LOG_FILE="${LOG_DIR}/shareframe-network-monitor.log"
+COUNTER_FILE="${LOG_DIR}/shareframe-network-monitor-down_counter"
 
 # Configuration
 WLAN='wlan0'

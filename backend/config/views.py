@@ -7,6 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.conf import settings
 from django.db.models import Q
 
+from frame_updates.authentication import FrameTokenAuthentication
 from images.models import Image
 from sent_images.models import SentImage
 
@@ -21,7 +22,7 @@ class MediaAccessView(APIView):
             raise PermissionDenied("No valid path")
 
         if not user.is_authenticated:
-            raise PermissionDenied("Not authenticated")
+            raise PermissionDenied("Media not found or not authorized to access.")
 
         access_granted = False
 
@@ -55,7 +56,26 @@ class MediaAccessView(APIView):
         if access_granted:
             response = Response(status=200)
             # nginx proxy_pass: /app/backend/mediafiles/private/
-            response["X-Accel-Redirect"] = "/api/media/protected/" + path
+            response["X-Accel-Redirect"] = "/api/media/protected/private/" + path
             return response
         else:
-            raise PermissionDenied("Not authorized to access this media.")
+            raise PermissionDenied("Media not found or not authorized to access.")
+
+
+class FrameUpdatesAccessView(APIView):
+    authentication_classes = [FrameTokenAuthentication]
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, path: str):
+        user = request.user
+
+        if path.strip() == "":
+            raise PermissionDenied("No valid path")
+
+        if not user.is_authenticated:
+            raise PermissionDenied("Media not found or not authorized to access.")
+
+        response = Response(status=200)
+        # nginx proxy_pass: /app/backend/mediafiles/frame-updates/
+        response["X-Accel-Redirect"] = "/api/media/protected/frame-updates/" + path
+        return response

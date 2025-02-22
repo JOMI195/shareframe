@@ -1,5 +1,6 @@
 import asyncio
 import os
+from pathlib import Path
 import sys
 import time
 import logging
@@ -50,11 +51,18 @@ class Display:
             raise
 
     def _load_user_images(self):
-        save_directory = settings.IMAGES_SAVE_DIR
         self.logger.info(f"Loading user images from: {save_directory}")
 
+        save_directory = os.path.join(
+            settings.BASE_DIR,
+            settings.USER_IMAGES_SAVE_DIR,
+        )
+
         if not os.path.exists(save_directory):
-            self.logger.warning(f"User images directory not found: {save_directory}")
+            self.logger.warning(
+                f"User images directory not found: {save_directory}. Creating directory instead."
+            )
+            Path(save_directory).mkdir()
             return
 
         for filename in os.listdir(save_directory):
@@ -99,8 +107,8 @@ class Display:
 
     def _load_static_images(self):
         static_folder = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.realpath(__file__))),
-            settings.STATIC_IMAGES_DIR,
+            settings.BASE_DIR,
+            settings.DEFAULT_IMAGES_DIR,
         )
         self.logger.info(f"Loading static images from: {static_folder}")
 
@@ -127,6 +135,22 @@ class Display:
         )
         return can_refresh
 
+    async def _show_loading_image(self):
+        self.logger.info(f"Loading startup frame image")
+
+        frame_startup_image_path = os.path.join(
+            settings.BASE_DIR,
+            settings.DEFAULT_FRAME_IMAGES_DIR,
+            "logo-frame-loading-shareframe.jpg",
+        )
+
+        if os.path.exists(frame_startup_image_path):
+            await self._display_image(frame_startup_image_path, display_fast=True)
+        else:
+            self.logger.warning(
+                f"Loading startup frame image not found: {frame_startup_image_path}"
+            )
+
     async def _wait_until_can_refresh(self):
         if not self._can_refresh():
             wait_time = (
@@ -140,6 +164,8 @@ class Display:
 
     async def display_images_in_loop(self, interval: int):
         self.logger.info(f"Starting display loop with interval: {interval}s")
+
+        await self._show_loading_image()
 
         while True:
             images_to_display = (
@@ -198,7 +224,7 @@ class Display:
                 await self._display_image(image_path)
                 await asyncio.sleep(interval)
 
-    async def _display_image(self, image_path: str):
+    async def _display_image(self, image_path: str, display_fast: bool = False):
         self.logger.info(f"Preparing to display image: {image_path}")
 
         try:
@@ -207,10 +233,11 @@ class Display:
             image = Image.open(image_path)
             image = image.resize((self.epd.width, self.epd.height))
 
-            self.epd.init()
-            self.epd.Clear()
-            self.epd.sleep()
-            await asyncio.sleep(120)
+            if not display_fast:
+                self.epd.init()
+                self.epd.Clear()
+                self.epd.sleep()
+                await asyncio.sleep(180)
 
             self.epd.init()
             self.epd.display(self.epd.getbuffer(image))

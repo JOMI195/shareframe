@@ -1,11 +1,15 @@
 import os
+from pathlib import Path
 
 DEBUG = os.getenv("DEBUG", False) == "True"
 PRODUCTION = os.getenv("PRODUCTION", False) == "True"
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+MEDIA_FOLDER = "media"
 
 # Logging config
-LOGGING_SAVE_DIR = "logs"
-LOGGING_FILE = "frame_logs.log"
+LOGGING_SAVE_DIR = "/var/log/shareframe"
+LOGGING_FILE = "shareframe-application.log"
 LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 
 # Client config
@@ -26,7 +30,7 @@ HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-token/"
 
 SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
 
-TOKEN_CACHE_DIR = "/tmp/frame_access_token"
+TOKEN_CACHE_DIR = ".cache"
 TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
 
 IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
@@ -34,9 +38,10 @@ IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
 WEBSOCKET_MESSAGE_MAX_SIZE = 10 * 1024 * 1024  # 10MB
 
 # Display config
-IMAGES_SAVE_DIR = "/home/frame/Documents/board_data/recieved_images"
-STATIC_IMAGES_DIR = "fixtures"
+USER_IMAGES_SAVE_DIR = f"{MEDIA_FOLDER}/recieved-user-images"
+DEFAULT_FRAME_IMAGES_DIR = f"{MEDIA_FOLDER}/frame"
+DEFAULT_IMAGES_DIR = f"{MEDIA_FOLDER}/default"
 
 REFRESH_INTERVAL_HOURS = 12
-NEXT_REFRESH_WAITING_INTERVALL_MINUTES = 5
+NEXT_REFRESH_WAITING_INTERVALL_MINUTES = 3
 IMAGES_LOOP_INTERVALL_MINUTES = 15

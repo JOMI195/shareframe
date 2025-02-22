@@ -44,7 +44,10 @@ class WebsocketClient:
             self.message_handlers.append(self._default_message_handler)
             self.logger.info("Using default message handler")
 
-        self.token_cache_file = settings.TOKEN_CACHE_FILE
+        self.token_cache_file = os.path.join(
+            settings.BASE_DIR,
+            settings.TOKEN_CACHE_FILE,
+        )
         self.access_token: Optional[str] = None
         self.token_expires_at: Optional[float] = None
         self._load_cached_token()

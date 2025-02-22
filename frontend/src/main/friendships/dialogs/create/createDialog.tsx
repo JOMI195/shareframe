@@ -33,7 +33,7 @@ const FriendshipCreateDialog: React.FC = () => {
       .string()
       .required("Dieses Feld wird benötigt" as string)
       .matches(
-        /^(?=.*[A-Z]).{8,8}$/,
+        /^[A-Za-z0-9]{8}$/,
         "Der Code besteht aus 8 Zeichen" as string
       )
     ,

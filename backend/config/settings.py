@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     # APPS
     "frames",
+    "frame_updates",
     "authentication",
     "appEmail",
     "user_core",

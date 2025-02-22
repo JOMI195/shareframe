@@ -1,0 +1,16 @@
+[Unit]
+Description=ShareFrame Python Application
+After=network.target pigpiod.service
+Wants=pigpiod.service
+
+[Service]
+Type=simple
+User=frame
+WorkingDirectory=/home/frame/Documents/shareframe/app
+EnvironmentFile=/home/frame/Documents/shareframe/app/.env
+ExecStart=/home/frame/Documents/shareframe/.venv/bin/python /home/frame/Documents/shareframe/app/main.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

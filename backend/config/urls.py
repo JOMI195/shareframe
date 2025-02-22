@@ -4,7 +4,7 @@ from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from .views import MediaAccessView
+from .views import FrameUpdatesAccessView, MediaAccessView
 
 urlpatterns = [
     # general
@@ -14,6 +14,7 @@ urlpatterns = [
     path("api/auth/", include("djoser.urls.jwt")),
     # apps
     path("api/", include("frames.urls")),
+    path("api/", include("frame_updates.urls")),
     path("api/", include("images.urls")),
     path("api/", include("sent_images.urls")),
     path("api/", include("friendships.urls")),
@@ -23,6 +24,13 @@ if not bool(settings.DEBUG):
     urlpatterns.append(
         re_path(
             r"^api/media/private/(?P<path>.*)$", MediaAccessView.as_view(), name="media"
+        )
+    )
+    urlpatterns.append(
+        re_path(
+            r"^api/media/frame-updates/(?P<path>.*)$",
+            FrameUpdatesAccessView.as_view(),
+            name="frame-updates-media",
         )
     )
 
