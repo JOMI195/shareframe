@@ -14,7 +14,7 @@ urlpatterns = [
         name="latest-version",
     ),
     path(
-        f"{URL_PATH}<str:version>/",
+        f"{URL_PATH}<str:version>",
         UpdateAPIViewSet.as_view({"get": "get_version"}),
         name="version-detail",
     ),
