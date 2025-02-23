@@ -1,16 +1,24 @@
 [Unit]
-Description=ShareFrame Python Application
-After=network.target pigpiod.service
-Wants=pigpiod.service
+Description=shareframe python application
+After=network.target pigpiod.service dev-spidev0.0.device sys-devices-platform-soc-3f204000.spi-spi_master-spi0-spi0.0.device
+Wants=pigpiod.service dev-spidev0.0.device
+Requires=sys-devices-platform-soc-3f204000.spi-spi_master-spi0-spi0.0.device
 
 [Service]
 Type=simple
 User=frame
-WorkingDirectory=/home/frame/Documents/shareframe/app
-EnvironmentFile=/home/frame/Documents/shareframe/app/.env
-ExecStart=/home/frame/Documents/shareframe/.venv/bin/python /home/frame/Documents/shareframe/app/main.py
+WorkingDirectory=/home/frame/shareframe/app
+
+ExecStartPre=/bin/sleep 5
+ExecStartPre=/sbin/modprobe spi-bcm2835
+ExecStartPre=/sbin/modprobe spidev
+
+ExecStart=/home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/main.py
+
 Restart=always
-RestartSec=10
+RestartSec=30s
+
+Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target

@@ -9,7 +9,10 @@ from config import settings
 class ImageProcessor:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.save_directory = settings.USER_IMAGES_SAVE_DIR
+        self.logger.info("Initializing image processor")
+
+        save_directory_path = settings.USER_IMAGES_SAVE_PATH
+        self.save_directory = save_directory_path.as_posix()
         try:
             os.makedirs(self.save_directory, exist_ok=True)
             self.logger.info(f"Initialized image save directory: {self.save_directory}")
@@ -18,6 +21,8 @@ class ImageProcessor:
                 f"Failed to create save directory: {str(e)}", exc_info=True
             )
             raise
+
+        self.logger.info("Initializing image processor successful")
 
     def process_image_message(self, message: Dict) -> Optional[str]:
         if not all(key in message for key in ["type", "sender", "data"]):
@@ -40,7 +45,7 @@ class ImageProcessor:
             with open(filepath, "wb") as f:
                 f.write(image_data)
 
-            self.logger.info(f"Image {filepath} saved successfully")
+            self.logger.info(f"Image {filepath} saved successful")
             return filepath
 
         except base64.binascii.Error as e:

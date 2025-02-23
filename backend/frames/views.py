@@ -272,7 +272,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         return Response(
-            {"message": "Image sent successfully."}, status=status.HTTP_200_OK
+            {"message": "Image sent successful."}, status=status.HTTP_200_OK
         )
 
     @action(

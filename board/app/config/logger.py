@@ -5,7 +5,10 @@ from logging.handlers import RotatingFileHandler
 from config import settings
 
 
-def setup_logging(log_level: str = "INFO") -> None:
+def setup_logging(
+    log_file_path: str,
+    log_level: str = "INFO",
+) -> None:
     log_dir = settings.LOGGING_SAVE_DIR
 
     Path(log_dir).mkdir(exist_ok=True)
@@ -20,7 +23,7 @@ def setup_logging(log_level: str = "INFO") -> None:
 
     # File handler (rotating log files)
     file_handler = RotatingFileHandler(
-        settings.LOGGING_FULL_FILE_PATH, maxBytes=5 * 1024 * 1024, backupCount=5  # 5MB
+        log_file_path, maxBytes=5 * 1024 * 1024, backupCount=5  # 5MB
     )
     file_handler.setFormatter(file_formatter)
     file_handler.setLevel(log_level)

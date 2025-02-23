@@ -10,18 +10,39 @@ if [ -z "$1" ]; then
 fi
 
 USER="frame"
-SERIAL_NUMBER=$1
-WORKING_DIR="/home/$USER/Documents/shareframe"
+APPLICATION_SERVICE_NAME="shareframe"
+APPLICATION_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
+UPDATE_SERVICE_NAME="shareframe-updater"
+UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
+
+SERIAL_NUMBER=$1
+WORKING_DIR="/home/$USER/shareframe"
+
+APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
+UPDATER_LOG_FILE="/var/log/shareframe/shareframe-updater.log"
+
+# Create log files
+
+if [ ! -f "$APPLICATION_LOG_FILE" ]; then
+    sudo touch "$APPLICATION_LOG_FILE"
+    echo "Log file created: $APPLICATION_LOG_FILE"
+fi
+sudo chown "$USER:$USER" "$APPLICATION_LOG_FILE"
+sudo chmod 664 "$APPLICATION_LOG_FILE"
+
+if [ ! -f "$UPDATER_LOG_FILE" ]; then
+    sudo touch "$UPDATER_LOG_FILE"
+    echo "Log file created: $UPDATER_LOG_FILE"
+fi
+sudo chown "$USER:$USER" "$UPDATER_LOG_FILE"
+sudo chmod 664 "$UPDATER_LOG_FILE"
+
+# Check if directories existing
 if [ ! -d "$WORKING_DIR/app" ]; then
     echo "Error: Initial version folder app not found. Please copy initial version to board first."
     exit 1
 fi
-
-# if [ ! -f "$WORKING_DIR/updater" ]; then
-#     echo "Error: Updater folder not found. Please copy folder to board first."
-#     exit 1
-# fi
 
 if [ "$EUID" -ne 0 ]; then 
     echo "Please run as root (use sudo)"
@@ -33,7 +54,8 @@ if [ ! -f "$WORKING_DIR/.env.serial-number" ]; then
 fi
 
 sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" $WORKING_DIR/.env.serial-number
-chmod 600 $WORKING_DIR/.env.serial-number
+chown frame:frame $WORKING_DIR/.env.serial-number
+chmod 644 $WORKING_DIR/.env.serial-number
 
 apt-get update
 apt-get upgrade -y
@@ -42,30 +64,28 @@ apt-get install -y python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil 
 cd $WORKING_DIR
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
-pip install spidev gpiozero python-dotenv asyncio websockets requests
+pip install --upgrade pip
+pip install spidev gpiozero python-dotenv asyncio websockets==14.1 requests
 
-if [ -f "$WORKING_DIR/setup/shareframe.service" ]; then
-    cp $WORKING_DIR/setup/shareframe.service /etc/systemd/system/shareframe.service
+if [ -f "$WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME" ]; then
+    cp $WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME /etc/systemd/system/$APPLICATION_SERVICE_FILE_NAME
 else
-    echo "Warning: shareframe.service file not found!"
+    echo "Warning: $APPLICATION_SERVICE_FILE_NAME file not found!"
 fi
 
-# if [ -f "$WORKING_DIR/setup/shareframe-updater.timer" ] && [ -f "$WORKING_DIR/setup/shareframe-updater.service" ]; then
-#     cp $WORKING_DIR/setup/shareframe-updater.timer /etc/systemd/system/shareframe-updater.timer
-#     cp $WORKING_DIR/setup/shareframe-updater.service /etc/systemd/system/shareframe-updater.service
-# else
-#     echo "Warning: shareframe-updater-/ .service or .timer files not found!"
-# fi
+if [ -f "$WORKING_DIR/setup/shareframe-updater.timer" ] && [ -f "$WORKING_DIR/setup/shareframe-updater.service" ]; then
+    cp $WORKING_DIR/setup/shareframe-updater.timer /etc/systemd/system/shareframe-updater.timer
+    cp $WORKING_DIR/setup/shareframe-updater.service /etc/systemd/system/shareframe-updater.service
+else
+    echo "Warning: shareframe-updater-/ .service or .timer files not found!"
+fi
 
 echo "Installation complete!"
 echo "Starting Application..."
 
 systemctl daemon-reload
 
-systemctl enable shareframe
-systemctl start shareframe
-
-# systemctl enable shareframe-updater.timer
-# systemctl start shareframe-updater.timer
+systemctl enable "$APPLICATION_SERVICE_NAME"
+systemctl enable "$UPDATE_TIMER_FILE_NAME"
 
 echo "Application started!"

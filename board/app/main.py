@@ -14,14 +14,26 @@ load_dotenv(env_serial_path, override=True)
 from src.client import WebsocketClient
 from src.image import ImageProcessor
 from src.display import Display
+from src.frame_token import TokenManager
 from config import settings
 from config.logger import setup_logging
 import logging
 
 
+async def cancel_all_tasks():
+    """Cancel all pending asyncio tasks."""
+    logging.info("Clearing exisiting tasks")
+    tasks = [t for t in asyncio.all_tasks() if t is not asyncio.current_task()]
+    for task in tasks:
+        task.cancel()
+    await asyncio.gather(*tasks, return_exceptions=True)
+
+
 class FrameApplication:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.logger.info("Initializing main frame application")
+        TokenManager.initialize()
         self.image_processor = ImageProcessor()
         self.display = Display()
         self.websocket_client = WebsocketClient(
@@ -33,6 +45,8 @@ class FrameApplication:
             get_user_frame_images_info=self._get_user_frame_images_info,
             get_user_frame_images_ids_info=self._get_user_frame_images_ids_info,
         )
+
+        self.logger.info("Initializing main frame application successful")
 
     def _get_user_frame_images_info(self) -> List[dict]:
         images = [
@@ -50,6 +64,7 @@ class FrameApplication:
         ]
         return ids
 
+    # Websocket handlers
     async def handle_websocket_picture_message(self, message: dict):
         if message.get("type") == "picture":
             sender = message.get("sender")
@@ -110,24 +125,31 @@ class FrameApplication:
         if message.get("type") == "clear_display":
             await self.display.clear_display()
 
+    # Main method
     async def run(self):
-        asyncio.create_task(
+        self.logger.info("Starting main async methods")
+
+        await asyncio.gather(
             self.display.display_images_in_loop(
-                interval=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
-            )
+                interval_secs=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
+            ),
+            self.display.clear_display_interval(
+                interval_secs=settings.REFRESH_INTERVAL_HOURS * 60 * 60
+            ),
+            self.websocket_client.run(),
         )
-        # asyncio.create_task(self.display.refresh_if_needed())
-        await self.websocket_client.run()
 
 
+# Entrypoint
 async def main():
-    setup_logging()
-    logging.info("Starting application")
+    logging.info("Starting main entrypoint")
     logging.info(f"Settings: Production={settings.PRODUCTION}, Debug={settings.DEBUG}")
+    await cancel_all_tasks()
     app = FrameApplication()
     await app.run()
 
 
 if __name__ == "__main__":
     load_dotenv()
+    setup_logging(log_file_path=settings.LOGGING_FULL_FILE_PATH)
     asyncio.run(main())

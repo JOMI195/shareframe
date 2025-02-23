@@ -1,10 +1,9 @@
 [Unit]
-Description=ShareFrame Update Timer
+Description=shareframe update python application timer
 After=network.target
 
 [Timer]
 OnCalendar=*-*-* 03:00:00
-# Randomize within 1 hour window (between 3:00 and 4:00 AM)
 RandomizedDelaySec=3600
 Persistent=true
 

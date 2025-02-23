@@ -20,11 +20,12 @@ from waveshare_epd import epd7in5_V2
 class Display:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self.logger.info("Initializing display controller")
+        self.logger.info("Initializing display")
 
         try:
             self.epd = epd7in5_V2.EPD()
             self._initialize_display()
+            self._show_loading_image()
 
             self.last_refresh_time = datetime.now()
             self.current_image_path = None
@@ -33,9 +34,9 @@ class Display:
 
             self._load_user_images()
             self._load_static_images()
-            self.logger.info("Display controller initialized successfully")
+            self.logger.info("Initializing display successful")
         except Exception as e:
-            self.logger.error(f"Failed to initialize display: {str(e)}", exc_info=True)
+            self.logger.error(f"Initializing display failed: {str(e)}", exc_info=True)
             raise
 
     def _initialize_display(self):
@@ -45,18 +46,17 @@ class Display:
             self.epd.Clear()
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
-            self.logger.info("E-paper display initialized and cleared")
+            self.logger.info("Initializing e-paper display successful")
         except Exception as e:
-            self.logger.error(f"Display initialization failed: {str(e)}", exc_info=True)
+            self.logger.error(
+                f"Initializing e-paper display failed: {str(e)}", exc_info=True
+            )
             raise
 
     def _load_user_images(self):
-        self.logger.info(f"Loading user images from: {save_directory}")
+        save_directory = settings.USER_IMAGES_SAVE_PATH.as_posix()
 
-        save_directory = os.path.join(
-            settings.BASE_DIR,
-            settings.USER_IMAGES_SAVE_DIR,
-        )
+        self.logger.info(f"Loading user images from: {save_directory}")
 
         if not os.path.exists(save_directory):
             self.logger.warning(
@@ -106,10 +106,8 @@ class Display:
         self.logger.info(f"Loaded {len(self.user_image_paths)} user images")
 
     def _load_static_images(self):
-        static_folder = os.path.join(
-            settings.BASE_DIR,
-            settings.DEFAULT_IMAGES_DIR,
-        )
+        static_folder = settings.DEFAULT_IMAGES_PATH.as_posix()
+
         self.logger.info(f"Loading static images from: {static_folder}")
 
         if os.path.exists(static_folder):
@@ -121,6 +119,36 @@ class Display:
             self.logger.info(f"Loaded {len(self.static_image_paths)} static images")
         else:
             self.logger.warning(f"Static images directory not found: {static_folder}")
+
+    def _show_loading_image(self):
+        self.logger.info(f"Displaying startup frame image")
+
+        frame_startup_image_path = (
+            settings.DEFAULT_FRAME_IMAGES_PATH / "logo-frame-loading-shareframe.jpg"
+        ).as_posix()
+
+        if os.path.exists(frame_startup_image_path):
+            try:
+                image = Image.open(frame_startup_image_path)
+                image = image.resize((self.epd.width, self.epd.height))
+
+                self.epd.init()
+                self.epd.display(self.epd.getbuffer(image))
+                time.sleep(10)
+                self.epd.sleep()
+
+                self.last_refresh_time = datetime.now()
+                self.logger.info(f"Displaying startup frame image successful")
+
+            except Exception as e:
+                self.logger.error(
+                    f"Displaying startup frame image failed: {str(e)}", exc_info=True
+                )
+                raise
+        else:
+            self.logger.warning(
+                f"Loading startup frame image not found: {frame_startup_image_path}"
+            )
 
     def _can_refresh(self):
         now = datetime.now()
@@ -135,22 +163,6 @@ class Display:
         )
         return can_refresh
 
-    async def _show_loading_image(self):
-        self.logger.info(f"Loading startup frame image")
-
-        frame_startup_image_path = os.path.join(
-            settings.BASE_DIR,
-            settings.DEFAULT_FRAME_IMAGES_DIR,
-            "logo-frame-loading-shareframe.jpg",
-        )
-
-        if os.path.exists(frame_startup_image_path):
-            await self._display_image(frame_startup_image_path, display_fast=True)
-        else:
-            self.logger.warning(
-                f"Loading startup frame image not found: {frame_startup_image_path}"
-            )
-
     async def _wait_until_can_refresh(self):
         if not self._can_refresh():
             wait_time = (
@@ -162,10 +174,31 @@ class Display:
         while not self._can_refresh():
             await asyncio.sleep(10)
 
-    async def display_images_in_loop(self, interval: int):
-        self.logger.info(f"Starting display loop with interval: {interval}s")
+    async def _display_image(self, image_path: str):
+        self.logger.info(f"Preparing to display image: {image_path}")
 
-        await self._show_loading_image()
+        try:
+            await self._wait_until_can_refresh()
+
+            image = Image.open(image_path)
+            image = image.resize((self.epd.width, self.epd.height))
+
+            self.epd.init()
+            self.epd.display(self.epd.getbuffer(image))
+            time.sleep(10)
+            self.epd.sleep()
+
+            self.last_refresh_time = datetime.now()
+            self.current_image_path = image_path
+            self.logger.info("Image displayed successful")
+
+        except Exception as e:
+            self.logger.error(f"Failed to display image: {str(e)}", exc_info=True)
+            raise
+
+    async def display_images_in_loop(self, interval_secs: int):
+        await self.clear_display()
+        self.logger.info(f"Starting display loop with interval: {interval_secs}s")
 
         while True:
             images_to_display = (
@@ -222,34 +255,7 @@ class Display:
 
                 await self._wait_until_can_refresh()
                 await self._display_image(image_path)
-                await asyncio.sleep(interval)
-
-    async def _display_image(self, image_path: str, display_fast: bool = False):
-        self.logger.info(f"Preparing to display image: {image_path}")
-
-        try:
-            await self._wait_until_can_refresh()
-
-            image = Image.open(image_path)
-            image = image.resize((self.epd.width, self.epd.height))
-
-            if not display_fast:
-                self.epd.init()
-                self.epd.Clear()
-                self.epd.sleep()
-                await asyncio.sleep(180)
-
-            self.epd.init()
-            self.epd.display(self.epd.getbuffer(image))
-            self.epd.sleep()
-
-            self.last_refresh_time = datetime.now()
-            self.current_image_path = image_path
-            self.logger.info("Image displayed successfully")
-
-        except Exception as e:
-            self.logger.error(f"Failed to display image: {str(e)}", exc_info=True)
-            raise
+                await asyncio.sleep(interval_secs)
 
     async def clear_display(self):
         self.logger.info("Clearing display")
@@ -259,7 +265,13 @@ class Display:
             self.epd.Clear()
             self.epd.sleep()
             self.last_refresh_time = datetime.now()
-            self.logger.info("Display cleared successfully")
+            self.logger.info("Clearing display successful")
         except Exception as e:
-            self.logger.error(f"Failed to clear display: {str(e)}", exc_info=True)
+            self.logger.error(f"Clearing display failed: {str(e)}", exc_info=True)
             raise
+
+    async def clear_display_interval(self, interval_secs: int):
+        while True:
+            await asyncio.sleep(interval_secs)
+            self.logger.info("Clearing display in interval")
+            await self.clear_display()
