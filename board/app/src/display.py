@@ -1,4 +1,5 @@
 import asyncio
+import gc
 import os
 from pathlib import Path
 import sys
@@ -129,13 +130,20 @@ class Display:
 
         if os.path.exists(frame_startup_image_path):
             try:
-                image = Image.open(frame_startup_image_path)
-                image = image.resize((self.epd.width, self.epd.height))
+                current_pil_image = Image.open(frame_startup_image_path)
+                current_pil_image = current_pil_image.resize(
+                    (self.epd.width, self.epd.height)
+                )
+
+                image_buffer = self.epd.getbuffer(current_pil_image)
 
                 self.epd.init()
-                self.epd.display(self.epd.getbuffer(image))
-                time.sleep(10)
+                self.epd.display(image_buffer)
                 self.epd.sleep()
+
+                del image_buffer
+                current_pil_image.close()
+                gc.collect()
 
                 self.last_refresh_time = datetime.now()
                 self.logger.info(f"Displaying startup frame image successful")
@@ -180,13 +188,20 @@ class Display:
         try:
             await self._wait_until_can_refresh()
 
-            image = Image.open(image_path)
-            image = image.resize((self.epd.width, self.epd.height))
+            current_pil_image = Image.open(image_path)
+            current_pil_image = current_pil_image.resize(
+                (self.epd.width, self.epd.height)
+            )
+
+            image_buffer = self.epd.getbuffer(current_pil_image)
 
             self.epd.init()
-            self.epd.display(self.epd.getbuffer(image))
-            time.sleep(10)
+            self.epd.display(image_buffer)
             self.epd.sleep()
+
+            del image_buffer
+            current_pil_image.close()
+            gc.collect()
 
             self.last_refresh_time = datetime.now()
             self.current_image_path = image_path
@@ -197,7 +212,6 @@ class Display:
             raise
 
     async def display_images_in_loop(self, interval_secs: int):
-        await self.clear_display()
         self.logger.info(f"Starting display loop with interval: {interval_secs}s")
 
         while True:

@@ -447,7 +447,7 @@ def main():
 
 if __name__ == "__main__":
     TokenManager.initialize()
-    if not TokenManager.is_token_valid():
+    if not TokenManager.is_token_expiry_valid():
         success = TokenManager.obtain_token()
         if not success:
             logger.error("Failed to obtain token")

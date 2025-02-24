@@ -126,7 +126,7 @@ class WebsocketClient:
             )
 
     async def _connect_websocket(self) -> bool:
-        if not TokenManager.is_token_valid():
+        if not TokenManager.is_token_expiry_valid():
             self.logger.info("Token invalid or expired, obtaining new token")
             if not TokenManager.obtain_token():
                 return False

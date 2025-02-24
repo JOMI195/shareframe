@@ -129,15 +129,17 @@ class FrameApplication:
     async def run(self):
         self.logger.info("Starting main async methods")
 
-        await asyncio.gather(
+        asyncio.create_task(
             self.display.display_images_in_loop(
                 interval_secs=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
-            ),
-            self.display.clear_display_interval(
-                interval_secs=settings.REFRESH_INTERVAL_HOURS * 60 * 60
-            ),
-            self.websocket_client.run(),
+            )
         )
+        asyncio.create_task(
+            self.display.clear_display_interval(
+                interval_secs=(settings.REFRESH_INTERVAL_HOURS * 60 * 60)
+            )
+        )
+        await self.websocket_client.run()
 
 
 # Entrypoint

@@ -75,7 +75,7 @@ class TokenManager:
             return False
 
     @classmethod
-    def is_token_valid(cls) -> bool:
+    def is_token_expiry_valid(cls) -> bool:
         if not cls.access_token or not cls.token_expires_at:
             cls.logger.warning("Missing token or expiration time")
             return False
@@ -87,7 +87,7 @@ class TokenManager:
             cls.logger.debug(
                 f"Token validity check: {is_valid}, expires at {expires_at}"
             )
-            return cls.verify_token()
+            return True
         except ValueError as e:
             cls.logger.error(
                 f"Error parsing token expiration time: {str(e)}", exc_info=True
