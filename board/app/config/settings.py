@@ -16,6 +16,7 @@ LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 
 # Websocket client config
 BASE_URL = os.getenv("BASE_URL")
+HTTP_TIMEOUT_SEC = 600
 
 if PRODUCTION == True:
     HTTP_BASE_URL = f"https://{BASE_URL}"
@@ -55,10 +56,12 @@ NEXT_REFRESH_WAITING_INTERVALL_MINUTES = 3
 IMAGES_LOOP_INTERVALL_MINUTES = 15
 
 # Updates
-UPDATE_LOGGING_FILE = "shareframe-updater.log"
+UPDATE_LOGGING_FILE = "shareframe-update.log"
 UPDATE_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
 
 UPDATE_VERSION_FILE_NAME = "version.txt"
-UPDATE_BACKUP_DIR_NAME = "app_backups"
+UPDATE_FILES_LIST_NAME = "files_to_backup.json"
+UPDATE_DELETE_FILES_LIST_NAME = "files_to_delete.json"
+UPDATE_BACKUP_DIR_NAME = "app_backup"
 
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"

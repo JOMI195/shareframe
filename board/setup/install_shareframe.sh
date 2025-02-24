@@ -13,14 +13,14 @@ USER="frame"
 APPLICATION_SERVICE_NAME="shareframe"
 APPLICATION_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
-UPDATE_SERVICE_NAME="shareframe-updater"
+UPDATE_SERVICE_NAME="shareframe-update"
 UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 
 SERIAL_NUMBER=$1
 WORKING_DIR="/home/$USER/shareframe"
 
 APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
-UPDATER_LOG_FILE="/var/log/shareframe/shareframe-updater.log"
+UPDATER_LOG_FILE="/var/log/shareframe/shareframe-update.log"
 
 # Create log files
 
@@ -73,19 +73,16 @@ else
     echo "Warning: $APPLICATION_SERVICE_FILE_NAME file not found!"
 fi
 
-if [ -f "$WORKING_DIR/setup/shareframe-updater.timer" ] && [ -f "$WORKING_DIR/setup/shareframe-updater.service" ]; then
-    cp $WORKING_DIR/setup/shareframe-updater.timer /etc/systemd/system/shareframe-updater.timer
-    cp $WORKING_DIR/setup/shareframe-updater.service /etc/systemd/system/shareframe-updater.service
+if [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.timer" ] && [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.service" ]; then
+    cp $WORKING_DIR/setup/$UPDATE_SERVICE_NAME.timer /etc/systemd/system/$UPDATE_SERVICE_NAME.timer
+    cp $WORKING_DIR/setup/$UPDATE_SERVICE_NAME.service /etc/systemd/system/$UPDATE_SERVICE_NAME.service
 else
-    echo "Warning: shareframe-updater-/ .service or .timer files not found!"
+    echo "Warning: $UPDATE_SERVICE_NAME-/ .service or .timer files not found!"
 fi
-
-echo "Installation complete!"
-echo "Starting Application..."
 
 systemctl daemon-reload
 
-systemctl enable "$APPLICATION_SERVICE_NAME"
+systemctl enable "$APPLICATION_SERVICE_FILE_NAME"
 systemctl enable "$UPDATE_TIMER_FILE_NAME"
 
-echo "Application started!"
+echo "Installation complete!"

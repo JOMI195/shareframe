@@ -1,6 +1,7 @@
 [Unit]
 Description=shareframe update python application timer
-After=network.target
+After=network.target pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
+Wants=pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
 
 [Timer]
 OnCalendar=*-*-* 03:00:00

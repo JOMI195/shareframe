@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+
+# /home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/utils/clear_display.py
+
 import os
 import sys
 import time
