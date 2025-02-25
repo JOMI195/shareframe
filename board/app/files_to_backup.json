@@ -16,6 +16,7 @@
     "src/display.py",
     "src/frame_token.py",
     "src/image.py",
+    "updates/clear_display.py",
     "updates/display.py",
     "updates/service.py",
     "updates/updates.py",
