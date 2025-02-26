@@ -218,7 +218,7 @@ const SentImagesGallery = () => {
                                 {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
                             </Typography>
                             <Typography textAlign={"center"} variant="caption" color="textSecondary">
-                                (Abgelaufene Aktivität wird nach 30 Tagen gelöscht)
+                                (Abgelaufene Aktivität wird nach 14 Tagen gelöscht)
                             </Typography>
                         </>
                     )}

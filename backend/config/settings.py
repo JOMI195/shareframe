@@ -294,4 +294,4 @@ FRONTEND_CONTACT_URL = "kontakt/"
 
 #### Sent_Images
 # Number of days after expiration before deleting sent images
-SENT_IMAGE_DELETE_DAYS = 30  # days
+SENT_IMAGE_DELETE_DAYS = 14  # days

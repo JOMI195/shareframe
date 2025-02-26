@@ -14,6 +14,7 @@ from .serializers import (
     ImageRetrieveSerializer,
     ImageDestroySerializer,
 )
+from sent_images.models import SentImage
 
 
 class ImagesViewSet(ModelViewSet):
@@ -96,8 +97,17 @@ class ImagesViewSet(ModelViewSet):
         except Image.DoesNotExist:
             raise NotFound("Image not found or you don't have permission to delete it.")
 
+        sent_images = SentImage.objects.filter(image=element)
+        if sent_images.exists():
+            return Response(
+                {
+                    "detail": "Cannot delete image while corresponding sent-image exists."
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
         serializer = ImageRetrieveSerializer(element)
         response_data = serializer.data
-        response_data["id"] = pk_to_delete
+        response_data["id"] = int(pk_to_delete)
         element.delete()
         return Response(response_data)

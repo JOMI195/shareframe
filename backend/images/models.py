@@ -55,8 +55,8 @@ class Image(models.Model):
 
         super().delete(*args, **kwargs)
 
-        # if image_path and os.path.isfile(image_path):
-        #     default_storage.delete(image_path)
+        if image_path and os.path.isfile(image_path):
+            default_storage.delete(image_path)
 
-        # if dir_path and os.path.exists(dir_path) and not os.listdir(dir_path):
-        #     os.rmdir(dir_path)
+        if dir_path and os.path.exists(dir_path) and not os.listdir(dir_path):
+            os.rmdir(dir_path)
