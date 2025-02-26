@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     Box,
     ImageList,
@@ -12,30 +12,29 @@ import {
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
-import { getApi as imagesApi, getImages } from "@/store/entities/images/images.slice";
+import {
+    getApi as imagesApi,
+    getImagesPaginated,
+    getImagesPaginatedPageSize
+} from "@/store/entities/images/images.slice";
 import { getApi as friendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
+import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import FilterControls from "./filters/filters";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
-const ITEMS_PER_PAGE = 12;
 const SKELETON_COLS = 3;
 
 const ImagesGallery: React.FC = () => {
     const dispatch = useAppDispatch();
-    const images = useAppSelector(getImages);
+    const imagesPaginated = useAppSelector(getImagesPaginated);
+    const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
     const friendshipsLoading = useAppSelector(friendshipsApi).loading;
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
-
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(images.length / ITEMS_PER_PAGE);
-    const currentImages = images.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
 
     // Adjust the number of columns based on screen size
     let cols = 3;
@@ -50,7 +49,7 @@ const ImagesGallery: React.FC = () => {
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-        setCurrentPage(page);
+        dispatch(setImagesPaginatedPage(page));
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
@@ -72,13 +71,17 @@ const ImagesGallery: React.FC = () => {
         </ImageList>
     );
 
+    // Calculate total pages from the count in the paginated response
+    const totalPages = Math.ceil(imagesPaginated.count / pageSize);
+
     return (
         <Stack spacing={2}>
+            <FilterControls />
             {(imagesLoading || friendshipsLoading) ? (
                 <LoadingSkeleton />
             ) : (
                 <ImageList cols={cols} gap={8}>
-                    {currentImages.map((image) => (
+                    {imagesPaginated.results.map((image) => (
                         <ImageListItem
                             key={image.id}
                             onClick={() => handleImageClick(image)}
@@ -100,14 +103,14 @@ const ImagesGallery: React.FC = () => {
             )}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                {(imagesLoading && friendshipsLoading) ? (
+                {(imagesLoading || friendshipsLoading) ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
                         {totalPages > 1 && (
                             <Pagination
                                 count={totalPages}
-                                page={currentPage}
+                                page={imagesPaginated.page}
                                 onChange={handlePageChange}
                                 color="primary"
                                 size={"large"}
@@ -121,7 +124,7 @@ const ImagesGallery: React.FC = () => {
                             color="textSecondary"
                             textAlign={"center"}
                         >
-                            {images.length} Foto{images.length !== 1 ? "s" : ""}
+                            {imagesPaginated.count} Foto{imagesPaginated.count !== 1 ? "s" : ""}
                         </Typography>
                     </>
                 )}

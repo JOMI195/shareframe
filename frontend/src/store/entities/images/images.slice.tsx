@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { IImage, ISentImage } from "@/types";
+import { IImagesPaginated, ISentImage } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -7,7 +7,8 @@ type SliceState = {
     loading: boolean;
     lastFetch: number | null;
   };
-  images: IImage[];
+  imagesPaginated: IImagesPaginated;
+  imagesPaginatedPageSize: number;
   sentImages: ISentImage[];
 };
 
@@ -16,7 +17,14 @@ const initialState: SliceState = {
     loading: false,
     lastFetch: null,
   },
-  images: [],
+  imagesPaginated: {
+    count: 0,
+    next: null,
+    previous: null,
+    page: 1,
+    results: []
+  },
+  imagesPaginatedPageSize: 10,
   sentImages: []
 };
 
@@ -28,18 +36,28 @@ const imagesSlice = createSlice({
       sliceState.api.loading = true;
     },
     imagesReceived: (sliceState, action) => {
-      sliceState.images = action.payload;
+      sliceState.imagesPaginated = {
+        ...action.payload,
+        page: sliceState.imagesPaginated.page,
+      };
       sliceState.api.lastFetch = Date.now();
       sliceState.api.loading = false;
     },
     imagesRequestFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    imagesPageSet: (sliceState, action) => {
+      sliceState.imagesPaginated.page = action.payload;
+    },
+    imagesPageSizeSet: (sliceState, action) => {
+      sliceState.imagesPaginatedPageSize = action.payload;
+    },
     createImagePending: (sliceState) => {
       sliceState.api.loading = true;
     },
     createImageFulfilled: (sliceState, action) => {
-      sliceState.images.unshift(action.payload);
+      sliceState.imagesPaginated.results.unshift(action.payload);
+      sliceState.imagesPaginated.count += 1;
       sliceState.api.lastFetch = Date.now();
       sliceState.api.loading = false;
     },
@@ -51,10 +69,11 @@ const imagesSlice = createSlice({
     },
     deleteImageFulfilled: (sliceState, action) => {
       const oldCreation = action.payload;
-      const index = sliceState.images.findIndex(
+      const index = sliceState.imagesPaginated.results.findIndex(
         (image) => image.created_at === oldCreation.created_at
       );
-      sliceState.images.splice(index, 1);
+      sliceState.imagesPaginated.results.splice(index, 1);
+      sliceState.imagesPaginated.count -= 1;
       sliceState.api.loading = false;
     },
     deleteImageFailed: (sliceState) => {
@@ -114,6 +133,8 @@ export const {
   imagesRequested,
   imagesReceived,
   imagesRequestFailed,
+  imagesPageSet,
+  imagesPageSizeSet,
   createImagePending,
   createImageFailed,
   createImageFulfilled,
@@ -136,5 +157,6 @@ export const {
 export default imagesSlice.reducer;
 
 export const getApi = (state: RootState) => state.entities.images.api;
-export const getImages = (state: RootState) => state.entities.images.images;
+export const getImagesPaginated = (state: RootState) => state.entities.images.imagesPaginated;
+export const getImagesPaginatedPageSize = (state: RootState) => state.entities.images.imagesPaginatedPageSize;
 export const getSentImages = (state: RootState) => state.entities.images.sentImages;

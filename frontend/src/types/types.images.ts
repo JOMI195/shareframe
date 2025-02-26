@@ -6,6 +6,14 @@ export interface IImage {
     url: string;
 }
 
+export interface IImagesPaginated {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    page: number;
+    results: IImage[];
+};
+
 export const isIImage = (obj: any): obj is IImage => {
     return (
         obj &&

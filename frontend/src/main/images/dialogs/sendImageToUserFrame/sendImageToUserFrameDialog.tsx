@@ -19,7 +19,7 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IImage } from "@/types";
 import { closeSendImageToUserFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
-import { getApi, getImages } from "@/store/entities/images/images.slice";
+import { getApi, getImagesPaginated } from "@/store/entities/images/images.slice";
 import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
@@ -32,9 +32,9 @@ const SendImageToUserFrameDialog = () => {
     const dispatch = useAppDispatch();
 
     const { sendToFrame: sendDialog } = useAppSelector(getDialogs);
-    const images = useAppSelector(getImages);
+    const imagesPaginated = useAppSelector(getImagesPaginated);
     const loading = useAppSelector(getApi).loading;
-    const imageToSend = images.find((image => image.id === sendDialog.imageId)) as IImage | undefined;
+    const imageToSend = imagesPaginated.results.find((image => image.id === sendDialog.imageId)) as IImage | undefined;
 
     const user = useAppSelector(getUser);
 

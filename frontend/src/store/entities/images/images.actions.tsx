@@ -5,13 +5,26 @@ import * as FramesEndpoints from "@/assets/endpoints/api/framesEndpoints";
 import { AppDispatch } from "@/store";
 import http from "@/services/httpService";
 
-export const fetchImages = () =>
+export const fetchImages = (
+  page: number = 1,
+  page_size: number = 10
+) =>
   apiRequest({
-    url: ImagesEndpoints.getImagesUrl(),
+    url: ImagesEndpoints.getImagesPaginatedUrl(page, page_size),
     onStart: ImagesSlice.imagesRequested.type,
     onSuccess: ImagesSlice.imagesReceived.type,
     onError: ImagesSlice.imagesRequestFailed.type,
   });
+
+export const setImagesPaginatedPage = (page: number) => ({
+  type: ImagesSlice.imagesPageSet.type,
+  payload: page,
+});
+
+export const setImagesPaginatedPageSize = (pageSize: number) => ({
+  type: ImagesSlice.imagesPageSizeSet.type,
+  payload: pageSize,
+});
 
 export const uploadImage = (
   image: File,

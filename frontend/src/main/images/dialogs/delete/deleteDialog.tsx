@@ -2,7 +2,7 @@ import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQ
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IImage, isIImage } from "@/types";
 import { closeDeleteImageDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
-import { getApi, getImages } from "@/store/entities/images/images.slice";
+import { getApi, getImagesPaginated } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
@@ -13,9 +13,9 @@ const ImageDeleteDialog = () => {
     const dispatch = useAppDispatch();
 
     const { delete: deleteDialog } = useAppSelector(getDialogs);
-    const images = useAppSelector(getImages);
+    const imagesPaginated = useAppSelector(getImagesPaginated);
     const loading = useAppSelector(getApi).loading
-    const imageToDelete = images.find((image => image.id === deleteDialog.imageId)) as IImage | undefined;
+    const imageToDelete = imagesPaginated.results.find((image => image.id === deleteDialog.imageId)) as IImage | undefined;
 
     const [errorMessage, setErrorMessage] = useState("");
 
