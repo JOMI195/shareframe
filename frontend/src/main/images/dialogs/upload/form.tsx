@@ -67,8 +67,9 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImage, image }) =
         </ListItem>
     ) : null;
 
-    const onClick = () => {
+    const onManualImageSelectionButtonClick = () => {
         if (inputRef.current) {
+            inputRef.current.value = '';
             inputRef.current.click()
         }
     }
@@ -115,7 +116,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImage, image }) =
                     </Box>
                 </Grid>
                 <Grid item xs={12} sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <Button variant="outlined" onClick={onClick}>
+                    <Button variant="outlined" onClick={onManualImageSelectionButtonClick}>
                         {'Foto auswählen'}
                     </Button>
                 </Grid>

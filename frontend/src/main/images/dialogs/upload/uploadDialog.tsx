@@ -22,7 +22,7 @@ import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
 import CloseIcon from '@mui/icons-material/Close';
 import FileUploadForm from './form'
-import ImageCropper from './imageCropper'
+import Cropper from './cropper/cropper'
 import { validateImage } from './validation'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { closeCreateImageDialog, getDialogs } from '@/store/ui/images/images.slice'
@@ -124,7 +124,7 @@ const UploadDialog: React.FC = () => {
         );
       case 1:
         return image ? (
-          <ImageCropper
+          <Cropper
             image={image}
             setCropper={setCropper}
           />

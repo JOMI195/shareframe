@@ -3,13 +3,14 @@ import { FixedCropperRef, FixedCropper, ImageRestriction } from 'react-advanced-
 import 'react-advanced-cropper/dist/style.css';
 import './cropper.css';
 import 'react-advanced-cropper/dist/themes/corners.css';
+import Wrapper from './wrapper';
 
 interface CropperWrapperProps {
     image: File;
     setCropper: React.Dispatch<React.SetStateAction<FixedCropperRef | null>>;
 }
 
-const ImageCropper: React.FC<CropperWrapperProps> = ({ image, setCropper }) => {
+const Cropper: React.FC<CropperWrapperProps> = ({ image, setCropper }) => {
     const cropperRef = useRef<FixedCropperRef>(null);
 
     useEffect(() => {
@@ -33,8 +34,9 @@ const ImageCropper: React.FC<CropperWrapperProps> = ({ image, setCropper }) => {
                 adjustStencil: false,
             }}
             checkOrientation={true}
+            wrapperComponent={Wrapper}
         />
     );
 };
 
-export default ImageCropper;
+export default Cropper;
