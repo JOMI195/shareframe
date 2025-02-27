@@ -284,6 +284,11 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 #### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = None
+IMAGES_FORMAT_SIZES = {
+    "thumbnail": {"width": 350, "height": None, "quality": 85},
+    "medium": {"width": 800, "height": None, "quality": 85},
+    "large": {"width": 1600, "height": None, "quality": 90},
+}
 
 #### Frames
 FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 300  # seconds

@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog } from "@/store/ui/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -9,14 +9,18 @@ import { downloadImage } from "@/store/entities/images/images.actions";
 import CustomDialog from "@/common/components/dialog";
 import { DialogAction } from "@/types";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
+import { getVariant } from "@/common/utils/images";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
 const ImagePreviewDialog = () => {
+    const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const dialog = useAppSelector(getDialogs).preview;
     const selectedImage = dialog.selectedImage;
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const handleCloseImagePreview = () => {
         dispatch(closePreviewImageDialog());
@@ -79,7 +83,7 @@ const ImagePreviewDialog = () => {
                 )}
                 {selectedImage && (
                     <AuthenticatedImage
-                        url={`${MEDIA_BASE_URL}${selectedImage.url}`}
+                        url={`${MEDIA_BASE_URL}${isSmallScreen ? getVariant(selectedImage, "medium")?.url : getVariant(selectedImage, "large")?.url}`}
                         alt={selectedImage?.name}
                         style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
                     />

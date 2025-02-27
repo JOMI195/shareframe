@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import SentImage
-from django.utils.html import format_html
 
 
 @admin.register(SentImage)
@@ -12,8 +11,8 @@ class SentImageAdmin(admin.ModelAdmin):
     readonly_fields = (
         "sender",
         "reciever",
+        "image",
         "sent_at",
-        "image_display",
         "expires_at",
     )
 
@@ -21,7 +20,7 @@ class SentImageAdmin(admin.ModelAdmin):
         (
             None,
             {
-                "fields": ("sender", "reciever", "image_display"),
+                "fields": ("sender", "reciever", "image"),
             },
         ),
         (
@@ -31,12 +30,3 @@ class SentImageAdmin(admin.ModelAdmin):
             },
         ),
     )
-
-    def image_display(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" width="200" height="200" />', obj.image.image.url
-            )
-        return "Something went wrong - no picture"
-
-    image_display.short_description = "Image preview"

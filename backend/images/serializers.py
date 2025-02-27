@@ -1,11 +1,9 @@
 import os
-
 from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
-
 from .checksum import get_sha256_sum_from_file
-from .models import Image
+from .models import Image, ImageSize, ImageVariant
 
 
 class ImagesValidationMixin:
@@ -26,10 +24,8 @@ class ImagesValidationMixin:
         name, extension = os.path.splitext(file_name)
         extension = extension[1:].lower()
         allowed_formats = settings.IMAGES_ALLOWED_FORMATS
-
         if not bool(allowed_formats):
             return True
-
         return extension in allowed_formats
 
     def respects_filesize_limit(self, size):
@@ -50,32 +46,54 @@ class ImageCreateSerializer(ImagesValidationMixin, serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ("image", "upload_image_sha256_hex_hash")
-        read_only_fields = ("name", "size", "created_at")
+        read_only_fields = ("name", "size", "created_at", "width", "height", "format")
 
     def validate(self, data):
         image_file = data.get("image")
         upload_image_hash = data.get("upload_image_sha256_hex_hash")
-
         self.validate_file(image_file, upload_image_hash)
-
         return data
 
     def create(self, validated_data):
         validated_data.pop("upload_image_sha256_hex_hash", None)
-
         validated_data["user"] = self.context["request"].user
         return super().create(validated_data)
 
 
+class ImageVariantSerializer(serializers.ModelSerializer):
+    url = serializers.SerializerMethodField()
+    size_name = serializers.CharField(source="image_size.name", read_only=True)
+    width = serializers.IntegerField(source="image_size.width", read_only=True)
+    height = serializers.IntegerField(source="image_size.height", read_only=True)
+
+    class Meta:
+        model = ImageVariant
+        fields = ("url", "size_name", "width", "height")
+
+    def get_url(self, obj):
+        return obj.file.url if obj.file else None
+
+
 class ImageRetrieveSerializer(serializers.ModelSerializer):
     url = serializers.SerializerMethodField()
+    variants = ImageVariantSerializer(many=True, read_only=True)
 
     def get_url(self, obj):
         return obj.image.url
 
     class Meta:
         model = Image
-        fields = ("id", "name", "size", "created_at", "url")
+        fields = (
+            "id",
+            "name",
+            "size",
+            "width",
+            "height",
+            "format",
+            "created_at",
+            "url",
+            "variants",
+        )
         read_only_fields = fields
 
 
@@ -83,3 +101,10 @@ class ImageDestroySerializer(serializers.ModelSerializer):
     class Meta:
         model = Image
         fields = ()
+
+
+class ImageSizeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ImageSize
+        fields = ("id", "name", "width", "height", "quality")
+        read_only_fields = fields

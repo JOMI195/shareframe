@@ -1,7 +1,7 @@
 import { useAppSelector } from '@/store';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { Box } from '@mui/material';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 interface AuthenticatedImageProps {
     url: string;
@@ -24,10 +24,38 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
 }) => {
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [isVisible, setIsVisible] = useState<boolean>(false);
+    const imgRef = useRef<HTMLDivElement>(null);
 
     const user = useAppSelector(getUser);
 
     useEffect(() => {
+        const observer = new IntersectionObserver(
+            ([entry]) => {
+                if (entry.isIntersecting) {
+                    setIsVisible(true);
+                }
+            },
+            {
+                rootMargin: '100px', // Preload when 100px away from viewport
+                threshold: 0.1,
+            }
+        );
+
+        if (imgRef.current) {
+            observer.observe(imgRef.current);
+        }
+
+        return () => {
+            if (imgRef.current) {
+                observer.unobserve(imgRef.current);
+            }
+        };
+    }, []);
+
+    useEffect(() => {
+        if (!isVisible) return;
+
         let isMounted = true;
 
         const loadImage = async (): Promise<void> => {
@@ -59,7 +87,6 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             } catch (error) {
                 setIsLoading(false);
                 if (error instanceof Error) {
-                    //console.error('Error loading image:', error.message);
                     onError?.(error);
                 }
             }
@@ -73,9 +100,9 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 URL.revokeObjectURL(imageSrc);
             }
         };
-    }, [url, onError]);
+    }, [isVisible]);
 
-    if (isLoading) {
+    if (isLoading && isVisible) {
         return (
             <Box
                 sx={{
@@ -84,39 +111,36 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                     bgcolor: 'grey.200',
                     animation: 'pulse 2s infinite',
                     '@keyframes pulse': {
-                        '0%, 100%': {
-                            opacity: 1
-                        },
-                        '50%': {
-                            opacity: .5
-                        }
+                        '0%, 100%': { opacity: 1 },
+                        '50%': { opacity: 0.5 }
                     },
                     ...style,
                     borderRadius: 1,
                 }}
+                ref={imgRef}
             />
         );
     }
 
-    return imageSrc ? (
-        <div
-            style={{
-                ...style,
-                overflow: 'hidden',
-            }}
-        >
-            <img
-                src={imageSrc}
-                alt={alt}
-                className={className}
-                style={{
-                    ...style,
-                    filter: hideToYouFilter ? 'blur(25px)' : 'none'
-                }}
-                onClick={onClick}
-            />
+    return (
+        <div ref={imgRef} style={{ overflow: 'hidden', ...style }}>
+            {imageSrc ? (
+                <img
+                    src={imageSrc}
+                    alt={alt}
+                    className={className}
+                    loading="lazy"
+                    style={{
+                        ...style,
+                        filter: hideToYouFilter ? 'blur(25px)' : 'none',
+                        transition: 'opacity 0.5s ease-in-out',
+                        opacity: isLoading ? 0 : 1,
+                    }}
+                    onClick={onClick}
+                />
+            ) : null}
         </div>
-    ) : null;
+    );
 };
 
 export default AuthenticatedImage;

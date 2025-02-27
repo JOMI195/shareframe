@@ -22,6 +22,7 @@ import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
 import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
+import { getVariant } from "@/common/utils/images";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -88,7 +89,7 @@ const ImagesGallery: React.FC = () => {
                             style={{ cursor: "pointer" }}
                         >
                             <AuthenticatedImage
-                                url={`${MEDIA_BASE_URL}${image.url}`}
+                                url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
                                 alt={image.name}
                                 style={{
                                     width: "100%",

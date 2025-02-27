@@ -1,36 +1,76 @@
 from django.contrib import admin
-from .models import Image
-from django.utils.html import format_html
+from .models import Image, ImageSize, ImageVariant
+
+
+class ImageVariantInline(admin.TabularInline):
+    model = ImageVariant
+    extra = 0
+    readonly_fields = ("file",)
+    fields = ("image_size", "file")
+
+
+@admin.register(ImageSize)
+class ImageSizeAdmin(admin.ModelAdmin):
+    list_display = ("name", "width", "height", "quality")
+    list_filter = ("name",)
+    search_fields = ("name",)
+    ordering = ("name",)
 
 
 @admin.register(Image)
 class ImagesAdmin(admin.ModelAdmin):
-    list_display = ("id", "user", "created_at")
-    list_filter = ("created_at",)
-    ordering = ("-created_at",)
-
-    def image_display(self, obj):
-        if obj.image:
-            return format_html(
-                '<img src="{}" width="200" height="200" />', obj.image.url
-            )
-        return "Something went wrong - no picture"
-
-    image_display.short_description = "Image preview"
-
-    readonly_fields = (
-        "image_display",
+    list_display = (
+        "id",
+        "name",
+        "user",
+        "format",
+        "dimensions",
+        "size_display",
         "created_at",
     )
+    list_filter = ("created_at", "format")
+    search_fields = ("name", "user__username", "user__email")
+    ordering = ("-created_at",)
+    readonly_fields = (
+        "created_at",
+        "name",
+        "size",
+        "width",
+        "height",
+        "format",
+    )
+    inlines = [ImageVariantInline]
     fieldsets = (
         (
             None,
-            {
-                "fields": (
-                    "user",
-                    "image_display",
-                )
-            },
+            {"fields": ("user", "name", "image")},
         ),
-        ("Timespamps", {"fields": ("created_at",)}),
+        (
+            "Image Properties",
+            {"fields": ("format", "width", "height", "size")},
+        ),
+        (
+            "Timestamps",
+            {"fields": ("created_at",)},
+        ),
     )
+
+    def dimensions(self, obj):
+        """Display image dimensions"""
+        if obj.width and obj.height:
+            return f"{obj.width} × {obj.height}"
+        return "Unknown"
+
+    dimensions.short_description = "Dimensions"
+
+    def size_display(self, obj):
+        """Display file size in human-readable format"""
+        # Convert bytes to appropriate unit
+        size_bytes = obj.size
+        for unit in ["B", "KB", "MB", "GB"]:
+            if size_bytes < 1024.0 or unit == "GB":
+                break
+            size_bytes /= 1024.0
+        return f"{size_bytes:.2f} {unit}"
+
+    size_display.short_description = "Size"

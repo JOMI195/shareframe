@@ -23,6 +23,7 @@ import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
+import { getVariant } from "@/common/utils/images";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
@@ -163,7 +164,7 @@ const SentImagesGallery = () => {
                                     style={{ cursor: "pointer" }}
                                 >
                                     <AuthenticatedImage
-                                        url={`${MEDIA_BASE_URL}${sentImage.image.url}`}
+                                        url={`${MEDIA_BASE_URL}${getVariant(sentImage.image, "thumbnail")?.url}`}
                                         alt={sentImage.image.name}
                                         style={{
                                             width: "100%",

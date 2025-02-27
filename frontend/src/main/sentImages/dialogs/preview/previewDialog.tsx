@@ -1,4 +1,4 @@
-import { Box, useTheme, Typography, Stack, ListItemAvatar, Avatar, ListItemText, Grid } from "@mui/material";
+import { Box, useTheme, Typography, Stack, ListItemAvatar, Avatar, ListItemText, Grid, useMediaQuery } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openDeactivateSendImageFrameDialog } from "@/store/ui/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -11,6 +11,7 @@ import { downloadImage } from "@/store/entities/images/images.actions";
 import CustomDialog from "@/common/components/dialog";
 import { DialogAction } from "@/types";
 import { closePreviewSentImageDialog, getDialogs } from "@/store/ui/sentImages/sentImages.slice";
+import { getVariant } from "@/common/utils/images";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -21,6 +22,8 @@ const ImagePreviewDialog = () => {
     const dialog = useAppSelector(getDialogs).preview;
     const selectedImage = dialog.selectedSentImage;
     const isExpired = (selectedImage && selectedImage.expires_at !== null) ? new Date(selectedImage.expires_at) < new Date() : true;
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const handleCloseImagePreview = () => {
         dispatch(closePreviewSentImageDialog());
@@ -70,7 +73,7 @@ const ImagePreviewDialog = () => {
             actions={dialogActions}
             contentSx={{ padding: 2 }}
         >
-            <Box>
+            <Box display="flex" flexDirection="column" alignItems="flex-start">
                 {selectedImage && (
                     <Grid container spacing={2} sx={{ pb: 2 }}>
                         <Grid item xs={6} sm={2}>
@@ -143,7 +146,7 @@ const ImagePreviewDialog = () => {
                 )}
                 {selectedImage && (
                     <AuthenticatedImage
-                        url={`${MEDIA_BASE_URL}${selectedImage.image.url}`}
+                        url={`${MEDIA_BASE_URL}${isSmallScreen ? getVariant(selectedImage.image, "medium")?.url : getVariant(selectedImage.image, "large")?.url}`}
                         alt={selectedImage.image.name}
                         style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
                     />

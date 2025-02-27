@@ -1,9 +1,20 @@
+export interface IImageVariant {
+    url: string;
+    width: number;
+    height: number | null;
+    size_name: "thumbnail" | "medium" | "large";
+}
+
 export interface IImage {
     id: number;
     name: string;
     size: number;
+    width: number;
+    height: number;
+    format: string;
     created_at: string;
     url: string;
+    variants: IImageVariant[];
 }
 
 export interface IImagesPaginated {
@@ -20,10 +31,21 @@ export const isIImage = (obj: any): obj is IImage => {
         typeof obj.id === 'number' &&
         typeof obj.name === 'string' &&
         typeof obj.size === 'number' &&
+        typeof obj.width === 'number' &&
+        typeof obj.height === 'number' &&
+        typeof obj.format === 'string' &&
         typeof obj.created_at === 'string' &&
-        typeof obj.url === 'string'
+        typeof obj.url === 'string' &&
+        Array.isArray(obj.variants) &&
+        obj.variants.every(
+            (variant: any) =>
+                typeof variant.url === 'string' &&
+                (variant.size_name === 'thumbnail' || variant.size_name === 'medium' || variant.size_name === 'large') &&
+                typeof variant.width === 'number' &&
+                (variant.height === null || typeof variant.height === 'number')
+        )
     );
-}
+};
 
 export interface IImageValidationResponse {
     valid: boolean;
