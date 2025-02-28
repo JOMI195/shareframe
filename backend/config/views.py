@@ -63,19 +63,6 @@ class MediaAccessView(APIView):
 
     def _check_path_access(self, path, user):
         """Check if user has access to the given path"""
-        # First check original images
-        images = Image.objects.all()
-        for image in images:
-            doc_path = self._normalize_path(image.image.url)
-
-            if path.endswith("/"):
-                doc_path = doc_path + "/"
-
-            if path == doc_path:
-                if self._check_user_access(image.user, user, image):
-                    return True
-
-        # Then check variants
         variants = ImageVariant.objects.all()
         for variant in variants:
             doc_path = self._normalize_path(variant.file.url)
@@ -86,6 +73,17 @@ class MediaAccessView(APIView):
             if path == doc_path:
                 parent_image = variant.parent_image
                 if self._check_user_access(parent_image.user, user, parent_image):
+                    return True
+
+        images = Image.objects.all()
+        for image in images:
+            doc_path = self._normalize_path(image.image.url)
+
+            if path.endswith("/"):
+                doc_path = doc_path + "/"
+
+            if path == doc_path:
+                if self._check_user_access(image.user, user, image):
                     return True
 
         return False
