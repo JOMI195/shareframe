@@ -196,10 +196,26 @@ export const Navigation: React.FC<NavigationProps> = ({
             </Box>
             <Grid justifyContent={"space-between"} container sx={{ mt: 1 }}>
                 <Grid item xs={5.8}>
-                    <Button fullWidth startIcon={<CenterFocusStrongIcon />} sx={{ bgcolor: "background.paper", color: "white" }} onClick={onCenter}>Zentrieren</Button>
+                    <Button
+                        disabled={disabled}
+                        fullWidth
+                        startIcon={<CenterFocusStrongIcon />}
+                        sx={{ bgcolor: "background.paper", color: "white" }}
+                        onClick={onCenter}
+                    >
+                        Zentrieren
+                    </Button>
                 </Grid>
                 <Grid item xs={5.8}>
-                    <Button fullWidth startIcon={<RestartAltIcon />} sx={{ bgcolor: "background.paper", color: "white" }} onClick={onCropperReset}>Reset</Button>
+                    <Button
+                        disabled={disabled}
+                        fullWidth
+                        startIcon={<RestartAltIcon />}
+                        sx={{ bgcolor: "background.paper", color: "white" }}
+                        onClick={onCropperReset}
+                    >
+                        Reset
+                    </Button>
                 </Grid>
             </Grid>
         </Box>

@@ -22,6 +22,23 @@ const Cropper: React.FC<CropperProps> = ({ image, setCroppedAreaPixels }) => {
     const [zoom, setZoom] = useState(1);
     const [rotation, setRotation] = useState(0)
     const [imageSrc, setImageSrc] = useState<string>('');
+    const [isTouching, setIsTouching] = useState(false);
+
+    const handleTouchStart = () => setIsTouching(true);
+    const handleTouchEnd = () => setIsTouching(false);
+
+    useEffect(() => {
+        const container = cropperContainerRef.current;
+        if (container) {
+            container.addEventListener("touchstart", handleTouchStart);
+            container.addEventListener("touchend", handleTouchEnd);
+
+            return () => {
+                container.removeEventListener("touchstart", handleTouchStart);
+                container.removeEventListener("touchend", handleTouchEnd);
+            };
+        }
+    }, []);
 
     useEffect(() => {
         if (image) {
@@ -74,7 +91,11 @@ const Cropper: React.FC<CropperProps> = ({ image, setCroppedAreaPixels }) => {
                             onCropChange={onCropChange}
                             onCropComplete={onCropComplete}
                             onZoomChange={onZoom}
-                            onRotationChange={onRotation}
+                            onRotationChange={(newRotation) => {
+                                if (!isTouching) {
+                                    onRotation(newRotation);
+                                }
+                            }}
                             minZoom={MIN_ZOOM}
                             maxZoom={MAX_ZOOM}
                             restrictPosition={false}
