@@ -30,6 +30,7 @@ import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
 import { FixedCropperRef } from 'react-advanced-cropper'
+import { getApi } from '@/store/entities/images/images.slice'
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -55,6 +56,7 @@ const UploadDialog: React.FC = () => {
   const theme = useTheme()
   const dispatch = useAppDispatch()
   const matches = useMediaQuery(theme.breakpoints.up('md'))
+  const loading = useAppSelector(getApi).loading;
 
   const [activeStep, setActiveStep] = useState(0);
   const [image, setImage] = useState<File | null>(null);
@@ -185,7 +187,7 @@ const UploadDialog: React.FC = () => {
                             fullWidth
                             variant="contained"
                             onClick={handleNext}
-                            disabled={!image}
+                            disabled={!image || (activeStep === steps.length - 1 && loading)}
                             sx={{ mt: 1, mr: 1 }}
                           >
                             {activeStep === steps.length - 1 ? 'Zuschneiden und Hochladen' : 'Weiter'}
