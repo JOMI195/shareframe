@@ -29,8 +29,9 @@ import { closeCreateImageDialog, getDialogs } from '@/store/ui/images/images.sli
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
-import { FixedCropperRef } from 'react-advanced-cropper'
 import { getApi } from '@/store/entities/images/images.slice'
+import { Area } from 'react-easy-crop';
+import { getCroppedImg } from './cropper/utils'
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -61,7 +62,7 @@ const UploadDialog: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [image, setImage] = useState<File | null>(null);
 
-  const [cropper, setCropper] = useState<FixedCropperRef | null>(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>({ x: 0, y: 0, width: 0, height: 0 });
 
 
   const open = useAppSelector(getDialogs).create.open;
@@ -88,32 +89,37 @@ const UploadDialog: React.FC = () => {
   };
 
   const handleDialogUpload = async () => {
-    if (cropper) {
-      const canvas = cropper.getCanvas();
-
-      if (canvas) {
-        canvas.toBlob(async (blob: Blob | null) => {
-          if (blob) {
-            const croppedFile = new File([blob], image?.name || 'cropped-image.jpg', {
-              type: 'image/jpeg',
-              lastModified: Date.now()
-            });
-
-            const validation: IImageValidationResponse = validateImage(croppedFile, 0);
-            if (validation.valid) {
-              const upload_image_sha256_hex_hash = await fileToSha256Hex(croppedFile);
-
-              const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash));
-
-              if (isIImage(newImage)) {
-                handleDialogClose()
-              }
-            }
-          }
-        }, 'image/jpeg');
-      }
+    if (!croppedAreaPixels || !image) {
+      console.error('Invalid cropped area or image source');
+      return;
     }
-  }
+
+    try {
+      const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
+
+      const croppedFile = new File([croppedBlob], image?.name || 'cropped-image.jpg', {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      });
+
+      const validation: IImageValidationResponse = validateImage(croppedFile, 0);
+      if (validation.valid) {
+        const upload_image_sha256_hex_hash = await fileToSha256Hex(croppedFile);
+
+        const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash));
+
+        if (isIImage(newImage)) {
+          handleDialogClose();
+        }
+      } else {
+
+      }
+    } catch (error) {
+
+    }
+  };
+
+
 
   const getStepContent = (step: number) => {
     switch (step) {
@@ -128,7 +134,7 @@ const UploadDialog: React.FC = () => {
         return image ? (
           <Cropper
             image={image}
-            setCropper={setCropper}
+            setCroppedAreaPixels={setCroppedAreaPixels}
           />
         ) : null;
       default:
@@ -177,76 +183,39 @@ const UploadDialog: React.FC = () => {
                 <Step key={label} sx={{ width: "100%" }}>
                   <StepLabel>{label}</StepLabel>
                   <StepContent>
-                    <Container disableGutters maxWidth='sm'>
-                      <Grid container>
-                        <Grid item xs={12} sx={{ mt: 5 }}>
-                          {getStepContent(activeStep)}
-                        </Grid>
-                        <Grid item xs={12} sx={{ mt: 5 }}>
-                          <Button
-                            fullWidth
-                            variant="contained"
-                            onClick={handleNext}
-                            disabled={!image || (activeStep === steps.length - 1 && loading)}
-                            sx={{ mt: 1, mr: 1 }}
-                          >
-                            {activeStep === steps.length - 1 ? 'Zuschneiden und Hochladen' : 'Weiter'}
-                          </Button>
-                        </Grid>
-                        <Grid item xs={12}>
-                          <Button
-                            fullWidth
-                            variant='outlined'
-                            disabled={activeStep === 0}
-                            onClick={handleBack}
-                            sx={{ mt: 1, mr: 1 }}
-                          >
-                            Zurück
-                          </Button>
-                        </Grid>
+                    <Grid container>
+                      <Grid item xs={12} sx={{ mt: 5 }}>
+                        {getStepContent(activeStep)}
                       </Grid>
-                    </Container>
+                      <Grid item xs={12} sx={{ mt: 5 }}>
+                        <Button
+                          fullWidth
+                          variant="contained"
+                          onClick={handleNext}
+                          disabled={!image || (activeStep === steps.length - 1 && loading)}
+                          sx={{ mt: 1, mr: 1 }}
+                        >
+                          {activeStep === steps.length - 1 ? 'Zuschneiden und Hochladen' : 'Weiter'}
+                        </Button>
+                      </Grid>
+                      <Grid item xs={12}>
+                        <Button
+                          fullWidth
+                          variant='outlined'
+                          disabled={activeStep === 0}
+                          onClick={handleBack}
+                          sx={{ mt: 1, mr: 1 }}
+                        >
+                          Zurück
+                        </Button>
+                      </Grid>
+                    </Grid>
                   </StepContent>
                 </Step>
               ))}
             </Stepper>
           </Box>
         </DialogContent>
-        {/* <DialogActions>
-          {matches && (
-            <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: '100%' }}>
-              {activeStep !== 0 && (
-                <Button onClick={handleBack} disabled={isUploading}>
-                  Zurück
-                </Button>
-              )}
-              {activeStep < steps.length - 1 ? (
-                <Button
-                  onClick={handleNext}
-                  disabled={activeStep === 0 && !image}
-                >
-                  Weiter
-                </Button>
-              ) : (
-                <Button
-                  onClick={handleDialogUpload}
-                  disabled={!image || isUploading}
-                >
-                  {isUploading ? 'Hochladen...' : 'Hochladen'}
-                </Button>
-              )}
-            </Box>
-          )}
-          {!matches && activeStep !== steps.length - 1 && (
-            <Box sx={{ display: "flex", flexDirection: "row", justifyContent: "space-between", width: '100%' }}>
-              {activeStep !== 0 && (
-                <Button onClick={handleBack} disabled={isUploading}>
-                  Zurück
-                </Button>
-              )}
-            </Box>
-          )}
-        </DialogActions> */}
       </Dialog>
     </Container >
   )
