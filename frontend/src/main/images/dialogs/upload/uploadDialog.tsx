@@ -62,7 +62,13 @@ const UploadDialog: React.FC = () => {
   const [activeStep, setActiveStep] = useState(0);
   const [image, setImage] = useState<File | null>(null);
 
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>({ x: 0, y: 0, width: 0, height: 0 });
+  const CROPPER_PROPS_INITIAL_STATE = {
+    rotation: 0,
+    croppedAreaPixels: { x: 0, y: 0, width: 0, height: 0 }
+  };
+
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels);
+  const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation);
 
 
   const open = useAppSelector(getDialogs).create.open;
@@ -90,12 +96,11 @@ const UploadDialog: React.FC = () => {
 
   const handleDialogUpload = async () => {
     if (!croppedAreaPixels || !image) {
-      console.error('Invalid cropped area or image source');
       return;
     }
 
     try {
-      const croppedBlob = await getCroppedImg(image, croppedAreaPixels);
+      const croppedBlob = await getCroppedImg(image, croppedAreaPixels, rotation);
 
       const croppedFile = new File([croppedBlob], image?.name || 'cropped-image.jpg', {
         type: 'image/jpeg',
@@ -110,6 +115,8 @@ const UploadDialog: React.FC = () => {
 
         if (isIImage(newImage)) {
           handleDialogClose();
+          setCroppedAreaPixels(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels);
+          setRotation(CROPPER_PROPS_INITIAL_STATE.rotation);
         }
       } else {
 
@@ -135,6 +142,8 @@ const UploadDialog: React.FC = () => {
           <Cropper
             image={image}
             setCroppedAreaPixels={setCroppedAreaPixels}
+            rotation={rotation}
+            setRotation={setRotation}
           />
         ) : null;
       default:

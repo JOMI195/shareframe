@@ -12,15 +12,21 @@ const MAX_ROTATION = 360;
 
 interface CropperProps {
     image: File;
-    setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>
+    setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
+    rotation: number;
+    setRotation: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const Cropper: React.FC<CropperProps> = ({ image, setCroppedAreaPixels }) => {
+const Cropper: React.FC<CropperProps> = ({
+    image,
+    setCroppedAreaPixels,
+    rotation,
+    setRotation
+}) => {
     const cropperRef = useRef<EasyCropper>(null);
     const cropperContainerRef = useRef<HTMLDivElement>(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [rotation, setRotation] = useState(0)
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isTouching, setIsTouching] = useState(false);
 
@@ -100,6 +106,7 @@ const Cropper: React.FC<CropperProps> = ({ image, setCroppedAreaPixels }) => {
                             maxZoom={MAX_ZOOM}
                             restrictPosition={false}
                             cropShape="rect"
+                            objectFit="horizontal-cover"
                         />
                     </div>
                     <Navigation
