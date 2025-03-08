@@ -276,6 +276,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             if message_type == "close_connection":
                 await self.close_connection()
+                timestamp = message.get("timestamp")
+                await self.send(json.dumps({"type": "pong", "timestamp": timestamp}))
             elif message_type == "text":
                 content = message.get("content", "")
                 print(f"Received text message: {content}")
