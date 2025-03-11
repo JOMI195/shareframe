@@ -85,13 +85,14 @@ class EPD:
 
     def ReadBusy(self):
         logger.debug("e-Paper busy")
-        self.send_command(0x71)
-        busy = epdconfig.digital_read(self.busy_pin)
-        while busy == 0:
-            self.send_command(0x71)
-            busy = epdconfig.digital_read(self.busy_pin)
-        epdconfig.delay_ms(20)
-        logger.debug("e-Paper busy release")
+        iter = 0
+        while epdconfig.digital_read(self.busy_pin) == 0:
+            epdconfig.delay_ms(100)
+            iter += 1
+            if iter > 150:
+                logger.info("Forced e-paper busy release")
+                break
+            logger.debug("e-Paper busy release")
 
     def init(self):
         if epdconfig.module_init() != 0:

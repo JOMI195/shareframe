@@ -59,6 +59,7 @@ chmod 644 $WORKING_DIR/.env.serial-number
 
 apt-get update
 apt-get upgrade -y
+apt-get autoremove
 apt-get install -y python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
 
 cd $WORKING_DIR

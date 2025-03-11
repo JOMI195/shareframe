@@ -1,21 +1,36 @@
 import asyncio
+from dataclasses import dataclass
+from enum import Enum
 import gc
 import os
 from pathlib import Path
 import sys
 import time
 import logging
+from typing import Optional
 from PIL import Image
 from datetime import datetime, timedelta, timezone
 from config import settings
 
-libdir = os.path.join(
-    os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"
-)
-if os.path.exists(libdir):
-    sys.path.append(libdir)
+if not settings.MOCK_DISPLAY:
+    libdir = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"
+    )
+    if os.path.exists(libdir):
+        sys.path.append(libdir)
 
-from waveshare_epd import epd7in5_V2
+    from waveshare_epd import epd7in5_V2 as Driver
+
+
+class EPDCommand(Enum):
+    INIT = "init"
+    CLEAR = "clear"
+    DISPLAY_IMAGE = "display_image"
+
+
+@dataclass
+class EPDCommandParams:
+    image_path: Optional[str] = None  # required for DISPLAY_IMAGE
 
 
 class Display:
@@ -24,9 +39,11 @@ class Display:
         self.logger.info("Initializing display")
 
         try:
-            self.epd = epd7in5_V2.EPD()
-            self._initialize_display()
-            self._show_loading_image()
+            self.epd = None
+
+            self._interact_with_display(EPDCommand.INIT)
+            self._interact_with_display(EPDCommand.CLEAR)
+            self._show_startup_image()
 
             self.last_refresh_time = datetime.now()
             self.current_image_path = None
@@ -40,19 +57,63 @@ class Display:
             self.logger.error(f"Initializing display failed: {str(e)}", exc_info=True)
             raise
 
-    def _initialize_display(self):
-        self.logger.info("Initializing e-paper display")
+    def _interact_with_display(
+        self,
+        command: EPDCommand,
+        params: Optional[EPDCommandParams] = None,
+    ):
+        self.logger.info(f"Executing command: {command.value}")
         try:
-            self.epd.init()
-            self.epd.Clear()
-            self.epd.sleep()
-            self.last_refresh_time = datetime.now()
-            self.logger.info("Initializing e-paper display successful")
+            if not settings.MOCK_DISPLAY:
+                if command == EPDCommand.INIT:
+                    self.epd = Driver.EPD()
+                    self.logger.info("E-paper driver class initialized")
+                    return
+
+                self.epd.init()
+                self.logger.info("E-paper display initialized (standard mode)")
+
+                if command == EPDCommand.CLEAR:
+                    self.epd.Clear()
+                    time.sleep(2)
+                    self.logger.info("E-paper display cleared")
+                elif command == EPDCommand.DISPLAY_IMAGE:
+                    gc.collect()
+                    if not params or not params.image_path:
+                        raise ValueError(
+                            "DISPLAY_IMAGE command requires an image_path parameter"
+                        )
+                    current_pil_image = Image.open(params.image_path)
+                    current_pil_image = current_pil_image.resize(
+                        (self.epd.width, self.epd.height)
+                    )
+                    image_buffer = self.epd.getbuffer(current_pil_image)
+                    self.epd.display(image_buffer)
+                    time.sleep(2)
+                    current_pil_image.close()
+                    del image_buffer
+                    gc.collect()
+                    self.logger.info("E-paper displayed image")
+                else:
+                    self.logger.warning(f"Unsupported command: {command}")
+            else:
+                self.logger.info(f"Simulating E-paper display command: {command}")
         except Exception as e:
             self.logger.error(
-                f"Initializing e-paper display failed: {str(e)}", exc_info=True
+                f"Error during command {command}: {str(e)}", exc_info=True
             )
             raise
+        finally:
+            try:
+                if not settings.MOCK_DISPLAY:
+                    if command != EPDCommand.INIT:
+                        self.epd.sleep()
+                        self.logger.info("E-paper display put to sleep")
+            except Exception as e:
+                self.logger.error(
+                    f"Error during command sleep: {str(e)}", exc_info=True
+                )
+                raise
 
     def _load_user_images(self):
         save_directory = settings.USER_IMAGES_SAVE_PATH.as_posix()
@@ -121,7 +182,7 @@ class Display:
         else:
             self.logger.warning(f"Static images directory not found: {static_folder}")
 
-    def _show_loading_image(self):
+    def _show_startup_image(self):
         self.logger.info(f"Displaying startup frame image")
 
         frame_startup_image_path = (
@@ -130,20 +191,10 @@ class Display:
 
         if os.path.exists(frame_startup_image_path):
             try:
-                current_pil_image = Image.open(frame_startup_image_path)
-                current_pil_image = current_pil_image.resize(
-                    (self.epd.width, self.epd.height)
+                display_image_params = EPDCommandParams(frame_startup_image_path)
+                self._interact_with_display(
+                    EPDCommand.DISPLAY_IMAGE, display_image_params
                 )
-
-                image_buffer = self.epd.getbuffer(current_pil_image)
-
-                self.epd.init()
-                self.epd.display(image_buffer)
-                self.epd.sleep()
-
-                del image_buffer
-                current_pil_image.close()
-                gc.collect()
 
                 self.last_refresh_time = datetime.now()
                 self.logger.info(f"Displaying startup frame image successful")
@@ -165,9 +216,9 @@ class Display:
             minutes=settings.NEXT_REFRESH_WAITING_INTERVALL_MINUTES
         )
         can_refresh = interval_since_last_refresh >= time_until_next_refresh
-        self.logger.debug(
-            f"Refresh check: interval={interval_since_last_refresh.total_seconds()}s, "
-            f"required={time_until_next_refresh.total_seconds()}s, can_refresh={can_refresh}"
+        self.logger.info(
+            f"Refresh check: current-wait-time={interval_since_last_refresh.total_seconds()}s, "
+            f"required-wait-time={time_until_next_refresh.total_seconds()}s until next refresh"
         )
         return can_refresh
 
@@ -188,30 +239,30 @@ class Display:
         try:
             await self._wait_until_can_refresh()
 
-            current_pil_image = Image.open(image_path)
-            current_pil_image = current_pil_image.resize(
-                (self.epd.width, self.epd.height)
-            )
-
-            image_buffer = self.epd.getbuffer(current_pil_image)
-
-            self.epd.init()
-            self.epd.display(image_buffer)
-            self.epd.sleep()
-
-            del image_buffer
-            current_pil_image.close()
-            gc.collect()
+            display_image_params = EPDCommandParams(image_path)
+            self._interact_with_display(EPDCommand.DISPLAY_IMAGE, display_image_params)
 
             self.last_refresh_time = datetime.now()
             self.current_image_path = image_path
-            self.logger.info("Image displayed successful")
+            self.logger.info("Display of image successful")
 
         except Exception as e:
             self.logger.error(f"Failed to display image: {str(e)}", exc_info=True)
             raise
 
-    async def display_images_in_loop(self, interval_secs: int):
+    # ------- TASKS
+    async def clear_display_task(self):
+        self.logger.info("Clearing display task")
+        try:
+            await self._wait_until_can_refresh()
+            self._interact_with_display(command=EPDCommand.CLEAR)
+            self.last_refresh_time = datetime.now()
+            self.logger.info("Clearing display successful")
+        except Exception as e:
+            self.logger.error(f"Clearing display failed: {str(e)}", exc_info=True)
+            raise
+
+    async def display_images_in_loop_task(self, interval_secs: int):
         self.logger.info(f"Starting display loop with interval: {interval_secs}s")
 
         while True:
@@ -220,7 +271,7 @@ class Display:
                 if self.user_image_paths
                 else self.static_image_paths
             )
-            self.logger.debug(f"Current display queue: {len(images_to_display)} images")
+            self.logger.info(f"Current display queue: {len(images_to_display)} images")
 
             for image_data in list(images_to_display):
                 if (
@@ -258,7 +309,7 @@ class Display:
                         if os.path.exists(image_path):
                             try:
                                 os.remove(image_path)
-                                self.logger.debug(
+                                self.logger.info(
                                     f"Deleted expired image file: {image_path}"
                                 )
                             except OSError as e:
@@ -267,25 +318,11 @@ class Display:
                                 )
                         continue
 
-                await self._wait_until_can_refresh()
                 await self._display_image(image_path)
                 await asyncio.sleep(interval_secs)
 
-    async def clear_display(self):
-        self.logger.info("Clearing display")
-        try:
-            await self._wait_until_can_refresh()
-            self.epd.init()
-            self.epd.Clear()
-            self.epd.sleep()
-            self.last_refresh_time = datetime.now()
-            self.logger.info("Clearing display successful")
-        except Exception as e:
-            self.logger.error(f"Clearing display failed: {str(e)}", exc_info=True)
-            raise
-
-    async def clear_display_interval(self, interval_secs: int):
+    async def periodic_clear_display_task(self, interval_secs: int):
         while True:
             await asyncio.sleep(interval_secs)
             self.logger.info("Clearing display in interval")
-            await self.clear_display()
+            await self.clear_display_task()

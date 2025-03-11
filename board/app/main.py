@@ -123,35 +123,70 @@ class FrameApplication:
 
     async def handle_websocket_reset_frame_message(self, message: dict):
         if message.get("type") == "clear_display":
-            await self.display.clear_display()
+            await self.display.clear_display_task()
 
     # Main method
     async def run(self):
         self.logger.info("Starting main async methods")
 
-        asyncio.create_task(
-            self.display.display_images_in_loop(
-                interval_secs=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
+        async def safe_task(coro, name):
+            try:
+                await coro
+            except Exception as e:
+                self.logger.error(f"Task {name} failed: {e}", exc_info=True)
+
+        display_task = asyncio.create_task(
+            safe_task(
+                self.display.display_images_in_loop_task(
+                    interval_secs=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
+                ),
+                "display_images_loop",
             )
         )
-        asyncio.create_task(
-            self.display.clear_display_interval(
-                interval_secs=(settings.REFRESH_INTERVAL_HOURS * 60 * 60)
+
+        clear_task = asyncio.create_task(
+            safe_task(
+                self.display.periodic_clear_display_task(
+                    interval_secs=(settings.REFRESH_INTERVAL_HOURS * 60 * 60)
+                ),
+                "clear_display_interval",
             )
         )
-        await self.websocket_client.run()
+
+        try:
+            await self.websocket_client.run()
+        except Exception as e:
+            self.logger.error(f"WebSocket client failed: {e}", exc_info=True)
 
 
 # Entrypoint
 async def main():
     logging.info("Starting main entrypoint")
-    logging.info(f"Settings: Production={settings.PRODUCTION}, Debug={settings.DEBUG}")
-    await cancel_all_tasks()
-    app = FrameApplication()
-    await app.run()
+    logging.info(
+        f"Settings: Production={settings.PRODUCTION}, Debug={settings.DEBUG} , MOCK_DISPLAY={settings.MOCK_DISPLAY}"
+    )
+
+    try:
+        await cancel_all_tasks()
+
+        app = FrameApplication()
+        await asyncio.wait_for(app.run(), timeout=None)
+    except asyncio.CancelledError:
+        logging.info("Main task was cancelled")
+    except Exception as e:
+        logging.error(f"Fatal error in main task: {e}", exc_info=True)
+    finally:
+        logging.info("Cleaning up before exit")
+        await cancel_all_tasks()
 
 
 if __name__ == "__main__":
     load_dotenv()
     setup_logging(log_file_path=settings.LOGGING_FULL_FILE_PATH)
-    asyncio.run(main())
+
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logging.info("Program stopped by user")
+    except Exception as e:
+        logging.critical(f"Unhandled exception in asyncio.run: {e}", exc_info=True)

@@ -3,6 +3,8 @@ from pathlib import Path
 
 DEBUG = os.getenv("DEBUG", False) == "True"
 PRODUCTION = os.getenv("PRODUCTION", False) == "True"
+MOCK_DISPLAY = os.getenv("MOCK_DISPLAY", False) == "True"
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_FOLDER = "media"
@@ -17,6 +19,9 @@ LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 # Websocket client config
 BASE_URL = os.getenv("BASE_URL")
 HTTP_TIMEOUT_SEC = 600
+WEBSOCKET_RECV_TIMEOUT = 60
+WEBSOCKET_PING_INTERVAL = 60
+WEBSOCKET_PONG_TIMEOUT = 10
 
 if PRODUCTION == True:
     HTTP_BASE_URL = f"https://{BASE_URL}"
