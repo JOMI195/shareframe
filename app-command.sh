@@ -25,7 +25,13 @@ fi
 
 # Generate the build version
 BUILD_DATE=$(date -u +"%Y-%m-%d")
-BUILD_UUID=$(uuidgen | tr '[:upper:]' '[:lower:]' | awk -F'-' '{print substr($1,1,8)}')
+if command -v uuidgen > /dev/null; then
+  # Linux/macOS
+  BUILD_UUID=$(uuidgen | tr '[:upper:]' '[:lower:]' | awk -F'-' '{print substr($1,1,8)}')
+else
+  # Windows
+  BUILD_UUID=$(powershell -Command "[guid]::NewGuid().ToString().Substring(0,8)" | tr '[:upper:]' '[:lower:]')
+fi
 BUILD_VERSION="${BUILD_DATE}-${BUILD_UUID}"
 
 export VITE_APP_BUILD_VERSION=$BUILD_VERSION

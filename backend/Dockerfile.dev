@@ -14,7 +14,7 @@ RUN pip install --upgrade pip
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
-COPY ./bin/entrypoint.sh ./bin/
+COPY ./bin/entrypoint.sh ./bin/entrypoint.sh
 RUN sed -i 's/\r$//g' /app/backend/bin/entrypoint.sh
 RUN chmod +x /app/backend/bin/entrypoint.sh
 
