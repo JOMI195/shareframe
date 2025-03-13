@@ -12,10 +12,14 @@ import {
     CardActions,
     Tooltip,
     IconButton,
+    Chip,
+    Button,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IFrame } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
+import WifiIcon from '@mui/icons-material/Wifi';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
 
@@ -25,7 +29,7 @@ const FramesGallery: React.FC = () => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
 
-    const frames = useAppSelector(getFrames);
+    const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -72,6 +76,9 @@ const FramesGallery: React.FC = () => {
     );
 
     const FrameCard = ({ frame }: { frame: IFrame }) => {
+        const hasConnection = frame.frame_websocket_connection !== null;
+        const ipAddress = frame.frame_websocket_connection?.local_ip_address;
+
         return (
             <Card>
                 <CardContent
@@ -95,16 +102,52 @@ const FramesGallery: React.FC = () => {
                         height: "100%",
                         width: "100%"
                     }}>
-                        <Stack direction="row">
-                            <Tooltip title={"Bilderrahmen abmelden"}>
-                                <IconButton
-                                    onClick={() => { unregisterFrameButtonClickHandle(frame) }}
-                                    aria-label="delete"
-                                    color="error"
-                                >
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Tooltip>
+                        <Stack width={"100%"} direction="column" px={2} spacing={1}>
+                            <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+                                <Typography>
+                                    Status:
+                                </Typography>
+                                <Chip
+                                    icon={<WifiIcon />}
+                                    label={hasConnection ? "Online" : "Offline"}
+                                    color={hasConnection ? "success" : "error"}
+                                    size="small"
+                                    sx={{
+                                        height: "28px"
+                                    }}
+                                />
+                            </Stack>
+                            <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+                                <Typography>
+                                    Einstellungen:
+                                </Typography>
+                                <Tooltip title={"Öffne Bilderrahmen Einstellungen"}>
+                                    <Button
+                                        variant="contained"
+                                        color={"secondary"}
+                                        size="small"
+                                        onClick={() => window.open(`http://${ipAddress}`, "_blank")}
+                                        disabled={ipAddress !== null ? false : true}
+                                        startIcon={<OpenInNewIcon />}
+                                        sx={{
+                                            height: "28px"
+                                        }}
+                                    >
+                                        {"Öffnen"}
+                                    </Button>
+                                </Tooltip>
+                            </Stack>
+                            <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                                <Tooltip title={"Bilderrahmen abmelden"}>
+                                    <IconButton
+                                        onClick={() => { unregisterFrameButtonClickHandle(frame) }}
+                                        aria-label="delete"
+                                        color="error"
+                                    >
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                            </Stack>
                         </Stack>
                     </Box>
                 </CardActions>

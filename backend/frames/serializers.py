@@ -9,7 +9,13 @@ class FrameWebsocketConnectionSerializer(serializers.ModelSerializer):
 
 
 class FrameRetrieveSerializer(serializers.ModelSerializer):
-    frame_websocket_connections = FrameWebsocketConnectionSerializer(read_only=True)
+    frame_websocket_connection = serializers.SerializerMethodField()
+
+    def get_frame_websocket_connection(self, obj):
+        connection = FrameWebsocketConnection.objects.filter(frame=obj).first()
+        if connection:
+            return FrameWebsocketConnectionSerializer(connection).data
+        return None
 
     class Meta:
         model = Frame
@@ -18,5 +24,5 @@ class FrameRetrieveSerializer(serializers.ModelSerializer):
             "public_serial_number",
             "is_active",
             "registered_at",
-            "frame_websocket_connections",
+            "frame_websocket_connection",
         ]
