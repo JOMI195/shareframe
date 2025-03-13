@@ -64,6 +64,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
     @extend_schema(exclude=True)
+    def create(self, request, *args, **kwargs):
+        return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+    @extend_schema(exclude=True)
     def update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
@@ -90,17 +94,19 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
+        error_mess = "Frame not found because of invalid serial number or already registered to a user."
+
         try:
             frame = Frame.objects.get(public_serial_number=public_serial_number)
         except Frame.DoesNotExist:
             return Response(
-                {"error": "Frame not found or invalid serial number."},
+                {"error": error_mess},
                 status=status.HTTP_404_NOT_FOUND,
             )
 
         if frame.user:
             return Response(
-                {"error": "Frame is already registered to a user."},
+                {"error": error_mess},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

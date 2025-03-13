@@ -12,10 +12,10 @@ class FrameTokenInline(admin.TabularInline):
 
 
 class FrameWebsocketConnectionInline(admin.TabularInline):
-    fields = ("connected_at", "last_active")
+    fields = ("local_ip_address", "connected_at", "last_active")
     model = FrameWebsocketConnection
     extra = 0
-    readonly_fields = ("connected_at", "last_active")
+    readonly_fields = ("local_ip_address", "connected_at", "last_active")
     can_delete = False
 
 
@@ -34,7 +34,7 @@ class FrameAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     inlines = [FrameTokenInline, FrameWebsocketConnectionInline]
-    readonly_fields = ("registered_at", "last_connected")
+    readonly_fields = ("registered_at", "last_connected", "last_active")
     fieldsets = (
         (
             None,
@@ -51,7 +51,7 @@ class FrameAdmin(admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("registered_at", "last_connected"),
+                "fields": ("registered_at", "last_connected", "last_active"),
             },
         ),
     )
@@ -81,7 +81,13 @@ class FrameWebsocketConnectionAdmin(admin.ModelAdmin):
     list_per_page = 50
     ordering = ("-connected_at",)
 
-    readonly_fields = ("frame", "channel_name", "connected_at", "last_active")
+    readonly_fields = (
+        "frame",
+        "channel_name",
+        "connected_at",
+        "last_active",
+        "local_ip_address",
+    )
 
     fieldsets = (
         (
@@ -89,6 +95,7 @@ class FrameWebsocketConnectionAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "frame",
+                    "local_ip_address",
                     "channel_name",
                 )
             },

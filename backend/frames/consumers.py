@@ -16,10 +16,26 @@ from .models import FrameWebsocketConnection
 
 
 class FrameWebSocketConsumer(AsyncWebsocketConsumer):
+
+    @database_sync_to_async
+    def update_last_active(self):
+        try:
+            frame = self.scope.get("frame")
+            if frame:
+                frame.last_active = timezone.now()
+                frame.save(update_fields=["last_active"])
+                connection = FrameWebsocketConnection.objects.get(
+                    frame=frame, channel_name=self.channel_name
+                )
+                connection.last_active = timezone.now()
+                connection.save(update_fields=["last_active"])
+        except Exception as e:
+            print(f"Error updating last active fields: {str(e)}")
+
     @database_sync_to_async
     def update_last_connected(self, frame):
         frame.last_connected = timezone.now()
-        frame.save()
+        frame.save(update_fields=["last_connected"])
 
     @database_sync_to_async
     def save_connection(self, frame):
@@ -33,6 +49,19 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def remove_connection(self):
         FrameWebsocketConnection.objects.filter(channel_name=self.channel_name).delete()
+
+    @database_sync_to_async
+    def update_connection_ip(self, local_ip_address):
+        try:
+            frame = self.scope.get("frame")
+            if frame:
+                connection = FrameWebsocketConnection.objects.get(
+                    frame=frame, channel_name=self.channel_name
+                )
+                connection.local_ip_address = local_ip_address
+                connection.save(update_fields=["local_ip_address"])
+        except Exception as e:
+            print(f"Error updating connection IP: {str(e)}")
 
     @database_sync_to_async
     def get_user_frame_connections(self, receiver):
@@ -190,6 +219,14 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             traceback.print_exc()
 
+    async def handle_ping(self, message):
+        timestamp = message.get("timestamp")
+        await self.send(json.dumps({"type": "pong", "timestamp": timestamp}))
+
+        local_ip_address = message.get("local_ip_address")
+        if local_ip_address:
+            await self.update_connection_ip(local_ip_address)
+
     @classmethod
     async def send_clear_specific_images_to_user_frames(
         cls, receiver: User, sent_image_ids: list[int]
@@ -270,6 +307,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         await self.close()
 
     async def receive(self, text_data):
+        await self.update_last_active()
+
         try:
             message = json.loads(text_data)
             message_type = message.get("type")
@@ -277,8 +316,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             if message_type == "close_connection":
                 await self.close_connection()
             elif message_type == "ping":
-                timestamp = message.get("timestamp")
-                await self.send(json.dumps({"type": "pong", "timestamp": timestamp}))
+                await self.handle_ping(message)
             elif message_type == "text":
                 content = message.get("content", "")
                 print(f"Received text message: {content}")
@@ -295,7 +333,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             print(f"Error processing message: {e}")
 
     async def send_picture(self, event):
+        await self.update_last_active()
         await self.send(text_data=event["picture_data"])
 
     async def clear_specific_sent_images(self, event):
+        await self.update_last_active()
         await self.send(text_data=event["data"])

@@ -17,6 +17,7 @@ class Frame(models.Model):
 
     registered_at = models.DateTimeField(auto_now_add=True)
     last_connected = models.DateTimeField(auto_now=True)
+    last_active = models.DateTimeField(auto_now=True)
 
     def create_or_update_tokens(self):
         FrameToken.objects.filter(frame=self).delete()
@@ -54,5 +55,6 @@ class FrameWebsocketConnection(models.Model):
         Frame, on_delete=models.CASCADE, related_name="frame_websocket_connections"
     )
     channel_name = models.CharField(max_length=255, unique=True)
+    local_ip_address = models.GenericIPAddressField(null=True, blank=True)
     connected_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(auto_now=True)
