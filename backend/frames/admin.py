@@ -25,6 +25,7 @@ class FrameAdmin(admin.ModelAdmin):
         "id",
         "public_serial_number",
         "user",
+        "version",
         "is_active",
         "has_ws_connection",
         "registered_at",
@@ -34,12 +35,12 @@ class FrameAdmin(admin.ModelAdmin):
     list_per_page = 50
 
     inlines = [FrameTokenInline, FrameWebsocketConnectionInline]
-    readonly_fields = ("registered_at", "last_connected", "last_active")
+    readonly_fields = ("registered_at", "last_connected", "last_active", "version")
     fieldsets = (
         (
             None,
             {
-                "fields": ("user", "is_active"),
+                "fields": ("user", "is_active", "version"),
             },
         ),
         (

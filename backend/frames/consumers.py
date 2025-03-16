@@ -64,6 +64,16 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             print(f"Error updating connection IP: {str(e)}")
 
     @database_sync_to_async
+    def update_version(self, version):
+        try:
+            frame = self.scope.get("frame")
+            if frame:
+                frame.version = version
+                frame.save(update_fields=["version"])
+        except Exception as e:
+            print(f"Error updating frame version: {str(e)}")
+
+    @database_sync_to_async
     def get_user_frame_connections(self, receiver):
         return list(
             FrameWebsocketConnection.objects.filter(
@@ -223,9 +233,14 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         timestamp = message.get("timestamp")
         await self.send(json.dumps({"type": "pong", "timestamp": timestamp}))
 
+    async def handle_config_transmit(self, message):
         local_ip_address = message.get("local_ip_address")
         if local_ip_address:
             await self.update_connection_ip(local_ip_address)
+
+        version = message.get("version")
+        if version:
+            await self.update_version(version)
 
     @classmethod
     async def send_clear_specific_images_to_user_frames(
@@ -317,6 +332,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 await self.close_connection()
             elif message_type == "ping":
                 await self.handle_ping(message)
+            elif message_type == "config":
+                await self.handle_config_transmit(message)
             elif message_type == "text":
                 content = message.get("content", "")
                 print(f"Received text message: {content}")

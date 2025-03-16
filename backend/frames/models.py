@@ -19,6 +19,8 @@ class Frame(models.Model):
     last_connected = models.DateTimeField(auto_now=True)
     last_active = models.DateTimeField(auto_now=True)
 
+    version = models.CharField(max_length=100, default="1.0.0")
+
     def create_or_update_tokens(self):
         FrameToken.objects.filter(frame=self).delete()
 
