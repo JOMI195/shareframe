@@ -5,6 +5,7 @@ import { createSlice } from "@reduxjs/toolkit";
 type SliceState = {
   api: {
     loading: boolean;
+    otpLoading: boolean;
     lastFetch: number | null;
   };
   frames: IFrame[];
@@ -13,6 +14,7 @@ type SliceState = {
 const initialState: SliceState = {
   api: {
     loading: false,
+    otpLoading: false,
     lastFetch: null,
   },
   frames: []
@@ -58,6 +60,16 @@ const framesSlice = createSlice({
     registerFrameFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+    frameOTPRequested: (sliceState) => {
+      sliceState.api.otpLoading = true;
+    },
+    frameOTPRecieved: (sliceState) => {
+      sliceState.api.lastFetch = Date.now();
+      sliceState.api.otpLoading = false;
+    },
+    frameOTPRequestFailed: (sliceState) => {
+      sliceState.api.otpLoading = false;
+    },
   },
 });
 
@@ -71,6 +83,9 @@ export const {
   unregisterFrameFailed,
   unregisterFrameFulfilled,
   unregisterFramePending,
+  frameOTPRecieved,
+  frameOTPRequested,
+  frameOTPRequestFailed
 } = framesSlice.actions;
 export default framesSlice.reducer;
 

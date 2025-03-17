@@ -1,8 +1,11 @@
 import os
+import string
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 import uuid
+import random
 
 
 class Frame(models.Model):
@@ -55,6 +58,45 @@ class Frame(models.Model):
 
         return FrameToken.objects.create(frame=self, **token_data)
 
+    def generate_otp(self, expiry_minutes=10):
+        """
+        Generates a new OTP for this frame.
+        If an unexpired OTP already exists, it will be invalidated.
+        """
+        # Delete any existing OTP for this frame
+        try:
+            self.frame_otp.delete()
+        except FrameOTP.DoesNotExist:
+            pass
+
+        # Create a new OTP
+        expires_at = timezone.now() + timezone.timedelta(minutes=int(expiry_minutes))
+        otp = FrameOTP.objects.create(frame=self, expires_at=expires_at)
+
+        return otp.code
+
+    def verify_otp(self, code):
+        """
+        Verifies if the provided OTP code is valid for this frame.
+        If valid, the OTP is consumed (deleted).
+        """
+        try:
+            otp = self.frame_otp
+
+            if otp.code != code:
+                return False
+
+            if timezone.now() > otp.expires_at:
+                otp.delete()
+                return False
+
+            # OTP is valid, consume it
+            otp.delete()
+            return True
+
+        except FrameOTP.DoesNotExist:
+            return False
+
 
 class FrameToken(models.Model):
     frame = models.OneToOneField(
@@ -77,6 +119,25 @@ class FrameToken(models.Model):
 
     def is_access_token_valid(self):
         return timezone.now() < self.access_token_expires_at
+
+
+class FrameOTP(models.Model):
+    """One-Time Password for Frame authentication"""
+
+    frame = models.OneToOneField(
+        Frame, on_delete=models.CASCADE, related_name="frame_otp"
+    )
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def save(self, *args, **kwargs):
+        if not self.code:
+            self.code = "".join(random.choices(string.digits, k=6))
+        super().save(*args, **kwargs)
+
+    def is_valid(self):
+        return self.expires_at is not None and timezone.now() < self.expires_at
 
 
 class FrameWebsocketConnection(models.Model):

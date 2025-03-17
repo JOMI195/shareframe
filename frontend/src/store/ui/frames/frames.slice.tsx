@@ -1,10 +1,10 @@
 import { RootState } from "@/store";
-import { framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed } from "@/store/entities/frames/frames.slice";
+import { framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed, frameOTPRequested, frameOTPRecieved, frameOTPRequestFailed } from "@/store/entities/frames/frames.slice";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
-  dialogs: { register: { open: boolean }, unregister: { open: boolean, frameId: number | null } };
+  dialogs: { register: { open: boolean }, unregister: { open: boolean, frameId: number | null }, requestOTP: { open: boolean, frameId: number | null }, };
   snackbar: {
     alert: { open: boolean; message: string; severity: AlertColor };
     loading: { open: boolean; message: string; };
@@ -12,7 +12,7 @@ type SliceState = {
 };
 
 const initialState: SliceState = {
-  dialogs: { register: { open: false }, unregister: { open: false, frameId: null } },
+  dialogs: { register: { open: false }, unregister: { open: false, frameId: null }, requestOTP: { open: false, frameId: null } },
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
     loading: { open: false, message: "", },
@@ -103,6 +103,34 @@ const framesSlice = createSlice({
           message: "",
         };
       })
+      .addCase(frameOTPRequested, (sliceState) => {
+        sliceState.snackbar.loading = {
+          open: true,
+          message: "Generiere OTP",
+        };
+      })
+      .addCase(frameOTPRecieved, (sliceState) => {
+        sliceState.snackbar.alert = {
+          open: true,
+          message: "OTP erfolgreich generiert",
+          severity: "success",
+        };
+        sliceState.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
+      .addCase(frameOTPRequestFailed, (sliceState) => {
+        sliceState.snackbar.alert = {
+          open: true,
+          message: "Generierung von OTP fehlgeschlagen",
+          severity: "error",
+        };
+        sliceState.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
   },
   reducers: {
     registerFrameDialogOpened: (sliceState) => {
@@ -143,6 +171,14 @@ const framesSlice = createSlice({
         ...frames.snackbar.loading,
         open: false,
       };
+    },
+    obtainFrameOTPDialogOpened: (sliceState, action) => {
+      sliceState.dialogs.requestOTP.open = true;
+      sliceState.dialogs.requestOTP.frameId = action.payload.frameId;
+    },
+    obtainFrameOTPDialogClosed: (sliceState) => {
+      sliceState.dialogs.requestOTP.open = false;
+      sliceState.dialogs.requestOTP.frameId = null;
     },
   },
 });
@@ -187,6 +223,15 @@ export const closeFramesLoadingSnackbar = () => ({
   type: loadingSnackbarClosed.type,
 });
 
+export const openRequestOTPDialog = (payload: { frameId: number }) => ({
+  type: obtainFrameOTPDialogOpened.type,
+  payload
+});
+
+export const closeRequestOTPDialog = () => ({
+  type: obtainFrameOTPDialogClosed.type,
+});
+
 export const {
   registerFrameDialogOpened,
   registerFrameDialogClosed,
@@ -195,7 +240,9 @@ export const {
   loadingSnackbarClosed,
   loadingSnackbarOpened,
   unregisterFrameDialogClosed,
-  unregisterFrameDialogOpened
+  unregisterFrameDialogOpened,
+  obtainFrameOTPDialogOpened,
+  obtainFrameOTPDialogClosed
 } = framesSlice.actions;
 
 export default framesSlice.reducer;

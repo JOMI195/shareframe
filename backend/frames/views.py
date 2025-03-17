@@ -1,3 +1,4 @@
+import os
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -308,6 +309,74 @@ class FramesViewSet(viewsets.ModelViewSet):
         if not frame_token.is_access_token_valid():
             return Response(
                 {"error": "Access token has expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response(
+            {
+                "valid": True,
+            }
+        )
+
+    @action(
+        detail=True,
+        methods=["POST"],
+        permission_classes=[IsAuthenticated],
+        url_path="obtain-frame-otp",
+    )
+    def obtain_frame_otp(self, request, pk=None):
+        try:
+            frame = self.get_queryset().get(pk=pk)
+        except Frame.DoesNotExist:
+            return Response(
+                {"error": "Frame not found"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        expiry_minutes = os.environ.get("DJANGO_FRAME_OTP_EXPIRY_MINUTES", 10)
+        otp = frame.generate_otp(expiry_minutes=expiry_minutes)
+
+        return Response(
+            {"otp": otp, "expires_in_minutes": expiry_minutes},
+            status=status.HTTP_200_OK,
+        )
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+        url_path="verify-frame-otp",
+        throttle_classes=[],
+    )
+    def verify_frame_otp(self, request):
+        private_serial_number = request.data.get("private_serial_number")
+        otp_code = request.data.get("otp")
+
+        if not private_serial_number:
+            return Response(
+                {"error": "Private serial number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not otp_code:
+            return Response(
+                {"error": "OTP is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            frame = Frame.objects.get(private_serial_number=private_serial_number)
+        except Frame.DoesNotExist:
+            return Response(
+                {"error": "Frame not found or invalid serial number."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        is_valid = frame.verify_otp(otp_code)
+
+        if not is_valid:
+            return Response(
+                {"error": "OTP invalid or expired."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 

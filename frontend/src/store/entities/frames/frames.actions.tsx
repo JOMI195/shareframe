@@ -29,3 +29,12 @@ export const unregisterFrame = (public_serial_number: string) =>
     onError: framesSlice.unregisterFrameFailed.type,
     data: { "public_serial_number": public_serial_number }
   });
+
+export const obtainFrameOTP = (frame_id: number) =>
+  apiRequest({
+    url: framesEndpoints.getObtainFrameOtpUrl(frame_id),
+    method: "post",
+    onStart: framesSlice.frameOTPRequested.type,
+    onSuccess: framesSlice.frameOTPRecieved.type,
+    onError: framesSlice.frameOTPRequestFailed.type,
+  });

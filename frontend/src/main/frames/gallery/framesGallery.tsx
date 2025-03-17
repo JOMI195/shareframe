@@ -18,10 +18,11 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IFrame } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
+import KeyIcon from '@mui/icons-material/Key';
 import WifiIcon from '@mui/icons-material/Wifi';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
-import { openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -145,6 +146,14 @@ const FramesGallery: React.FC = () => {
                                         color="error"
                                     >
                                         <DeleteIcon />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title={"OTP generieren"}>
+                                    <IconButton
+                                        aria-label="generate otp"
+                                        onClick={() => dispatch(openRequestOTPDialog({ frameId: frame.id }))}
+                                    >
+                                        <KeyIcon />
                                     </IconButton>
                                 </Tooltip>
                             </Stack>

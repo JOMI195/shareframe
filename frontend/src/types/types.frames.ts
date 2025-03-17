@@ -23,3 +23,16 @@ export const isIFrameResponse = (obj: any): obj is IFrame => {
         typeof obj.registered_at === 'string'
     );
 }
+
+export interface IFrameOTP {
+    otp: string;
+    expires_in_minutes: string;
+}
+
+export const isIFrameOTP = (obj: any): obj is IFrameOTP => {
+    return (
+        obj &&
+        typeof obj.otp === 'string' &&
+        typeof obj.expires_in_minutes === 'string'
+    );
+}
