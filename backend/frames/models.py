@@ -21,7 +21,34 @@ class Frame(models.Model):
 
     version = models.CharField(max_length=100, default="1.0.0")
 
-    def create_or_update_tokens(self):
+    def get_or_create_token(self):
+        """
+        Retrieves the existing token if it's valid and not close to expiring,
+        or creates a new one if it's expired or about to expire.
+        Returns the token object.
+        """
+
+        access_token_expiration_window_hours = os.environ.get(
+            "DJANGO_FRAME_ACCESSTOKEN_EXPIRATION_WINDOW_HOURS", 24
+        )
+        expiration_window = timezone.timedelta(
+            hours=int(access_token_expiration_window_hours)
+        )
+
+        try:
+            token = self.frame_token
+
+            approaching_expiration = token.access_token_expires_at - expiration_window
+
+            if (
+                token.is_access_token_valid()
+                and timezone.now() < approaching_expiration
+            ):
+                return token
+
+        except FrameToken.DoesNotExist:
+            pass
+
         FrameToken.objects.filter(frame=self).delete()
 
         token_data = FrameToken.generate_tokens(self)

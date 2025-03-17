@@ -173,7 +173,7 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
-        frame_token = frame.create_or_update_tokens()
+        frame_token = frame.get_or_create_token()
         frame_token.last_obtained = timezone.now()
         frame_token.save()
 
