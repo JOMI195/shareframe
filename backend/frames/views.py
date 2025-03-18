@@ -1,3 +1,4 @@
+import hmac
 import os
 from django.utils import timezone
 from rest_framework import viewsets, status
@@ -17,6 +18,7 @@ from .consumers import FrameWebSocketConsumer
 from user_core.models import User
 from friendships.models import Friendship
 from images.models import Image
+from .auth import FrameHTTPAuth
 
 
 class FramesViewSet(viewsets.ModelViewSet):
@@ -153,41 +155,6 @@ class FramesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["POST"],
-        permission_classes=[AllowAny],
-        url_path="obtain-frame-ws-auth-token",
-        throttle_classes=[],
-    )
-    def obtain_frame_ws_auth_token(self, request):
-        private_serial_number = request.data.get("private_serial_number")
-
-        if not private_serial_number:
-            return Response(
-                {"error": "Private serial number is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            frame = Frame.objects.get(private_serial_number=private_serial_number)
-        except Frame.DoesNotExist:
-            return Response(
-                {"error": "Frame not found or invalid serial number."},
-                status=status.HTTP_404_NOT_FOUND,
-            )
-
-        frame_token = frame.get_or_create_token()
-        frame_token.last_obtained = timezone.now()
-        frame_token.save()
-
-        return Response(
-            {
-                "access_token": frame_token.access_token,
-                "expires_at": frame_token.access_token_expires_at,
-            }
-        )
-
-    @action(
-        detail=False,
-        methods=["POST"],
         permission_classes=[IsAuthenticated],
         url_path="send-image",
     )
@@ -286,10 +253,116 @@ class FramesViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["POST"],
         permission_classes=[AllowAny],
+        url_path="obtain-frame-ws-auth-token",
+        throttle_classes=[],
+    )
+    def obtain_frame_ws_auth_token(self, request):
+        private_serial_number = request.data.get("private_serial_number")
+
+        if not private_serial_number:
+            return Response(
+                {"error": "Private serial number is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            frame = Frame.objects.get(private_serial_number=private_serial_number)
+        except Frame.DoesNotExist:
+            return Response(
+                {"error": "Frame not found or invalid serial number."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        frame_token = frame.get_or_create_token()
+        frame_token.last_obtained = timezone.now()
+        frame_token.save()
+
+        return Response(
+            {
+                "access_token": frame_token.access_token,
+                "expires_at": frame_token.access_token_expires_at,
+            }
+        )
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+        url_path="obtain-frame-auth-token",
+    )
+    def obtain_frame_auth_token(self, request):
+        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
+            request
+        )
+
+        if not is_authenticated:
+            # If authentication failed, result is the error response
+            return result
+
+        matching_frame = result
+
+        frame_token = matching_frame.get_or_create_token()
+        frame_token.last_obtained = timezone.now()
+        frame_token.save()
+
+        return Response(
+            {
+                "access_token": frame_token.access_token,
+                "expires_at": frame_token.access_token_expires_at,
+            }
+        )
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
         url_path="verify-frame-token",
         throttle_classes=[],
     )
     def verify_frame_token(self, request):
+        access_token = request.data.get("access_token")
+
+        if not access_token:
+            return Response(
+                {"error": "Access token is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            frame_token = FrameToken.objects.get(access_token=access_token)
+        except FrameToken.DoesNotExist:
+            return Response(
+                {"error": "Invalid access token."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        if not frame_token.is_access_token_valid():
+            return Response(
+                {"error": "Access token has expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response(
+            {
+                "valid": True,
+            }
+        )
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        permission_classes=[AllowAny],
+        url_path="verify-frame-auth-token",
+    )
+    def verify_frame_auth_token(self, request):
+        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
+            request
+        )
+
+        if not is_authenticated:
+            # If authentication failed, result is the error response
+            return result
+
         access_token = request.data.get("access_token")
 
         if not access_token:
@@ -346,30 +419,24 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="verify-frame-otp",
-        throttle_classes=[],
     )
     def verify_frame_otp(self, request):
-        private_serial_number = request.data.get("private_serial_number")
-        otp_code = request.data.get("otp")
+        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
+            request
+        )
 
-        if not private_serial_number:
-            return Response(
-                {"error": "Private serial number is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if not is_authenticated:
+            # If authentication failed, result is the error response
+            return result
+
+        frame = result
+
+        otp_code = request.data.get("otp")
 
         if not otp_code:
             return Response(
                 {"error": "OTP is required."},
                 status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            frame = Frame.objects.get(private_serial_number=private_serial_number)
-        except Frame.DoesNotExist:
-            return Response(
-                {"error": "Frame not found or invalid serial number."},
-                status=status.HTTP_404_NOT_FOUND,
             )
 
         is_valid = frame.verify_otp(otp_code)
