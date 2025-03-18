@@ -34,15 +34,14 @@ class FrameHTTPAuth:
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validate timestamp is recent (within 30 seconds for stronger security)
+        # Validate timestamp is recent (within some minutes for stronger security)
         try:
             timestamp_dt = datetime.datetime.fromtimestamp(
                 int(timestamp), tz=dt_timezone.utc
             )
             time_diff = timezone.now() - timestamp_dt
-            if (
-                abs(time_diff.total_seconds())
-                > settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_SEC
+            if abs(time_diff.total_seconds()) > (
+                settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN * 60
             ):
                 return False, Response(
                     {"error": "Request timestamp is too old or future dated."},
