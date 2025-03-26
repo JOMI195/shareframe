@@ -10,8 +10,9 @@ def clear_display():
     try:
         result = subprocess.run(
             [
+                "sudo",
                 "/home/frame/shareframe/.venv/bin/python",
-                "/home/frame/shareframe/app/updates/clear_display.py",
+                "/home/frame/shareframe/app/display/clear_display.py",
             ],
             capture_output=True,
             text=True,
@@ -27,9 +28,7 @@ def clear_display():
             return False
 
         current_status = result.stdout.strip()
-        logger.info(
-            "Clearing display before update successful. Output: %s", current_status
-        )
+        logger.info("Clearing display successful. Output: %s", current_status)
         return True
 
     except Exception as e:

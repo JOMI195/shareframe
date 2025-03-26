@@ -8,7 +8,7 @@ import certifi
 import websockets
 from typing import List, Optional, Callable, Union
 from config import settings
-from src.frame_token import TokenManager
+from common.frame_token import TokenManager
 
 
 class WebsocketClient:
@@ -43,6 +43,7 @@ class WebsocketClient:
         self._status_check_task: Optional[asyncio.Task] = None
         self._ping_task: Optional[asyncio.Task] = None
         self._last_pong_time = time.time()
+        self._config_transmit_task: Optional[asyncio.Task] = None
 
         self.logger.info("Initializing websocket client successful")
 
@@ -106,6 +107,24 @@ class WebsocketClient:
     #         finally:
     #             self._ping_task = None
 
+    # ------- UTILS
+    def _get_local_ip_address(self):
+        try:
+            import socket
+
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.connect(("8.8.8.8", 80))
+            ip_address = s.getsockname()[0]
+            s.close()
+            return ip_address
+        except Exception as e:
+            self.logger.error(f"Error getting local IP address: {e}")
+            try:
+                return socket.gethostbyname(socket.gethostname())
+            except Exception:
+                self.logger.warning("Using fallback IP 127.0.0.1")
+                return "127.0.0.1"
+
     # ------- TASKS
     async def _periodic_status_check_task(self, websocket):
         try:
@@ -117,19 +136,23 @@ class WebsocketClient:
                         settings.IMAGES_STATUS_CHECK_INTERVAL_MINUTES * 60
                     )
                 else:
+                    self.logger.warning("Websocket is None, forcing reconnection")
                     break
         except websockets.exceptions.ConnectionClosed as e:
             self.logger.info(
                 f"WebSocket connection closed: {e}, stopping periodic status check"
             )
+            raise
 
     async def _periodic_ping_task(self, websocket):
         """Send periodic pings to the server to keep the connection alive"""
         try:
             while True:
                 if websocket:
-                    # Send ping
-                    ping_message = {"type": "ping", "timestamp": time.time()}
+                    ping_message = {
+                        "type": "ping",
+                        "timestamp": time.time(),
+                    }
                     await websocket.send(json.dumps(ping_message))
                     self.logger.info(f"Sent ping at {time.time()}")
 
@@ -154,15 +177,44 @@ class WebsocketClient:
                         - settings.WEBSOCKET_PONG_TIMEOUT
                     )
                 else:
+                    self.logger.warning("Websocket is None, forcing reconnection")
                     break
         except websockets.exceptions.ConnectionClosed as e:
             self.logger.info(f"WebSocket connection closed during ping: {e}")
-            raise  # Re-raise to signal the connection is closed
+            raise
+
+    async def _periodic_config_transmit_task(self, websocket):
+        """Send config updates to the server to keep the connection alive"""
+        try:
+            local_ip_address = self._get_local_ip_address()
+            self.logger.info(f"Using local IP address: {local_ip_address}")
+
+            while True:
+                if websocket:
+                    ping_message = {
+                        "type": "config",
+                        "local_ip_address": local_ip_address,
+                        "version": settings.VERSION,
+                    }
+                    await websocket.send(json.dumps(ping_message))
+                    self.logger.info(f"Sent config at {time.time()}")
+
+                    await asyncio.sleep(settings.WEBSOCKET_CONFIG_INTERVAL_MIN * 60)
+                else:
+                    self.logger.warning("Websocket is None, forcing reconnection")
+                    break
+        except websockets.exceptions.ConnectionClosed as e:
+            self.logger.info(f"WebSocket connection closed during config update: {e}")
+            raise
 
     async def _cancel_websocket_tasks(self):
         tasks_to_cancel = [
             task
-            for task in [self._status_check_task, self._ping_task]
+            for task in [
+                self._status_check_task,
+                self._ping_task,
+                self._config_transmit_task,
+            ]
             if task is not None and not task.done()
         ]
 
@@ -254,27 +306,19 @@ class WebsocketClient:
                 self.logger.info("WebSocket connection established successful")
 
                 await self._cancel_websocket_tasks()
-                self._last_pong_time = time.time()  # Reset pong time on new connection
+                self._last_pong_time = time.time()
 
-                # Start status check task
-                async def bounded_status_check():
-                    try:
-                        await self._periodic_status_check_task(websocket)
-                    except Exception as e:
-                        self.logger.error(f"Status check task failed: {e}")
+                config_task = asyncio.create_task(
+                    self._periodic_config_transmit_task(websocket)
+                )
+                ping_task = asyncio.create_task(self._periodic_ping_task(websocket))
+                status_check_task = asyncio.create_task(
+                    self._periodic_status_check_task(websocket)
+                )
 
-                self._status_check_task = asyncio.create_task(bounded_status_check())
-
-                # Start ping task
-                async def bounded_ping():
-                    try:
-                        await self._periodic_ping_task(websocket)
-                    except Exception as e:
-                        self.logger.error(f"Ping task failed: {e}")
-                        # Force reconnection if ping fails
-                        return False
-
-                self._ping_task = asyncio.create_task(bounded_ping())
+                self._ping_task = ping_task
+                self._config_transmit_task = config_task
+                self._status_check_task = status_check_task
 
                 try:
                     while True:
@@ -294,10 +338,28 @@ class WebsocketClient:
                             self.logger.warning(
                                 f"WebSocket recv timeout after {settings.WEBSOCKET_RECV_TIMEOUT} seconds"
                             )
-                            # We don't need to ping here since we have a dedicated ping task
                         except websockets.ConnectionClosed as e:
                             self.logger.warning(f"WebSocket connection closed: {e}")
                             await self._cancel_websocket_tasks()
+                            return False
+
+                        if ping_task.done() and ping_task.exception() is not None:
+                            self.logger.error(
+                                f"Ping task failed: {ping_task.exception()}"
+                            )
+                            return False
+                        if (
+                            status_check_task.done()
+                            and status_check_task.exception() is not None
+                        ):
+                            self.logger.error(
+                                f"Status check task failed: {status_check_task.exception()}"
+                            )
+                            return False
+                        if config_task.done() and config_task.exception() is not None:
+                            self.logger.error(
+                                f"Config task failed: {config_task.exception()}"
+                            )
                             return False
                 finally:
                     self.logger.info("Ending websocket session, cleaning up tasks")

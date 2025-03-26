@@ -8,21 +8,13 @@ Type=simple
 User=frame
 WorkingDirectory=/home/frame/shareframe/app
 
-ExecStartPre=/bin/sleep 30
+ExecStartPre=/bin/sleep 5
 
 Environment="PYTHONUNBUFFERED=1"
-ExecStart=/home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/main.py
+ExecStart=/home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/app.py
 
 Restart=always
 RestartSec=30s
-
-MemoryMax=400M
-CPUQuota=80%
-TimeoutStartSec=60s
-TimeoutStopSec=30s
-
-StandardOutput=journal
-StandardError=journal
 
 [Install]
 WantedBy=multi-user.target

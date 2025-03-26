@@ -41,46 +41,14 @@ class ServiceManager:
         try:
             logger.info(f"{action.capitalize()}ing {self.service_name} service")
 
-            # Run the systemctl command
-            subprocess.run(
+            subprocess.Popen(
                 ["sudo", "systemctl", action, self.service_name],
-                check=True,
-                capture_output=True,
-                timeout=300,  # Add timeout to prevent hanging
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                start_new_session=True,
             )
 
-            # Give the service a moment to change state
-            time.sleep(60)
-
-            # Check expected status based on action
-            expected_status = "inactive" if action == "stop" else "active"
-
-            # Verify service status with retry
-            max_retries = 3
-            for attempt in range(max_retries):
-                result = subprocess.run(
-                    ["sudo", "systemctl", "is-active", self.service_name],
-                    capture_output=True,
-                    text=True,
-                    timeout=120,
-                )
-
-                current_status = result.stdout.strip()
-
-                if current_status == expected_status:
-                    logger.info(f"{self.service_name} service {action}ed successfully")
-                    return True
-
-                if attempt < max_retries - 1:
-                    logger.warning(
-                        f"Service status check attempt {attempt+1} failed, retrying..."
-                    )
-                    time.sleep(2)  # Wait before retrying
-
-            logger.error(
-                f"{self.service_name} failed to {action} properly. Current status: {current_status}"
-            )
-            return False
+            return True
 
         except subprocess.TimeoutExpired:
             logger.error(f"Timeout while {action}ing service")
@@ -124,7 +92,7 @@ class ServiceManager:
                 ["sudo", "systemctl", "is-active", self.service_name],
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=10,
             )
             return result.stdout.strip() == "active"
         except Exception as e:

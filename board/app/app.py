@@ -11,10 +11,10 @@ env_serial_path = parent_dir / ".env.serial-number"
 load_dotenv(current_dir / ".env")
 load_dotenv(env_serial_path, override=True)
 
-from src.client import WebsocketClient
-from src.image import ImageProcessor
-from src.display import Display
-from src.frame_token import TokenManager
+from main.client import WebsocketClient
+from main.image import ImageProcessor
+from main.display import Display
+from common.frame_token import TokenManager
 from config import settings
 from config.logger import setup_logging
 import logging

@@ -249,6 +249,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             {"message": "Image sent successful."}, status=status.HTTP_200_OK
         )
 
+    # ------- LEGACY
     @action(
         detail=False,
         methods=["POST"],
@@ -312,6 +313,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             }
         )
 
+    # ------- LEGACY
     @action(
         detail=False,
         methods=["POST"],

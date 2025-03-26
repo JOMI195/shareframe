@@ -4,12 +4,15 @@ from pathlib import Path
 DEBUG = os.getenv("DEBUG", False) == "True"
 PRODUCTION = os.getenv("PRODUCTION", False) == "True"
 MOCK_DISPLAY = os.getenv("MOCK_DISPLAY", False) == "True"
+VERSION = os.getenv("VERSION", "1.0.0")
+
+FRAME_AUTH_SECRET_KEY = os.environ.get("FRAME_AUTH_SECRET_KEY")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_FOLDER = "media"
 
-SERVICE_NAME = "shareframe"
+SERVICE_NAME = "shareframe.service"
 
 # Logging config
 LOGGING_SAVE_DIR = "/var/log/shareframe"
@@ -22,6 +25,7 @@ HTTP_TIMEOUT_SEC = 600
 WEBSOCKET_RECV_TIMEOUT = 60
 WEBSOCKET_PING_INTERVAL = 60
 WEBSOCKET_PONG_TIMEOUT = 10
+WEBSOCKET_CONFIG_INTERVAL_MIN = 10
 
 if PRODUCTION == True:
     HTTP_BASE_URL = f"https://{BASE_URL}"
@@ -33,8 +37,8 @@ else:
     WS_ORIGIN_URL = f"ws://127.0.0.1"
 
 WS_FRAME_URL = f"{WS_BASE_URL}/ws/frames/"
-HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-ws-auth-token/"
-HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-token/"
+HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-auth-token/"
+HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-auth-token/"
 
 SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
 
@@ -70,3 +74,9 @@ UPDATE_DELETE_FILES_LIST_NAME = "files_to_delete.json"
 UPDATE_BACKUP_DIR_NAME = "app_backup"
 
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"
+
+# Dashbaord
+DASHBOARD_LOGGING_FILE = "shareframe-dashboard.log"
+DASHBOARD_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
+
+DASHBOARD_HTTP_VERIFY_OTP_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-otp/"

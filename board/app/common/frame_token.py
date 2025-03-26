@@ -1,9 +1,9 @@
 import logging
 import os
-from pathlib import Path
 import requests
 import json
 from datetime import datetime, timezone
+from .http_auth import HTTPAuth
 from config import settings
 
 
@@ -62,12 +62,18 @@ class TokenManager:
             cls.logger.warning("No access token available for verification")
             return False
         try:
+            headers = HTTPAuth.get_http_auth_headers()
+            url = settings.HTTP_VERIFY_TOKEN_URL
+
             response = requests.post(
-                settings.HTTP_VERIFY_TOKEN_URL,
+                url,
                 json={"access_token": cls.access_token},
+                headers=headers,
                 timeout=600,
             )
+
             is_valid = response.status_code == 200
+
             cls.logger.info(f"Token verification result: {is_valid}")
             return is_valid
         except Exception as e:
@@ -98,11 +104,16 @@ class TokenManager:
     def obtain_token(cls) -> bool:
         cls.logger.info("Attempting to obtain new token")
         try:
+            headers = HTTPAuth.get_http_auth_headers()
+            url = settings.HTTP_OBTAIN_TOKEN_URL
+
             response = requests.post(
-                settings.HTTP_OBTAIN_TOKEN_URL,
-                data={"private_serial_number": os.getenv("SERIAL_NUMBER")},
+                url,
+                json={},
+                headers=headers,
                 timeout=600,
             )
+
             response.raise_for_status()
             token_data = response.json()
             cls.access_token = token_data["access_token"]

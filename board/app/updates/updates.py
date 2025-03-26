@@ -10,8 +10,8 @@ import shutil
 import time
 import json
 
-from .service import ServiceManager
-from .display import clear_display
+from service.service import ServiceManager
+from display.display import clear_display
 
 logger = logging.getLogger(__name__)
 

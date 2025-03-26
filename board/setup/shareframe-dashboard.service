@@ -1,0 +1,17 @@
+[Unit]
+Description=shareframe dashboard for frame settings python application
+After=network.target pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
+Wants=pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
+
+[Service]
+Type=simple
+User=frame
+Environment="PYTHONUNBUFFERED=1"
+WorkingDirectory=/home/frame/shareframe/app
+ExecStart=sudo /home/frame/shareframe/.venv/bin/gunicorn --chdir /home/frame/shareframe/app --workers 1 --bind=0.0.0.0:80 dashboard_main:app --user=frame --timeout 600
+
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

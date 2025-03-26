@@ -182,3 +182,6 @@ lerna-debug.log*
 # docker build specific
 backend_db_data/
 .backend_db_data/
+
+# Dashboard
+/board/app/dashboard/frontend/

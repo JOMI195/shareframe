@@ -10,11 +10,11 @@ load_dotenv(CURRENT_DIR / ".env")
 load_dotenv(ENV_SERIAL_PATH, override=True)
 
 import logging
-from src.frame_token import TokenManager
 from config import settings
 from config.logger import setup_logging
 from updates.updates import UpdateManager
-from updates.service import ServiceManager
+from service.service import ServiceManager
+from common.frame_token import TokenManager
 
 setup_logging(log_file_path=settings.UPDATE_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)

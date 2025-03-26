@@ -10,20 +10,25 @@ if [ -z "$1" ]; then
 fi
 
 USER="frame"
+
 APPLICATION_SERVICE_NAME="shareframe"
 APPLICATION_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
 UPDATE_SERVICE_NAME="shareframe-update"
 UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 
+DASHBOARD_SERVICE_NAME="shareframe-dashboard"
+DASHBOARD_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
+
 SERIAL_NUMBER=$1
 WORKING_DIR="/home/$USER/shareframe"
 
 APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
 UPDATER_LOG_FILE="/var/log/shareframe/shareframe-update.log"
+DASHBOARD_LOG_FILE="/var/log/shareframe/shareframe-dashboard.log"
 
-# Create log files
 
+# log files
 if [ ! -f "$APPLICATION_LOG_FILE" ]; then
     sudo touch "$APPLICATION_LOG_FILE"
     echo "Log file created: $APPLICATION_LOG_FILE"
@@ -37,6 +42,13 @@ if [ ! -f "$UPDATER_LOG_FILE" ]; then
 fi
 sudo chown "$USER:$USER" "$UPDATER_LOG_FILE"
 sudo chmod 664 "$UPDATER_LOG_FILE"
+
+if [ ! -f "$DASHBOARD_LOG_FILE" ]; then
+    sudo touch "$DASHBOARD_LOG_FILE"
+    echo "Log file created: $DASHBOARD_LOG_FILE"
+fi
+sudo chown "$USER:$USER" "$DASHBOARD_LOG_FILE"
+sudo chmod 664 "$DASHBOARD_LOG_FILE"
 
 # Check if directories existing
 if [ ! -d "$WORKING_DIR/app" ]; then
@@ -66,7 +78,7 @@ cd $WORKING_DIR
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install spidev gpiozero python-dotenv asyncio websockets==14.1 requests
+pip install spidev gpiozero python-dotenv asyncio websockets==14.1 requests gunicorn flask flask-cors requests netifaces
 
 if [ -f "$WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME" ]; then
     cp $WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME /etc/systemd/system/$APPLICATION_SERVICE_FILE_NAME
@@ -81,9 +93,16 @@ else
     echo "Warning: $UPDATE_SERVICE_NAME-/ .service or .timer files not found!"
 fi
 
+if [ -f "$WORKING_DIR/setup/$DASHBOARD_SERVICE_FILE_NAME" ]; then
+    cp $WORKING_DIR/setup/$DASHBOARD_SERVICE_FILE_NAME /etc/systemd/system/$DASHBOARD_SERVICE_FILE_NAME
+else
+    echo "Warning: $DASHBOARD_SERVICE_FILE_NAME file not found!"
+fi
+
 systemctl daemon-reload
 
 systemctl enable "$APPLICATION_SERVICE_FILE_NAME"
 systemctl enable "$UPDATE_TIMER_FILE_NAME"
+systemctl enable "$DASHBOARD_SERVICE_FILE_NAME"
 
 echo "Installation complete!"
