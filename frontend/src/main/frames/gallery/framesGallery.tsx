@@ -127,7 +127,7 @@ const FramesGallery: React.FC = () => {
                                         variant="contained"
                                         color={"secondary"}
                                         size="small"
-                                        onClick={() => window.open(`https://${ipAddress}`, "_blank")}
+                                        onClick={() => window.open(`http://${ipAddress}`, "_blank")}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
                                         startIcon={<OpenInNewIcon />}
                                         sx={{
