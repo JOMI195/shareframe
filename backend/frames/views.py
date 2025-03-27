@@ -1,5 +1,5 @@
-import hmac
 import os
+from django.conf import settings
 from django.utils import timezone
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -19,6 +19,7 @@ from user_core.models import User
 from friendships.models import Friendship
 from images.models import Image
 from .auth import FrameHTTPAuth
+from securePayload.securePayload import SecurePayload
 
 
 class FramesViewSet(viewsets.ModelViewSet):
@@ -449,8 +450,8 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_401_UNAUTHORIZED,
             )
 
-        return Response(
-            {
-                "valid": True,
-            }
+        secure_payload = SecurePayload.encrypt(
+            payload={"valid": True}, secret=settings.FRAME_AUTH_SECRET_KEY
         )
+
+        return Response({"secure_payload": secure_payload})

@@ -22,6 +22,7 @@ import requests
 from dashboard.authentication import login_required
 from service.service import ServiceManager
 from common.http_auth import HTTPAuth
+from common.securePayload import SecurePayload
 from config import settings
 from config.logger import setup_logging
 
@@ -73,6 +74,11 @@ def auth_login():
     headers = HTTPAuth.get_http_auth_headers()
 
     logger.info(f"Verifying OTP with server")
+
+    INVALID_OTP_RESPONSE = (
+        jsonify({"success": False, "message": "Ungültiges OTP"}),
+        401,
+    )
     try:
         response = requests.post(
             settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
@@ -81,19 +87,39 @@ def auth_login():
             timeout=600,
         )
 
-        if response.status_code == 200 and response.json().get("valid"):
-            logger.info(f"Authentication successful")
-            session["logged_in"] = True
-            return jsonify({"success": True, "message": "Login erfolgreich"})
-        else:
-            logger.info(f"Authentication failed with denied OTP")
-            return jsonify({"success": False, "message": "Ungültiges OTP"}), 401
+        if response.status_code != 200:
+            logger.info("Authentication failed with denied OTP")
+            return INVALID_OTP_RESPONSE
+
+        response_data = response.json()
+
+        logger.info(f"server otp verify secure payload response: {response_data}")
+
+        secure_payload = response_data.get("secure_payload")
+
+        if not secure_payload:
+            logger.info("No secure payload received")
+            return INVALID_OTP_RESPONSE
+
+        payload = SecurePayload.decrypt(
+            payload=secure_payload, secret=settings.FRAME_AUTH_SECRET_KEY
+        )
+
+        logger.info(f"server otp verify decrypted payload: {payload}")
+
+        if not payload.get("valid", False):
+            logger.info("Invalid payload")
+            return INVALID_OTP_RESPONSE
+
+        logger.info("Authentication successful")
+        session["logged_in"] = True
+        return jsonify({"success": True, "message": "Login erfolgreich"}), 200
 
     except Exception as e:
         logger.error(f"Authentication failed: {e}")
         return (
-            jsonify({"success": False, "message": f"Authentifizierung fehlgeschlagen"}),
-            500,
+            jsonify({"success": False, "message": "Authentifizierung fehlgeschlagen"}),
+            50,
         )
 
     # data = request.get_json()

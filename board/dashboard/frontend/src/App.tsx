@@ -48,7 +48,7 @@ function App(): React.ReactElement {
     try {
       dispatch(addLoadingSnackbar(
         snackbarId,
-        'Authentifizierung des OTP. Bitte habe einen kurzen Moment Gedult',
+        'Authentifizierung des OTP. Dies kann einige wenige Minuten in Anspruch nehmen. Bitte schließe diese Seite währendessen nicht.',
       ));
       const response = await fetch('/api/auth/login', {
         method: 'POST',
