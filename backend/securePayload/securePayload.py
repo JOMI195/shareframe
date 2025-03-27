@@ -15,6 +15,10 @@ class SecurePayload:
         """
         Encrypt payload with timestamp
         """
+
+        if not isinstance(secret, bytes):
+            secret = secret.encode("utf-8")
+
         secure_payload = {"data": payload, "timestamp": int(time.time())}
 
         payload_json = json.dumps(secure_payload)
@@ -32,6 +36,10 @@ class SecurePayload:
         """
         Decrypt and validate payload
         """
+
+        if not isinstance(secret, bytes):
+            secret = secret.encode("utf-8")
+
         try:
             # Decode base64
             decoded = base64.urlsafe_b64decode(payload.encode("utf-8")).decode("utf-8")
