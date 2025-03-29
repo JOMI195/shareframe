@@ -20,7 +20,7 @@ import requests
 
 from dashboard.authentication import login_required
 from dashboard.middleware import TokenAuthMiddleware
-from dashboard.frame_auth_requests import authenticated_request
+from dashboard.frame_auth_requests import frame_auth_token_request
 from service.service import ServiceManager
 from common.frame_token import TokenManager
 from common.securePayload import SecurePayload
@@ -33,7 +33,8 @@ requests.packages.urllib3.util.connection.HAS_IPV6 = False
 setup_logging(log_file_path=settings.DASHBOARD_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
 
-service_manager = ServiceManager(settings.SERVICE_NAME)
+application_service_manager = ServiceManager(settings.SERVICE_NAME)
+update_service_manager = ServiceManager(settings.UPDATE_SERVICE_NAME)
 TokenManager.initialize()
 
 app = Flask(__name__, static_folder="dashboard/frontend", static_url_path="")
@@ -86,9 +87,9 @@ def auth_login():
         401,
     )
     try:
-        response = authenticated_request(
-            url="post",
-            method=settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
+        response = frame_auth_token_request(
+            url=settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
+            method="post",
             json={"otp": otp},
             timeout=600,
         )
@@ -131,7 +132,7 @@ def auth_login():
         logger.error(f"Authentication failed: {e}")
         return (
             jsonify({"success": False, "message": "Authentifizierung fehlgeschlagen"}),
-            50,
+            500,
         )
 
     # data = request.get_json()
@@ -157,9 +158,11 @@ def auth_logout():
 
 @app.route("/api/auth/check-auth", methods=["GET"])
 def auth_check_auth():
-    logger.info(f"Verifying frontend user is authenticated")
+    logger.info(f"Verifying if frontend user is authenticated")
     if session.get("logged_in"):
+        logger.info(f"Frontend user is authenticated")
         return jsonify({"authenticated": True})
+    logger.warning(f"Frontend user not is authenticated")
     return jsonify({"authenticated": False})
 
 
@@ -343,9 +346,9 @@ def frame_slideshow():
 
     try:
         if action == "start":
-            success = service_manager.start()
+            success = application_service_manager.start()
         else:
-            success = service_manager.stop()
+            success = application_service_manager.stop()
 
         if success:
             return jsonify(
@@ -375,7 +378,7 @@ def frame_slideshow():
 def frame_slideshow_is_active():
 
     try:
-        is_active = service_manager.is_active()
+        is_active = application_service_manager.is_active()
 
         return jsonify({"success": True, "isActive": is_active})
 
@@ -422,7 +425,7 @@ def frame_infos():
             {
                 "success": True,
                 "message": "Allgemeine Geräteinformationen erfolgreich abgerufen",
-                "frameInfo": {
+                "data": {
                     "public_serial_number": settings.PUBLIC_SERIAL_NUMBER,
                     "version": settings.VERSION,
                     "display_refresh_interval_mins": settings.IMAGES_LOOP_INTERVALL_MINUTES,
@@ -438,13 +441,68 @@ def frame_infos():
 @app.route("/api/frame/updates/latest", methods=["GET"])
 @login_required
 def frame_updates_latest():
-    pass
+    logger.info(f"Getting latest updates")
+
+    ERROR_RESPONSE = (
+        jsonify(
+            {"success": False, "message": "Laden des neusten Updates fehlgeschlagen"}
+        ),
+        500,
+    )
+    try:
+        response = frame_auth_token_request(
+            url=settings.HTTP_UPDATE_LATEST_URL,
+            timeout=600,
+        )
+
+        if response.status_code != 200:
+            logger.info("Server update request failed")
+            return ERROR_RESPONSE
+
+        return jsonify(
+            {
+                "success": True,
+                "message": "Allgemeine Geräteinformationen erfolgreich abgerufen",
+                "data": response.json(),
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Server update request failed failed: {e}")
+        return ERROR_RESPONSE
 
 
 @app.route("/api/frame/updates/perform-update", methods=["POST"])
 @login_required
-def frame_updates_perfrom_update():
-    pass
+def frame_updates_perform_update():
+    try:
+        success = update_service_manager.start()
+
+        if success:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": f"Updateprozess gestartet",
+                }
+            )
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Starten des Updateprozesses fehlgeschlagen",
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Starten des Updateprozesses fehlgeschlagen: {str(e)}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Starten des Updateprozesses fehlgeschlagen: {str(e)}",
+                }
+            ),
+            500,
+        )
 
 
 # -------- PI

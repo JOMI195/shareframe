@@ -17,12 +17,22 @@ import SignalWifiStatusbarConnectedNoInternet4Icon from '@mui/icons-material/Sig
 import SignalWifiStatusbar4BarIcon from '@mui/icons-material/SignalWifiStatusbar4Bar';
 import InfoIcon from '@mui/icons-material/Info';
 import ShareframeDialog from '../../shareframeDialog';
+import { selectUpdatesState } from '@/store/updates/updates.Slice';
+import { selectFrameInfoState } from '@/store/frameInfo/frameInfo.Slice';
+import { isVersionNewer } from '@/common/utils/version';
+import UpdateIcon from '@mui/icons-material/Update';
+import { getBadgeNumber } from '@/common/utils/badge';
 
 const TopAppBar = () => {
     const dispatch = useAppDispatch();
     const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
     const { isConnected } = usePiConnection();
     const { isAuthenticated } = useAppSelector(selectAuth);
+
+    const { latest_release } = useAppSelector(selectUpdatesState);
+    const { frameInfo } = useAppSelector(selectFrameInfoState);
+
+    const isNewVersion = (latest_release && frameInfo && isVersionNewer(latest_release.version, frameInfo.version)) ?? false;
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
@@ -46,6 +56,8 @@ const TopAppBar = () => {
     };
 
     const ConnectionStatusIcon = isConnected ? SignalWifiStatusbar4BarIcon : SignalWifiStatusbarConnectedNoInternet4Icon;
+
+    const badgeNumber = getBadgeNumber(!isConnected, (isAuthenticated && isNewVersion));
 
     return (
         <>
@@ -71,16 +83,16 @@ const TopAppBar = () => {
                             flex: 1
                         }}
                     />
-                    <Tooltip title={isConnected ? "Mit dem Bilderrahmen verbunden" : "Keine Verbindung zum Bilderrahmen"}>
+                    <Tooltip title={"Benachrichtigungen"}>
                         <IconButton onClick={handleInfoClick}>
-                            <Badge badgeContent={4} color="error">
+                            <Badge badgeContent={badgeNumber} color="error">
                                 <InfoIcon fontSize={isSmallScreen ? "medium" : "medium"} />
                             </Badge>
                         </IconButton>
                     </Tooltip>
                     <Tooltip title={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}>
                         <IconButton size={isSmallScreen ? "medium" : "medium"} onClick={toggleColorMode}>
-                            <IconComponent color={isConnected ? "inherit" : "error"} fontSize={isSmallScreen ? "medium" : "medium"} />
+                            <IconComponent fontSize={isSmallScreen ? "medium" : "medium"} />
                         </IconButton>
                     </Tooltip>
                     {isAuthenticated && (
@@ -107,16 +119,27 @@ const TopAppBar = () => {
                     horizontal: 'right',
                 }}
             >
-                <MenuItem onClick={handleInfoClose} disabled>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                        <ConnectionStatusIcon color={isConnected ? "success" : "error"} />
-                        <Typography>
-                            {isConnected
-                                ? 'Mit dem Bilderrahmen verbunden'
-                                : 'Keine Verbindung zum Bilderrahmen'}
-                        </Typography>
-                    </Box>
-                </MenuItem>
+                {badgeNumber === 0 && (
+                    <MenuItem onClick={handleInfoClose} sx={{ pointerEvents: 'none', width: "100%", minWidth: "400px" }}>
+                        <Typography>Keine Benachrichtigungen verfügbar</Typography>
+                    </MenuItem>
+                )}
+                {!isConnected && (
+                    <MenuItem onClick={handleInfoClose} sx={{ pointerEvents: 'none', width: "100%", minWidth: "400px" }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <ConnectionStatusIcon color={isConnected ? "success" : "error"} />
+                            <Typography>Keine Verbindung zum Bilderrahmen</Typography>
+                        </Box>
+                    </MenuItem>
+                )}
+                {isAuthenticated && isNewVersion && (
+                    <MenuItem onClick={handleInfoClose} sx={{ pointerEvents: 'none', width: "100%", minWidth: "400px" }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                            <UpdateIcon color={"error"} />
+                            <Typography>{`Neue Version (${latest_release?.version}) verfügbar`}</Typography>
+                        </Box>
+                    </MenuItem>
+                )}
             </Menu>
 
             <ShareframeDialog

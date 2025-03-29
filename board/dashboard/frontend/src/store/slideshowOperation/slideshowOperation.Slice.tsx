@@ -193,13 +193,6 @@ export const toggleSlideshowThunk = () => async (
                             isToggling: false,
                         }));
 
-                        // Success notification
-                        dispatch(addAlertSnackbar(
-                            uuid(),
-                            `Bilderwiedergabe erfolgreich ${action === 'stop' ? 'gestoppt' : 'gestartet'}`,
-                            'success'
-                        ));
-
                         dispatch(startTimer('actionRestrict'));
 
                         // Clear frame if stopping
@@ -209,6 +202,12 @@ export const toggleSlideshowThunk = () => async (
 
                         dispatch(removeLoadingSnackbar(actionId));
 
+                        // Success notification
+                        dispatch(addAlertSnackbar(
+                            uuid(),
+                            `Bilderwiedergabe erfolgreich ${action === 'stop' ? 'gestoppt' : 'gestartet'}`,
+                            'success'
+                        ));
 
                         return;
                     }

@@ -11,6 +11,7 @@ class ReleaseSerializer(serializers.ModelSerializer):
             "checksum",
             "release_notes",
             "release_date",
+            "criticality",
         ]
 
 

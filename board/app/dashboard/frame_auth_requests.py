@@ -3,7 +3,7 @@ import requests
 from common.frame_token import TokenManager
 
 
-def authenticated_request(url, method, **kwargs):
+def frame_auth_token_request(url, method="get", **kwargs):
     """
     Helper function to make authenticated requests from anywhere in the application.
     """

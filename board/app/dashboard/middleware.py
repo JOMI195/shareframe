@@ -26,4 +26,4 @@ class TokenAuthMiddleware:
         self.session.mount("https://", HTTPAdapter(max_retries=retry_strategy))
 
         # Store the session on the app
-        app.extensions["token_auth_session"] = self.sessio
+        app.extensions["token_auth_session"] = self.session

@@ -10,9 +10,11 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import { useAppDispatch } from '@/store';
 import { loginThunk } from '@/store/auth/auth.Slice';
+import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 
 const Authentication = () => {
     const dispatch = useAppDispatch();
+    const { isConnected } = usePiConnection();
     const [password, setPassword] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -103,7 +105,7 @@ const Authentication = () => {
                     variant="contained"
                     color="primary"
                     sx={{ mt: 3, mb: 2 }}
-                    disabled={loading || !password}
+                    disabled={loading || !password || !isConnected}
                 >
                     {'Anmelden'}
                 </Button>

@@ -51,6 +51,14 @@ const FrameActions: React.FC = () => {
     return (
         <>
             <Grid container spacing={3} sx={{ pb: isSmallScreen ? 7 : 0 }}>
+                {!presentationTimer.isRunning && appInitialLoadTimer.isRunning && (
+                    <Grid item xs={12}>
+                        <Alert severity="info" sx={{ display: 'flex', alignItems: 'center' }}>
+                            Bitte warte einen Augenblick bis der aktuelle Status der Bildwiedergabe ermittelt wurde
+                        </Alert>
+                    </Grid>
+                )}
+
                 {presentationTimer.isRunning && (
                     <Grid item xs={12}>
                         <Alert severity="info" sx={{ display: 'flex', alignItems: 'center' }}>

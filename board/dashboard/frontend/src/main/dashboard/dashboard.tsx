@@ -1,6 +1,7 @@
 import ShareframeTabs from "@/common/components/tabs";
 import WifiIcon from '@mui/icons-material/Wifi';
 import InfoIcon from '@mui/icons-material/Info';
+import UpdateIcon from '@mui/icons-material/Update';
 import FilterFramesIcon from '@mui/icons-material/FilterFrames';
 import Network from "./network/network";
 import General from "./general/general";
@@ -8,17 +9,30 @@ import FrameActions from "./frameActions/frameActions";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/store";
 import { startTimer } from "@/store/multiTimer/multiTimer.Slice";
+import Updates from "./updates/updates";
+import { fetchLatestRelease } from "@/store/updates/updates.Slice";
+import { startContinuousStatusCheck } from "@/store/slideshowStatus/slideshowStatus.Slice";
 
 const Dashboard: React.FC = () => {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
-        dispatch(startTimer('appInitialLoad', 0.3));
+        const stopStatusCheck = dispatch(startContinuousStatusCheck());
+
+        return () => {
+            stopStatusCheck();
+        };
     }, [dispatch]);
+
+    useEffect(() => {
+        dispatch(startTimer('appInitialLoad', 0.2));
+        dispatch(fetchLatestRelease());
+    }, [dispatch]);
+
 
     const tabs = [
         {
-            label: "Allgemein",
+            label: "Steuerung",
             icon: <FilterFramesIcon />,
             content: <FrameActions />,
         },
@@ -31,6 +45,11 @@ const Dashboard: React.FC = () => {
             label: "Gerät",
             icon: <InfoIcon />,
             content: <General />,
+        },
+        {
+            label: "Updates",
+            icon: <UpdateIcon />,
+            content: <Updates />,
         },
     ];
 

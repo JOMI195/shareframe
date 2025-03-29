@@ -3,7 +3,6 @@ import { Box, CircularProgress } from '@mui/material';
 import Authentication from './main/authentication/authentication';
 import Dashboard from './main/dashboard/dashboard';
 import { useAppDispatch, useAppSelector } from './store';
-import { startContinuousStatusCheck } from './store/slideshowStatus/slideshowStatus.Slice';
 import { initializeTimersFromStorage } from './store/multiTimer/multiTimer.Slice';
 import {
   checkAuthStatusThunk,
@@ -19,14 +18,6 @@ const App = () => {
   useEffect(() => {
     dispatch(checkAuthStatusThunk());
     setInitialLoad(false);
-  }, [dispatch]);
-
-  useEffect(() => {
-    const stopStatusCheck = dispatch(startContinuousStatusCheck());
-
-    return () => {
-      stopStatusCheck();
-    };
   }, [dispatch]);
 
   useEffect(() => {

@@ -24,7 +24,7 @@ PROTECTED_NETWORK = "preconfigured"
 PROTECTED_NETWORK_ALIAS = "VOREINGESTELLT"
 MOCK_SAVED_NETWORKS = ["HomeWiFi", "CafeNet", "OfficeWiFi"]
 MOCK_SERIAL_NUMBER = "EB3IB-5EL99-0RAPY-8V7X0-IA84H"
-MOCK_VERSION = "1.2.3"
+MOCK_VERSION = "1.0.0"
 
 # Simulated service state
 service_active = False
@@ -175,13 +175,63 @@ def mock_frame_infos():
         {
             "success": True,
             "message": "Allgemeine Geräteinformationen erfolgreich abgerufen",
-            "frameInfo": {
+            "data": {
                 "public_serial_number": MOCK_SERIAL_NUMBER,
                 "version": MOCK_VERSION,
                 "display_refresh_interval_mins": 5,
             },
         }
     )
+
+
+@app.route("/api/frame/updates/latest", methods=["GET"])
+def mock_frame_updates_latest():
+    return jsonify(
+        {
+            "success": True,
+            "message": "Latest update retrieved successfully",
+            "data": {
+                "version": "1.0.1",
+                "download_url": "http://example.com/download",
+                "checksum": "abcdef1234567890",
+                "release_notes": "Bug fixes and performance improvements",
+                "release_date": "2025-03-29T12:00:00Z",
+                "criticality": "PATCH",
+            },
+        }
+    )
+
+
+@app.route("/api/frame/updates/perform-update", methods=["POST"])
+def mock_frame_updates_perform_update():
+    try:
+        success = True
+
+        if success:
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Updateprozess gestartet",
+                }
+            )
+        return jsonify(
+            {
+                "success": False,
+                "message": "Starten des Updateprozesses fehlgeschlagen",
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Starten des Updateprozesses fehlgeschlagen: {str(e)}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Starten des Updateprozesses fehlgeschlagen: {str(e)}",
+                }
+            ),
+            500,
+        )
 
 
 @app.route("/api/pi/check-connection", methods=["GET"])

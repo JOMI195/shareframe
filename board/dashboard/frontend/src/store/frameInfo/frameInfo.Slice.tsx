@@ -15,14 +15,12 @@ export interface FrameInfo {
 export interface FrameInfoState {
     frameInfo: FrameInfo | null;
     loading: boolean;
-    error: string | null;
 }
 
 // Initial State
 const initialState: FrameInfoState = {
     frameInfo: null,
     loading: false,
-    error: null
 };
 
 // Async Thunk
@@ -31,10 +29,10 @@ export const fetchFrameInfos = createAsyncThunk(
     async (_, { dispatch, rejectWithValue }) => {
         try {
             const response = await fetchWithTimeout('/api/frame/infos');
-            const data: IServerResponse & { frameInfo: FrameInfo } = await response.json();
+            const payload: IServerResponse & { data: FrameInfo } = await response.json();
 
-            if (data.success && data.frameInfo) {
-                return data.frameInfo;
+            if (payload.success && payload.data) {
+                return payload.data;
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Abrufen der Frame-Informationen fehlgeschlagen", "error"));
                 return rejectWithValue('Failed to fetch frame infos');
@@ -56,15 +54,12 @@ export const frameInfoSlice = createSlice({
         // Fetch Frame Infos
         builder.addCase(fetchFrameInfos.pending, (state) => {
             state.loading = true;
-            state.error = null;
         });
         builder.addCase(fetchFrameInfos.fulfilled, (state, action) => {
             state.loading = false;
             state.frameInfo = action.payload;
         });
-        builder.addCase(fetchFrameInfos.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload as string;
+        builder.addCase(fetchFrameInfos.rejected, () => {
         });
     }
 });

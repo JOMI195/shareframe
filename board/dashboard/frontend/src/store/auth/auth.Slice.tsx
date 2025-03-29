@@ -38,7 +38,7 @@ export const loginThunk = createAsyncThunk(
       // Add loading snackbar
       dispatch(addLoadingSnackbar(
         snackbarId,
-        'Überprüfung des OTP. Dies kann einige wenige Minuten in Anspruch nehmen. Bitte schließe diese Seite währendessen nicht.',
+        'Überprüfung des OTP',
       ));
 
       const response = await fetchWithTimeout('/api/auth/login', {

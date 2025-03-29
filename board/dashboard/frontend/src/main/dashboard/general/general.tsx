@@ -28,21 +28,12 @@ const General = () => {
                         Gerät
                     </Typography>
                     <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
-                        <Typography variant="body2" color='primary'>
+                        <Typography variant="body2">
                             Seriennummer
                         </Typography>
                         <Divider />
                         <Typography variant="body2" gutterBottom>
                             {frameInfos?.public_serial_number ?? ""}
-                        </Typography>
-                    </Box>
-                    <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
-                        <Typography variant="body2" color='primary'>
-                            Version
-                        </Typography>
-                        <Divider />
-                        <Typography variant="body2" gutterBottom>
-                            {frameInfos?.version ?? ""}
                         </Typography>
                     </Box>
 
@@ -56,7 +47,7 @@ const General = () => {
                             Hardwarespezifikation
                         </Typography>
                         <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
-                            <Typography variant="body2" color='primary'>
+                            <Typography variant="body2">
                                 Display-Größe
                             </Typography>
                             <Divider />
@@ -65,7 +56,7 @@ const General = () => {
                             </Typography>
                         </Box>
                         <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
-                            <Typography variant="body2" color='primary'>
+                            <Typography variant="body2">
                                 Aktualisierungsrate (Minuten)
                             </Typography>
                             <Divider />
