@@ -4,7 +4,7 @@ import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '../snackbars/snackbars.Slice';
 import { fetchWithTimeout } from '@/common/utils/fetch';
 import { IServerResponse } from '@/types';
-import { startTimer } from '../multiTimer/multiTimer.Slice';
+import { addTimer, startTimer } from '../timers/timers.Slice';
 
 
 const MAX_OPERATION_WAIT_TIME = 10 * 60 * 1000; // 10 minutes
@@ -193,7 +193,12 @@ export const toggleSlideshowThunk = () => async (
                             isToggling: false,
                         }));
 
-                        dispatch(startTimer('actionRestrict'));
+                        dispatch(addTimer({
+                            id: 'slideshow-actions-timer',
+                        }));
+
+                        dispatch(startTimer('slideshow-actions-timer'));
+
 
                         // Clear frame if stopping
                         if (action === 'stop') {

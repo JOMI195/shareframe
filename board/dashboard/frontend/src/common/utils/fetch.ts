@@ -7,7 +7,7 @@ export const fetchWithTimeout = async (
     const id = setTimeout(() => controller.abort(), timeout);
 
     try {
-        const response = await fetch(url, { // `http://127.0.0.1:5000${url}`
+        const response = await fetch(`http://127.0.0.1:5000${url}`, { // `http://127.0.0.1:5000${url}`
             ...options,
             credentials: 'include',
             signal: controller.signal

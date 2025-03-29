@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
     Box,
     Card,
@@ -19,10 +19,15 @@ import {
     PhotoLibraryOutlined,
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { selectSlideshowOperation, toggleSlideshowThunk, clearDisplayThunk } from '@/store/slideshowOperation/slideshowOperation.Slice';
+import {
+    selectSlideshowOperation,
+    toggleSlideshowThunk,
+    clearDisplayThunk
+} from '@/store/slideshowOperation/slideshowOperation.Slice';
 import { selectSlideshowStatus } from '@/store/slideshowStatus/slideshowStatus.Slice';
-import { formatTimeRemaining, selectTimer } from '@/store/multiTimer/multiTimer.Slice';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
+import { useTimer } from '@/hooks/useTimer';
+import { syncSpecificTimer } from '@/store/timers/timers.Slice';
 
 const FrameActions: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -31,8 +36,33 @@ const FrameActions: React.FC = () => {
     const { isConnected } = usePiConnection();
     const { isToggling, isClearingDisplay } = useAppSelector(selectSlideshowOperation);
     const { isActive, lastCheckedAt } = useAppSelector(selectSlideshowStatus);
-    const presentationTimer = useAppSelector(state => selectTimer(state, 'actionRestrict'));
-    const appInitialLoadTimer = useAppSelector(state => selectTimer(state, 'appInitialLoad'));
+
+    const {
+        isActive: isAppIntialLoadTimerActive,
+    } = useTimer({
+        id: 'app-initial-load-timer',
+    });
+
+    const {
+        isActive: isSlideshowActionsTimerActive,
+        formattedTime: slideshowActionsTimerTime
+    } = useTimer({
+        id: 'slideshow-actions-timer',
+    });
+
+    useEffect(() => {
+        dispatch(syncSpecificTimer('app-initial-load-timer'));
+        dispatch(syncSpecificTimer('slideshow-actions-timer'));
+
+        const syncInterval = setInterval(() => {
+            if (isAppIntialLoadTimerActive || isSlideshowActionsTimerActive) {
+                dispatch(syncSpecificTimer('app-initial-load-timer'));
+                dispatch(syncSpecificTimer('slideshow-actions-timer'));
+            }
+        }, 1000);
+
+        return () => clearInterval(syncInterval);
+    }, [dispatch, isAppIntialLoadTimerActive, isSlideshowActionsTimerActive]);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -44,14 +74,13 @@ const FrameActions: React.FC = () => {
         dispatch(clearDisplayThunk());
     };
 
-    const isTimerRunning = presentationTimer.isRunning || appInitialLoadTimer.isRunning;
-
+    const isTimerRunning = isSlideshowActionsTimerActive || isAppIntialLoadTimerActive;
     const isButtonsDisabled = isTimerRunning || isToggling || isClearingDisplay || !isConnected || lastCheckedAt === null
 
     return (
         <>
             <Grid container spacing={3} sx={{ pb: isSmallScreen ? 7 : 0 }}>
-                {!presentationTimer.isRunning && appInitialLoadTimer.isRunning && (
+                {!isSlideshowActionsTimerActive && isAppIntialLoadTimerActive && (
                     <Grid item xs={12}>
                         <Alert severity="info" sx={{ display: 'flex', alignItems: 'center' }}>
                             Bitte warte einen Augenblick bis der aktuelle Status der Bildwiedergabe ermittelt wurde
@@ -59,14 +88,15 @@ const FrameActions: React.FC = () => {
                     </Grid>
                 )}
 
-                {presentationTimer.isRunning && (
+                {isSlideshowActionsTimerActive && (
                     <Grid item xs={12}>
                         <Alert severity="info" sx={{ display: 'flex', alignItems: 'center' }}>
-                            Um das Display zu schonen ist die nächste Aktion erst wieder in {formatTimeRemaining(presentationTimer.remainingSeconds)} min möglich
+                            Um das Display zu schonen ist die nächste Aktion erst wieder in {slideshowActionsTimerTime} möglich
                         </Alert>
                     </Grid>
                 )}
 
+                {/* Rest of your component remains the same */}
                 <Grid item xs={12} md={6}>
                     <Card elevation={1} sx={{ height: '100%' }}>
                         <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>

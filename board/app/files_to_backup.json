@@ -53,6 +53,7 @@
     "display/display.py",
     "files_to_backup.json",
     "files_to_delete.json",
+    "heartbeat.py",
     "lib/waveshare_epd/DEV_Config_32.so",
     "lib/waveshare_epd/DEV_Config_64.so",
     "lib/waveshare_epd/__init__.py",
@@ -75,6 +76,5 @@
     "updates/updates.py",
     "utils/__init__.py",
     "utils/clear_display.py",
-    "utils/test_display.py",
-    "version.txt"
+    "utils/test_display.py"
 ]

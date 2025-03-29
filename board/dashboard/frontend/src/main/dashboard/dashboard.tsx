@@ -8,13 +8,20 @@ import General from "./general/general";
 import FrameActions from "./frameActions/frameActions";
 import { useEffect } from "react";
 import { useAppDispatch } from "@/store";
-import { startTimer } from "@/store/multiTimer/multiTimer.Slice";
 import Updates from "./updates/updates";
 import { fetchLatestRelease } from "@/store/updates/updates.Slice";
 import { startContinuousStatusCheck } from "@/store/slideshowStatus/slideshowStatus.Slice";
+import { useTimer } from "@/hooks/useTimer";
 
 const Dashboard: React.FC = () => {
     const dispatch = useAppDispatch();
+    const {
+        start: startAppInitialLoadTimer,
+    } = useTimer({
+        id: 'app-initial-load-timer',
+        duration: 10,
+        autoStart: false
+    });
 
     useEffect(() => {
         const stopStatusCheck = dispatch(startContinuousStatusCheck());
@@ -25,7 +32,7 @@ const Dashboard: React.FC = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        dispatch(startTimer('appInitialLoad', 0.2));
+        startAppInitialLoadTimer()
         dispatch(fetchLatestRelease());
     }, [dispatch]);
 
