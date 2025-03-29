@@ -10,7 +10,11 @@ if [ -z "$2" ]; then
 fi
 
 USER="frame"
+PUBLIC_SERIAL_NUMBER=$1
+SERIAL_NUMBER=$2
+WORKING_DIR="/home/$USER/shareframe"
 
+# services
 APPLICATION_SERVICE_NAME="shareframe"
 APPLICATION_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
@@ -20,17 +24,16 @@ UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 DASHBOARD_SERVICE_NAME="shareframe-dashboard"
 DASHBOARD_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
-PUBLIC_SERIAL_NUMBER=$1
-SERIAL_NUMBER=$2
+HEARTBEAT_SERVICE_NAME="shareframe-heartbeat"
+HEARTBEAT_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
-WORKING_DIR="/home/$USER/shareframe"
-
+# log files
 APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
 UPDATER_LOG_FILE="/var/log/shareframe/shareframe-update.log"
 DASHBOARD_LOG_FILE="/var/log/shareframe/shareframe-dashboard.log"
+HEARTBEAT_LOG_FILE="/var/log/shareframe/shareframe-heartbeat.log"
 
-
-# log files
+# setup log files
 if [ ! -f "$APPLICATION_LOG_FILE" ]; then
     sudo touch "$APPLICATION_LOG_FILE"
     echo "Log file created: $APPLICATION_LOG_FILE"
@@ -51,6 +54,13 @@ if [ ! -f "$DASHBOARD_LOG_FILE" ]; then
 fi
 sudo chown "$USER:$USER" "$DASHBOARD_LOG_FILE"
 sudo chmod 664 "$DASHBOARD_LOG_FILE"
+
+if [ ! -f "$HEARTBEAT_LOG_FILE" ]; then
+    sudo touch "$HEARTBEAT_LOG_FILE"
+    echo "Log file created: $HEARTBEAT_LOG_FILE"
+fi
+sudo chown "$USER:$USER" "$HEARTBEAT_LOG_FILE"
+sudo chmod 664 "$HEARTBEAT_LOG_FILE"
 
 # Check if directories existing
 if [ ! -d "$WORKING_DIR/app" ]; then
@@ -90,7 +100,7 @@ cd $WORKING_DIR
 python3 -m venv --system-site-packages .venv
 source .venv/bin/activate
 pip install --upgrade pip
-pip install spidev gpiozero python-dotenv asyncio websockets==14.1 requests gunicorn flask flask-cors requests netifaces
+pip install spidev gpiozero python-dotenv asyncio websockets==14.1 backoff requests gunicorn flask flask-cors requests netifaces
 
 if [ -f "$WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME" ]; then
     cp $WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME /etc/systemd/system/$APPLICATION_SERVICE_FILE_NAME
@@ -111,10 +121,17 @@ else
     echo "Warning: $DASHBOARD_SERVICE_FILE_NAME file not found!"
 fi
 
+if [ -f "$WORKING_DIR/setup/$HEARTBEAT_SERVICE_FILE_NAME" ]; then
+    cp $WORKING_DIR/setup/$HEARTBEAT_SERVICE_FILE_NAME /etc/systemd/system/$HEARTBEAT_SERVICE_FILE_NAME
+else
+    echo "Warning: $HEARTBEAT_SERVICE_FILE_NAME file not found!"
+fi
+
 systemctl daemon-reload
 
 systemctl enable "$APPLICATION_SERVICE_FILE_NAME"
 systemctl enable "$UPDATE_TIMER_FILE_NAME"
 systemctl enable "$DASHBOARD_SERVICE_FILE_NAME"
+systemctl enable "$HEARTBEAT_SERVICE_FILE_NAME"
 
 echo "Installation complete!"

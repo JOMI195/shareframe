@@ -356,11 +356,11 @@ class WebsocketClient:
                                 f"Status check task failed: {status_check_task.exception()}"
                             )
                             return False
-                        if config_task.done() and config_task.exception() is not None:
-                            self.logger.error(
-                                f"Config task failed: {config_task.exception()}"
-                            )
-                            return False
+                        # if config_task.done() and config_task.exception() is not None:
+                        #     self.logger.error(
+                        #         f"Config task failed: {config_task.exception()}"
+                        #     )
+                        #     return False
                 finally:
                     self.logger.info("Ending websocket session, cleaning up tasks")
                     await self._cancel_websocket_tasks()

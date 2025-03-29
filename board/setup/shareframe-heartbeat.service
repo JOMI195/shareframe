@@ -1,0 +1,16 @@
+[Unit]
+Description=shareframe heartbeat for showing activness to the server
+After=network.target
+
+[Service]
+Type=simple
+User=frame
+Environment="PYTHONUNBUFFERED=1"
+WorkingDirectory=/home/frame/shareframe/app
+ExecStart=/home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/heartbeat.py
+
+Restart=always
+RestartSec=30s
+
+[Install]
+WantedBy=multi-user.target

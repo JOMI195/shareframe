@@ -1,19 +1,29 @@
-import asyncio
 import logging
+from pathlib import Path
+
+from dotenv import load_dotenv
+
+current_dir = Path(__file__).resolve().parent
+parent_dir = current_dir.parent
+env_serial_path = parent_dir / ".env.serial-number"
+
+load_dotenv(current_dir / ".env")
+load_dotenv(env_serial_path, override=True)
+
+import asyncio
 import socket
-import time
 from datetime import datetime
 import requests
 import backoff
-
+from common.frame_token import TokenManager
 from config import settings
 from dashboard.frame_auth_requests import frame_auth_token_request
+from config.logger import setup_logging
+
+# shareframe.de not ready for ipv6 yet
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 logger = logging.getLogger(__name__)
-
-HEARTBEAT_INTERVAL_SECS = settings.DASHBOARD_HTTP_FRAME_HEARTBEAT_INTERVAL_MINS * 60
-MAX_RETRY_DELAY = 10 * 60  # Maximum retry delay of 10 minutes
-HEARTBEAT_URL = settings.DASHBOARD_HTTP_FRAME_HEARTBEAT_URL
 
 
 def get_local_ip_address():
@@ -34,7 +44,7 @@ def get_local_ip_address():
 @backoff.on_exception(
     backoff.expo,
     (requests.exceptions.RequestException, Exception),
-    max_time=MAX_RETRY_DELAY,
+    max_time=settings.HEARTBEAT_MAX_RETRY_DELAY_SECS,
 )
 async def send_heartbeat():
     """Send a heartbeat to the server with authentication."""
@@ -49,7 +59,10 @@ async def send_heartbeat():
         logger.debug(f"Sending heartbeat with payload: {payload}")
 
         response = frame_auth_token_request(
-            url=HEARTBEAT_URL, method="post", json=payload, timeout=600
+            url=settings.HEARTBEAT_HTTP_FRAME_HEARTBEAT_URL,
+            method="post",
+            json=payload,
+            timeout=600,
         )
 
         if response.status_code == 200:
@@ -68,7 +81,7 @@ async def send_heartbeat():
 
 async def heartbeat_task():
     """Continuous task to send heartbeats at regular intervals."""
-    logger.info("Starting heartbeat task")
+    logger.info("Starting heartbeat main task")
 
     while True:
         try:
@@ -76,27 +89,20 @@ async def heartbeat_task():
         except Exception as e:
             logger.error(f"Heartbeat failed after all retries: {e}")
 
-        # Wait for the next interval
-        await asyncio.sleep(HEARTBEAT_INTERVAL_SECS)
+        await asyncio.sleep(settings.HEARTBEAT_HTTP_FRAME_HEARTBEAT_INTERVAL_MINS * 60)
 
 
-def start_heartbeat_service():
-    """Start the heartbeat service in the background."""
-    loop = asyncio.get_event_loop()
-    task = loop.create_task(heartbeat_task())
-    return task
-
-
-# If this file is run directly, start the heartbeat service
 if __name__ == "__main__":
-    from config.logger import setup_logging
+    logger.debug(f"Starting Hearbeat Application")
 
-    setup_logging(log_file_path=settings.DASHBOARD_LOGGING_FULL_FILE_PATH)
+    TokenManager.initialize()
+
+    setup_logging(log_file_path=settings.HEARTBEAT_LOGGING_FULL_FILE_PATH)
 
     loop = asyncio.get_event_loop()
     try:
         loop.run_until_complete(heartbeat_task())
-    except KeyboardInterrupt:
-        logger.info("Heartbeat service stopped by user")
+    except Exception as e:
+        logger.error(f"Running heartbeat application failed: {e}")
     finally:
         loop.close()
