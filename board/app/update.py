@@ -15,6 +15,10 @@ from config.logger import setup_logging
 from updates.updates import UpdateManager
 from service.service import ServiceManager
 from common.frame_token import TokenManager
+import requests
+
+# shareframe.de not ready for ipv6 yet
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 setup_logging(log_file_path=settings.UPDATE_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
@@ -24,7 +28,7 @@ def main():
     logger.info("Starting update process")
 
     TokenManager.initialize()
-    if not TokenManager.is_token_expiry_valid():
+    if not TokenManager.verify_token_expiry():
         if not TokenManager.verify_token():
             success = TokenManager.obtain_token()
             if not success:

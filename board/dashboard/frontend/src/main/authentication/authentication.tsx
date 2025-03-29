@@ -8,12 +8,11 @@ import {
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
+import { useAppDispatch } from '@/store';
+import { loginThunk } from '@/store/auth/auth.Slice';
 
-interface AuthenticationProps {
-    onLogin: (password: string) => Promise<void>;
-}
-
-function Authentication({ onLogin }: AuthenticationProps): React.ReactElement {
+const Authentication = () => {
+    const dispatch = useAppDispatch();
     const [password, setPassword] = useState<string>('');
     const [loading, setLoading] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +21,7 @@ function Authentication({ onLogin }: AuthenticationProps): React.ReactElement {
         e.preventDefault();
         setLoading(true);
         try {
-            await onLogin(password);
+            await dispatch(loginThunk(password));
         } finally {
             setLoading(false);
         }

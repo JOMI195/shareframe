@@ -41,6 +41,7 @@ HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-auth-token/"
 HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-auth-token/"
 
 SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
+PUBLIC_SERIAL_NUMBER = os.getenv("PUBLIC_SERIAL_NUMBER")
 
 TOKEN_CACHE_DIR = ".cache"
 TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"

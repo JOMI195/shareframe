@@ -3,6 +3,7 @@ import { RootState } from '@/store'; // Adjust import path as needed
 import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 import { IServerResponse } from '@/types';
+import { fetchWithTimeout } from '@/common/utils/fetch';
 
 // Interfaces
 export interface NetworkCredentials {
@@ -31,11 +32,11 @@ export const fetchNetworkData = createAsyncThunk(
     async (_, { dispatch, rejectWithValue }) => {
         try {
             // Fetch current connection
-            const connResponse = await fetch('/api/connection/current-connection');
+            const connResponse = await fetchWithTimeout('/api/connection/current-connection');
             const connData = await connResponse.json();
 
             // Fetch saved networks
-            const networksResponse = await fetch('/api/connection/saved-networks');
+            const networksResponse = await fetchWithTimeout('/api/connection/saved-networks');
             const networksData = await networksResponse.json();
 
             if (connData.success && networksData.success) {
@@ -70,7 +71,7 @@ export const addNetwork = createAsyncThunk(
                 'Netzwerk hinzufügen'
             ));
 
-            const response = await fetch('/api/connection/connect', {
+            const response = await fetchWithTimeout('/api/connection/connect', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -108,7 +109,7 @@ export const forgetNetwork = createAsyncThunk(
                 loadingSnackbarId,
                 'Netzwerk entfernen'
             ));
-            const response = await fetch('/api/connection/forget', {
+            const response = await fetchWithTimeout('/api/connection/forget', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

@@ -38,7 +38,7 @@ const LoadingSnackbar = ({ snackbar }: ILoadingSnackbarProps) => {
             >
                 <CircularProgress
                     color="inherit"
-                    size="1.1rem"
+                    size={40}
                 />
                 <Typography variant="subtitle2" sx={{ ml: 5 }}>
                     {snackbar.message}

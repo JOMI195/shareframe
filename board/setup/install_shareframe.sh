@@ -4,8 +4,8 @@ set -e
 
 echo "Starting shareframe installation..."
 
-if [ -z "$1" ]; then
-    echo "Usage: $0 <SERIAL_NUMBER>"
+if [ -z "$2" ]; then
+    echo "Usage: $0 <PUBLIC_SERIAL_NUMBER> <PRIVATE_SERIAL_NUMBER>"
     exit 1
 fi
 
@@ -20,7 +20,9 @@ UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 DASHBOARD_SERVICE_NAME="shareframe-dashboard"
 DASHBOARD_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
-SERIAL_NUMBER=$1
+PUBLIC_SERIAL_NUMBER=$1
+SERIAL_NUMBER=$2
+
 WORKING_DIR="/home/$USER/shareframe"
 
 APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
@@ -65,9 +67,19 @@ if [ ! -f "$WORKING_DIR/.env.serial-number" ]; then
     echo "SERIAL_NUMBER=" > "$WORKING_DIR/.env.serial-number"
 fi
 
-sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" $WORKING_DIR/.env.serial-number
-chown frame:frame $WORKING_DIR/.env.serial-number
-chmod 644 $WORKING_DIR/.env.serial-number
+if grep -q "^SERIAL_NUMBER=" "$WORKING_DIR/.env.serial-number"; then
+    sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" "$WORKING_DIR/.env.serial-number"
+else
+    echo "SERIAL_NUMBER='$SERIAL_NUMBER'" >> "$WORKING_DIR/.env.serial-number"
+fi
+
+if grep -q "^PUBLIC_SERIAL_NUMBER=" "$WORKING_DIR/.env.serial-number"; then
+    sed -i "s/^PUBLIC_SERIAL_NUMBER=.*/PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'/" "$WORKING_DIR/.env.serial-number"
+else
+    echo "PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'" >> "$WORKING_DIR/.env.serial-number"
+fi
+chown frame:frame "$WORKING_DIR/.env.serial-number"
+chmod 644 "$WORKING_DIR/.env.serial-number"
 
 apt-get update
 apt-get upgrade -y

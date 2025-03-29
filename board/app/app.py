@@ -18,6 +18,10 @@ from common.frame_token import TokenManager
 from config import settings
 from config.logger import setup_logging
 import logging
+import requests
+
+# shareframe.de not ready for ipv6 yet
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 
 async def cancel_all_tasks():

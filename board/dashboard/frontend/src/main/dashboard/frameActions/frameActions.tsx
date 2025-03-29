@@ -9,6 +9,8 @@ import {
     Button,
     Grid,
     Alert,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
 import {
     PlayArrowOutlined,
@@ -19,16 +21,20 @@ import {
 import { useAppDispatch, useAppSelector } from '@/store';
 import { selectSlideshowOperation, toggleSlideshowThunk, clearDisplayThunk } from '@/store/slideshowOperation/slideshowOperation.Slice';
 import { selectSlideshowStatus } from '@/store/slideshowStatus/slideshowStatus.Slice';
-import { formatTimeRemaining, selectSlideshowActionRestrictTimer } from '@/store/slideshowActionRestrictTimer/slideshowActionRestrictTimer.Slice';
+import { formatTimeRemaining, selectTimer } from '@/store/multiTimer/multiTimer.Slice';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 
 const FrameActions: React.FC = () => {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
 
     const { isConnected } = usePiConnection();
     const { isToggling, isClearingDisplay } = useAppSelector(selectSlideshowOperation);
     const { isActive, lastCheckedAt } = useAppSelector(selectSlideshowStatus);
-    const { isRunning, remainingSeconds } = useAppSelector(selectSlideshowActionRestrictTimer);
+    const presentationTimer = useAppSelector(state => selectTimer(state, 'actionRestrict'));
+    const appInitialLoadTimer = useAppSelector(state => selectTimer(state, 'appInitialLoad'));
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const handleToggleSlideshow = () => {
         dispatch(toggleSlideshowThunk());
@@ -38,15 +44,17 @@ const FrameActions: React.FC = () => {
         dispatch(clearDisplayThunk());
     };
 
-    const isButtonsDisabled = isRunning || isToggling || isClearingDisplay || !isConnected || lastCheckedAt === null
+    const isTimerRunning = presentationTimer.isRunning || appInitialLoadTimer.isRunning;
+
+    const isButtonsDisabled = isTimerRunning || isToggling || isClearingDisplay || !isConnected || lastCheckedAt === null
 
     return (
         <>
-            <Grid container spacing={3}>
-                {isRunning && (
+            <Grid container spacing={3} sx={{ pb: isSmallScreen ? 7 : 0 }}>
+                {presentationTimer.isRunning && (
                     <Grid item xs={12}>
                         <Alert severity="info" sx={{ display: 'flex', alignItems: 'center' }}>
-                            Um das Display zu schonen ist die nächste Aktion erst wieder in {formatTimeRemaining(remainingSeconds)} min möglich
+                            Um das Display zu schonen ist die nächste Aktion erst wieder in {formatTimeRemaining(presentationTimer.remainingSeconds)} min möglich
                         </Alert>
                     </Grid>
                 )}

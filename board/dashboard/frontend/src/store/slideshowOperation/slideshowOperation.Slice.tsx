@@ -3,8 +3,8 @@ import { AppDispatch, RootState } from '..';
 import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '../snackbars/snackbars.Slice';
 import { fetchWithTimeout } from '@/common/utils/fetch';
-import { startSlideshowActionRestrictTimer } from '../slideshowActionRestrictTimer/slideshowActionRestrictTimer.Slice';
 import { IServerResponse } from '@/types';
+import { startTimer } from '../multiTimer/multiTimer.Slice';
 
 
 const MAX_OPERATION_WAIT_TIME = 10 * 60 * 1000; // 10 minutes
@@ -99,7 +99,7 @@ export const clearDisplayThunk = () => async (
         ));
 
         // Start timer
-        dispatch(startSlideshowActionRestrictTimer());
+        dispatch(startTimer('actionRestrict'));
 
         // Reset clear display status
         dispatch(slideshowOperationSlice.actions.setClearDisplayStatus({
@@ -200,7 +200,7 @@ export const toggleSlideshowThunk = () => async (
                             'success'
                         ));
 
-                        dispatch(startSlideshowActionRestrictTimer());
+                        dispatch(startTimer('actionRestrict'));
 
                         // Clear frame if stopping
                         if (action === 'stop') {

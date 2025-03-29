@@ -6,9 +6,12 @@ from datetime import timezone as dt_timezone
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.response import Response
-from .models import Frame
+from rest_framework.authentication import BaseAuthentication
+from rest_framework.exceptions import AuthenticationFailed
+from .models import Frame, FrameToken
 
 
+# authentication without frame-token
 class FrameHTTPAuth:
     """
     provides authentication methods for Frame authentication.
@@ -87,3 +90,33 @@ class FrameHTTPAuth:
         ).hexdigest()
 
         return digest
+
+
+# authentication with frame-token
+class FrameTokenAuthentication(BaseAuthentication):
+
+    def authenticate(self, request):
+        token = request.headers.get("Authorization")
+
+        if not token:
+            return None
+
+        try:
+            prefix, access_token = token.split(" ")
+            if prefix.lower() != "frame-access-token":
+                raise AuthenticationFailed("Invalid token format")
+        except ValueError:
+            raise AuthenticationFailed("Invalid token format")
+
+        try:
+            frame_token = FrameToken.objects.select_related("frame").get(
+                access_token=access_token
+            )
+
+            if not frame_token.is_access_token_valid():
+                raise AuthenticationFailed("Token has expired")
+
+            return (frame_token.frame.user, frame_token.frame)
+
+        except FrameToken.DoesNotExist:
+            raise AuthenticationFailed("Invalid token")

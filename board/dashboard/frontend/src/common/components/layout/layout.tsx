@@ -4,16 +4,15 @@ import { ReactNode } from "react";
 
 interface MainLayoutProps {
     children: ReactNode;
-    onLogout: () => Promise<void>;
 }
 
-const MainLayout: React.FC<MainLayoutProps> = ({ children, onLogout }) => {
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-            <TopAppbar onLogout={onLogout} />
+            <TopAppbar />
             <Container
                 maxWidth="md"
                 disableGutters
@@ -22,8 +21,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children, onLogout }) => {
                     display: 'flex',
                     alignItems: "center",
                     flexDirection: 'column',
-                    pt: isSmallScreen ? 2 : 5,
-                    pb: 10,
+                    pt: isSmallScreen ? 1 : 5,
+                    pb: isSmallScreen ? 1 : 5,
                 }}
             >
                 {children}

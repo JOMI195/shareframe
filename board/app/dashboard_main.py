@@ -1,6 +1,5 @@
 import logging
 from pathlib import Path
-
 from dotenv import load_dotenv
 
 current_dir = Path(__file__).resolve().parent
@@ -20,16 +19,22 @@ import requests
 
 
 from dashboard.authentication import login_required
+from dashboard.middleware import TokenAuthMiddleware
+from dashboard.frame_auth_requests import authenticated_request
 from service.service import ServiceManager
-from common.http_auth import HTTPAuth
+from common.frame_token import TokenManager
 from common.securePayload import SecurePayload
 from config import settings
 from config.logger import setup_logging
+
+# shareframe.de not ready for ipv6 yet
+requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 setup_logging(log_file_path=settings.DASHBOARD_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
 
 service_manager = ServiceManager(settings.SERVICE_NAME)
+TokenManager.initialize()
 
 app = Flask(__name__, static_folder="dashboard/frontend", static_url_path="")
 app.config["SESSION_COOKIE_SECURE"] = False
@@ -39,6 +44,9 @@ CORS(app, supports_credentials=True)
 
 # Set a secret key for session management
 app.secret_key = secrets.token_hex(16)
+
+# Initialize middleware
+TokenAuthMiddleware(app)
 
 # Define the protected network name
 PROTECTED_NETWORK = "preconfigured"
@@ -71,8 +79,6 @@ def auth_login():
 
     logger.info(f"Authentication attempt with OTP: {otp}")
 
-    headers = HTTPAuth.get_http_auth_headers()
-
     logger.info(f"Verifying OTP with server")
 
     INVALID_OTP_RESPONSE = (
@@ -80,12 +86,18 @@ def auth_login():
         401,
     )
     try:
-        response = requests.post(
-            settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
-            headers=headers,
+        response = authenticated_request(
+            url="post",
+            method=settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
             json={"otp": otp},
             timeout=600,
         )
+        # response = requests.post(
+        #     settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
+        #     headers=headers,
+        #     json={"otp": otp},
+        #     timeout=600,
+        # )
 
         if response.status_code != 200:
             logger.info("Authentication failed with denied OTP")
@@ -152,8 +164,6 @@ def auth_check_auth():
 
 
 # -------- WIFI
-
-
 @app.route("/api/connection/current-connection", methods=["GET"])
 @login_required
 def connection_current_connection():
@@ -402,6 +412,39 @@ def frame_clear():
     except Exception as e:
         logger.error(f"Error managing slideshow service: {str(e)}")
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+
+@app.route("/api/frame/infos", methods=["GET"])
+@login_required
+def frame_infos():
+    try:
+        return jsonify(
+            {
+                "success": True,
+                "message": "Allgemeine Geräteinformationen erfolgreich abgerufen",
+                "frameInfo": {
+                    "public_serial_number": settings.PUBLIC_SERIAL_NUMBER,
+                    "version": settings.VERSION,
+                    "display_refresh_interval_mins": settings.IMAGES_LOOP_INTERVALL_MINUTES,
+                },
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error checking slideshow service status: {str(e)}")
+        return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
+
+
+@app.route("/api/frame/updates/latest", methods=["GET"])
+@login_required
+def frame_updates_latest():
+    pass
+
+
+@app.route("/api/frame/updates/perform-update", methods=["POST"])
+@login_required
+def frame_updates_perfrom_update():
+    pass
 
 
 # -------- PI

@@ -1,25 +1,25 @@
-import React from 'react';
+import { useEffect } from 'react';
 import {
     Box,
     Typography,
     Stack,
     CardContent,
     Card,
+    Divider,
 } from '@mui/material';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { fetchFrameInfos, selectFrameInfoState } from '@/store/frameInfo/frameInfo.Slice';
 
-interface EinkPictureFrameProps {
-    deviceId?: string;
-    resolution?: string;
-    firmwareVersion?: string;
-    refreshInterval?: number;
-}
+const RESOLUTION = "800 x 480";
 
-const General: React.FC<EinkPictureFrameProps> = ({
-    deviceId = "EF-2025-0042",
-    resolution = "800 x 480",
-    firmwareVersion = "1.0.0",
-    refreshInterval = 15
-}) => {
+const General = () => {
+    const dispatch = useAppDispatch();
+    const frameInfos = useAppSelector(selectFrameInfoState).frameInfo;
+
+    useEffect(() => {
+        dispatch(fetchFrameInfos());
+    }, []);
+
     return (
         <Stack spacing={3}>
             <Card elevation={1} sx={{ height: '100%' }}>
@@ -27,20 +27,22 @@ const General: React.FC<EinkPictureFrameProps> = ({
                     <Typography variant="h6" color="text.secondary" gutterBottom>
                         Gerät
                     </Typography>
-                    <Box display={"flex"} justifyContent={"space-between"}>
-                        <Typography variant="body2" gutterBottom>
-                            Seriennummer:
+                    <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
+                        <Typography variant="body2" color='primary'>
+                            Seriennummer
                         </Typography>
+                        <Divider />
                         <Typography variant="body2" gutterBottom>
-                            {deviceId}
+                            {frameInfos?.public_serial_number ?? ""}
                         </Typography>
                     </Box>
-                    <Box display={"flex"} justifyContent={"space-between"}>
-                        <Typography variant="body2" gutterBottom>
-                            Version:
+                    <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
+                        <Typography variant="body2" color='primary'>
+                            Version
                         </Typography>
+                        <Divider />
                         <Typography variant="body2" gutterBottom>
-                            {firmwareVersion}
+                            {frameInfos?.version ?? ""}
                         </Typography>
                     </Box>
 
@@ -53,20 +55,22 @@ const General: React.FC<EinkPictureFrameProps> = ({
                         <Typography variant="h6" color="text.secondary" gutterBottom>
                             Hardwarespezifikation
                         </Typography>
-                        <Box display={"flex"} justifyContent={"space-between"}>
-                            <Typography variant="body2" gutterBottom>
-                                Display-Größe:
+                        <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
+                            <Typography variant="body2" color='primary'>
+                                Display-Größe
                             </Typography>
+                            <Divider />
                             <Typography variant="body2" gutterBottom>
-                                {resolution}
+                                {RESOLUTION}
                             </Typography>
                         </Box>
-                        <Box display={"flex"} justifyContent={"space-between"}>
-                            <Typography variant="body2" gutterBottom>
-                                Aktualisierungsrate:
+                        <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
+                            <Typography variant="body2" color='primary'>
+                                Aktualisierungsrate (Minuten)
                             </Typography>
+                            <Divider />
                             <Typography variant="body2" gutterBottom>
-                                {refreshInterval} Minuten
+                                {frameInfos?.display_refresh_interval_mins ?? ""}
                             </Typography>
                         </Box>
                     </Box>

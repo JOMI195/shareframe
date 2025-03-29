@@ -19,6 +19,8 @@ class TokenManager:
     @classmethod
     def initialize(cls):
         cls._load_cached_token()
+        if not cls.verify_token():
+            cls.obtain_token()
 
     @classmethod
     def _load_cached_token(cls):
@@ -57,18 +59,15 @@ class TokenManager:
 
     @classmethod
     def verify_token(cls) -> bool:
-        cls.logger.info("Verifying access token")
-        if not cls.access_token:
-            cls.logger.warning("No access token available for verification")
+        if not cls.verify_token_expiry():
             return False
+        cls.logger.info("Verifying access token with server")
         try:
-            headers = HTTPAuth.get_http_auth_headers()
             url = settings.HTTP_VERIFY_TOKEN_URL
 
             response = requests.post(
                 url,
                 json={"access_token": cls.access_token},
-                headers=headers,
                 timeout=600,
             )
 
@@ -81,7 +80,8 @@ class TokenManager:
             return False
 
     @classmethod
-    def is_token_expiry_valid(cls) -> bool:
+    def verify_token_expiry(cls) -> bool:
+        cls.logger.info("Verifying access token expiry")
         if not cls.access_token or not cls.token_expires_at:
             cls.logger.warning("Missing token or expiration time")
             return False
@@ -90,10 +90,8 @@ class TokenManager:
                 cls.token_expires_at, "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=timezone.utc)
             is_valid = datetime.now(timezone.utc) < expires_at
-            cls.logger.debug(
-                f"Token validity check: {is_valid}, expires at {expires_at}"
-            )
-            return True
+            cls.logger.debug(f"Token has valid expiry: {is_valid}")
+            return is_valid
         except ValueError as e:
             cls.logger.error(
                 f"Error parsing token expiration time: {str(e)}", exc_info=True

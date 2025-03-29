@@ -16,9 +16,3 @@ class ReleaseSerializer(serializers.ModelSerializer):
 
 class VersionListSerializer(serializers.Serializer):
     versions = serializers.ListField(child=serializers.CharField())
-
-
-class LatestVersionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Release
-        fields = ["version", "download_url", "checksum"]

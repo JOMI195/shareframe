@@ -18,7 +18,7 @@ from .consumers import FrameWebSocketConsumer
 from user_core.models import User
 from friendships.models import Friendship
 from images.models import Image
-from .auth import FrameHTTPAuth
+from .auth import FrameHTTPAuth, FrameTokenAuthentication
 from securePayload.securePayload import SecurePayload
 
 
@@ -358,14 +358,6 @@ class FramesViewSet(viewsets.ModelViewSet):
         url_path="verify-frame-auth-token",
     )
     def verify_frame_auth_token(self, request):
-        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
-            request
-        )
-
-        if not is_authenticated:
-            # If authentication failed, result is the error response
-            return result
-
         access_token = request.data.get("access_token")
 
         if not access_token:
@@ -420,19 +412,12 @@ class FramesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["POST"],
-        permission_classes=[AllowAny],
+        authentication_classes=[FrameTokenAuthentication],
+        permission_classes=[IsAuthenticated],
         url_path="verify-frame-otp",
     )
     def verify_frame_otp(self, request):
-        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
-            request
-        )
-
-        if not is_authenticated:
-            # If authentication failed, result is the error response
-            return result
-
-        frame = result
+        frame: Frame = request.auth
 
         otp_code = request.data.get("otp")
 

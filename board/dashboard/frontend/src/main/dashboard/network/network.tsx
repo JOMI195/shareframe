@@ -146,7 +146,7 @@ const Network = () => {
                                     <CircularProgress />
                                 </Box>
                             ) : (
-                                <List sx={{ mb: 3 }}>
+                                <List>
                                     {savedNetworks.length === 0 ? (
                                         <Typography variant="body2" gutterBottom sx={{ textAlign: 'left' }}>
                                             Keine gespeicherten Netzwerke gefunden.
@@ -174,9 +174,9 @@ const Network = () => {
                             )}
                         </CardContent>
                     </Card>
-                </Grid>
+                </Grid></Grid>
 
-                {/* Action Buttons (Mobile) */}
+            {/* Action Buttons (Mobile) */} <Grid sx={{ pt: 3 }} container spacing={1}>
                 <Grid item xs={12} md={6} display={{ xs: "flex", md: "none" }}>
                     <Button
                         variant="contained"
@@ -262,9 +262,9 @@ const Network = () => {
                 cancelText="Abbrechen"
             >
                 <Typography variant="body1" gutterBottom>
-                    Möchtest du das Netzwerk <strong>{networkToForget}</strong> wirklich aus den gespeicherten Netzwerken entfernen?
+                    Möchtest du das Netzwerk <Typography color='primary' component="b">{networkToForget}</Typography> wirklich aus den gespeicherten Netzwerken entfernen?
                 </Typography>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body1" color="text.secondary">
                     Du kannst das Netzwerk jederzeit erneut hinzufügen.
                 </Typography>
             </ShareframeDialog>

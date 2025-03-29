@@ -1,3 +1,4 @@
+import { fetchWithTimeout } from '@/common/utils/fetch';
 import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 
 interface PiConnectionContextType {
@@ -19,7 +20,7 @@ export const PiConnectionProvider: React.FC<{ children: React.ReactNode }> = ({ 
     const checkPiConnection = useCallback(async () => {
         try {
             setIsCheckingConnection(true);
-            const response = await fetch('/api/pi/check-connection');
+            const response = await fetchWithTimeout('/api/pi/check-connection');
             const data = await response.json();
 
             setIsConnected(data.connected);

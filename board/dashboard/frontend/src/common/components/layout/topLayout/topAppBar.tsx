@@ -1,55 +1,56 @@
+import React, { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import LogoutIcon from '@mui/icons-material/Logout';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContext';
-import { Button, keyframes, Typography, useMediaQuery, useTheme } from '@mui/material';
+import { Badge, Typography, useMediaQuery, useTheme } from '@mui/material';
 import Logo from '../../logo';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { logoutThunk, selectAuth } from '@/store/auth/auth.Slice';
+import SignalWifiStatusbarConnectedNoInternet4Icon from '@mui/icons-material/SignalWifiStatusbarConnectedNoInternet4';
+import SignalWifiStatusbar4BarIcon from '@mui/icons-material/SignalWifiStatusbar4Bar';
+import InfoIcon from '@mui/icons-material/Info';
+import ShareframeDialog from '../../shareframeDialog';
 
-interface TopAppBarProps {
-    onLogout: () => Promise<void>;
-}
-
-
-const pulseAnimation = keyframes`
-    0% { opacity: 1; }
-    50% { opacity: 0.6; }
-    100% { opacity: 1; }
-`;
-
-const TopAppBar: React.FC<TopAppBarProps> = ({ onLogout }) => {
+const TopAppBar = () => {
+    const dispatch = useAppDispatch();
     const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
     const { isConnected } = usePiConnection();
+    const { isAuthenticated } = useAppSelector(selectAuth);
 
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-    const statusIndicator = () => {
-        return (
-            <>
-                <Box
-                    sx={{
-                        width: 14,
-                        height: 14,
-                        borderRadius: '50%',
-                        backgroundColor: isConnected ? 'green' : 'red',
-                        animation: `${pulseAnimation} 1s infinite ease-in-out`,
-                        marginRight: 1,
-                    }} /><Typography variant="body2" sx={{ fontWeight: 500 }}>
-                    {isConnected ? 'Mit dem Bilderrahmen verbunden' : 'Keine Verbindung zum Bilderrahmen'}
-                </Typography>
-            </>
-        )
-    }
+    // State for connection status menu
+    const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+    const open = Boolean(anchorEl);
 
+    const [isLogOutDialogOpen, setIsLogOutDialogOpen] = useState(false);
+
+    const handleInfoClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+        setAnchorEl(event.currentTarget);
+    };
+
+    const handleInfoClose = () => {
+        setAnchorEl(null);
+    };
+
+    const handleLogout = () => {
+        dispatch(logoutThunk());
+    };
+
+    const ConnectionStatusIcon = isConnected ? SignalWifiStatusbar4BarIcon : SignalWifiStatusbarConnectedNoInternet4Icon;
 
     return (
         <>
             <AppBar
-                elevation={isSmallScreen ? 0 : 1}
+                elevation={1}
                 position="sticky"
                 sx={{
                     height: theme => theme.layout.appbar.height,
@@ -70,47 +71,71 @@ const TopAppBar: React.FC<TopAppBarProps> = ({ onLogout }) => {
                             flex: 1
                         }}
                     />
-                    {!isSmallScreen && (
-                        <> {statusIndicator()}</>
-                    )}
-                    <Tooltip title={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}>
-                        <IconButton size={isSmallScreen ? "medium" : "medium"} onClick={toggleColorMode} sx={{ ml: 1 }}>
-                            <IconComponent fontSize={isSmallScreen ? "medium" : "medium"} />
+                    <Tooltip title={isConnected ? "Mit dem Bilderrahmen verbunden" : "Keine Verbindung zum Bilderrahmen"}>
+                        <IconButton onClick={handleInfoClick}>
+                            <Badge badgeContent={4} color="error">
+                                <InfoIcon fontSize={isSmallScreen ? "medium" : "medium"} />
+                            </Badge>
                         </IconButton>
                     </Tooltip>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        startIcon={<LogoutIcon />}
-                        onClick={onLogout}
-                        size='small'
-                        sx={{ ml: 1 }}
-                    >
-                        Logout
-                    </Button>
+                    <Tooltip title={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}>
+                        <IconButton size={isSmallScreen ? "medium" : "medium"} onClick={toggleColorMode}>
+                            <IconComponent color={isConnected ? "inherit" : "error"} fontSize={isSmallScreen ? "medium" : "medium"} />
+                        </IconButton>
+                    </Tooltip>
+                    {isAuthenticated && (
+                        <Tooltip title={"Abmelden"}>
+                            <IconButton color="error" onClick={() => setIsLogOutDialogOpen(true)}>
+                                <LogoutIcon fontSize={isSmallScreen ? "medium" : "medium"} />
+                            </IconButton>
+                        </Tooltip>
+                    )}
                 </Toolbar>
-
             </AppBar>
-            {isSmallScreen && (
-                <Box
-                    sx={{
-                        position: 'sticky',
-                        top: theme.layout.appbar.height,
-                        zIndex: 10,
-                        width: '100%',
-                        background: theme => theme.palette.background.default,
-                        boxShadow: 1,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        paddingBottom: isSmallScreen ? 1 : 2,
-                        paddingX: 2,
-                    }}
-                >
-                    {statusIndicator()}
-                </Box>
-            )}
+
+            {/* Connection Status Menu */}
+            <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={handleInfoClose}
+                anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'right',
+                }}
+                transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                }}
+            >
+                <MenuItem onClick={handleInfoClose} disabled>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <ConnectionStatusIcon color={isConnected ? "success" : "error"} />
+                        <Typography>
+                            {isConnected
+                                ? 'Mit dem Bilderrahmen verbunden'
+                                : 'Keine Verbindung zum Bilderrahmen'}
+                        </Typography>
+                    </Box>
+                </MenuItem>
+            </Menu>
+
+            <ShareframeDialog
+                open={isLogOutDialogOpen}
+                title="Abmelden"
+                onClose={() => setIsLogOutDialogOpen(false)}
+                onConfirm={() => {
+                    setIsLogOutDialogOpen(false);
+                    handleLogout();
+                }}
+                confirmText="Abmelden"
+                cancelText="Abbrechen"
+            >
+                <Typography variant="body1">
+                    Möchtest du dich wirklich abmelden?
+                </Typography>
+            </ShareframeDialog>
         </>
     );
 }
+
 export default TopAppBar;

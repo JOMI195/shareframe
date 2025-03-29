@@ -22,17 +22,17 @@
 #             }
 #         )
 
+
 from rest_framework import viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 
-from .authentication import FrameTokenAuthentication
+from frames.auth import FrameTokenAuthentication
 from .models import Release
 from .serializers import (
     ReleaseSerializer,
     VersionListSerializer,
-    LatestVersionSerializer,
 )
 
 
@@ -52,7 +52,7 @@ class UpdateAPIViewSet(viewsets.ViewSet):
         if not latest_release:
             return Response({"error": "No releases found"}, status=404)
 
-        serializer = LatestVersionSerializer(latest_release)
+        serializer = ReleaseSerializer(latest_release)
         return Response(serializer.data)
 
     def get_version(self, request, version):
