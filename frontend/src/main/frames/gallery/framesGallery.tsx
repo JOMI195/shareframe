@@ -23,6 +23,7 @@ import WifiIcon from '@mui/icons-material/Wifi';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { isFrameActive } from "@/common/utils/frame";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -77,7 +78,7 @@ const FramesGallery: React.FC = () => {
     );
 
     const FrameCard = ({ frame }: { frame: IFrame }) => {
-        const hasConnection = frame.frame_websocket_connection !== null;
+        const hasConnection = isFrameActive(frame);
         const ipAddress = frame.local_ip_address;
 
         return (

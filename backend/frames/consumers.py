@@ -329,8 +329,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 await self.close_connection()
             elif message_type == "ping":
                 await self.handle_ping(message)
-            elif message_type == "config":
-                await self.handle_config_transmit(message)
+            # elif message_type == "config":
+            #     await self.handle_config_transmit(message)
             elif message_type == "text":
                 content = message.get("content", "")
                 print(f"Received text message: {content}")

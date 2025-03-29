@@ -3,6 +3,7 @@ import string
 from django.conf import settings
 from django.db import models
 from django.utils import timezone
+from django.utils.timezone import now
 from django.core.exceptions import ValidationError
 import uuid
 import random
@@ -23,8 +24,8 @@ class Frame(models.Model):
     last_active = models.DateTimeField(auto_now=True)
 
     version = models.CharField(max_length=100, default="1.0.0")
-
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    last_board_heartbeat = models.DateTimeField(default=now)
 
     def get_or_create_token(self):
         """

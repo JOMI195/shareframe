@@ -40,6 +40,7 @@ class FrameAdmin(admin.ModelAdmin):
         "last_active",
         "version",
         "local_ip_address",
+        "last_board_heartbeat",
     )
     fieldsets = (
         (
@@ -63,7 +64,7 @@ class FrameAdmin(admin.ModelAdmin):
         (
             "Connection",
             {
-                "fields": ("local_ip_address",),
+                "fields": ("local_ip_address", "last_board_heartbeat"),
             },
         ),
     )

@@ -3,10 +3,7 @@ export interface IFrame {
     public_serial_number: string;
     is_active: boolean;
     registered_at: string;
-    frame_websocket_connection: {
-        connected_at: string;
-        last_active: string;
-    } | null;
+    last_board_heartbeat: string;
     local_ip_address: string | null;
 }
 
