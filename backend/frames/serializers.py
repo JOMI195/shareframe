@@ -5,7 +5,7 @@ from .models import Frame, FrameWebsocketConnection
 class FrameWebsocketConnectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = FrameWebsocketConnection
-        fields = ["local_ip_address", "connected_at", "last_active"]
+        fields = ["connected_at", "last_active"]
 
 
 class FrameRetrieveSerializer(serializers.ModelSerializer):
@@ -25,4 +25,5 @@ class FrameRetrieveSerializer(serializers.ModelSerializer):
             "is_active",
             "registered_at",
             "frame_websocket_connection",
+            "local_ip_address",
         ]

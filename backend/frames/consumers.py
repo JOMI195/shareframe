@@ -55,11 +55,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         try:
             frame = self.scope.get("frame")
             if frame:
-                connection = FrameWebsocketConnection.objects.get(
-                    frame=frame, channel_name=self.channel_name
-                )
-                connection.local_ip_address = local_ip_address
-                connection.save(update_fields=["local_ip_address"])
+                frame.local_ip_address = local_ip_address
+                frame.save(update_fields=["local_ip_address"])
         except Exception as e:
             print(f"Error updating connection IP: {str(e)}")
 

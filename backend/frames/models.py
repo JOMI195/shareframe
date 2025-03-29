@@ -24,6 +24,8 @@ class Frame(models.Model):
 
     version = models.CharField(max_length=100, default="1.0.0")
 
+    local_ip_address = models.GenericIPAddressField(null=True, blank=True)
+
     def get_or_create_token(self):
         """
         Retrieves the existing token if it's valid and not close to expiring,
@@ -145,6 +147,5 @@ class FrameWebsocketConnection(models.Model):
         Frame, on_delete=models.CASCADE, related_name="frame_websocket_connections"
     )
     channel_name = models.CharField(max_length=255, unique=True)
-    local_ip_address = models.GenericIPAddressField(null=True, blank=True)
     connected_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(auto_now=True)

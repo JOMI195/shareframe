@@ -78,7 +78,7 @@ const FramesGallery: React.FC = () => {
 
     const FrameCard = ({ frame }: { frame: IFrame }) => {
         const hasConnection = frame.frame_websocket_connection !== null;
-        const ipAddress = frame.frame_websocket_connection?.local_ip_address;
+        const ipAddress = frame.local_ip_address;
 
         return (
             <Card>

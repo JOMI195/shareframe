@@ -4,10 +4,10 @@ export interface IFrame {
     is_active: boolean;
     registered_at: string;
     frame_websocket_connection: {
-        local_ip_address: string | null;
         connected_at: string;
         last_active: string;
     } | null;
+    local_ip_address: string | null;
 }
 
 export interface IRegisterFrameForm {

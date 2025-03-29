@@ -12,10 +12,10 @@ class FrameTokenInline(admin.TabularInline):
 
 
 class FrameWebsocketConnectionInline(admin.TabularInline):
-    fields = ("local_ip_address", "connected_at", "last_active")
+    fields = ("connected_at", "last_active")
     model = FrameWebsocketConnection
     extra = 0
-    readonly_fields = ("local_ip_address", "connected_at", "last_active")
+    readonly_fields = ("connected_at", "last_active")
     can_delete = False
 
 
@@ -28,14 +28,19 @@ class FrameAdmin(admin.ModelAdmin):
         "version",
         "is_active",
         "has_ws_connection",
-        "registered_at",
     )
-    list_filter = ("is_active", "registered_at")
+    list_filter = ("is_active", "version")
     search_fields = ("public_serial_number", "user__username")
     list_per_page = 50
 
     inlines = [FrameTokenInline, FrameWebsocketConnectionInline]
-    readonly_fields = ("registered_at", "last_connected", "last_active", "version")
+    readonly_fields = (
+        "registered_at",
+        "last_connected",
+        "last_active",
+        "version",
+        "local_ip_address",
+    )
     fieldsets = (
         (
             None,
@@ -53,6 +58,12 @@ class FrameAdmin(admin.ModelAdmin):
             "Timestamps",
             {
                 "fields": ("registered_at", "last_connected", "last_active"),
+            },
+        ),
+        (
+            "Connection",
+            {
+                "fields": ("local_ip_address",),
             },
         ),
     )
@@ -84,22 +95,14 @@ class FrameWebsocketConnectionAdmin(admin.ModelAdmin):
 
     readonly_fields = (
         "frame",
-        "channel_name",
         "connected_at",
         "last_active",
-        "local_ip_address",
     )
 
     fieldsets = (
         (
             None,
-            {
-                "fields": (
-                    "frame",
-                    "local_ip_address",
-                    "channel_name",
-                )
-            },
+            {"fields": ("frame",)},
         ),
         (
             "Timestamps",
