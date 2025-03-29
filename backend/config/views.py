@@ -1,5 +1,6 @@
 from typing import List
 
+from frames.auth import FrameTokenAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -7,7 +8,6 @@ from rest_framework.exceptions import PermissionDenied
 from django.conf import settings
 from django.db.models import Q
 
-from frame_updates.authentication import FrameTokenAuthentication
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
 
