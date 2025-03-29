@@ -16,11 +16,14 @@ import subprocess
 import os
 import secrets
 import requests
+import threading
+import asyncio
 
 
 from dashboard.authentication import login_required
 from dashboard.middleware import TokenAuthMiddleware
 from dashboard.frame_auth_requests import frame_auth_token_request
+from dashboard.heartbeat import start_heartbeat_service
 from service.service import ServiceManager
 from common.frame_token import TokenManager
 from common.securePayload import SecurePayload
@@ -36,6 +39,23 @@ logger = logging.getLogger(__name__)
 application_service_manager = ServiceManager(settings.SERVICE_NAME)
 update_service_manager = ServiceManager(settings.UPDATE_SERVICE_NAME)
 TokenManager.initialize()
+
+
+def start_heartbeat_in_background():
+    """Start the heartbeat service in a separate thread."""
+    loop = asyncio.new_event_loop()
+
+    def run_heartbeat():
+        asyncio.set_event_loop(loop)
+        loop.run_until_complete(start_heartbeat_service())
+
+    heartbeat_thread = threading.Thread(target=run_heartbeat, daemon=True)
+    heartbeat_thread.start()
+    logger.info("Heartbeat service started in background thread")
+    return heartbeat_thread
+
+
+heartbeat_thread = start_heartbeat_in_background()
 
 app = Flask(__name__, static_folder="dashboard/frontend", static_url_path="")
 app.config["SESSION_COOKIE_SECURE"] = False

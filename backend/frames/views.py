@@ -440,3 +440,35 @@ class FramesViewSet(viewsets.ModelViewSet):
         )
 
         return Response({"secure_payload": secure_payload})
+
+    @action(
+        detail=False,
+        methods=["POST"],
+        authentication_classes=[FrameTokenAuthentication],
+        permission_classes=[IsAuthenticated],
+        url_path="frame-hearbeat",
+    )
+    def frame_hearbeat(self, request):
+        frame: Frame = request.auth
+
+        local_ip_address = request.data.get("local_ip_address")
+        version = request.data.get("version")
+
+        if not local_ip_address:
+            return Response(
+                {"error": "local_ip_address is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not version:
+            return Response(
+                {"error": "version is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        frame.local_ip_address = local_ip_address
+        frame.version = version
+
+        frame.save(update_fields=["local_ip_address", "version"])
+
+        return Response({"message": "Recieved heartbeat."}, status=status.HTTP_200_OK)

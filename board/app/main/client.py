@@ -308,16 +308,16 @@ class WebsocketClient:
                 await self._cancel_websocket_tasks()
                 self._last_pong_time = time.time()
 
-                config_task = asyncio.create_task(
-                    self._periodic_config_transmit_task(websocket)
-                )
+                # config_task = asyncio.create_task(
+                #     self._periodic_config_transmit_task(websocket)
+                # )
                 ping_task = asyncio.create_task(self._periodic_ping_task(websocket))
                 status_check_task = asyncio.create_task(
                     self._periodic_status_check_task(websocket)
                 )
 
                 self._ping_task = ping_task
-                self._config_transmit_task = config_task
+                # self._config_transmit_task = config_task
                 self._status_check_task = status_check_task
 
                 try:
