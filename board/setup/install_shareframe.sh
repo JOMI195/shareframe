@@ -122,13 +122,10 @@ sudo -u "$USER" bash <<EOF
 cd "$USER_DIR"
 curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
 
-echo 'export PATH="$USER_DIR/.local/bin:\$PATH"' >> "$USER_DIR/.bashrc"
-source "$USER_DIR/.bashrc"
-
-poetry config virtualenvs.options.system-site-packages true
+/home/frame/.local/bin/poetry config virtualenvs.options.system-site-packages true
 
 cd "$APPLICATION_DIR/"
-poetry install
+/home/frame/.local/bin/poetry install
 
 EOF
 
