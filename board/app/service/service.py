@@ -98,3 +98,33 @@ class ServiceManager:
         except Exception as e:
             logger.error(f"Error checking service status: {str(e)}")
             return False
+
+    def wait_for_state(self, expected_state, timeout=600, check_interval=3):
+        """
+        Wait for the service to reach the expected state within the timeout period.
+        """
+        start_time = time.time()
+        logger.info(
+            f"Waiting for {self.service_name} to become {'active' if expected_state else 'inactive'}"
+        )
+
+        while time.time() - start_time < timeout:
+            current_state = self.is_active()
+
+            if current_state == expected_state:
+                logger.info(
+                    f"Service {self.service_name} is now {'active' if expected_state else 'inactive'}"
+                )
+                return True
+
+            logger.debug(
+                f"Service state check: currently {'active' if current_state else 'inactive'}, "
+                f"waiting for {'active' if expected_state else 'inactive'}"
+            )
+            time.sleep(check_interval)
+
+        logger.error(
+            f"Timeout waiting for {self.service_name} to become "
+            f"{'active' if expected_state else 'inactive'} after {timeout} seconds"
+        )
+        return False

@@ -17,12 +17,14 @@ import {
     StopOutlined,
     DeleteOutlined,
     PhotoLibraryOutlined,
+    SkipNextOutlined
 } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
     selectSlideshowOperation,
     toggleSlideshowThunk,
-    clearDisplayThunk
+    clearDisplayThunk,
+    skipImageThunk
 } from '@/store/slideshowOperation/slideshowOperation.Slice';
 import { selectSlideshowStatus } from '@/store/slideshowStatus/slideshowStatus.Slice';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
@@ -34,13 +36,14 @@ const FrameActions: React.FC = () => {
     const theme = useTheme();
 
     const { isConnected } = usePiConnection();
-    const { isToggling, isClearingDisplay } = useAppSelector(selectSlideshowOperation);
+    const { isToggling, isClearingDisplay, isSkippingImage } = useAppSelector(selectSlideshowOperation);
     const { isActive, lastCheckedAt } = useAppSelector(selectSlideshowStatus);
 
     const {
         isActive: isAppIntialLoadTimerActive,
     } = useTimer({
         id: 'app-initial-load-timer',
+        shouldCreate: false
     });
 
     const {
@@ -70,12 +73,16 @@ const FrameActions: React.FC = () => {
         dispatch(toggleSlideshowThunk());
     };
 
+    const handleSkipImage = () => {
+        dispatch(skipImageThunk());
+    };
+
     const handleClearDisplay = () => {
         dispatch(clearDisplayThunk());
     };
 
     const isTimerRunning = isSlideshowActionsTimerActive || isAppIntialLoadTimerActive;
-    const isButtonsDisabled = isTimerRunning || isToggling || isClearingDisplay || !isConnected || lastCheckedAt === null
+    const isButtonsDisabled = isTimerRunning || isToggling || isClearingDisplay || isSkippingImage || !isConnected || lastCheckedAt === null
 
     return (
         <>
@@ -96,8 +103,7 @@ const FrameActions: React.FC = () => {
                     </Grid>
                 )}
 
-                {/* Rest of your component remains the same */}
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} sm={6}>
                     <Card elevation={1} sx={{ height: '100%' }}>
                         <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <Stack spacing={2} sx={{ height: '100%' }}>
@@ -139,7 +145,42 @@ const FrameActions: React.FC = () => {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid item xs={12} sm={6}>
+                    <Card elevation={1} sx={{ height: '100%' }}>
+                        <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                            <Stack spacing={2} sx={{ height: '100%' }}>
+                                <Box display="flex" alignItems="center">
+                                    <SkipNextOutlined sx={{ mr: 1 }} />
+                                    <Typography variant="h6">Bild überspringen</Typography>
+                                </Box>
+
+                                <Typography variant="body2">
+                                    Aktuelles Bild in der Bildwiedergabe überspringen.
+                                </Typography>
+                                <Typography variant="body2">
+                                    Überspringt das aktuell auf dem Bilderrahmen angezeigte Bild und lädt das nächste Bild.
+                                </Typography>
+                                <Typography variant="body2">
+                                    Kann nur bei laufender Bildwiedergabe ausgeführt werden.
+                                </Typography>
+
+                                <Box sx={{ flexGrow: 1 }} />
+
+                                <Button
+                                    variant="contained"
+                                    startIcon={<SkipNextOutlined />}
+                                    onClick={handleSkipImage}
+                                    fullWidth
+                                    disabled={isButtonsDisabled || !isActive}
+                                >
+                                    Bild überspringen
+                                </Button>
+                            </Stack>
+                        </CardContent>
+                    </Card>
+                </Grid>
+
+                <Grid item xs={12} sm={6}>
                     <Card elevation={1} sx={{ height: '100%' }}>
                         <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                             <Stack spacing={2} sx={{ height: '100%' }}>
@@ -161,7 +202,7 @@ const FrameActions: React.FC = () => {
                                 <Box sx={{ flexGrow: 1 }} />
 
                                 <Button
-                                    variant="outlined"
+                                    variant="contained"
                                     startIcon={<DeleteOutlined />}
                                     onClick={handleClearDisplay}
                                     fullWidth

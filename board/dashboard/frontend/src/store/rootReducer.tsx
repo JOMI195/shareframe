@@ -7,6 +7,8 @@ import networkReducer from "./network/network.Slice";
 import authReducer from "./auth/auth.Slice";
 import frameInfoReducer from "./frameInfo/frameInfo.Slice";
 import updatesReducer from "./updates/updates.Slice";
+import loadingWallReducer from "./loadingWall/loadingWall.Slice";
+import piPowerReducer from "./piPower/piPower.Slice";
 
 const rootReducer = combineReducers({
   snackbars: snackbarsReducer,
@@ -16,7 +18,9 @@ const rootReducer = combineReducers({
   network: networkReducer,
   auth: authReducer,
   frameInfo: frameInfoReducer,
-  updates: updatesReducer
+  updates: updatesReducer,
+  loadingWall: loadingWallReducer,
+  piPower: piPowerReducer,
 });
 
 export default rootReducer;

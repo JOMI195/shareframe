@@ -5,9 +5,12 @@ After=network.target
 [Service]
 Type=simple
 User=frame
-Environment="PYTHONUNBUFFERED=1"
+
 WorkingDirectory=/home/frame/shareframe/app
-ExecStart=/home/frame/shareframe/.venv/bin/python /home/frame/shareframe/app/heartbeat.py
+
+Environment="PYTHONUNBUFFERED=1"
+
+ExecStart=/home/frame/.local/bin/poetry run python /home/frame/shareframe/app/heartbeat.py
 
 Restart=always
 RestartSec=30s

@@ -38,6 +38,8 @@ class Display:
         self.logger = logging.getLogger(__name__)
         self.logger.info("Initializing display")
 
+        self.skip_current_image_event = asyncio.Event()
+
         try:
             self.epd = None
 
@@ -319,7 +321,25 @@ class Display:
                         continue
 
                 await self._display_image(image_path)
-                await asyncio.sleep(interval_secs)
+                # await asyncio.sleep(interval_secs)
+
+                self.skip_current_image_event.clear()  # Reset the event
+                try:
+                    # Wait for either the interval to pass or the skip event to be set
+                    await asyncio.wait_for(
+                        self.skip_current_image_event.wait(), timeout=interval_secs
+                    )
+                    if self.skip_current_image_event.is_set():
+                        self.logger.info(
+                            "Skipping sleep interval due to external trigger"
+                        )
+                except asyncio.TimeoutError:
+                    # This is expected when the timeout is reached normally
+                    pass
+
+    def skip_current_image(self):
+        self.logger.info("Skip current image requested")
+        self.skip_current_image_event.set()
 
     async def periodic_clear_display_task(self, interval_secs: int):
         while True:

@@ -4,15 +4,19 @@ set -e
 
 echo "Starting shareframe installation..."
 
-if [ -z "$2" ]; then
-    echo "Usage: $0 <PUBLIC_SERIAL_NUMBER> <PRIVATE_SERIAL_NUMBER>"
+if [ -z "$3" ]; then
+    echo "Usage: $0 <FRAME_AUTH_SECRET_KEY> <PUBLIC_SERIAL_NUMBER> <PRIVATE_SERIAL_NUMBER>"
     exit 1
 fi
 
 USER="frame"
-PUBLIC_SERIAL_NUMBER=$1
-SERIAL_NUMBER=$2
-WORKING_DIR="/home/$USER/shareframe"
+FRAME_AUTH_SECRET_KEY=$1
+PUBLIC_SERIAL_NUMBER=$2
+SERIAL_NUMBER=$3
+
+USER_DIR="/home/$USER"
+WORKING_DIR="$USER_DIR/shareframe"
+APPLICATION_DIR="$WORKING_DIR/app"
 
 # services
 APPLICATION_SERVICE_NAME="shareframe"
@@ -73,35 +77,64 @@ if [ "$EUID" -ne 0 ]; then
     exit 1
 fi
 
-if [ ! -f "$WORKING_DIR/.env.serial-number" ]; then
-    echo "SERIAL_NUMBER=" > "$WORKING_DIR/.env.serial-number"
+# secrets file
+if [ ! -f "$WORKING_DIR/.env.secrets" ]; then
+    echo "SERIAL_NUMBER=" > "$WORKING_DIR/.env.secrets"
 fi
 
-if grep -q "^SERIAL_NUMBER=" "$WORKING_DIR/.env.serial-number"; then
-    sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" "$WORKING_DIR/.env.serial-number"
+if grep -q "^SERIAL_NUMBER=" "$WORKING_DIR/.env.secrets"; then
+    sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" "$WORKING_DIR/.env.secrets"
 else
-    echo "SERIAL_NUMBER='$SERIAL_NUMBER'" >> "$WORKING_DIR/.env.serial-number"
+    echo "SERIAL_NUMBER='$SERIAL_NUMBER'" >> "$WORKING_DIR/.env.secrets"
 fi
 
-if grep -q "^PUBLIC_SERIAL_NUMBER=" "$WORKING_DIR/.env.serial-number"; then
-    sed -i "s/^PUBLIC_SERIAL_NUMBER=.*/PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'/" "$WORKING_DIR/.env.serial-number"
+if grep -q "^PUBLIC_SERIAL_NUMBER=" "$WORKING_DIR/.env.secrets"; then
+    sed -i "s/^PUBLIC_SERIAL_NUMBER=.*/PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'/" "$WORKING_DIR/.env.secrets"
 else
-    echo "PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'" >> "$WORKING_DIR/.env.serial-number"
+    echo "PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'" >> "$WORKING_DIR/.env.secrets"
 fi
-chown frame:frame "$WORKING_DIR/.env.serial-number"
-chmod 644 "$WORKING_DIR/.env.serial-number"
 
+if grep -q "^FRAME_AUTH_SECRET_KEY=" "$WORKING_DIR/.env.secrets"; then
+    sed -i "s/^FRAME_AUTH_SECRET_KEY=.*/FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'/" "$WORKING_DIR/.env.secrets"
+else
+    echo "FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'" >> "$WORKING_DIR/.env.secrets"
+fi
+
+chown frame:frame "$WORKING_DIR/.env.secrets"
+chmod 644 "$WORKING_DIR/.env.secrets"
+
+# dependencies
 apt-get update
 apt-get upgrade -y
 apt-get autoremove
-apt-get install -y python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
+apt-get install -y nginx python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
 
-cd $WORKING_DIR
-python3 -m venv --system-site-packages .venv
-source .venv/bin/activate
-pip install --upgrade pip
-pip install spidev gpiozero python-dotenv asyncio websockets==14.1 backoff requests gunicorn flask flask-cors requests netifaces
+# nginx conf for dashboard
+rm "/etc/nginx/sites-enabled/default"
+cp "$APPLICATION_DIR/dashboard/nginx/shareframe-dashboard.conf" /etc/nginx/sites-available/shareframe-dashboard
+cp "$APPLICATION_DIR/dashboard/nginx/502-error.html" /usr/share/nginx/html/
+ln -s /etc/nginx/sites-available/shareframe-dashboard /etc/nginx/sites-enabled/
+systemctl restart nginx
 
+# python env via poetry
+sudo -u "$USER" bash <<EOF
+
+cd "$USER_DIR"
+curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
+
+echo 'export PATH="$USER_DIR/.local/bin:\$PATH"' >> "$USER_DIR/.bashrc"
+source "$USER_DIR/.bashrc"
+
+poetry config virtualenvs.options.system-site-packages true
+
+cd "$APPLICATION_DIR/"
+poetry install
+
+EOF
+
+echo "Poetry has been installed for user frame"
+
+# service setup
 if [ -f "$WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME" ]; then
     cp $WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME /etc/systemd/system/$APPLICATION_SERVICE_FILE_NAME
 else

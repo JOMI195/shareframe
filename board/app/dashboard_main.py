@@ -1,10 +1,11 @@
+from datetime import timedelta
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
 
 current_dir = Path(__file__).resolve().parent
 parent_dir = current_dir.parent
-env_serial_path = parent_dir / ".env.serial-number"
+env_serial_path = parent_dir / ".env.secrets"
 
 load_dotenv(current_dir / ".env")
 load_dotenv(env_serial_path, override=True)
@@ -19,7 +20,7 @@ import requests
 
 from dashboard.authentication import login_required
 from dashboard.middleware import TokenAuthMiddleware
-from dashboard.frame_auth_requests import frame_auth_token_request
+from common.frame_auth_requests import frame_auth_token_request
 from service.service import ServiceManager
 from common.frame_token import TokenManager
 from common.securePayload import SecurePayload
@@ -32,14 +33,19 @@ requests.packages.urllib3.util.connection.HAS_IPV6 = False
 setup_logging(log_file_path=settings.DASHBOARD_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
 
+logger.info(f"Setup services")
+
 application_service_manager = ServiceManager(settings.SERVICE_NAME)
 update_service_manager = ServiceManager(settings.UPDATE_SERVICE_NAME)
 TokenManager.initialize()
+
+logger.info(f"Startup dashboard app")
 
 app = Flask(__name__, static_folder="dashboard/frontend", static_url_path="")
 app.config["SESSION_COOKIE_SECURE"] = False
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=7)
 CORS(app, supports_credentials=True)
 
 # Set a secret key for session management
@@ -49,8 +55,10 @@ app.secret_key = secrets.token_hex(16)
 TokenAuthMiddleware(app)
 
 # Define the protected network name
-PROTECTED_NETWORK = "preconfigured"
+PROTECTED_NETWORKS = ["preconfigured", "Jomi"]
 PROTECTED_NETWORK_ALIAS = "VOREINGESTELLT"
+
+logger.info(f"Dashboard started")
 
 
 # Serve React frontend
@@ -92,12 +100,6 @@ def auth_login():
             json={"otp": otp},
             timeout=600,
         )
-        # response = requests.post(
-        #     settings.DASHBOARD_HTTP_VERIFY_OTP_URL,
-        #     headers=headers,
-        #     json={"otp": otp},
-        #     timeout=600,
-        # )
 
         if response.status_code != 200:
             logger.info("Authentication failed with denied OTP")
@@ -183,7 +185,7 @@ def connection_current_connection():
         for conn in connections:
             if "wlan0" in conn:
                 current = conn.split(":")[0]
-                if current == PROTECTED_NETWORK:
+                if current in PROTECTED_NETWORKS:
                     current = PROTECTED_NETWORK_ALIAS
                 break
 
@@ -212,7 +214,7 @@ def connectionsaved_networks():
             conn_type, conn_name = conn.split(":")
 
             # Skip the protected network
-            if conn_name == PROTECTED_NETWORK:
+            if conn_name in PROTECTED_NETWORKS:
                 continue
 
             # Check if this is a Wi-Fi connection (matching '802-11-wireless')
@@ -233,12 +235,12 @@ def connection_connect():
     password = data.get("password")
 
     # Prevent modifying the protected network
-    if ssid == PROTECTED_NETWORK:
+    if ssid in PROTECTED_NETWORKS:
         return (
             jsonify(
                 {
                     "success": False,
-                    "message": f"Das Netzwerk '{PROTECTED_NETWORK}' kann nicht verändert werden.",
+                    "message": f"Das Netzwerk '{PROTECTED_NETWORKS}' kann nicht verändert werden.",
                 }
             ),
             403,
@@ -299,12 +301,12 @@ def connection_forget():
     ssid = data.get("ssid")
 
     # Prevent deleting the protected network
-    if ssid == PROTECTED_NETWORK:
+    if ssid in PROTECTED_NETWORKS:
         return (
             jsonify(
                 {
                     "success": False,
-                    "message": f"The network '{PROTECTED_NETWORK}' cannot be removed.",
+                    "message": f"The network '{PROTECTED_NETWORKS}' cannot be removed.",
                 }
             ),
             403,
@@ -329,7 +331,7 @@ def connection_forget():
         )
 
 
-# -------- FRAME
+# -------- FRAME SLIDESHOW
 @app.route("/api/frame/slideshow", methods=["POST"])
 @login_required
 def frame_slideshow():
@@ -416,6 +418,34 @@ def frame_clear():
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
 
 
+@app.route("/api/frame/slideshow/skip-slideshow-image", methods=["POST"])
+@login_required
+def frame_slideshow_skip_slideshow_image():
+
+    try:
+        subprocess.run(
+            ["sudo", "systemctl", "kill", "-s", "SIGUSR1", settings.SERVICE_NAME],
+            check=True,
+        )
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Successfully skipped image in slideshow",
+            }
+        )
+    except subprocess.CalledProcessError as e:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Skipping the image in slideshow failed: {str(e)}",
+                }
+            ),
+            500,
+        )
+
+
+# -------- FRAME INFOS
 @app.route("/api/frame/infos", methods=["GET"])
 @login_required
 def frame_infos():
@@ -437,6 +467,7 @@ def frame_infos():
         return jsonify({"success": False, "message": f"Error: {str(e)}"}), 500
 
 
+# -------- FRAME UPDATES
 @app.route("/api/frame/updates/latest", methods=["GET"])
 @login_required
 def frame_updates_latest():
@@ -558,6 +589,122 @@ def pi_check_connection():
                     "success": False,
                     "connected": False,
                     "message": f"Unexpected error: {str(e)}",
+                }
+            ),
+            500,
+        )
+
+
+@app.route("/api/pi/restart", methods=["POST"])
+@login_required
+def pi_restart():
+    try:
+        result = subprocess.run(
+            ["sudo", "systemctl", "reboot"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+
+        if result.returncode == 0:
+            session.pop("logged_in", None)
+
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Restart command sent successfully. The Raspberry Pi is now rebooting.",
+                }
+            )
+        else:
+            logger.error(
+                f"Restart command failed with return code {result.returncode}. Output: {result.stderr}"
+            )
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Failed to restart. Error: {result.stderr}",
+                    }
+                ),
+                500,
+            )
+
+    except subprocess.TimeoutExpired:
+        logger.error("Pi restart command timed out")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "The restart command timed out. The Raspberry Pi may be unresponsive or experiencing connectivity issues.",
+                }
+            ),
+            500,
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Pi restart: {str(e)}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"An unexpected error occurred while attempting to restart the Raspberry Pi: {str(e)}",
+                }
+            ),
+            500,
+        )
+
+
+@app.route("/api/pi/shutdown", methods=["POST"])
+@login_required
+def pi_shutdown():
+    try:
+        result = subprocess.run(
+            ["sudo", "shutdown"], capture_output=True, text=True, timeout=5, check=False
+        )
+
+        if result.returncode == 0:
+            session.pop("logged_in", None)
+
+            return jsonify(
+                {
+                    "success": True,
+                    "message": "Shutdown command sent successfully. The Raspberry Pi is now powering off.",
+                }
+            )
+        else:
+            logger.error(
+                f"Shutdown command failed with return code {result.returncode}. Output: {result.stderr}"
+            )
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Failed to shut down. Error: {result.stderr}",
+                    }
+                ),
+                500,
+            )
+
+    except subprocess.TimeoutExpired:
+        logger.error("Pi shutdown command timed out")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "The shutdown command timed out. The Raspberry Pi may be unresponsive or experiencing connectivity issues.",
+                }
+            ),
+            500,
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in Pi shutdown: {str(e)}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"An unexpected error occurred while attempting to shut down the Raspberry Pi: {str(e)}",
                 }
             ),
             500,

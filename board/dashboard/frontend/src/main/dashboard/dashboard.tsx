@@ -12,15 +12,16 @@ import Updates from "./updates/updates";
 import { fetchLatestRelease } from "@/store/updates/updates.Slice";
 import { startContinuousStatusCheck } from "@/store/slideshowStatus/slideshowStatus.Slice";
 import { useTimer } from "@/hooks/useTimer";
+import { fetchFrameInfos } from "@/store/frameInfo/frameInfo.Slice";
+import { fetchNetworkData } from "@/store/network/network.Slice";
+import { usePiConnection } from "@/context/piConnection/piConnectionContext";
 
 const Dashboard: React.FC = () => {
     const dispatch = useAppDispatch();
-    const {
-        start: startAppInitialLoadTimer,
-    } = useTimer({
+    const { isConnected } = usePiConnection();
+    const { reset: resetAppIntitialLoadTimer, start: startAppIntitialLoadTimer } = useTimer({
         id: 'app-initial-load-timer',
-        duration: 10,
-        autoStart: false
+        duration: 20,
     });
 
     useEffect(() => {
@@ -32,10 +33,15 @@ const Dashboard: React.FC = () => {
     }, [dispatch]);
 
     useEffect(() => {
-        startAppInitialLoadTimer()
+        dispatch(fetchNetworkData());
+    }, [isConnected, dispatch]);
+
+    useEffect(() => {
+        resetAppIntitialLoadTimer();
+        startAppIntitialLoadTimer();
+        dispatch(fetchFrameInfos());
         dispatch(fetchLatestRelease());
     }, [dispatch]);
-
 
     const tabs = [
         {
@@ -62,7 +68,7 @@ const Dashboard: React.FC = () => {
 
     return (
         <ShareframeTabs
-            title="Bilderrahmen"
+            title="Bilderrahmen - Dashboard"
             tabs={tabs}
         />
     );

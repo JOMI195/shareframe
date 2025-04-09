@@ -1,3 +1,4 @@
+from datetime import timedelta
 import logging
 import random
 import secrets
@@ -9,6 +10,11 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
+app.config["SESSION_COOKIE_SECURE"] = False
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=1)
+CORS(app, supports_credentials=True)
 app.secret_key = secrets.token_hex(16)
 CORS(
     app,
@@ -27,7 +33,7 @@ MOCK_SERIAL_NUMBER = "EB3IB-5EL99-0RAPY-8V7X0-IA84H"
 MOCK_VERSION = "1.0.0"
 
 # Simulated service state
-service_active = False
+service_active = True
 
 
 @app.route("/api/auth/login", methods=["POST"])

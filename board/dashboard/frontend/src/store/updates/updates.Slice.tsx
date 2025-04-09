@@ -4,7 +4,8 @@ import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 import { IServerResponse } from '@/types';
 import { fetchWithTimeout } from '@/common/utils/fetch';
-import { getLatestReleaseUrl, getPerformUpdateUrl } from '@/assets/endpoints/api/updates';
+import { getLatestReleaseUrl, getPerformUpdateUrl } from '@/assets/endpoints/api/frame';
+import { showLoadingWall } from '../loadingWall/loadingWall.Slice';
 
 interface Release {
     version: string;
@@ -40,7 +41,7 @@ export const fetchLatestRelease = createAsyncThunk(
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-            dispatch(addAlertSnackbar(uuid(), "Suche nach neuster Version fehlgeschlagen", "error"));
+            dispatch(addAlertSnackbar(uuid(), "Suche nach neuer Version fehlgeschlagen", "error"));
             return rejectWithValue(errorMessage);
         }
     }
@@ -58,6 +59,7 @@ export const performUpdate = createAsyncThunk(
 
             if (payload.success) {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess gestartet", "success"));
+                dispatch(showLoadingWall("Die Updates werden ausgeführt. Während dieser Zeit ist das Dashboard nicht verfügbar. Die Applikation wird anschließend neu gestartet. Lade diese Seite in ein paar Minuten erneut bis sie wieder verfügbar ist."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess fehlgeschlagen", "error"));
                 return rejectWithValue('Failed start update process');

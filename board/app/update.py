@@ -4,7 +4,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 CURRENT_DIR = Path(__file__).resolve().parent
-ENV_SERIAL_PATH = CURRENT_DIR.parent / ".env.serial-number"
+ENV_SERIAL_PATH = CURRENT_DIR.parent / ".env.secrets"
 
 load_dotenv(CURRENT_DIR / ".env")
 load_dotenv(ENV_SERIAL_PATH, override=True)
@@ -28,23 +28,23 @@ def main():
     logger.info("Starting update process")
 
     TokenManager.initialize()
-    if not TokenManager.verify_token_expiry():
-        if not TokenManager.verify_token():
-            success = TokenManager.obtain_token()
-            if not success:
-                logger.error("Failed to obtain token")
-                raise Exception("Failed to obtain token")
 
-    service_manager = ServiceManager(settings.SERVICE_NAME)
+    application_service_manager = ServiceManager(settings.SERVICE_NAME)
+    dashboard_service_manager = ServiceManager(settings.DASHBOARD_SERVICE_NAME)
+    heartbeat_service_manager = ServiceManager(settings.HEARTBEAT_SERVICE_NAME)
+
     update_manager = UpdateManager(
-        service_manager=service_manager,
+        application_service_manager=application_service_manager,
+        dashboard_service_manager=dashboard_service_manager,
+        heartbeat_service_manager=heartbeat_service_manager,
         install_dir=CURRENT_DIR,
         backup_dir=CURRENT_DIR.parent / settings.UPDATE_BACKUP_DIR_NAME,
-        version_file_name=settings.UPDATE_VERSION_FILE_NAME,
-        files_list_name=settings.UPDATE_FILES_LIST_NAME,
+        files_to_backup_list_name=settings.UPDATE_FILES_LIST_NAME,
         files_to_delete_list_name=settings.UPDATE_DELETE_FILES_LIST_NAME,
         update_url=settings.HTTP_UPDATE_LATEST_URL,
         auth_headers=TokenManager.get_auth_headers(),
+        version=settings.VERSION,
+        criticalities_to_update_immediately=["Critical"],
     )
 
     result = update_manager.check_and_apply_update()

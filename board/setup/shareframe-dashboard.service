@@ -6,9 +6,12 @@ Wants=pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
 [Service]
 Type=simple
 User=frame
-Environment="PYTHONUNBUFFERED=1"
+
 WorkingDirectory=/home/frame/shareframe/app
-ExecStart=sudo /home/frame/shareframe/.venv/bin/gunicorn --chdir /home/frame/shareframe/app --workers 1 --bind=0.0.0.0:80 dashboard_main:app --user=frame --timeout 600
+
+Environment="PYTHONUNBUFFERED=1"
+
+ExecStart=/home/frame/.local/bin/poetry run gunicorn --chdir /home/frame/shareframe/app --workers 1 --bind=0.0.0.0:8080 dashboard_main:app --timeout 600
 
 Restart=always
 RestartSec=30s

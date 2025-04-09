@@ -1,4 +1,3 @@
-from flask import current_app
 import requests
 from common.frame_token import TokenManager
 
@@ -6,16 +5,10 @@ from common.frame_token import TokenManager
 def frame_auth_token_request(url, method="get", **kwargs):
     """
     Helper function to make authenticated requests from anywhere in the application.
+    This version works without Flask application context.
     """
-    # Get the session from app extensions
-    try:
-        session = current_app.extensions.get("token_auth_session")
-        if not session:
-            # Create a session if middleware not initialized
-            session = requests.Session()
-    except RuntimeError:
-        # Handle case when outside application context
-        session = requests.Session()
+    # Create a session for the request
+    session = requests.Session()
 
     # Ensure token is valid
     if not TokenManager.verify_token_expiry():

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 current_dir = Path(__file__).resolve().parent
 parent_dir = current_dir.parent
-env_serial_path = parent_dir / ".env.serial-number"
+env_serial_path = parent_dir / ".env.secrets"
 
 load_dotenv(current_dir / ".env")
 load_dotenv(env_serial_path, override=True)
@@ -15,9 +15,9 @@ import socket
 from datetime import datetime
 import requests
 import backoff
-from common.frame_token import TokenManager
 from config import settings
-from dashboard.frame_auth_requests import frame_auth_token_request
+from common.frame_token import TokenManager
+from common.frame_auth_requests import frame_auth_token_request
 from config.logger import setup_logging
 
 # shareframe.de not ready for ipv6 yet
@@ -88,16 +88,17 @@ async def heartbeat_task():
             await send_heartbeat()
         except Exception as e:
             logger.error(f"Heartbeat failed after all retries: {e}")
+            raise
 
         await asyncio.sleep(settings.HEARTBEAT_HTTP_FRAME_HEARTBEAT_INTERVAL_MINS * 60)
 
 
 if __name__ == "__main__":
-    logger.debug(f"Starting Hearbeat Application")
+    setup_logging(log_file_path=settings.HEARTBEAT_LOGGING_FULL_FILE_PATH)
+
+    logger.info(f"Starting Hearbeat Application")
 
     TokenManager.initialize()
-
-    setup_logging(log_file_path=settings.HEARTBEAT_LOGGING_FULL_FILE_PATH)
 
     loop = asyncio.get_event_loop()
     try:

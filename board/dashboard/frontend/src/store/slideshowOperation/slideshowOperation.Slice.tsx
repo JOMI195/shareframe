@@ -4,7 +4,8 @@ import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '../snackbars/snackbars.Slice';
 import { fetchWithTimeout } from '@/common/utils/fetch';
 import { IServerResponse } from '@/types';
-import { addTimer, startTimer } from '../timers/timers.Slice';
+import { addTimer, resetTimer, startTimer } from '../timers/timers.Slice';
+import { getClearDisplayUrl, getSkipSlideshowImageUrl, getSlideshowIsActiveUrl, getSlideshowUrl } from '@/assets/endpoints/api/frame';
 
 
 const MAX_OPERATION_WAIT_TIME = 10 * 60 * 1000; // 10 minutes
@@ -13,6 +14,7 @@ const MAX_OPERATION_WAIT_TIME = 10 * 60 * 1000; // 10 minutes
 interface SlideshowOperationState {
     isToggling: boolean;
     isClearingDisplay: boolean;
+    isSkippingImage: boolean;
     error: string | null;
     startTime: number | null;
 }
@@ -21,6 +23,7 @@ interface SlideshowOperationState {
 const initialState: SlideshowOperationState = {
     isToggling: false,
     isClearingDisplay: false,
+    isSkippingImage: false,
     error: null,
     startTime: null,
 };
@@ -42,19 +45,94 @@ export const slideshowOperationSlice = createSlice({
             state.isClearingDisplay = action.payload.isClearingDisplay;
             state.startTime = action.payload.isClearingDisplay ? Date.now() : null;
         },
+        setSkipImageStatus: (state, action: PayloadAction<{
+            isSkippingImage: boolean;
+        }>) => {
+            state.isSkippingImage = action.payload.isSkippingImage;
+            state.startTime = action.payload.isSkippingImage ? Date.now() : null;
+        },
         setError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
         resetOperation: (state) => {
             state.isToggling = false;
             state.isClearingDisplay = false;
+            state.isSkippingImage = false;
             state.error = null;
             state.startTime = null;
         }
     }
 });
 
-// Async Thunk for Clearing Display
+export const skipImageThunk = () => async (
+    dispatch: AppDispatch,
+    getState: () => RootState
+) => {
+    const currentState = getState().slideshowOperation;
+
+    // Prevent multiple simultaneous operations
+    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
+        return;
+    }
+
+    const actionId = uuid();
+
+    try {
+        dispatch(slideshowOperationSlice.actions.setSkipImageStatus({
+            isSkippingImage: true,
+        }));
+
+        dispatch(addLoadingSnackbar(
+            actionId,
+            'Aktuelles Bild wird übersprungen'
+        ));
+
+        const skipResponse = await fetchWithTimeout(getSkipSlideshowImageUrl(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+        });
+
+        const clearData: IServerResponse = await skipResponse.json();
+
+        if (!clearData.success) {
+            throw new Error('Bild überspringen fehlgeschlagen');
+        }
+
+
+        dispatch(addAlertSnackbar(
+            uuid(),
+            'Aktuelles Bild erfolgreich übersprungen',
+            'success'
+        ));
+
+        dispatch(resetTimer('slideshow-actions-timer'));
+        dispatch(startTimer('slideshow-actions-timer'));
+
+        dispatch(slideshowOperationSlice.actions.setSkipImageStatus({
+            isSkippingImage: false,
+        }));
+
+        dispatch(removeLoadingSnackbar(actionId));
+
+    } catch (error) {
+        dispatch(slideshowOperationSlice.actions.setSkipImageStatus({
+            isSkippingImage: false,
+        }));
+
+        dispatch(slideshowOperationSlice.actions.setError(
+            error instanceof Error ? error.message : 'Unbekannter Fehler'
+        ));
+
+        dispatch(addAlertSnackbar(
+            uuid(),
+            'Aktuelles Bild überspringen fehlgeschlagen',
+            'error'
+        ));
+
+        dispatch(removeLoadingSnackbar(actionId));
+    }
+};
+
 export const clearDisplayThunk = () => async (
     dispatch: AppDispatch,
     getState: () => RootState
@@ -62,7 +140,7 @@ export const clearDisplayThunk = () => async (
     const currentState = getState().slideshowOperation;
 
     // Prevent multiple simultaneous operations
-    if (currentState.isToggling || currentState.isClearingDisplay) {
+    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
         return;
     }
 
@@ -80,7 +158,7 @@ export const clearDisplayThunk = () => async (
             'Bildschirm wird geleert'
         ));
 
-        const clearResponse = await fetchWithTimeout('/api/frame/clear', {
+        const clearResponse = await fetchWithTimeout(getClearDisplayUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
         });
@@ -99,7 +177,8 @@ export const clearDisplayThunk = () => async (
         ));
 
         // Start timer
-        dispatch(startTimer('actionRestrict'));
+        dispatch(resetTimer('slideshow-actions-timer'));
+        dispatch(startTimer('slideshow-actions-timer'));
 
         // Reset clear display status
         dispatch(slideshowOperationSlice.actions.setClearDisplayStatus({
@@ -137,7 +216,7 @@ export const toggleSlideshowThunk = () => async (
     const currentState = getState().slideshowOperation;
 
     // Prevent multiple simultaneous operations
-    if (currentState.isToggling || currentState.isClearingDisplay) {
+    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
         return;
     }
 
@@ -156,7 +235,7 @@ export const toggleSlideshowThunk = () => async (
         ));
 
         // Fetch current slideshow status
-        const statusResponse = await fetchWithTimeout('/api/frame/slideshow/is-active');
+        const statusResponse = await fetchWithTimeout(getSlideshowIsActiveUrl());
         const statusData = await statusResponse.json();
 
         if (!statusData.success) {
@@ -165,7 +244,7 @@ export const toggleSlideshowThunk = () => async (
 
         const action = statusData.isActive ? 'stop' : 'start';
 
-        const toggleResponse = await fetchWithTimeout('/api/frame/slideshow', {
+        const toggleResponse = await fetchWithTimeout(getSlideshowUrl(), {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action })
@@ -182,7 +261,7 @@ export const toggleSlideshowThunk = () => async (
 
             while (Date.now() - startTime < MAX_OPERATION_WAIT_TIME) {
                 try {
-                    const statusCheck = await fetchWithTimeout('/api/frame/slideshow/is-active');
+                    const statusCheck = await fetchWithTimeout(getSlideshowIsActiveUrl());
                     const statusCheckData = await statusCheck.json();
 
                     if (statusCheckData.success &&
@@ -197,12 +276,13 @@ export const toggleSlideshowThunk = () => async (
                             id: 'slideshow-actions-timer',
                         }));
 
+                        dispatch(resetTimer('slideshow-actions-timer'));
                         dispatch(startTimer('slideshow-actions-timer'));
 
 
                         // Clear frame if stopping
                         if (action === 'stop') {
-                            await fetchWithTimeout('/api/frame/clear', { method: 'POST' });
+                            await fetchWithTimeout(getClearDisplayUrl(), { method: 'POST' });
                         }
 
                         dispatch(removeLoadingSnackbar(actionId));

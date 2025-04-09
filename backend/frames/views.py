@@ -289,7 +289,6 @@ class FramesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["POST"],
-        authentication_classes=[],
         permission_classes=[AllowAny],
         url_path="obtain-frame-auth-token",
     )
@@ -355,7 +354,6 @@ class FramesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["POST"],
-        authentication_classes=[],
         permission_classes=[AllowAny],
         url_path="verify-frame-auth-token",
     )

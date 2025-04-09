@@ -3,6 +3,7 @@ from datetime import datetime
 from typing import List, Optional
 from django.utils import timezone
 import json
+import asyncio
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
 from channels.layers import get_channel_layer
@@ -126,6 +127,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             current_images = message_data.get("sent_image_ids", [])
 
+            batch_size = 2
+            delay_seconds = 5  # 5 sec delay between batches
+
             print(
                 f"Checking images for user {frame.user.username}, "
                 f"comparing {len(current_images)} existing images"
@@ -140,19 +144,29 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 if sent_image.id not in current_images:
                     images_to_send.append(sent_image)
 
-            print(f"Found {len(images_to_send)} missing images to send")
+            total_images = len(images_to_send)
+            print(f"Found {total_images} missing images to send")
 
-            for sent_image in images_to_send:
-                image_data = await self.prepare_image_data(sent_image)
-
-                await self.__class__.send_picture_to_user_frames(
-                    sender=image_data["sender"],
-                    reciever=image_data["reciever"],
-                    image=image_data["image"],
-                    expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
-                    expiry_datetime=image_data["expiry_datetime"],
-                    sent_image_id=image_data["sent_image_id"],
+            for i in range(0, total_images, batch_size):
+                batch = images_to_send[i : i + batch_size]
+                print(
+                    f"Sending batch {i//batch_size + 1}/{(total_images-1)//batch_size + 1} ({len(batch)} images)"
                 )
+
+                for sent_image in batch:
+                    image_data = await self.prepare_image_data(sent_image)
+
+                    await self.__class__.send_picture_to_user_frames(
+                        sender=image_data["sender"],
+                        reciever=image_data["reciever"],
+                        image=image_data["image"],
+                        expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
+                        expiry_datetime=image_data["expiry_datetime"],
+                        sent_image_id=image_data["sent_image_id"],
+                    )
+
+                if i + batch_size < total_images:
+                    await asyncio.sleep(delay_seconds)
 
         except Exception as e:
             print(f"Error handling check_sent_images: {str(e)}")

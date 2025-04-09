@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Box, Typography, Button, Divider, List, ListItem,
     ListItemText, TextField, IconButton, CircularProgress,
-    InputAdornment, Card, CardContent, Grid
+    InputAdornment, Card, CardContent, Grid,
+    Stack
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
@@ -14,6 +15,8 @@ import ShareframeDialog from '@/common/components/shareframeDialog';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { addNetwork, fetchNetworkData, forgetNetwork, NetworkCredentials, selectNetworkState } from '@/store/network/network.Slice';
+import uuid from 'react-uuid';
+import { addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 
 const Network = () => {
     const dispatch = useAppDispatch();
@@ -31,11 +34,14 @@ const Network = () => {
 
     const isButtonsDisabled = submitting || loading || !isConnected;
 
-    useEffect(() => {
+    const loadnetworkData = async () => {
         if (isConnected) {
-            dispatch(fetchNetworkData());
+            const snackbarId = uuid();
+            dispatch(addLoadingSnackbar(snackbarId, "Lade Netzwerke"));
+            await dispatch(fetchNetworkData());
+            dispatch(removeLoadingSnackbar(snackbarId));
         }
-    }, [isConnected, dispatch]);
+    }
 
     const handleAddNetwork = (): void => {
         setNewNetwork({ ssid: '', password: '' });
@@ -85,99 +91,99 @@ const Network = () => {
     };
 
     return (
-        <Box>
-            <Grid container spacing={3}>
-                {/* Action Buttons (Desktop) */}
-                <Grid item justifyContent={"flex-end"} xs={12} display={{ xs: "none", md: "flex" }}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<AddIcon />}
-                        onClick={handleAddNetwork}
-                        disabled={isButtonsDisabled}
-                        sx={{ mr: 1 }}
-                    >
-                        Netzwerk hinzufügen
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        color="primary"
-                        startIcon={<RefreshIcon />}
-                        onClick={() => dispatch(fetchNetworkData())}
-                        disabled={isButtonsDisabled}
-                    >
-                        Aktualisieren
-                    </Button>
+        <>
+            <Stack spacing={3}>
+                <Grid container spacing={1} display={{ xs: "none", sm: "flex" }} justifyContent={"flex-end"}>
+                    <Grid item sm={5}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<AddIcon />}
+                            onClick={handleAddNetwork}
+                            disabled={isButtonsDisabled}
+                            fullWidth
+                        >
+                            Netzwerk hinzufügen
+                        </Button>
+                    </Grid>
+
+                    <Grid item sm={5}>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            startIcon={<RefreshIcon />}
+                            onClick={loadnetworkData}
+                            disabled={isButtonsDisabled}
+                            fullWidth
+                        >
+                            Aktualisieren
+                        </Button>
+                    </Grid>
                 </Grid>
 
-                {/* Current Network Card */}
-                <Grid item xs={12} md={6}>
-                    <Card elevation={1} sx={{ height: '100%' }}>
-                        <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="h6">
-                                    Aktuelles WIFI-Netzwerk
-                                </Typography>
-                            </Box>
-                            <Divider sx={{ mb: 1 }} />
-                            <Box sx={{ display: 'flex', alignItems: 'center', mb: 5 }}>
+                <Card elevation={1} sx={{ height: '100%' }}>
+                    <CardContent sx={{ minHeight: "150px", height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Typography variant="h6" color="text.secondary" gutterBottom>
+                            Übersicht (WIFI)
+                        </Typography>
+
+                        <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"}>
+                            <Typography variant="body2">
+                                Aktuelles Netzwerk
+                            </Typography>
+                            <Divider />
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 <WifiIcon sx={{ mr: 1, color: 'primary.main' }} />
                                 <Typography variant="body2">
                                     {loading ? <CircularProgress size={12} /> : currentConnection}
                                 </Typography>
                             </Box>
-                        </CardContent>
-                    </Card>
-                </Grid>
-
-                {/* Saved Networks Card */}
-                <Grid item xs={12} md={6}>
-                    <Card elevation={1} sx={{ height: '100%' }}>
-                        <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <Typography variant="h6" sx={{ pr: 3 }}>
-                                    Gespeicherte WIFI-Netzwerke
-                                </Typography>
-                            </Box>
-                            <Divider sx={{ mb: 1 }} />
-
-                            {loading ? (
-                                <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-                                    <CircularProgress />
-                                </Box>
-                            ) : (
-                                <List>
-                                    {savedNetworks.length === 0 ? (
-                                        <Typography variant="body2" gutterBottom sx={{ textAlign: 'left' }}>
-                                            Keine gespeicherten Netzwerke gefunden.
+                        </Box>
+                        <Box display={"flex"} flexDirection={"column"} justifyContent={"space-between"} sx={{ mt: 1 }}>
+                            <Typography variant="body2">
+                                Gespeicherte Netzwerke
+                            </Typography>
+                            <Divider />
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {loading ? (
+                                    <Typography variant="body2">
+                                        <CircularProgress size={12} />
+                                    </Typography>
+                                ) : (
+                                    savedNetworks.length === 0 ? (
+                                        <Typography variant="body2" sx={{ textAlign: 'left' }}>
+                                            Keine gespeicherten Netzwerke gefunden (Voreingestellte Netzwerke können nicht verändert werden).
                                         </Typography>
                                     ) : (
-                                        savedNetworks.map((network) => (
-                                            <ListItem
-                                                key={network}
-                                                secondaryAction={
-                                                    <IconButton
-                                                        edge="end"
-                                                        aria-label="delete"
-                                                        onClick={() => initiateForgetNetwork(network)}
-                                                        disabled={isButtonsDisabled}
-                                                    >
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                }
-                                            >
-                                                <ListItemText primary={<Typography variant="body2">{network}</Typography>} />
-                                            </ListItem>
-                                        ))
-                                    )}
-                                </List>
-                            )}
-                        </CardContent>
-                    </Card>
-                </Grid></Grid>
+                                        <List>
+                                            {savedNetworks.map((network) => (
+                                                <ListItem
+                                                    key={network}
+                                                    secondaryAction={
+                                                        <IconButton
+                                                            edge="end"
+                                                            aria-label="delete"
+                                                            onClick={() => initiateForgetNetwork(network)}
+                                                            disabled={isButtonsDisabled}
+                                                        >
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    }
+                                                >
+                                                    <ListItemText primary={<Typography variant="body2">{network}</Typography>} />
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                    )
+                                )}
+                            </Box>
+                        </Box>
+                    </CardContent>
+                </Card>
+            </Stack >
 
-            {/* Action Buttons (Mobile) */} <Grid sx={{ pt: 3 }} container spacing={1}>
-                <Grid item xs={12} md={6} display={{ xs: "flex", md: "none" }}>
+            <Grid sx={{ pt: 3 }} container spacing={2} display={{ xs: "flex", sm: "none" }}>
+                <Grid item xs={12}>
                     <Button
                         variant="contained"
                         color="primary"
@@ -189,12 +195,12 @@ const Network = () => {
                         Netzwerk hinzufügen
                     </Button>
                 </Grid>
-                <Grid item xs={12} md={6} display={{ xs: "flex", md: "none" }}>
+                <Grid item xs={12}>
                     <Button
                         variant="outlined"
                         color="primary"
                         startIcon={<RefreshIcon />}
-                        onClick={() => dispatch(fetchNetworkData())}
+                        onClick={loadnetworkData}
                         disabled={isButtonsDisabled}
                         fullWidth
                     >
@@ -203,7 +209,6 @@ const Network = () => {
                 </Grid>
             </Grid>
 
-            {/* Add Network Dialog */}
             <ShareframeDialog
                 open={dialogOpen}
                 title={"Neues Netzwerk hinzufügen"}
@@ -252,7 +257,6 @@ const Network = () => {
                 />
             </ShareframeDialog>
 
-            {/* Forget Network Dialog */}
             <ShareframeDialog
                 open={forgetDialogOpen}
                 title="Netzwerk entfernen"
@@ -260,6 +264,7 @@ const Network = () => {
                 onConfirm={handleForgetNetwork}
                 confirmText="Entfernen"
                 cancelText="Abbrechen"
+                confirmDisabled={submitting || loading || !isConnected}
             >
                 <Typography variant="body1" gutterBottom>
                     Möchtest du das Netzwerk <Typography color='primary' component="b">{networkToForget}</Typography> wirklich aus den gespeicherten Netzwerken entfernen?
@@ -268,7 +273,7 @@ const Network = () => {
                     Du kannst das Netzwerk jederzeit erneut hinzufügen.
                 </Typography>
             </ShareframeDialog>
-        </Box>
+        </>
     );
 }
 

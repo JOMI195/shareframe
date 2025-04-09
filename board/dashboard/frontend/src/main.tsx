@@ -7,7 +7,6 @@ import Snackbars from './common/components/snackbars/snackbars.tsx'
 import { Provider } from 'react-redux'
 import { store } from './store/index.ts'
 import { PiConnectionProvider } from './context/piConnection/piConnectionContext.tsx'
-import MainLayout from './common/components/layout/layout.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <Provider store={store}>
@@ -15,9 +14,7 @@ createRoot(document.getElementById('root')!).render(
       <CssBaseline enableColorScheme />
       <PiConnectionProvider>
         <Snackbars>
-          <MainLayout>
-            <App />
-          </MainLayout>
+          <App />
         </Snackbars>
       </PiConnectionProvider>
     </ColorThemeProvider>

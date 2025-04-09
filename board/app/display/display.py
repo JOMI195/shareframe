@@ -10,8 +10,9 @@ def clear_display():
     try:
         result = subprocess.run(
             [
-                "sudo",
-                "/home/frame/shareframe/.venv/bin/python",
+                "/home/frame/.local/bin/poetry",
+                "run",
+                "python",
                 "/home/frame/shareframe/app/display/clear_display.py",
             ],
             capture_output=True,

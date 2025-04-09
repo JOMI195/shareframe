@@ -6,16 +6,17 @@ interface UseTimerOptions {
     id: string;
     duration?: number;
     autoStart?: boolean;
+    shouldCreate?: boolean;
 }
 
-export const useTimer = ({ id, duration = 180, autoStart = false }: UseTimerOptions) => {
+export const useTimer = ({ id, duration = 180, autoStart = false, shouldCreate = true }: UseTimerOptions) => {
     const dispatch = useAppDispatch();
     const timer = useAppSelector((state: RootState) => selectTimer(state, id));
     const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
     // This ensures the timer is properly initialized
     useEffect(() => {
-        if (!timer) {
+        if (!timer && shouldCreate) {
             // Create timer if it doesn't exist
             dispatch(addTimer({ id, duration }));
 

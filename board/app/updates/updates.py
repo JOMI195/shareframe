@@ -24,55 +24,37 @@ class UpdateManager:
 
     def __init__(
         self,
-        service_manager: ServiceManager,
+        application_service_manager: ServiceManager,
+        dashboard_service_manager: ServiceManager,
+        heartbeat_service_manager: ServiceManager,
         install_dir: Path,
         backup_dir: Path,
-        version_file_name: str,
         update_url: str,
         auth_headers: dict,
-        files_list_name: str,
+        files_to_backup_list_name: str,
         files_to_delete_list_name: str,
+        version: str,
+        criticalities_to_update_immediately: list[str],
     ):
         """
         Initialize the update manager.
-
-        Args:
-            service_manager: ServiceManager instance to manage the service
-            install_dir (Path): Directory where the software is installed
-            backup_dir (Path): Directory to store backups
-            version_file_name (str): Name of the file that stores version info
-            update_url (str): URL to check for updates
-            auth_headers (dict): Headers for API authentication
-            files_list_name (str): Name of the file containing the list of files to backup
         """
-        self.service_manager = service_manager
+        self.application_service_manager = application_service_manager
+        self.dashboard_service_manager = dashboard_service_manager
+        self.heartbeat_service_manager = heartbeat_service_manager
+
         self.install_dir = install_dir
         self.backup_dir = backup_dir
-        self.version_file = install_dir / version_file_name
-        self.files_list_file = install_dir / files_list_name
-        self.files_to_delete_list = install_dir / files_to_delete_list_name
+        self.files_to_backup_file = install_dir / files_to_backup_list_name
+        self.files_to_delete_file = install_dir / files_to_delete_list_name
         self.update_url = update_url
         self.auth_headers = auth_headers
-
-    def get_current_version(self):
-        """
-        Read the current version from version file.
-
-        Returns:
-            str: Current version
-        """
-        try:
-            return self.version_file.read_text().strip()
-        except FileNotFoundError:
-            logger.warning("Version file not found. Assuming initial installation.")
-            return "0.0.0"
+        self.version = version
+        self.criticalities_to_update_immediately = criticalities_to_update_immediately
 
     def get_latest_version_info(self):
         """
         Get information about the latest version from the API.
-
-        Returns:
-            dict: Version information or None if failed
         """
         try:
             response = requests.get(
@@ -89,13 +71,6 @@ class UpdateManager:
     def download_update(self, version_info, temp_dir):
         """
         Download the update package.
-
-        Args:
-            version_info (dict): Information about the version to download
-            temp_dir (str): Temporary directory to store the download
-
-        Returns:
-            Path: Path to the downloaded file or None if failed
         """
         update_file = Path(temp_dir) / "update.tar.gz"
 
@@ -115,25 +90,18 @@ class UpdateManager:
             logger.error(f"Error downloading update: {str(e)}")
             return None
 
-    def verify_update(self, update_file, version_info):
+    def verify_update(self, update_file, latest_version_info):
         """
         Verify the integrity of the downloaded update.
-
-        Args:
-            update_file (Path): Path to the downloaded update file
-            version_info (dict): Information about the version with checksum
-
-        Returns:
-            bool: True if verification passed, False otherwise
         """
         try:
             sha256_hash = hashlib.sha256()
             sha256_hash.update(update_file.read_bytes())
             actual_checksum = sha256_hash.hexdigest()
 
-            if actual_checksum != version_info["checksum"]:
+            if actual_checksum != latest_version_info["checksum"]:
                 logger.error(
-                    f"Checksum verification failed! Expected: {version_info['checksum']}, Actual: {actual_checksum}"
+                    f"Checksum verification failed! Expected: {latest_version_info['checksum']}, Actual: {actual_checksum}"
                 )
                 return False
 
@@ -146,37 +114,28 @@ class UpdateManager:
     def get_files_to_backup(self):
         """
         Get the list of files to backup from the files_to_backup.json file.
-
-        Returns:
-            list: List of file paths to backup
         """
         try:
-            if not self.files_list_file.exists():
+            if not self.files_to_backup_file.exists():
                 logger.warning("Files list not found. Creating empty list.")
                 return []
 
-            with open(self.files_list_file, "r") as f:
+            with open(self.files_to_backup_file, "r") as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error reading files list: {str(e)}")
             return []
 
-    def get_files_to_delete(self, extract_path):
+    def get_files_to_delete(self):
         """
         Get the list of files to delete from the files_to_delete.json file.
-
-        Args:
-            extract_path (Path): Path where the update is extracted
-
-        Returns:
-            list: List of file paths to delete
         """
         try:
-            if not self.files_to_delete_list.exists():
+            if not self.files_to_delete_file.exists():
                 logger.info("No files_to_delete.json found in update package")
                 return []
 
-            with open(self.files_to_delete_list, "r") as f:
+            with open(self.files_to_delete_file, "r") as f:
                 return json.load(f)
         except Exception as e:
             logger.error(f"Error reading files to delete list: {str(e)}")
@@ -185,9 +144,6 @@ class UpdateManager:
     def backup_specified_files(self):
         """
         Backup only the files specified in the files list.
-
-        Returns:
-            Path: Path to the backup directory or None if failed
         """
         self.backup_dir.mkdir(parents=True, exist_ok=True)
 
@@ -228,13 +184,10 @@ class UpdateManager:
                 else:
                     logger.warning(f"File not found for backup: {file_path}")
 
-            # Also backup version file and files list
-            if self.version_file.exists():
-                shutil.copy2(self.version_file, backup_path / self.version_file.name)
-
-            if self.files_list_file.exists():
+            if self.files_to_backup_file.exists():
                 shutil.copy2(
-                    self.files_list_file, backup_path / self.files_list_file.name
+                    self.files_to_backup_file,
+                    backup_path / self.files_to_backup_file.name,
                 )
 
             logger.info("Backup completed successfully")
@@ -252,21 +205,13 @@ class UpdateManager:
                     )
             return None
 
-    def install_update(self, update_file, version_info, extract_path):
+    def install_update(self, extract_path):
         """
         Install the update by replacing files.
-
-        Args:
-            update_file (Path): Path to the downloaded update file
-            version_info (dict): Information about the version
-            extract_path (Path): Path where the update is extracted
-
-        Returns:
-            bool: True if installation succeeded, False otherwise
         """
         try:
             # Delete files specified in files_to_delete.json
-            files_to_delete = self.get_files_to_delete(extract_path)
+            files_to_delete = self.get_files_to_delete()
             for file_path in files_to_delete:
                 delete_path = self.install_dir / file_path
                 if delete_path.exists():
@@ -299,10 +244,6 @@ class UpdateManager:
                     shutil.copy2(item, dest_path)
                     logger.info(f"Updated file: {rel_path}")
 
-            # Update version file
-            self.version_file.write_text(version_info["version"])
-            logger.info(f"Updated version file to {version_info['version']}")
-
             return True
 
         except Exception as e:
@@ -312,19 +253,13 @@ class UpdateManager:
     def rollback_update(self, backup_path):
         """
         Rollback to the previous version using the backup.
-
-        Args:
-            backup_path (Path): Path to the backup directory
-
-        Returns:
-            bool: True if rollback succeeded, False otherwise
         """
         try:
             logger.warning("Performing rollback to previous version")
 
             # Make sure service is stopped
-            if self.service_manager.is_active():
-                if not self.service_manager.stop():
+            if self.application_service_manager.is_active():
+                if not self.application_service_manager.stop():
                     logger.warning(
                         "Failed to stop service for rollback, continuing anyway"
                     )
@@ -344,7 +279,7 @@ class UpdateManager:
                     logger.info(f"Restored file: {rel_path}")
 
             # Start the service
-            if self.service_manager.start():
+            if self.application_service_manager.start():
                 logger.info("Rollback completed successfully")
                 return True
             else:
@@ -356,7 +291,9 @@ class UpdateManager:
 
             # Try to start service even if rollback failed
             try:
-                self.service_manager.start()
+                self.application_service_manager.start()
+                self.dashboard_service_manager.start()
+                self.heartbeat_service_manager.start()
             except Exception as restart_error:
                 logger.critical(
                     f"Failed to start service after failed rollback: {str(restart_error)}"
@@ -367,13 +304,6 @@ class UpdateManager:
     def extract_update(self, update_file, temp_dir):
         """
         Extract the update package.
-
-        Args:
-            update_file (Path): Path to the downloaded update file
-            temp_dir (str): Temporary directory to extract to
-
-        Returns:
-            Path: Path to the extracted directory or None if failed
         """
         extract_path = Path(temp_dir) / "extracted"
         try:
@@ -397,7 +327,7 @@ class UpdateManager:
             bool: True if update succeeded or no update needed, False if failed
         """
         # Get current version
-        current_version = self.get_current_version()
+        current_version = self.version
         logger.info(f"Current version: {current_version}")
 
         # Check for new version
@@ -408,6 +338,13 @@ class UpdateManager:
 
         if latest_version_info["version"] == current_version:
             logger.info("Already running the latest version")
+            return True
+
+        if (
+            not latest_version_info["criticality"]
+            in self.criticalities_to_update_immediately
+        ):
+            logger.info("Update not considered as critical")
             return True
 
         logger.info(
@@ -422,25 +359,48 @@ class UpdateManager:
                 logger.error("Failed to download update")
                 return False
 
-            if not self.verify_update(update_file, latest_version_info):
+            if not self.verify_update(
+                update_file=update_file, latest_version_info=latest_version_info
+            ):
                 logger.error("Update verification failed")
                 return False
 
-            # Create backup before stopping service to minimize downtime
+            # Create backup
             backup_path = self.backup_specified_files()
             if not backup_path:
                 logger.error("Failed to create backup, aborting update")
                 return False
 
-            # Extract the update in advance to minimize downtime
-            extract_path = self.extract_update(update_file, temp_dir)
+            # Extract the update
+            extract_path = self.extract_update(
+                update_file=update_file, temp_dir=temp_dir
+            )
             if not extract_path:
                 logger.error("Failed to extract update")
                 return False
 
             # Now that everything is prepared, stop the service
-            if not self.service_manager.stop():
+            if not (
+                self.application_service_manager.stop()
+                and self.application_service_manager.wait_for_state(
+                    expected_state=False
+                )
+            ):
                 logger.error("Failed to stop service, aborting update")
+                return False
+
+            if not (
+                self.dashboard_service_manager.stop()
+                and self.dashboard_service_manager.wait_for_state(expected_state=False)
+            ):
+                logger.error("Failed to stop dashboard service, aborting update")
+                return False
+
+            if not (
+                self.heartbeat_service_manager.stop()
+                and self.heartbeat_service_manager.wait_for_state(expected_state=False)
+            ):
+                logger.error("Failed to stop heartbeat service, aborting update")
                 return False
 
             # Clear the display
@@ -449,16 +409,32 @@ class UpdateManager:
                 return False
 
             # Apply the update
-            update_success = self.install_update(
-                update_file, latest_version_info, extract_path
-            )
+            update_success = self.install_update(extract_path=extract_path)
 
             # Start the service regardless of update success
             # If update failed, we'll roll back after trying to start
-            service_started = self.service_manager.start()
+            application_service_started = (
+                self.application_service_manager.start()
+                and self.application_service_manager.wait_for_state(expected_state=True)
+            )
+
+            dashboard_service_started = (
+                self.dashboard_service_manager.start()
+                and self.dashboard_service_manager.wait_for_state(expected_state=True)
+            )
+
+            heartbeat_service_started = (
+                self.heartbeat_service_manager.start()
+                and self.heartbeat_service_manager.wait_for_state(expected_state=True)
+            )
 
             # Handle success/failure
-            if update_success and service_started:
+            if (
+                update_success
+                and application_service_started
+                and dashboard_service_started
+                and heartbeat_service_started
+            ):
                 logger.info(
                     f"Update to version {latest_version_info['version']} completed successfully"
                 )
@@ -466,11 +442,11 @@ class UpdateManager:
             else:
                 if not update_success:
                     logger.error("Update installation failed")
-                if not service_started:
+                if not application_service_started:
                     logger.error("Service failed to start after update")
 
                 # Attempt rollback
-                rollback_successful = self.rollback_update(backup_path)
+                rollback_successful = self.rollback_update(backup_path=backup_path)
 
                 if rollback_successful:
                     logger.info("Rollback completed successfully")

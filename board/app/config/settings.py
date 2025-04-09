@@ -6,6 +6,8 @@ PRODUCTION = os.getenv("PRODUCTION", False) == "True"
 MOCK_DISPLAY = os.getenv("MOCK_DISPLAY", False) == "True"
 VERSION = os.getenv("VERSION", "1.0.0")
 
+SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
+PUBLIC_SERIAL_NUMBER = os.getenv("PUBLIC_SERIAL_NUMBER")
 FRAME_AUTH_SECRET_KEY = os.environ.get("FRAME_AUTH_SECRET_KEY")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,16 +42,13 @@ WS_FRAME_URL = f"{WS_BASE_URL}/ws/frames/"
 HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-auth-token/"
 HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-auth-token/"
 
-SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
-PUBLIC_SERIAL_NUMBER = os.getenv("PUBLIC_SERIAL_NUMBER")
-
 TOKEN_CACHE_DIR = ".cache"
 TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
 TOKEN_CACHE_PATH = BASE_DIR.parent / TOKEN_CACHE_FILE
 
 IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
 
-WEBSOCKET_MESSAGE_MAX_SIZE = 10 * 1024 * 1024  # 10MB
+WEBSOCKET_MESSAGE_MAX_SIZE = 120 * 1024 * 1024  # 120MB
 
 # Display config
 USER_IMAGES_SAVE_DIR = f".{MEDIA_FOLDER}/recieved-user-images"
@@ -78,12 +77,14 @@ UPDATE_BACKUP_DIR_NAME = "app_backup"
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"
 
 # Dashbaord
+DASHBOARD_SERVICE_NAME = "shareframe-dashboard.service"
 DASHBOARD_LOGGING_FILE = "shareframe-dashboard.log"
 DASHBOARD_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
 
 DASHBOARD_HTTP_VERIFY_OTP_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-otp/"
 
 # Heartbeat
+HEARTBEAT_SERVICE_NAME = "shareframe-heartbeat.service"
 HEARTBEAT_LOGGING_FILE = "shareframe-heartbeat.log"
 HEARTBEAT_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{HEARTBEAT_LOGGING_FILE}"
 HEARTBEAT_HTTP_FRAME_HEARTBEAT_URL = f"{HTTP_BASE_URL}/api/frames/frame-hearbeat/"

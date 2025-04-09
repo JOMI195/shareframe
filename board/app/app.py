@@ -2,11 +2,12 @@ import os
 from pathlib import Path
 from typing import List
 import asyncio
+import signal
 from dotenv import load_dotenv
 
 current_dir = Path(__file__).resolve().parent
 parent_dir = current_dir.parent
-env_serial_path = parent_dir / ".env.serial-number"
+env_serial_path = parent_dir / ".env.secrets"
 
 load_dotenv(current_dir / ".env")
 load_dotenv(env_serial_path, override=True)
@@ -31,6 +32,19 @@ async def cancel_all_tasks():
     for task in tasks:
         task.cancel()
     await asyncio.gather(*tasks, return_exceptions=True)
+
+
+def setup_signal_handlers(app):
+    def handle_usr1_signal(signum, frame):
+        logging.info("Received SIGUSR1 signal - skipping current image")
+        asyncio.create_task(trigger_skip_image(app))
+
+    signal.signal(signal.SIGUSR1, handle_usr1_signal)
+    logging.info("Signal handlers configured")
+
+
+async def trigger_skip_image(app):
+    app.display.skip_current_image()
 
 
 class FrameApplication:
@@ -174,6 +188,8 @@ async def main():
         await cancel_all_tasks()
 
         app = FrameApplication()
+        setup_signal_handlers(app)
+
         await asyncio.wait_for(app.run(), timeout=None)
     except asyncio.CancelledError:
         logging.info("Main task was cancelled")
