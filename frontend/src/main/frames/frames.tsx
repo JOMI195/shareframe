@@ -13,6 +13,18 @@ const Frames: React.FC = () => {
         dispatch(fetchframes());
     }, []);
 
+    useEffect(() => {
+        const getFrames = () => {
+            dispatch(fetchframes());
+        };
+
+        window.addEventListener('focus', getFrames);
+
+        return () => {
+            window.removeEventListener('focus', getFrames);
+        };
+    }, []);
+
     return (
         <Container maxWidth={"md"} disableGutters>
             <Box sx={{
