@@ -4,15 +4,16 @@ set -e
 
 echo "Starting shareframe installation..."
 
-if [ -z "$3" ]; then
-    echo "Usage: $0 <FRAME_AUTH_SECRET_KEY> <PUBLIC_SERIAL_NUMBER> <PRIVATE_SERIAL_NUMBER>"
+if [ -z "$4" ]; then
+    echo "Usage: $0 <FRAME_AUTH_SECRET_KEY> <UPDATE_HASH_SECRET_KEY> <PUBLIC_SERIAL_NUMBER> <PRIVATE_SERIAL_NUMBER>"
     exit 1
 fi
 
 USER="frame"
 FRAME_AUTH_SECRET_KEY=$1
-PUBLIC_SERIAL_NUMBER=$2
-SERIAL_NUMBER=$3
+UPDATE_HASH_SECRET_KEY=$2
+PUBLIC_SERIAL_NUMBER=$3
+SERIAL_NUMBER=$4
 
 USER_DIR="/home/$USER"
 WORKING_DIR="$USER_DIR/shareframe"
@@ -98,6 +99,12 @@ if grep -q "^FRAME_AUTH_SECRET_KEY=" "$WORKING_DIR/.env.secrets"; then
     sed -i "s/^FRAME_AUTH_SECRET_KEY=.*/FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'/" "$WORKING_DIR/.env.secrets"
 else
     echo "FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'" >> "$WORKING_DIR/.env.secrets"
+fi
+
+if grep -q "^UPDATE_HASH_SECRET_KEY=" "$WORKING_DIR/.env.secrets"; then
+    sed -i "s/^UPDATE_HASH_SECRET_KEY=.*/UPDATE_HASH_SECRET_KEY='$UPDATE_HASH_SECRET_KEY'/" "$WORKING_DIR/.env.secrets"
+else
+    echo "UPDATE_HASH_SECRET_KEY='$UPDATE_HASH_SECRET_KEY'" >> "$WORKING_DIR/.env.secrets"
 fi
 
 chown frame:frame "$WORKING_DIR/.env.secrets"

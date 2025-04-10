@@ -1,0 +1,10 @@
+[
+    {
+        "name": "01-sudo-test.sh",
+        "sudo": true
+    },
+    {
+        "name": "02-non-sudo-test.sh",
+        "sudo": false
+    }
+]

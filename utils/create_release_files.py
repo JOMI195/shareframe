@@ -1,6 +1,7 @@
 import os
 import tarfile
 import hashlib
+import hmac
 
 
 def create_tar_gz(folder_path, output_filename):
@@ -19,8 +20,13 @@ def calculate_sha256(file_path):
     return sha256_hash.hexdigest()
 
 
+def encode_with_hmac(message, key):
+    return hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+
 def main():
     folder_path = input("Enter the folder path: ").strip()
+    frame_auth_secret_key = input("Enter the frame auth secret key: ").strip()
     version = input("Enter the version number: ").strip()
 
     if not os.path.isdir(folder_path):
@@ -34,10 +40,13 @@ def main():
     sha256_hash = calculate_sha256(output_filename)
     print(f"SHA-256 Hash: {sha256_hash}")
 
+    hmac_encoded_hash = encode_with_hmac(sha256_hash, frame_auth_secret_key)
+    print(f"HMAC-Encoded SHA-256 Hash: {hmac_encoded_hash}")
+
     hash_filename = output_filename + ".sha256"
     with open(hash_filename, "w") as f:
-        f.write(sha256_hash)
-    print(f"SHA-256 hash saved to: {hash_filename}")
+        f.write(hmac_encoded_hash)
+    print(f"HMAC-encoded SHA-256 hash saved to: {hash_filename}")
 
 
 if __name__ == "__main__":

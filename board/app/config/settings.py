@@ -8,7 +8,8 @@ VERSION = os.getenv("VERSION", "1.0.0")
 
 SERIAL_NUMBER = os.getenv("SERIAL_NUMBER")
 PUBLIC_SERIAL_NUMBER = os.getenv("PUBLIC_SERIAL_NUMBER")
-FRAME_AUTH_SECRET_KEY = os.environ.get("FRAME_AUTH_SECRET_KEY")
+FRAME_AUTH_SECRET_KEY = os.getenv("FRAME_AUTH_SECRET_KEY")
+UPDATE_HASH_SECRET_KEY = os.getenv("UPDATE_HASH_SECRET_KEY")
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -72,6 +73,7 @@ UPDATE_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
 UPDATE_VERSION_FILE_NAME = "version.txt"
 UPDATE_FILES_LIST_NAME = "files_to_backup.json"
 UPDATE_DELETE_FILES_LIST_NAME = "files_to_delete.json"
+SCRIPTS_TO_RUN_LIST_NAME = "scripts_to_run.json"
 UPDATE_BACKUP_DIR_NAME = "app_backup"
 
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"

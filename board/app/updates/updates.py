@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import hmac
 from pathlib import Path
 import subprocess
 import logging
@@ -16,6 +17,10 @@ from display.display import clear_display
 logger = logging.getLogger(__name__)
 
 
+def hmac_encode(message, key):
+    return hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest()
+
+
 class UpdateManager:
     """
     Manages the software update process including version checking,
@@ -28,11 +33,14 @@ class UpdateManager:
         dashboard_service_manager: ServiceManager,
         heartbeat_service_manager: ServiceManager,
         install_dir: Path,
+        update_files_dir_name: str,
         backup_dir: Path,
         update_url: str,
         auth_headers: dict,
         files_to_backup_list_name: str,
         files_to_delete_list_name: str,
+        scripts_to_run_list_name: str,
+        update_hash_secret_key: str,
         version: str,
         criticalities_to_update_immediately: list[str],
     ):
@@ -44,9 +52,17 @@ class UpdateManager:
         self.heartbeat_service_manager = heartbeat_service_manager
 
         self.install_dir = install_dir
+        self.update_files_dir_name = update_files_dir_name
+        self.scripts_to_run_dir_name = install_dir / update_files_dir_name / "scripts"
         self.backup_dir = backup_dir
-        self.files_to_backup_file = install_dir / files_to_backup_list_name
-        self.files_to_delete_file = install_dir / files_to_delete_list_name
+        self.files_to_backup_file = (
+            install_dir / update_files_dir_name / files_to_backup_list_name
+        )
+        self.files_to_delete_file = (
+            install_dir / update_files_dir_name / files_to_delete_list_name
+        )
+        self.scripts_to_run_list_name = scripts_to_run_list_name
+        self.update_hash_secret_key = update_hash_secret_key
         self.update_url = update_url
         self.auth_headers = auth_headers
         self.version = version
@@ -99,9 +115,11 @@ class UpdateManager:
             sha256_hash.update(update_file.read_bytes())
             actual_checksum = sha256_hash.hexdigest()
 
-            if actual_checksum != latest_version_info["checksum"]:
+            encoded_checksum = hmac_encode(actual_checksum, self.update_hash_secret_key)
+
+            if encoded_checksum != latest_version_info["checksum"]:
                 logger.error(
-                    f"Checksum verification failed! Expected: {latest_version_info['checksum']}, Actual: {actual_checksum}"
+                    f"Checksum verification failed!\nExpected: {latest_version_info['checksum']}\nActual: {encoded_checksum}"
                 )
                 return False
 
@@ -204,6 +222,94 @@ class UpdateManager:
                         f"Failed to clean up backup directory: {str(cleanup_error)}"
                     )
             return None
+
+    def run_update_scripts(self):
+        """
+        Run the scripts listed in the scripts_to_run_list file.
+        These scripts are located in the scripts_to_run_dir_name directory.
+        Scripts are run with sudo if needed based on the configuration in the list.
+        """
+        try:
+            scripts_to_run_list_file = (
+                self.install_dir
+                / self.update_files_dir_name
+                / self.scripts_to_run_list_name
+            )
+
+            if not scripts_to_run_list_file.exists():
+                logger.info(f"No scripts list file found at {scripts_to_run_list_file}")
+                return True
+
+            with open(scripts_to_run_list_file, "r") as f:
+                scripts_data = json.load(f)
+
+            if not scripts_data:
+                logger.info("No scripts to run")
+                return True
+
+            # Handle different formats of scripts data
+            # It could be a simple list of script names or a dict with additional info
+            if isinstance(scripts_data, list) and all(
+                isinstance(item, str) for item in scripts_data
+            ):
+                scripts_to_run = [
+                    {"name": name, "sudo": False} for name in scripts_data
+                ]
+            else:
+                scripts_to_run = scripts_data
+
+            if not self.scripts_to_run_dir_name.exists():
+                logger.error(
+                    f"Scripts directory not found: {self.scripts_to_run_dir_name}"
+                )
+                return False
+
+            for script_info in scripts_to_run:
+                if isinstance(script_info, str):
+                    script_name = script_info
+                    needs_sudo = False
+                else:
+                    script_name = script_info["name"]
+                    needs_sudo = script_info.get("sudo", False)
+
+                script_path = self.scripts_to_run_dir_name / script_name
+
+                if not script_path.exists():
+                    logger.error(f"Script not found: {script_path}")
+                    return False
+
+                # Make script executable
+                script_path.chmod(
+                    script_path.stat().st_mode | 0o111
+                )  # Add executable bit
+
+                if needs_sudo:
+                    cmd = ["sudo", str(script_path)]
+                    logger.info(f"Running script with sudo: {script_name}")
+                else:
+                    cmd = [str(script_path)]
+                    logger.info(f"Running script: {script_name}")
+
+                result = subprocess.run(
+                    cmd, check=False, capture_output=True, text=True
+                )
+
+                if result.returncode != 0:
+                    logger.error(
+                        f"Script {script_name} failed with exit code {result.returncode}"
+                    )
+                    logger.error(f"Script stdout: {result.stdout}")
+                    logger.error(f"Script stderr: {result.stderr}")
+                    return False
+
+                logger.info(f"Script {script_name} completed successfully")
+
+            logger.info("All scripts executed successfully")
+            return True
+
+        except Exception as e:
+            logger.error(f"Error running update scripts: {str(e)}")
+            return False
 
     def install_update(self, extract_path):
         """
@@ -410,9 +516,57 @@ class UpdateManager:
 
             # Apply the update
             update_success = self.install_update(extract_path=extract_path)
+            if not update_success:
+                logger.error("Update installation failed")
+                # Perform rollback before attempting to restart services
+                rollback_successful = self.rollback_update(backup_path=backup_path)
+                if rollback_successful:
+                    logger.info("Rollback completed successfully")
+                else:
+                    logger.critical(
+                        "Rollback failed. System may be in an inconsistent state."
+                    )
 
-            # Start the service regardless of update success
-            # If update failed, we'll roll back after trying to start
+                # Try to restart services after rollback
+                self.application_service_manager.start() and self.application_service_manager.wait_for_state(
+                    expected_state=True
+                )
+                self.dashboard_service_manager.start() and self.dashboard_service_manager.wait_for_state(
+                    expected_state=True
+                )
+                self.heartbeat_service_manager.start() and self.heartbeat_service_manager.wait_for_state(
+                    expected_state=True
+                )
+
+                return False
+
+            # Run additional scripts
+            scripts_success = self.run_update_scripts()
+            if not scripts_success:
+                logger.error("Scripts execution failed")
+                # Perform rollback before attempting to restart services
+                rollback_successful = self.rollback_update(backup_path=backup_path)
+                if rollback_successful:
+                    logger.info("Rollback completed successfully")
+                else:
+                    logger.critical(
+                        "Rollback failed. System may be in an inconsistent state."
+                    )
+
+                # Try to restart services after rollback
+                self.application_service_manager.start() and self.application_service_manager.wait_for_state(
+                    expected_state=True
+                )
+                self.dashboard_service_manager.start() and self.dashboard_service_manager.wait_for_state(
+                    expected_state=True
+                )
+                self.heartbeat_service_manager.start() and self.heartbeat_service_manager.wait_for_state(
+                    expected_state=True
+                )
+
+                return False
+
+            # At this point both update and scripts were successful, restart services
             application_service_started = (
                 self.application_service_manager.start()
                 and self.application_service_manager.wait_for_state(expected_state=True)
@@ -428,10 +582,9 @@ class UpdateManager:
                 and self.heartbeat_service_manager.wait_for_state(expected_state=True)
             )
 
-            # Handle success/failure
+            # Check if all services started properly
             if (
-                update_success
-                and application_service_started
+                application_service_started
                 and dashboard_service_started
                 and heartbeat_service_started
             ):
@@ -440,16 +593,28 @@ class UpdateManager:
                 )
                 return True
             else:
-                if not update_success:
-                    logger.error("Update installation failed")
+                # One or more services failed to start after successful update
                 if not application_service_started:
-                    logger.error("Service failed to start after update")
+                    logger.error("Application service failed to start after update")
+                if not dashboard_service_started:
+                    logger.error("Dashboard service failed to start after update")
+                if not heartbeat_service_started:
+                    logger.error("Heartbeat service failed to start after update")
 
                 # Attempt rollback
                 rollback_successful = self.rollback_update(backup_path=backup_path)
-
                 if rollback_successful:
                     logger.info("Rollback completed successfully")
+                    # Try to restart services after rollback
+                    self.application_service_manager.start() and self.application_service_manager.wait_for_state(
+                        expected_state=True
+                    )
+                    self.dashboard_service_manager.start() and self.dashboard_service_manager.wait_for_state(
+                        expected_state=True
+                    )
+                    self.heartbeat_service_manager.start() and self.heartbeat_service_manager.wait_for_state(
+                        expected_state=True
+                    )
                 else:
                     logger.critical(
                         "Rollback failed. System may be in an inconsistent state."
