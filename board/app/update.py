@@ -29,7 +29,7 @@ def main():
 
     TokenManager.initialize()
 
-    application_service_manager = ServiceManager(settings.SERVICE_NAME)
+    application_service_manager = ServiceManager(settings.APPLICATION_SERVICE_NAME)
     dashboard_service_manager = ServiceManager(settings.DASHBOARD_SERVICE_NAME)
     heartbeat_service_manager = ServiceManager(settings.HEARTBEAT_SERVICE_NAME)
 

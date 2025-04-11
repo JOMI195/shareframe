@@ -122,7 +122,7 @@ const ShareframeTabs: React.FC<TabsProps> = ({ title, tabs, headerAction }) => {
                         onChange={(_event, newValue) => {
                             setValue(newValue);
                         }}
-                        showLabels
+                    //showLabels
                     >
                         {tabs.map((tab, index) => (
                             <BottomNavigationAction key={index} label={tab.label} icon={tab.icon} />

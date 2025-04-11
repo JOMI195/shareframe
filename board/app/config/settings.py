@@ -15,7 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 MEDIA_FOLDER = "media"
 
-SERVICE_NAME = "shareframe.service"
+APPLICATION_SERVICE_NAME = "shareframe.service"
 
 # Logging config
 LOGGING_SAVE_DIR = "/var/log/shareframe"

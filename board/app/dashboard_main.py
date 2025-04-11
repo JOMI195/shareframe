@@ -1,4 +1,5 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from enum import Enum
 import logging
 from pathlib import Path
 from dotenv import load_dotenv
@@ -30,12 +31,20 @@ from config.logger import setup_logging
 # shareframe.de not ready for ipv6 yet
 requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
+
+class ServiceType(Enum):
+    APPLICATION = "application"
+    DASHBOARD = "dashboard"
+    UPDATE = "update"
+    HEARTBEAT = "heartbeat"
+
+
 setup_logging(log_file_path=settings.DASHBOARD_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
 
 logger.info(f"Setup services")
 
-application_service_manager = ServiceManager(settings.SERVICE_NAME)
+application_service_manager = ServiceManager(settings.APPLICATION_SERVICE_NAME)
 update_service_manager = ServiceManager(settings.UPDATE_SERVICE_NAME)
 TokenManager.initialize()
 
@@ -424,7 +433,14 @@ def frame_slideshow_skip_slideshow_image():
 
     try:
         subprocess.run(
-            ["sudo", "systemctl", "kill", "-s", "SIGUSR1", settings.SERVICE_NAME],
+            [
+                "sudo",
+                "systemctl",
+                "kill",
+                "-s",
+                "SIGUSR1",
+                settings.APPLICATION_SERVICE_NAME,
+            ],
             check=True,
         )
         return jsonify(
@@ -706,6 +722,158 @@ def pi_shutdown():
                     "success": False,
                     "message": f"An unexpected error occurred while attempting to shut down the Raspberry Pi: {str(e)}",
                 }
+            ),
+            500,
+        )
+
+
+@app.route("/api/logs", methods=["GET"])
+@login_required
+def get_service_logs():
+    try:
+        service_type = request.args.get("service_name")
+        if not service_type:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Missing service_name parameter",
+                    }
+                ),
+                400,
+            )
+
+        service_type = service_type.lower()
+
+        try:
+            service = ServiceType(service_type)
+        except ValueError:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Invalid service type. Valid options are: {', '.join([s.value for s in ServiceType])}",
+                    }
+                ),
+                400,
+            )
+
+        service_name_map = {
+            ServiceType.APPLICATION: settings.APPLICATION_SERVICE_NAME,
+            ServiceType.DASHBOARD: settings.DASHBOARD_SERVICE_NAME,
+            ServiceType.UPDATE: settings.UPDATE_SERVICE_NAME,
+            ServiceType.HEARTBEAT: settings.HEARTBEAT_SERVICE_NAME,
+        }
+
+        service_name = service_name_map[service]
+
+        since_timestamp = request.args.get("since_timestamp")
+        if not since_timestamp:
+            since_timestamp = (datetime.now() - timedelta(hours=24)).isoformat()
+
+        lines_str = request.args.get("lines", "1000")
+        try:
+            lines = int(lines_str)
+            if lines <= 0:
+                raise ValueError("Lines must be positive")
+            lines = min(lines, 5000)
+        except ValueError:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Lines parameter must be a positive integer",
+                    }
+                ),
+                400,
+            )
+
+        cmd = [
+            "sudo",
+            "journalctl",
+            "-u",
+            service_name,
+            "--since",
+            since_timestamp,
+            "--no-pager",
+            "-n",
+            str(lines),
+            "--output=short",
+        ]
+
+        timeout = 5
+
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout, check=False
+        )
+
+        if result.returncode == 0:
+            log_lines = result.stdout.strip().split("\n")
+
+            if len(log_lines) > lines:
+                log_lines = log_lines[-lines:]
+                truncation_message = f"Showing only the last {lines} lines of logs"
+                log_lines.insert(0, truncation_message)
+
+            try:
+                since_dt = (
+                    datetime.fromisoformat(since_timestamp.replace("Z", "+00:00"))
+                    if "Z" in since_timestamp
+                    else datetime.fromisoformat(since_timestamp)
+                )
+                now = datetime.now()
+                diff = now - since_dt
+
+                if diff.days > 0:
+                    period = f"Since {since_dt.strftime('%Y-%m-%d %H:%M')} ({diff.days} days, {diff.seconds // 3600} hours ago)"
+                elif diff.seconds // 3600 > 0:
+                    period = f"Since {since_dt.strftime('%Y-%m-%d %H:%M')} ({diff.seconds // 3600} hours, {(diff.seconds % 3600) // 60} minutes ago)"
+                else:
+                    period = f"Since {since_dt.strftime('%Y-%m-%d %H:%M')} ({(diff.seconds % 3600) // 60} minutes ago)"
+            except (ValueError, TypeError):
+                period = f"Since {since_timestamp}"
+
+            return jsonify(
+                {
+                    "success": True,
+                    "service": service_name,
+                    "period": period,
+                    "timestamp": datetime.now().isoformat(),
+                    "log_count": len(log_lines),
+                    "logs": log_lines,
+                }
+            )
+        else:
+            logger.error(
+                f"Log retrieval failed with code {result.returncode}. Error: {result.stderr}"
+            )
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"Failed to retrieve logs. Error: {result.stderr}",
+                    }
+                ),
+                500,
+            )
+
+    except subprocess.TimeoutExpired:
+        logger.error(f"Log retrieval timed out for service {service_type}")
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": "Log retrieval timed out. Try requesting a more recent timestamp or fewer lines.",
+                }
+            ),
+            500,
+        )
+
+    except Exception as e:
+        logger.error(f"Unexpected error in log retrieval: {str(e)}")
+        return (
+            jsonify(
+                {"success": False, "message": f"An unexpected error occurred: {str(e)}"}
             ),
             500,
         )

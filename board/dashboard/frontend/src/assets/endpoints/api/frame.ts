@@ -27,3 +27,6 @@ export const getPerformUpdateUrl = () => `${frameBaseUrl()}/updates/perform-upda
 export const getRestartPiUrl = () => `${apiBaseUrl()}/pi/restart`;
 
 export const getShutdownPiUrl = () => `${apiBaseUrl()}/pi/shutdown`;
+
+// Logs
+export const getFrameLogsUrl = () => `${apiBaseUrl()}/logs`;

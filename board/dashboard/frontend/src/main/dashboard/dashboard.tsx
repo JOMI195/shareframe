@@ -2,6 +2,7 @@ import ShareframeTabs from "@/common/components/tabs";
 import WifiIcon from '@mui/icons-material/Wifi';
 import InfoIcon from '@mui/icons-material/Info';
 import UpdateIcon from '@mui/icons-material/Update';
+import HomeRepairServiceIcon from '@mui/icons-material/HomeRepairService';
 import FilterFramesIcon from '@mui/icons-material/FilterFrames';
 import Network from "./network/network";
 import General from "./general/general";
@@ -15,6 +16,7 @@ import { useTimer } from "@/hooks/useTimer";
 import { fetchFrameInfos } from "@/store/frameInfo/frameInfo.Slice";
 import { fetchNetworkData } from "@/store/network/network.Slice";
 import { usePiConnection } from "@/context/piConnection/piConnectionContext";
+import FrameLogs from "./frameLogs/frameLogs";
 
 const Dashboard: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -55,14 +57,19 @@ const Dashboard: React.FC = () => {
             content: <Network />,
         },
         {
+            label: "Updates",
+            icon: <UpdateIcon />,
+            content: <Updates />,
+        },
+        {
             label: "Gerät",
             icon: <InfoIcon />,
             content: <General />,
         },
         {
-            label: "Updates",
-            icon: <UpdateIcon />,
-            content: <Updates />,
+            label: "Logs",
+            icon: <HomeRepairServiceIcon />,
+            content: <FrameLogs />,
         },
     ];
 
