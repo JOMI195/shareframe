@@ -1,7 +1,6 @@
 import asyncio
 from dataclasses import dataclass
 from enum import Enum
-import gc
 import os
 from pathlib import Path
 import sys
@@ -80,7 +79,6 @@ class Display:
                     time.sleep(2)
                     self.logger.info("E-paper display cleared")
                 elif command == EPDCommand.DISPLAY_IMAGE:
-                    gc.collect()
                     if not params or not params.image_path:
                         raise ValueError(
                             "DISPLAY_IMAGE command requires an image_path parameter"
@@ -91,10 +89,6 @@ class Display:
                     )
                     image_buffer = self.epd.getbuffer(current_pil_image)
                     self.epd.display(image_buffer)
-                    time.sleep(2)
-                    current_pil_image.close()
-                    del image_buffer
-                    gc.collect()
                     self.logger.info("E-paper displayed image")
                 else:
                     self.logger.warning(f"Unsupported command: {command}")
