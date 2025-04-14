@@ -9,6 +9,7 @@ import websockets
 from typing import List, Optional, Callable, Union
 from config import settings
 from common.frame_token import TokenManager
+from utils.log_utils import truncate_message
 
 
 class WebsocketClient:
@@ -53,7 +54,7 @@ class WebsocketClient:
 
     # ------- PROCESSING MESSAGES
     def _process_message(self, message: dict):
-        self.logger.info(f"Processing message: {message}")
+        self.logger.info(f"Processing message: {truncate_message(message)}")
 
         # Handle pong message
         if message.get("type") == "pong":
@@ -302,6 +303,8 @@ class WebsocketClient:
                 open_timeout=900,
                 ssl=ssl_context if settings.PRODUCTION == True else None,
                 max_size=settings.WEBSOCKET_MESSAGE_MAX_SIZE,
+                ping_interval=50,
+                ping_timeout=None,
             ) as websocket:
                 self.logger.info("WebSocket connection established successful")
 

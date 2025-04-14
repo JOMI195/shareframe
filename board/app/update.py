@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import os
 from pathlib import Path
 from dotenv import load_dotenv
 
@@ -22,6 +23,8 @@ requests.packages.urllib3.util.connection.HAS_IPV6 = False
 
 setup_logging(log_file_path=settings.UPDATE_LOGGING_FULL_FILE_PATH)
 logger = logging.getLogger(__name__)
+
+force_all = os.getenv("FORCE_ALL_UPDATES", "false").lower() == "true"
 
 
 def main():
@@ -47,7 +50,7 @@ def main():
         update_url=settings.HTTP_UPDATE_LATEST_URL,
         auth_headers=TokenManager.get_auth_headers(),
         version=settings.VERSION,
-        criticalities_to_update_immediately=["Critical"],
+        criticalities_to_update_immediately=None if force_all else ["Critical"],
     )
 
     result = update_manager.check_and_apply_update()

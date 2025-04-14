@@ -18,6 +18,7 @@ import subprocess
 import os
 import secrets
 import requests
+import re
 
 from dashboard.authentication import login_required
 from dashboard.middleware import TokenAuthMiddleware
@@ -238,7 +239,6 @@ def connectionsaved_networks():
 @app.route("/api/connection/connect", methods=["POST"])
 @login_required
 def connection_connect():
-
     data = request.get_json()
     ssid = data.get("ssid")
     password = data.get("password")
@@ -261,10 +261,29 @@ def connection_connect():
             400,
         )
 
-    escaped_ssid = re.sub(r'([\\"])', r"\\\1", ssid)
-
-    # Attempt to add the connection permanently
     try:
+        # Check if network name already exists
+        saved_connections_result = subprocess.run(
+            ["nmcli", "-t", "-f", "NAME", "connection", "show"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        saved_connections = saved_connections_result.stdout.strip().split("\n")
+
+        if ssid in saved_connections:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"A network with the name '{ssid}' already exists. Please choose a different name or forget the existing network first.",
+                    }
+                ),
+                409,  # Conflict status code
+            )
+
+        escaped_ssid = re.sub(r'([\\"])', r"\\\1", ssid)
+
         # Add the connection permanently using nmcli connection add
         subprocess.run(
             [
@@ -305,7 +324,6 @@ def connection_connect():
 @app.route("/api/connection/forget", methods=["POST"])
 @login_required
 def connection_forget():
-
     data = request.get_json()
     ssid = data.get("ssid")
 
@@ -324,8 +342,32 @@ def connection_forget():
     if not ssid:
         return jsonify({"success": False, "message": "SSID is required"}), 400
 
+    # Check if the network is currently active before deleting
     try:
-        # Delete the connection
+        result = subprocess.run(
+            ["nmcli", "-t", "-f", "NAME,DEVICE", "connection", "show", "--active"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        active_connections = result.stdout.strip().split("\n")
+
+        for conn in active_connections:
+            if "wlan0" in conn:
+                active_network = conn.split(":")[0]
+                if active_network == ssid:
+                    return (
+                        jsonify(
+                            {
+                                "success": False,
+                                "message": f"Cannot remove the currently connected network. Please connect to another network first.",
+                            }
+                        ),
+                        403,
+                    )
+                break
+
+        # Delete the connection if it's not active
         subprocess.run(["sudo", "nmcli", "connection", "delete", ssid], check=True)
         return jsonify(
             {
@@ -336,6 +378,98 @@ def connection_forget():
     except subprocess.CalledProcessError as e:
         return (
             jsonify({"success": False, "message": f"Operation failed: {str(e)}"}),
+            500,
+        )
+
+
+@app.route("/api/connection/rename", methods=["POST"])
+@login_required
+def connection_rename():
+    data = request.get_json()
+    old_name = data.get("oldName")
+    new_name = data.get("newName")
+
+    # Validate input parameters
+    if not old_name or not new_name:
+        return (
+            jsonify(
+                {"success": False, "message": "Old and new network names are required"}
+            ),
+            400,
+        )
+
+    # Prevent renaming protected networks
+    if old_name in PROTECTED_NETWORKS:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"The network '{old_name}' cannot be modified.",
+                }
+            ),
+            403,
+        )
+
+    # Prevent naming to a protected network name
+    if new_name in PROTECTED_NETWORKS:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Cannot rename to '{new_name}' as it is a protected network name.",
+                }
+            ),
+            403,
+        )
+
+    try:
+        # Check if new name already exists among saved connections
+        saved_connections_result = subprocess.run(
+            ["nmcli", "-t", "-f", "NAME", "connection", "show"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        saved_connections = saved_connections_result.stdout.strip().split("\n")
+
+        # If new name already exists (and it's not the one we're renaming)
+        if new_name in saved_connections and new_name != old_name:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": f"A network with the name '{new_name}' already exists. Please choose a different name.",
+                    }
+                ),
+                409,  # Conflict status code
+            )
+
+        # Use nmcli to modify the connection name
+        subprocess.run(
+            [
+                "sudo",
+                "nmcli",
+                "connection",
+                "modify",
+                old_name,
+                "connection.id",
+                new_name,
+            ],
+            check=True,
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Successfully renamed network from '{old_name}' to '{new_name}'",
+            }
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Failed to rename network: {str(e)}")
+        return (
+            jsonify(
+                {"success": False, "message": f"Failed to rename network: {str(e)}"}
+            ),
             500,
         )
 
@@ -801,10 +935,8 @@ def get_service_logs():
             "--output=short",
         ]
 
-        timeout = 5
-
         result = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout, check=False
+            cmd, capture_output=True, text=True, timeout=60, check=False
         )
 
         if result.returncode == 0:

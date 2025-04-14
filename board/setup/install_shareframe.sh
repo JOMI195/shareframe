@@ -23,6 +23,7 @@ APPLICATION_DIR="$WORKING_DIR/app"
 APPLICATION_SERVICE_NAME="shareframe"
 APPLICATION_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
 
+UPDATE_ALL_SERVICE_NAME="shareframe-update-all"
 UPDATE_SERVICE_NAME="shareframe-update"
 UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 
@@ -132,6 +133,7 @@ curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
 /home/frame/.local/bin/poetry config virtualenvs.options.system-site-packages true
 
 cd "$APPLICATION_DIR/"
+
 /home/frame/.local/bin/poetry install
 
 EOF
@@ -145,9 +147,10 @@ else
     echo "Warning: $APPLICATION_SERVICE_FILE_NAME file not found!"
 fi
 
-if [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.timer" ] && [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.service" ]; then
+if [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.timer" ] && [ -f "$WORKING_DIR/setup/$UPDATE_SERVICE_NAME.service" ] && [ -f "$WORKING_DIR/setup/$UPDATE_ALL_SERVICE_NAME.service" ]; then
     cp $WORKING_DIR/setup/$UPDATE_SERVICE_NAME.timer /etc/systemd/system/$UPDATE_SERVICE_NAME.timer
     cp $WORKING_DIR/setup/$UPDATE_SERVICE_NAME.service /etc/systemd/system/$UPDATE_SERVICE_NAME.service
+    cp $WORKING_DIR/setup/$UPDATE_ALL_SERVICE_NAME.service /etc/systemd/system/$UPDATE_ALL_SERVICE_NAME.service
 else
     echo "Warning: $UPDATE_SERVICE_NAME-/ .service or .timer files not found!"
 fi

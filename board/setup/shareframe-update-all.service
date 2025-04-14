@@ -1,5 +1,5 @@
 [Unit]
-Description=shareframe update python application to only consider predefined critical updates
+Description=shareframe update python application to apply all updates and not considering only critical ones
 After=network.target pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
 Wants=pigpiod.service dev-spidev0.0.device dev-spidev0.1.device
 
@@ -10,7 +10,7 @@ User=frame
 WorkingDirectory=/home/frame/shareframe/app
 
 Environment="PYTHONUNBUFFERED=1"
-Environment="FORCE_ALL_UPDATES=false"
+Environment="FORCE_ALL_UPDATES=true"
 ExecStart=/home/frame/.local/bin/poetry run python /home/frame/shareframe/app/update.py
 
 Restart=no

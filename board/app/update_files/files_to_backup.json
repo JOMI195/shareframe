@@ -12,10 +12,10 @@
     "dashboard/__init__.py",
     "dashboard/authentication.py",
     "dashboard/frontend/apple-touch-icon.png",
+    "dashboard/frontend/assets/index-BJ3eSC5C.js",
+    "dashboard/frontend/assets/index-BJ3eSC5C.js.br",
     "dashboard/frontend/assets/index-BiMhCNB6.css",
     "dashboard/frontend/assets/index-BiMhCNB6.css.br",
-    "dashboard/frontend/assets/index-DUUqdJWS.js",
-    "dashboard/frontend/assets/index-DUUqdJWS.js.br",
     "dashboard/frontend/assets/inter-cyrillic-400-normal-BLGc9T1a.woff2",
     "dashboard/frontend/assets/inter-cyrillic-400-normal-ZzOtrSSW.woff",
     "dashboard/frontend/assets/inter-cyrillic-ext-400-normal-BPnxn4xp.woff",
@@ -83,5 +83,6 @@
     "updates/updates.py",
     "utils/__init__.py",
     "utils/clear_display.py",
+    "utils/log_utils.py",
     "utils/test_display.py"
 ]

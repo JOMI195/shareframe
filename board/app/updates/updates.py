@@ -447,10 +447,11 @@ class UpdateManager:
             return True
 
         if (
-            not latest_version_info["criticality"]
-            in self.criticalities_to_update_immediately
+            self.criticalities_to_update_immediately is not None
+            and latest_version_info["criticality"]
+            not in self.criticalities_to_update_immediately
         ):
-            logger.info("Update not considered as critical")
+            logger.info("Update not considered critical, skipping")
             return True
 
         logger.info(

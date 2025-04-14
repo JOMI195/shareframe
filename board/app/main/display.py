@@ -76,7 +76,6 @@ class Display:
 
                 if command == EPDCommand.CLEAR:
                     self.epd.Clear()
-                    time.sleep(2)
                     self.logger.info("E-paper display cleared")
                 elif command == EPDCommand.DISPLAY_IMAGE:
                     if not params or not params.image_path:
@@ -89,6 +88,7 @@ class Display:
                     )
                     image_buffer = self.epd.getbuffer(current_pil_image)
                     self.epd.display(image_buffer)
+                    current_pil_image.close()
                     self.logger.info("E-paper displayed image")
                 else:
                     self.logger.warning(f"Unsupported command: {command}")

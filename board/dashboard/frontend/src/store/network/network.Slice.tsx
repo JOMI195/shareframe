@@ -4,6 +4,7 @@ import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 import { IServerResponse } from '@/types';
 import { fetchWithTimeout } from '@/common/utils/fetch';
+import { getConnectionRenameUrl } from '@/assets/endpoints/api/frame';
 
 // Interfaces
 export interface NetworkCredentials {
@@ -137,6 +138,50 @@ export const forgetNetwork = createAsyncThunk(
     }
 );
 
+export const renameNetwork = createAsyncThunk(
+    'network/renameNetwork',
+    async (
+        { oldName, newName }: { oldName: string; newName: string },
+        { dispatch, rejectWithValue }
+    ) => {
+        const loadingSnackbarId = uuid();
+
+        try {
+            dispatch(
+                addLoadingSnackbar(
+                    loadingSnackbarId,
+                    'Netzwerk umbenennen'
+                )
+            );
+
+            const response = await fetchWithTimeout(getConnectionRenameUrl(), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ oldName, newName }),
+            });
+
+            const data: IServerResponse = await response.json();
+
+            if (data.success) {
+                dispatch(addAlertSnackbar(uuid(), "Netzwerk erfolgreich umbenannt", "success"));
+                dispatch(fetchNetworkData());
+                return { oldName, newName };
+            } else {
+                dispatch(addAlertSnackbar(uuid(), "Umbenennen des Netzwerks fehlgeschlagen", "error"));
+                return rejectWithValue(data.message || 'Failed to rename network');
+            }
+        } catch (error) {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+            dispatch(addAlertSnackbar(uuid(), "Umbenennen des Netzwerks fehlgeschlagen", "error"));
+            return rejectWithValue(errorMessage);
+        } finally {
+            dispatch(removeLoadingSnackbar(loadingSnackbarId));
+        }
+    }
+);
+
 // Slice
 export const networkSlice = createSlice({
     name: 'network',
@@ -180,6 +225,19 @@ export const networkSlice = createSlice({
             state.loading = false;
         });
         builder.addCase(forgetNetwork.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload as string;
+        });
+
+        // Rename Network
+        builder.addCase(renameNetwork.pending, (state) => {
+            state.loading = true;
+            state.error = null;
+        });
+        builder.addCase(renameNetwork.fulfilled, (state) => {
+            state.loading = false;
+        });
+        builder.addCase(renameNetwork.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload as string;
         });

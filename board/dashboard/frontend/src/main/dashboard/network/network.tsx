@@ -9,12 +9,20 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import WifiIcon from '@mui/icons-material/Wifi';
+import EditIcon from '@mui/icons-material/Edit';
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import ShareframeDialog from '@/common/components/shareframeDialog';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { addNetwork, fetchNetworkData, forgetNetwork, NetworkCredentials, selectNetworkState } from '@/store/network/network.Slice';
+import {
+    addNetwork,
+    fetchNetworkData,
+    forgetNetwork,
+    renameNetwork,
+    NetworkCredentials,
+    selectNetworkState
+} from '@/store/network/network.Slice';
 import uuid from 'react-uuid';
 import { addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 
@@ -28,6 +36,11 @@ const Network = () => {
 
     const [forgetDialogOpen, setForgetDialogOpen] = useState<boolean>(false);
     const [networkToForget, setNetworkToForget] = useState<string>('');
+
+    // Add states for rename functionality
+    const [renameDialogOpen, setRenameDialogOpen] = useState<boolean>(false);
+    const [networkToRename, setNetworkToRename] = useState<string>('');
+    const [newNetworkName, setNewNetworkName] = useState<string>('');
 
     const [submitting, setSubmitting] = useState<boolean>(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -78,6 +91,33 @@ const Network = () => {
     const handleCloseForgetDialog = (): void => {
         setForgetDialogOpen(false);
         setNetworkToForget('');
+    };
+
+    // Add handlers for rename functionality
+    const initiateRenameNetwork = (ssid: string): void => {
+        setNetworkToRename(ssid);
+        setNewNetworkName(ssid);
+        setRenameDialogOpen(true);
+    };
+
+    const handleRenameNetwork = async (): Promise<void> => {
+        setSubmitting(true);
+        try {
+            await dispatch(renameNetwork({ oldName: networkToRename, newName: newNetworkName })).unwrap();
+            setRenameDialogOpen(false);
+        } catch (error) {
+            // Error handling is done in the thunk
+        } finally {
+            setSubmitting(false);
+            setNetworkToRename('');
+            setNewNetworkName('');
+        }
+    };
+
+    const handleCloseRenameDialog = (): void => {
+        setRenameDialogOpen(false);
+        setNetworkToRename('');
+        setNewNetworkName('');
     };
 
     const handleClickShowPassword = () => {
@@ -155,22 +195,40 @@ const Network = () => {
                                             Keine gespeicherten Netzwerke gefunden (Voreingestellte Netzwerke können nicht verändert werden).
                                         </Typography>
                                     ) : (
-                                        <List>
+                                        <List sx={{ width: '100%' }}>
                                             {savedNetworks.map((network) => (
                                                 <ListItem
                                                     key={network}
+                                                    sx={{
+                                                        pr: 16,
+                                                        '& .MuiListItemText-root': {
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis'
+                                                        }
+                                                    }}
                                                     secondaryAction={
-                                                        <IconButton
-                                                            edge="end"
-                                                            aria-label="delete"
-                                                            onClick={() => initiateForgetNetwork(network)}
-                                                            disabled={isButtonsDisabled}
-                                                        >
-                                                            <DeleteIcon />
-                                                        </IconButton>
+                                                        <Box sx={{ display: 'flex' }}>
+                                                            <IconButton
+                                                                edge="end"
+                                                                aria-label="edit"
+                                                                onClick={() => initiateRenameNetwork(network)}
+                                                                disabled={isButtonsDisabled}
+                                                                sx={{ mr: 1 }}
+                                                            >
+                                                                <EditIcon />
+                                                            </IconButton>
+                                                            <IconButton
+                                                                edge="end"
+                                                                aria-label="delete"
+                                                                onClick={() => initiateForgetNetwork(network)}
+                                                                disabled={isButtonsDisabled}
+                                                            >
+                                                                <DeleteIcon />
+                                                            </IconButton>
+                                                        </Box>
                                                     }
                                                 >
-                                                    <ListItemText primary={<Typography variant="body2">{network}</Typography>} />
+                                                    <ListItemText primary={<Typography variant="body2" noWrap>{network}</Typography>} />
                                                 </ListItem>
                                             ))}
                                         </List>
@@ -209,6 +267,7 @@ const Network = () => {
                 </Grid>
             </Grid>
 
+            {/* Add Network Dialog */}
             <ShareframeDialog
                 open={dialogOpen}
                 title={"Neues Netzwerk hinzufügen"}
@@ -257,6 +316,7 @@ const Network = () => {
                 />
             </ShareframeDialog>
 
+            {/* Forget Network Dialog */}
             <ShareframeDialog
                 open={forgetDialogOpen}
                 title="Netzwerk entfernen"
@@ -271,6 +331,37 @@ const Network = () => {
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Du kannst das Netzwerk jederzeit erneut hinzufügen.
+                </Typography>
+            </ShareframeDialog>
+
+            {/* Rename Network Dialog */}
+            <ShareframeDialog
+                open={renameDialogOpen}
+                title="Netzwerk umbenennen"
+                onClose={handleCloseRenameDialog}
+                onConfirm={handleRenameNetwork}
+                confirmText="Umbenennen"
+                cancelText="Abbrechen"
+                confirmDisabled={submitting || loading || !isConnected || !newNetworkName.trim()}
+                fullWidth={true}
+                showActions={true}
+            >
+                <Typography variant="body2" gutterBottom>
+                    Aktueller Name: <Typography color='primary' component="span">{networkToRename}</Typography>
+                </Typography>
+                <TextField
+                    autoFocus
+                    margin="dense"
+                    id="newName"
+                    label="Neuer Netzwerkname"
+                    type="text"
+                    fullWidth
+                    variant="outlined"
+                    value={newNetworkName}
+                    onChange={(e) => setNewNetworkName(e.target.value)}
+                />
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                    Voreingestellte Netzwerke können nicht umbenannt werden.
                 </Typography>
             </ShareframeDialog>
         </>

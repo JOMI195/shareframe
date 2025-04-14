@@ -7,7 +7,10 @@ const frameBaseUrl = () => `${apiBaseUrl()}/frame`;
 
 
 // Connection
+export const getConnectionBaseUrl = () => `${apiBaseUrl()}/connection`;
 
+export const getConnectionForgetUrl = () => `${getConnectionBaseUrl()}/forget`;
+export const getConnectionRenameUrl = () => `${getConnectionBaseUrl()}/rename`;
 
 // Slideshow
 export const getSlideshowUrl = () => `${frameBaseUrl()}/slideshow`;
