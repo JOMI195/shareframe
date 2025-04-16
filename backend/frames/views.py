@@ -197,7 +197,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             expiry_datetime = None
 
         try:
-            image = Image.objects.get(id=image_id, user=user)
+            image = Image.objects.get(id=image_id, user=user, markedAsDeleted=False)
         except Image.DoesNotExist:
             return Response(
                 {

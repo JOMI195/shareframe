@@ -325,7 +325,7 @@ export const toggleSlideshowThunk = () => async (
         };
 
         // Start monitoring in background
-        monitorOperation();
+        await monitorOperation();
 
     } catch (error) {
         // Reset toggle status

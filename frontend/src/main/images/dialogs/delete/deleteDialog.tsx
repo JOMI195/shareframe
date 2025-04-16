@@ -1,4 +1,4 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Alert } from "@mui/material";
+import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IImage, isIImage } from "@/types";
 import { closeDeleteImageDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
@@ -6,7 +6,6 @@ import { getApi, getImagesPaginated } from "@/store/entities/images/images.slice
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
-import { useEffect, useState } from "react";
 
 const ImageDeleteDialog = () => {
     const theme = useTheme();
@@ -17,8 +16,6 @@ const ImageDeleteDialog = () => {
     const loading = useAppSelector(getApi).loading
     const imageToDelete = imagesPaginated.results.find((image => image.id === deleteDialog.imageId)) as IImage | undefined;
 
-    const [errorMessage, setErrorMessage] = useState("");
-
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const handleDialogClose = () => {
@@ -28,31 +25,12 @@ const ImageDeleteDialog = () => {
     const handleConfirmDelete = async () => {
         if (imageToDelete !== undefined) {
             const deletedImage = await dispatch(deleteImage(imageToDelete.id, imageToDelete.name));
-            console.log(deletedImage);
-            if (!isIImage(deletedImage)) {
-                setErrorMessage("Ein Fehler ist aufgetreten. Möglicherweise existiert eine Aktivität mit diesem Bild. Nachdem diese Aktivtät abgelaufen und nach 14 Tagen gelöscht wurde, kann dieses Bild entfernt werden. Bitte warte einige Tage und versuche es erneut.");
-            } else {
-                setErrorMessage("");
+            if (isIImage(deletedImage)) {
                 handleDialogClose();
                 dispatch(closePreviewImageDialog());
             }
-        } else {
-            setErrorMessage("Ein unerwarteter Fehler ist aufgetreten. Bitte logge dich aus und wieder ein und versuche es ernuet.");
         }
     };
-
-    useEffect(() => {
-        let timer: NodeJS.Timeout | undefined;
-
-        if (errorMessage) {
-            timer = setTimeout(() => {
-                setErrorMessage("");
-            }, 60000);
-        }
-        return () => {
-            if (timer) clearTimeout(timer);
-        };
-    }, [errorMessage]);
 
     return (
         <Dialog
@@ -81,14 +59,9 @@ const ImageDeleteDialog = () => {
                     </Toolbar>
                 </AppBar>
             )}
-            <DialogTitle>{`Foto ${imageToDelete?.name} wirklich löschen?`}</DialogTitle>
+            <DialogTitle>{`Foto ${imageToDelete?.display_name ?? imageToDelete?.name} wirklich löschen?`}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>Das Löschen des Fotos ist unwiderruflich. Es kann nicht wieder hergestellt werden.</Typography>
-                {errorMessage && (
-                    <Alert severity="error" sx={{ my: 2 }}>
-                        {errorMessage}
-                    </Alert>
-                )}
                 <Grid
                     container
                     display={"flex"} justifyContent={"space-between"} alignItems={"center"}

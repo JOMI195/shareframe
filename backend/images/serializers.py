@@ -86,6 +86,7 @@ class ImageRetrieveSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
+            "display_name",
             "size",
             "width",
             "height",

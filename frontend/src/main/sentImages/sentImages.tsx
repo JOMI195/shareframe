@@ -4,12 +4,14 @@ import Dialogs from "./dialogs/dialogs";
 import SentImagesGallery from "./gallery/sentImagesGallery";
 import { fetchSentImages } from "@/store/entities/images/images.actions";
 import { useAppDispatch } from "@/store";
+import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 
 const SentImages: React.FC = () => {
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         dispatch(fetchSentImages());
+        dispatch(fetchFriendships());
     }, []);
 
     return (

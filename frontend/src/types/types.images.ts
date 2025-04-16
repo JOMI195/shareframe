@@ -8,6 +8,7 @@ export interface IImageVariant {
 export interface IImage {
     id: number;
     name: string;
+    display_name: string;
     size: number;
     width: number;
     height: number;

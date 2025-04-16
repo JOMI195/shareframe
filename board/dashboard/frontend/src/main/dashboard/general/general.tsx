@@ -15,7 +15,7 @@ import { selectFrameInfoState } from '@/store/frameInfo/frameInfo.Slice';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 import ShareframeDialog from '@/common/components/shareframeDialog';
 import { useState } from 'react';
-import { restartPi } from '@/store/piPower/piPower.Slice';
+import { restartPi, shutdownPi } from '@/store/piPower/piPower.Slice';
 
 const RESOLUTION = "800 x 480";
 
@@ -33,8 +33,8 @@ const General = () => {
     };
 
     const handleConfirmShutdown = async () => {
-        setIsRestartConfirmDialogOpen(false);
-        await dispatch(restartPi());
+        setIsShutdownConfirmDialogOpen(false);
+        await dispatch(shutdownPi());
     };
 
 

@@ -96,7 +96,7 @@ const SendImageToUserFrameDialog = () => {
                     </Toolbar>
                 </AppBar>
             )}
-            <DialogTitle>{`Foto ${imageToSend?.name} senden`}</DialogTitle>
+            <DialogTitle>{`Foto ${imageToSend?.display_name ?? imageToSend?.name} senden`}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>Wähle den Empfänger und die Ablaufzeit. Das Foto wird an alle Bilderrahmen des Empfängers geschickt und dort bis zu der angegebenen Ablaufzeit angezeigt.</Typography>
 

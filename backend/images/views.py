@@ -53,7 +53,9 @@ class ImagesViewSet(ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
-        return Image.objects.filter(user=self.request.user).order_by("-created_at")
+        return Image.objects.filter(
+            user=self.request.user, markedAsDeleted=False
+        ).order_by("-created_at")
 
     @extend_schema(
         responses={200: ImageRetrieveSerializer(many=True)},
@@ -69,7 +71,9 @@ class ImagesViewSet(ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            element = Image.objects.get(pk=self.kwargs["pk"], user=request.user)
+            element = Image.objects.get(
+                pk=self.kwargs["pk"], user=request.user, markedAsDeleted=False
+            )
         except Image.DoesNotExist:
             raise NotFound("Image not found or you don't have permission to view it.")
 
@@ -102,21 +106,15 @@ class ImagesViewSet(ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         pk_to_delete = self.kwargs["pk"]
         try:
-            element = Image.objects.get(pk=pk_to_delete, user=request.user)
+            element = Image.objects.get(
+                pk=pk_to_delete, user=request.user, markedAsDeleted=False
+            )
         except Image.DoesNotExist:
             raise NotFound("Image not found or you don't have permission to delete it.")
 
-        sent_images = SentImage.objects.filter(image=element)
-        if sent_images.exists():
-            return Response(
-                {
-                    "detail": "Cannot delete image while corresponding sent-image exists."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        # dont delete images directly, instead mark them as deleted
+        element.markedAsDeleted = True
+        element.save()
 
         serializer = ImageRetrieveSerializer(element)
-        response_data = serializer.data
-        response_data["id"] = int(pk_to_delete)
-        element.delete()
-        return Response(response_data)
+        return Response(serializer.data)

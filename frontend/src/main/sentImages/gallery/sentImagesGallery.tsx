@@ -12,7 +12,7 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getApi, getSentImages } from "@/store/entities/images/images.slice";
+import { getApi as getImagesApi, getSentImages } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
@@ -24,6 +24,7 @@ import { ISentImage } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariant } from "@/common/utils/images";
+import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
@@ -34,7 +35,8 @@ const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
     const sentImages = useAppSelector(getSentImages);
     const user = useAppSelector(getUser);
-    const loading = useAppSelector(getApi).loading;
+    const loading = useAppSelector(getImagesApi).loading;
+    const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
     const theme = useTheme();
 
     const { filter: filterDialog } = useAppSelector(getDialogs);
@@ -149,7 +151,7 @@ const SentImagesGallery = () => {
                 disabled={loading}
             />
             <Stack spacing={2}>
-                {loading ? (
+                {(loading || friendshipsLoading) ? (
                     <LoadingSkeleton />
                 ) : (
                     <ImageList cols={cols} gap={8}>

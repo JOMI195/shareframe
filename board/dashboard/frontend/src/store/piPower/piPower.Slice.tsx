@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { RootState } from '@/store';
+import { RootState, AppDispatch } from '@/store';
 import uuid from 'react-uuid';
 import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '@/store/snackbars/snackbars.Slice';
 import { IServerResponse } from '@/types';
@@ -15,7 +15,7 @@ const initialState: PiPowerState = {
 
 };
 
-export const restartPi = createAsyncThunk(
+export const restartPi = createAsyncThunk<void, void, { state: RootState, dispatch: AppDispatch }>(
     'piPower/restartPi',
     async (_, { dispatch, rejectWithValue }) => {
         const snackbarId = uuid();
@@ -42,7 +42,7 @@ export const restartPi = createAsyncThunk(
     }
 );
 
-export const shutdownPi = createAsyncThunk(
+export const shutdownPi = createAsyncThunk<void, void, { state: RootState, dispatch: AppDispatch }>(
     'piPower/shutdownPi',
     async (_, { dispatch, rejectWithValue, getState }) => {
         const snackbarId = uuid();
@@ -54,7 +54,7 @@ export const shutdownPi = createAsyncThunk(
             if (!state.slideshowStatus.isActive) {
                 await fetchWithTimeout(getClearDisplayUrl(), { method: 'POST' });
             } else {
-                await toggleSlideshowThunk();
+                await dispatch(toggleSlideshowThunk());
             }
 
             const response = await fetchWithTimeout(getShutdownPiUrl(), { method: 'POST', });

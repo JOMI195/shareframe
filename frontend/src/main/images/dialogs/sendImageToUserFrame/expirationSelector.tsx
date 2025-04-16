@@ -26,6 +26,7 @@ type SelectionMode = 'predefined' | 'custom';
 
 const PREDEFINED_OPTIONS: ExpirationOption[] = [
     { label: '24 Stunden', hours: 24 },
+    { label: '7 Tage', hours: 168 },
     { label: '14 Tage', hours: 336 },
     { label: '30 Tage', hours: 720 }
 ];

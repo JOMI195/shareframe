@@ -69,9 +69,13 @@ class Image(models.Model):
         on_delete=models.CASCADE,
         related_name="images",
     )
+    markedAsDeleted = models.BooleanField(default=False)
+
     image = models.ImageField(upload_to=get_original_upload_path)
+
     created_at = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=254)
+    display_name = models.CharField(max_length=254, blank=True)
     size = models.PositiveBigIntegerField()  # Size of original image
 
     # Store format information for easier resizing
@@ -83,6 +87,8 @@ class Image(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
+        if self.display_name:
+            return self.display_name
         return self.name
 
     def get_actual_filename(self):
@@ -191,12 +197,16 @@ class Image(models.Model):
             except Image.DoesNotExist:
                 pass
 
-        actual_filename = self.get_actual_filename()
-        self.name = actual_filename.lower()
+        # set image size
         self.size = self.image.size
 
         # First save to ensure we have an ID
         super(Image, self).save(*args, **kwargs)
+
+        self.name = self.get_actual_filename()
+        if not self.display_name:
+            self.display_name = f"image_{self.id}"
+        super(Image, self).save(update_fields=["name", "display_name"])
 
         # Generate variants after the original is saved
         if is_new or not self.variants.exists():

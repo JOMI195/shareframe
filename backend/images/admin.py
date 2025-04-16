@@ -28,12 +28,13 @@ class ImagesAdmin(admin.ModelAdmin):
         "size_display",
         "created_at",
     )
-    list_filter = ("created_at", "format")
+    list_filter = ("created_at", "format", "markedAsDeleted")
     search_fields = ("name", "user__username", "user__email")
     ordering = ("-created_at",)
     readonly_fields = (
         "created_at",
         "name",
+        "display_name",
         "size",
         "width",
         "height",
@@ -43,7 +44,7 @@ class ImagesAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("user", "name", "image")},
+            {"fields": ("user", "name", "display_name", "image", "markedAsDeleted")},
         ),
         (
             "Image Properties",

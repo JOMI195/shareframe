@@ -73,7 +73,7 @@ const ImagePreviewDialog = () => {
             actions={dialogActions}
             contentSx={{ padding: 2 }}
         >
-            <Box display="flex" flexDirection="column" alignItems="flex-start">
+            <Box display="flex" flexDirection="column" alignItems="center">
                 {selectedImage && (
                     <Grid container spacing={2} sx={{ pb: 2 }}>
                         <Grid item xs={6} sm={2}>
@@ -118,13 +118,13 @@ const ImagePreviewDialog = () => {
                                 </Stack>
                             </Box>
                         </Grid>
-                        <Grid item xs={6} sm={2}>
+                        <Grid item xs={6} sm={3}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Typography sx={{ mb: 0.5 }} color="GrayText">Gesendet am</Typography>
                                 <Typography>{(selectedImage && selectedImage.sent_at !== null) && formatGermanDateTime(new Date(selectedImage.sent_at))}</Typography>
                             </Box>
                         </Grid>
-                        <Grid item xs={6} sm={2}>
+                        <Grid item xs={6} sm={3}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Typography sx={{ mb: 0.5 }} color="GrayText">Läuft ab am</Typography>
                                 <Typography>{(selectedImage && selectedImage.expires_at !== null) && formatGermanDateTime(new Date(selectedImage.expires_at))}</Typography>

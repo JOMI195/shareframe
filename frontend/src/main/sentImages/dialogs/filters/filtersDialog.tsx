@@ -1,17 +1,23 @@
-import { Button, Dialog, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, TextField, Box } from "@mui/material";
+import { Button, Dialog, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getApi } from "@/store/entities/images/images.slice";
+import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
 import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter } from "@/store/ui/sentImages/sentImages.slice";
 import { useEffect, useState } from "react";
+import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
+import { getUser } from "@/store/entities/authentication/authentication.slice";
 
 const FiltersDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const { filter: filterDialog } = useAppSelector(getDialogs);
-    const loading = useAppSelector(getApi).loading;
+    const loading = useAppSelector(getImagesApi).loading;
+    const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
+
+    const user = useAppSelector(getUser);
+    const friendships = useAppSelector(getFriendships);
 
     const [senderFilterLocal, setSenderFilterLocal] = useState('');
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
@@ -76,24 +82,74 @@ const FiltersDialog = () => {
                     </Typography>
                     <Grid container spacing={1}>
                         <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label="Suche nach Sender"
-                                value={senderFilterLocal}
-                                onChange={(e) => setSenderFilterLocal(e.target.value)}
-                                disabled={loading}
-                                placeholder="Name des Senders eingeben"
-                            />
+                            <FormControl fullWidth sx={{ mb: 1 }}>
+                                <InputLabel>Suche nach Sender</InputLabel>
+                                <Select
+                                    disabled={loading || friendshipsLoading}
+                                    value={senderFilterLocal}
+                                    label="Sender"
+                                    onChange={(e) => setSenderFilterLocal(e.target.value as string)}
+                                >
+                                    {friendships
+                                        .filter(friendship => friendship.status === "accepted")
+                                        .map((friendship) => {
+                                            const friendUsername = friendship.sender !== user.me.username
+                                                ? friendship.sender
+                                                : friendship.reciever;
+
+                                            return (
+                                                <MenuItem
+                                                    key={friendUsername}
+                                                    value={friendUsername}
+                                                >
+                                                    {friendUsername}
+                                                </MenuItem>
+                                            );
+                                        })
+                                    }
+                                    <MenuItem
+                                        key={user.me.username}
+                                        value={"Du"}
+                                    >
+                                        {"Du"}
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
                         </Grid>
                         <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                label="Suche nach Empfänger"
-                                value={receiverFilterLocal}
-                                onChange={(e) => setReceiverFilterLocal(e.target.value)}
-                                disabled={loading}
-                                placeholder="Name des Empfängers eingeben"
-                            />
+                            <FormControl fullWidth sx={{ mb: 1 }}>
+                                <InputLabel>Suche nach Empfänger</InputLabel>
+                                <Select
+                                    disabled={loading || friendshipsLoading}
+                                    value={receiverFilterLocal}
+                                    label="Empfänger"
+                                    onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
+                                >
+                                    {friendships
+                                        .filter(friendship => friendship.status === "accepted")
+                                        .map((friendship) => {
+                                            const friendUsername = friendship.sender !== user.me.username
+                                                ? friendship.sender
+                                                : friendship.reciever;
+
+                                            return (
+                                                <MenuItem
+                                                    key={friendUsername}
+                                                    value={friendUsername}
+                                                >
+                                                    {friendUsername}
+                                                </MenuItem>
+                                            );
+                                        })
+                                    }
+                                    <MenuItem
+                                        key={user.me.username}
+                                        value={"Du"}
+                                    >
+                                        {"Du"}
+                                    </MenuItem>
+                                </Select>
+                            </FormControl>
                         </Grid>
                     </Grid>
                 </Box>
