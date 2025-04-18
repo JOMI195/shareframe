@@ -28,10 +28,10 @@ UPDATE_SERVICE_NAME="shareframe-update"
 UPDATE_TIMER_FILE_NAME="$UPDATE_SERVICE_NAME.timer"
 
 DASHBOARD_SERVICE_NAME="shareframe-dashboard"
-DASHBOARD_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
+DASHBOARD_SERVICE_FILE_NAME="$DASHBOARD_SERVICE_NAME.service"
 
 HEARTBEAT_SERVICE_NAME="shareframe-heartbeat"
-HEARTBEAT_SERVICE_FILE_NAME="$APPLICATION_SERVICE_NAME.service"
+HEARTBEAT_SERVICE_FILE_NAME="$HEARTBEAT_SERVICE_NAME.service"
 
 # log files
 APPLICATION_LOG_FILE="/var/log/shareframe/shareframe-application.log"
@@ -39,7 +39,19 @@ UPDATER_LOG_FILE="/var/log/shareframe/shareframe-update.log"
 DASHBOARD_LOG_FILE="/var/log/shareframe/shareframe-dashboard.log"
 HEARTBEAT_LOG_FILE="/var/log/shareframe/shareframe-heartbeat.log"
 
+# Check if directories existing
+if [ ! -d "$WORKING_DIR/app" ]; then
+    echo "Error: Initial version folder app not found. Please copy initial version to board first."
+    exit 1
+fi
+
+if [ "$EUID" -ne 0 ]; then 
+    echo "Please run as root (use sudo)"
+    exit 1
+fi
+
 # setup log files
+echo "Creating log files"
 if [ ! -f "$APPLICATION_LOG_FILE" ]; then
     sudo touch "$APPLICATION_LOG_FILE"
     echo "Log file created: $APPLICATION_LOG_FILE"
@@ -67,19 +79,10 @@ if [ ! -f "$HEARTBEAT_LOG_FILE" ]; then
 fi
 sudo chown "$USER:$USER" "$HEARTBEAT_LOG_FILE"
 sudo chmod 664 "$HEARTBEAT_LOG_FILE"
-
-# Check if directories existing
-if [ ! -d "$WORKING_DIR/app" ]; then
-    echo "Error: Initial version folder app not found. Please copy initial version to board first."
-    exit 1
-fi
-
-if [ "$EUID" -ne 0 ]; then 
-    echo "Please run as root (use sudo)"
-    exit 1
-fi
+echo "Creating log files done"
 
 # secrets file
+echo "Creating secrets file"
 if [ ! -f "$WORKING_DIR/.env.secrets" ]; then
     echo "SERIAL_NUMBER=" > "$WORKING_DIR/.env.secrets"
 fi
@@ -110,21 +113,27 @@ fi
 
 chown frame:frame "$WORKING_DIR/.env.secrets"
 chmod 644 "$WORKING_DIR/.env.secrets"
+echo "Creating secrets file done"
 
 # dependencies
+echo "Installing and update pi dependencies"
 apt-get update
 apt-get upgrade -y
 apt-get autoremove
 apt-get install -y nginx python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
+echo "Installing and update pi dependencies done"
 
 # nginx conf for dashboard
+echo "Configuring nginx for dashboard"
 rm "/etc/nginx/sites-enabled/default"
 cp "$APPLICATION_DIR/dashboard/nginx/shareframe-dashboard.conf" /etc/nginx/sites-available/shareframe-dashboard
 cp "$APPLICATION_DIR/dashboard/nginx/502-error.html" /usr/share/nginx/html/
 ln -s /etc/nginx/sites-available/shareframe-dashboard /etc/nginx/sites-enabled/
 systemctl restart nginx
+echo "Configuring nginx for dashboard done"
 
 # python env via poetry
+echo "Installing Poetry for user frame"
 sudo -u "$USER" bash <<EOF
 
 cd "$USER_DIR"
@@ -137,10 +146,10 @@ cd "$APPLICATION_DIR/"
 /home/frame/.local/bin/poetry install
 
 EOF
-
 echo "Poetry has been installed for user frame"
 
 # service setup
+echo "Installing services"
 if [ -f "$WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME" ]; then
     cp $WORKING_DIR/setup/$APPLICATION_SERVICE_FILE_NAME /etc/systemd/system/$APPLICATION_SERVICE_FILE_NAME
 else
@@ -174,4 +183,7 @@ systemctl enable "$UPDATE_TIMER_FILE_NAME"
 systemctl enable "$DASHBOARD_SERVICE_FILE_NAME"
 systemctl enable "$HEARTBEAT_SERVICE_FILE_NAME"
 
+echo "Installing services done"
+
+# finish installation of shareframe
 echo "Installation complete!"

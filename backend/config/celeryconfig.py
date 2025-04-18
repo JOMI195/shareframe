@@ -35,4 +35,8 @@ beat_schedule = {
         "task": "images.tasks.delete_marked_as_deleted_images_without_sent_images",
         "schedule": crontab(minute=30, hour=2),
     },
+    "close-and-delete-long-inactive-frame-websocket-connections-every-15-minutes": {
+        "task": "frames.tasks.close_and_delete_long_inactive_frame_websocket_connections",
+        "schedule": timedelta(minutes=15),
+    },
 }
