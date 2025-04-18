@@ -20,10 +20,10 @@ function Copyright(props: any) {
         <Link component={RouterLink} to={"/" + getContactUrl()} color="inherit">
           {"Kontakt"}
         </Link>{" "}
-        <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
+        <Link component={RouterLink} to={"/" + getPrivacyPolicyUrl()} color="inherit">
           {"Datenschutzerklärung"}
         </Link>{" "}
-        <Link component={RouterLink} to={getImprintUrl()} color="inherit">
+        <Link component={RouterLink} to={"/" + getImprintUrl()} color="inherit">
           {"Impressum"}
         </Link>
       </Box>
@@ -41,14 +41,14 @@ function Copyright(props: any) {
 
 export default function Layout() {
   return (
-    <Container component="main" maxWidth="xs" disableGutters>
+    <Container component="main" maxWidth="xs" disableGutters sx={{ my: 5, }}>
       <Box
         sx={{
-          my: 5,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          width: "100%"
+          width: "100%",
+          mb: 5
         }}
       >
         <Box sx={{ my: 2, width: "100%" }}>

@@ -1,35 +1,24 @@
-import { CircularProgress, Container } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
+import Logo from "./logo";
 
 const LoadingFallback = () => {
     return (
-        <Container
-            maxWidth="sm"
-            sx={{
-                p: 2,
-                mt: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-            }}
+        <Box
+            display="flex"
+            flexDirection={"column"}
+            justifyContent="center"
+            alignItems="center"
+            height={"100vh"}
         >
-
-            <img
-                src={"/logo-light-full-shareframe.svg"}
-                alt="Logo"
-                style={{
-                    width: '100%',
-                    maxWidth: 300,
-                    marginRight: 16,
-                    marginBottom: 50
-                }}
+            <Logo
+                darkLogoSrc="/logo-dark-full-shareframe.svg"
+                lightLogoSrc="/logo-light-full-shareframe.svg"
+                maxWidth={200}
+                marginRight={0}
+                clickable={false}
             />
-            <CircularProgress
-                size={80}
-                thickness={4}
-                sx={{ color: "#8b5cf6" }}
-                color='inherit'
-            />
-        </Container>
+            <CircularProgress size={"50px"} />
+        </Box>
     );
 };
 

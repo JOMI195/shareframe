@@ -17,15 +17,42 @@ import Friendships from '@/main/friendships/friendships';
 import Frames from '@/main/frames/frames';
 import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
+import Layout from '@/main/legals/layout';
 
 const Routing = createBrowserRouter([
   {
     element: <Snackbars />,
     children: [
       {
+        path: "*",
+        element: <NotFound />,
+      },
+      {
         path: getAuthenticationUrl(),
         element: <FeatureSelectorWrapper feature="authentication" />,
         children: authenticationRoutes,
+      },
+      {
+        element: <Layout />,
+        children: [
+          {
+            element: <FeatureSelectorWrapper feature="legals" />,
+            children: [
+              {
+                path: getContactUrl(),
+                element: <ContactForm />,
+              },
+              {
+                path: getPrivacyPolicyUrl(),
+                element: <PrivacyPolicy />,
+              },
+              {
+                path: getImprintUrl(),
+                element: <Impressum />,
+              },
+            ],
+          },
+        ]
       },
       {
         element: <MainLayout />,
@@ -62,23 +89,6 @@ const Routing = createBrowserRouter([
                 path: getSettingsUrl() + "*",
                 element: <FeatureSelectorWrapper feature="settings" />,
                 children: settingsRoutes,
-              },
-            ],
-          },
-          {
-            element: <FeatureSelectorWrapper feature="app" />,
-            children: [
-              {
-                path: getContactUrl(),
-                element: <ContactForm />,
-              },
-              {
-                path: getPrivacyPolicyUrl(),
-                element: <PrivacyPolicy />,
-              },
-              {
-                path: getImprintUrl(),
-                element: <Impressum />,
               },
             ],
           },
