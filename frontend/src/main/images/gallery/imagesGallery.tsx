@@ -23,6 +23,7 @@ import { IImage } from "@/types";
 import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
 import { getVariant } from "@/common/utils/images";
+import DataNotFound from "@/common/components/dataNotFound";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -80,28 +81,32 @@ const ImagesGallery: React.FC = () => {
             <FilterControls />
             {(imagesLoading || friendshipsLoading) ? (
                 <LoadingSkeleton />
-            ) : (
-                <ImageList cols={cols} gap={8}>
-                    {imagesPaginated.results.map((image) => (
-                        <ImageListItem
-                            key={image.id}
-                            onClick={() => handleImageClick(image)}
-                            style={{ cursor: "pointer" }}
-                        >
-                            <AuthenticatedImage
-                                url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
-                                alt={image.name}
-                                style={{
-                                    width: "100%",
-                                    height: "100%",
-                                    objectFit: "cover",
-                                    borderRadius: 8
-                                }}
-                            />
-                        </ImageListItem>
-                    ))}
-                </ImageList>
-            )}
+            ) :
+                imagesPaginated.results.length !== 0 ?
+                    (
+                        <ImageList cols={cols} gap={8}>
+                            {imagesPaginated.results.map((image) => (
+                                <ImageListItem
+                                    key={image.id}
+                                    onClick={() => handleImageClick(image)}
+                                    style={{ cursor: "pointer" }}
+                                >
+                                    <AuthenticatedImage
+                                        url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
+                                        alt={image.name}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            borderRadius: 8
+                                        }}
+                                    />
+                                </ImageListItem>
+                            ))}
+                        </ImageList>
+                    ) : (
+                        <DataNotFound notFoundMessage={"Keine Fotos vorhanden"} />
+                    )}
 
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
                 {(imagesLoading || friendshipsLoading) ? (

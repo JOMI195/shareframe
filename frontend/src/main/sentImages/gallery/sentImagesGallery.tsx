@@ -25,6 +25,7 @@ import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariant } from "@/common/utils/images";
 import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
+import DataNotFound from "@/common/components/dataNotFound";
 
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
@@ -153,7 +154,7 @@ const SentImagesGallery = () => {
             <Stack spacing={2}>
                 {(loading || friendshipsLoading) ? (
                     <LoadingSkeleton />
-                ) : (
+                ) : currentImages.length !== 0 ? (
                     <ImageList cols={cols} gap={8}>
                         {currentImages.map((sentImage) => {
                             const expiryDate = new Date(sentImage.expires_at);
@@ -197,6 +198,8 @@ const SentImagesGallery = () => {
                             );
                         })}
                     </ImageList>
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos vorhanden"} />
                 )}
 
 

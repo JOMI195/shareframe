@@ -21,6 +21,7 @@ import { IFriendship } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
+import DataNotFound from "@/common/components/dataNotFound";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -188,7 +189,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                             </Grid>
                         ))}
                     </Grid>
-                ) : (
+                ) : filteredRequests.length !== 0 ? (
                     <Grid container spacing={2}>
                         {filteredRequests
                             .map((friendship) => (
@@ -198,6 +199,8 @@ const FriendshipRequestsGallery: React.FC = () => {
                             ))}
                     </Grid>
 
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine Freundschaftsanfragen vorhanden"} />
                 )}
             </Box>
 

@@ -24,6 +24,7 @@ import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
 import { isFrameActive } from "@/common/utils/frame";
+import DataNotFound from "@/common/components/dataNotFound";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -177,7 +178,7 @@ const FramesGallery: React.FC = () => {
                             </Grid>
                         ))}
                     </Grid>
-                ) : (
+                ) : currentFrames.length !== 0 ? (
                     <Grid container spacing={2}>
                         {currentFrames
                             .map((frame) => (
@@ -186,6 +187,8 @@ const FramesGallery: React.FC = () => {
                                 </Grid>
                             ))}
                     </Grid>
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine hinzugefügten Bilderrahmen vorhanden"} />
                 )}
             </Box>
 

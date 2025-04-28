@@ -20,6 +20,7 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { openDeleteFriendshipsDialog } from "@/store/ui/friendships/friendships.slice";
 import { IFriendship } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
+import DataNotFound from "@/common/components/dataNotFound";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -135,7 +136,7 @@ const FriendshipsGallery: React.FC = () => {
                             </Grid>
                         ))}
                     </Grid>
-                ) : (
+                ) : currentFriendships.filter((friendship) => friendship.status === "accepted").length !== 0 ? (
                     <Grid container spacing={2}>
                         {currentFriendships
                             .filter((friendship) => friendship.status === "accepted")
@@ -145,6 +146,8 @@ const FriendshipsGallery: React.FC = () => {
                                 </Grid>
                             ))}
                     </Grid>
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine Freundschaften vorhanden"} />
                 )}
             </Box>
 
