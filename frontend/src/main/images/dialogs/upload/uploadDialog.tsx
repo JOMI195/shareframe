@@ -91,7 +91,11 @@ const UploadDialog: React.FC = () => {
   };
 
   const handleBack = () => {
-    setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    if (activeStep === 0) {
+      handleDialogClose();
+    } else {
+      setActiveStep((prevActiveStep) => prevActiveStep - 1);
+    }
   };
 
   const handleDialogUpload = async () => {
@@ -211,7 +215,6 @@ const UploadDialog: React.FC = () => {
                         <Button
                           fullWidth
                           variant='outlined'
-                          disabled={activeStep === 0}
                           onClick={handleBack}
                           sx={{ mt: 1, mr: 1 }}
                         >
