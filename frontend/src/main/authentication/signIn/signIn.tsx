@@ -21,6 +21,7 @@ import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import ClearIcon from '@mui/icons-material/Clear';
 
 import { useAppSelector } from "@/store";
 import {
@@ -69,7 +70,11 @@ export default function SignIn() {
     setShowPassword(!showPassword);
   };
 
-  const handleMouseDownPassword = (
+  const handleClearEmail = () => {
+    signInForm.setFieldValue("email", "");
+  };
+
+  const handleMouseDownButton = (
     event: React.MouseEvent<HTMLButtonElement>
   ) => {
     event.preventDefault();
@@ -139,6 +144,20 @@ export default function SignIn() {
               fullWidth
               autoComplete="email"
               variant="outlined"
+              InputProps={{
+                endAdornment: signInForm.values.email ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="clear email field"
+                      onClick={handleClearEmail}
+                      onMouseDown={handleMouseDownButton}
+                      edge="end"
+                    >
+                      <ClearIcon />
+                    </IconButton>
+                  </InputAdornment>
+                ) : null,
+              }}
             />
           </Grid>
           <Grid item xs={12}>
@@ -167,7 +186,7 @@ export default function SignIn() {
                     <IconButton
                       aria-label="toggle current password visibility"
                       onClick={() => handleClickShowPassword()}
-                      onMouseDown={handleMouseDownPassword}
+                      onMouseDown={handleMouseDownButton}
                       edge="end"
                     >
                       {showPassword ? <VisibilityOff /> : <Visibility />}
