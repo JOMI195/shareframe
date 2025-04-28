@@ -94,7 +94,7 @@ export const Navigation: React.FC<NavigationProps> = ({
         <Box display="flex" flexDirection={"column"} alignItems="center" width="100%">
             <Box display="flex" alignItems="center" width="100%" borderRadius={1}
                 sx={{
-                    bgcolor: "background.paper",
+                    bgcolor: (theme) => theme.palette.background.default,
                     pl: 2,
                     pr: 1,
                     mt: 1
@@ -145,7 +145,7 @@ export const Navigation: React.FC<NavigationProps> = ({
             </Box>
             <Box display="flex" alignItems="center" width="100%" borderRadius={1}
                 sx={{
-                    bgcolor: "background.paper",
+                    bgcolor: (theme) => theme.palette.background.default,
                     pl: 2,
                     pr: 1,
                     mt: 1
@@ -200,7 +200,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                         disabled={disabled}
                         fullWidth
                         startIcon={<CenterFocusStrongIcon />}
-                        sx={{ bgcolor: "background.paper", color: "white" }}
+                        sx={{
+                            bgcolor: (theme) => theme.palette.background.default,
+                            color: (theme) => theme.palette.text.primary,
+                        }}
                         onClick={onCenter}
                     >
                         Zentrieren
@@ -211,7 +214,10 @@ export const Navigation: React.FC<NavigationProps> = ({
                         disabled={disabled}
                         fullWidth
                         startIcon={<RestartAltIcon />}
-                        sx={{ bgcolor: "background.paper", color: "white" }}
+                        sx={{
+                            bgcolor: (theme) => theme.palette.background.default,
+                            color: (theme) => theme.palette.text.primary,
+                        }}
                         onClick={onCropperReset}
                     >
                         Reset
