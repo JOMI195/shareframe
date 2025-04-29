@@ -1,20 +1,26 @@
 import { IAppBarMenuItem } from "@/types";
-import { getActivityUrl, getFramesUrl, getFriendsUrl, getHomeUrl } from "../endpoints/app/appEndpoints";
+import { getActivityUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from "../endpoints/app/appEndpoints";
 import GroupIcon from '@mui/icons-material/Group';
 import ImageIcon from '@mui/icons-material/Image';
+import HomeIcon from '@mui/icons-material/Home';
 import FilterFramesIcon from '@mui/icons-material/FilterFrames';
-import NoteIcon from '@mui/icons-material/Note';
+import ShareIcon from '@mui/icons-material/Share';
 
 export const sidebarMenuItems: IAppBarMenuItem[] = [
     {
-        name: "Fotos",
+        name: "Start",
         url: getHomeUrl(),
+        icon: HomeIcon
+    },
+    {
+        name: "Fotos",
+        url: getImageUrl(),
         icon: ImageIcon
     },
     {
-        name: "Aktivität",
+        name: "Aktivitäten",
         url: getActivityUrl(),
-        icon: NoteIcon
+        icon: ShareIcon
     },
     {
         name: "Freunde",

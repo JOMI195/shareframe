@@ -1,5 +1,7 @@
 export const getHomeUrl = () => "/"
 
+export const getImageUrl = () => "fotos/"
+
 export const getContactUrl = () => "kontakt/"
 
 export const getEnterWallUrl = () => "comingSoon/"

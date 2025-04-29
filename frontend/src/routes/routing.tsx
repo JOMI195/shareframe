@@ -3,7 +3,7 @@ import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
-import { getActivityUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getActivityUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
@@ -18,6 +18,7 @@ import Frames from '@/main/frames/frames';
 import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
 import Layout from '@/main/legals/layout';
+import Home from '@/main/home/home';
 
 const Routing = createBrowserRouter([
   {
@@ -69,7 +70,11 @@ const Routing = createBrowserRouter([
                 children: [
                   {
                     path: getHomeUrl(),
-                    element: <Images />,
+                    element: <Home />
+                  },
+                  {
+                    path: getImageUrl(),
+                    element: <Images />
                   },
                   {
                     path: getFriendsUrl(),
