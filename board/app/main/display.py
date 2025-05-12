@@ -335,8 +335,59 @@ class Display:
         self.logger.info("Skip current image requested")
         self.skip_current_image_event.set()
 
-    async def periodic_clear_display_task(self, interval_secs: int):
+    async def periodic_clear_display_task(self):
+        """Run clear display task at specific times defined in settings."""
+        self.logger.info("Starting periodic clear display scheduler")
+
         while True:
-            await asyncio.sleep(interval_secs)
-            self.logger.info("Clearing display in interval")
-            await self.clear_display_task()
+            now = datetime.now()
+
+            clear_times = settings.CLEAR_DISPLAY_TIMES
+
+            # Find the next scheduled time
+            next_time = None
+            shortest_wait = timedelta(days=1)
+
+            for time_str in clear_times:
+                if isinstance(time_str, str):
+                    hours, minutes = map(int, time_str.split(":"))
+                    scheduled_time = now.replace(
+                        hour=hours, minute=minutes, second=0, microsecond=0
+                    )
+                else:
+                    scheduled_time = now.replace(
+                        hour=time_str.hour,
+                        minute=time_str.minute,
+                        second=0,
+                        microsecond=0,
+                    )
+
+                # If the time has passed today, schedule for tomorrow
+                if scheduled_time <= now:
+                    scheduled_time += timedelta(days=1)
+
+                wait_time = scheduled_time - now
+
+                # Update next_time if this time is sooner than the current next_time
+                if wait_time < shortest_wait:
+                    shortest_wait = wait_time
+                    next_time = scheduled_time
+
+            if next_time:
+                wait_seconds = shortest_wait.total_seconds()
+                self.logger.info(
+                    f"Next display clear scheduled at {next_time.strftime('%H:%M')} (in {wait_seconds:.0f} seconds)"
+                )
+
+                await asyncio.sleep(wait_seconds)
+
+                self.logger.info(
+                    f"Executing scheduled display clear at {datetime.now().strftime('%H:%M')}"
+                )
+                await self.clear_display_task()
+            else:
+                # Fallback sleep if no valid times found (shouldn't happen if configured correctly)
+                self.logger.warning(
+                    "No valid clear times found in settings, checking again in 1 hour"
+                )
+                await asyncio.sleep(3600)

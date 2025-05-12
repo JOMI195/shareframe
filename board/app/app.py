@@ -164,10 +164,8 @@ class FrameApplication:
 
         clear_task = asyncio.create_task(
             safe_task(
-                self.display.periodic_clear_display_task(
-                    interval_secs=(settings.REFRESH_INTERVAL_HOURS * 60 * 60)
-                ),
-                "clear_display_interval",
+                self.display.periodic_clear_display_task(),
+                "clear_display_scheduler",
             )
         )
 
