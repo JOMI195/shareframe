@@ -51,6 +51,8 @@ def main():
         auth_headers=TokenManager.get_auth_headers(),
         version=settings.VERSION,
         criticalities_to_update_immediately=None if force_all else ["Critical"],
+        backup_all=True,
+        delete_all=True,
     )
 
     result = update_manager.check_and_apply_update()

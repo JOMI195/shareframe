@@ -74,7 +74,7 @@ UPDATE_VERSION_FILE_NAME = "version.txt"
 UPDATE_FILES_LIST_NAME = "files_to_backup.json"
 UPDATE_DELETE_FILES_LIST_NAME = "files_to_delete.json"
 SCRIPTS_TO_RUN_LIST_NAME = "scripts_to_run.json"
-UPDATE_BACKUP_DIR_NAME = "app_backup"
+UPDATE_BACKUP_DIR_NAME = ".app_backup"
 
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"
 

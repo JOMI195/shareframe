@@ -43,6 +43,8 @@ class UpdateManager:
         update_hash_secret_key: str,
         version: str,
         criticalities_to_update_immediately: list[str],
+        backup_all: bool,
+        delete_all: bool,
     ):
         """
         Initialize the update manager.
@@ -67,6 +69,8 @@ class UpdateManager:
         self.auth_headers = auth_headers
         self.version = version
         self.criticalities_to_update_immediately = criticalities_to_update_immediately
+        self.backup_all = backup_all
+        self.delete_all = delete_all
 
     def get_latest_version_info(self):
         """
@@ -159,9 +163,41 @@ class UpdateManager:
             logger.error(f"Error reading files to delete list: {str(e)}")
             return []
 
+    def is_safe_path(self, path_str):
+        """
+        Check if a path is safe to use (not trying to traverse outside installation directory).
+        """
+        # Check for dangerous path components
+        dangerous_patterns = ["/", "\\", "..", "~"]
+        for pattern in dangerous_patterns:
+            if pattern in path_str:
+                logger.warning(
+                    f"Dangerous pattern '{pattern}' found in path: {path_str}"
+                )
+                return False
+
+        # Ensure the resolved path is within the installation directory
+        try:
+            # Convert to absolute path and resolve any symlinks or relative components
+            test_path = (self.install_dir / path_str).resolve()
+            install_path = self.install_dir.resolve()
+
+            # Check if the path is within the installation directory
+            if not str(test_path).startswith(str(install_path)):
+                logger.warning(
+                    f"Path traversal attempt detected: {path_str} resolves outside install directory"
+                )
+                return False
+        except Exception as e:
+            logger.error(f"Error validating path '{path_str}': {str(e)}")
+            return False
+
+        return True
+
     def backup_specified_files(self):
         """
-        Backup only the files specified in the files list.
+        Backup only the files specified in the files list or the entire installation directory
+        if backup_all is True.
         """
         self.backup_dir.mkdir(parents=True, exist_ok=True)
 
@@ -181,34 +217,60 @@ class UpdateManager:
             logger.info(f"Creating backup at {backup_path}")
             backup_path.mkdir(parents=True)
 
-            # Get the list of files to backup
-            files_to_backup = self.get_files_to_backup()
+            if self.backup_all:
+                # Backup the entire installation directory
+                logger.info("Backing up entire installation directory")
 
-            # Backup each file in the list
-            for file_path in files_to_backup:
-                source_path = self.install_dir / file_path
-                dest_path = backup_path / file_path
+                # Create destination path
+                dest_path = backup_path
+                dest_path.mkdir(parents=True, exist_ok=True)
 
-                if source_path.exists():
-                    # Ensure the destination directory exists
-                    dest_path.parent.mkdir(parents=True, exist_ok=True)
+                for item in self.install_dir.iterdir():
+                    if item.is_file():
+                        shutil.copy2(item, dest_path / item.name)
+                        logger.info(f"Backed up file: {item.name}")
+                    elif item.is_dir():
+                        shutil.copytree(item, dest_path / item.name)
+                        logger.info(f"Backed up directory: {item.name}")
 
-                    if source_path.is_file():
-                        shutil.copy2(source_path, dest_path)
-                        logger.info(f"Backed up file: {file_path}")
-                    elif source_path.is_dir():
-                        shutil.copytree(source_path, dest_path)
-                        logger.info(f"Backed up directory: {file_path}")
-                else:
-                    logger.warning(f"File not found for backup: {file_path}")
+                logger.info("Full backup completed successfully")
+            else:
+                # Get the list of files to backup
+                files_to_backup = self.get_files_to_backup()
 
-            if self.files_to_backup_file.exists():
-                shutil.copy2(
-                    self.files_to_backup_file,
-                    backup_path / self.files_to_backup_file.name,
-                )
+                # Backup each file in the list
+                for file_path in files_to_backup:
+                    # Safety check: Skip dangerous paths
+                    if not self.is_safe_path(file_path):
+                        logger.warning(
+                            f"Skipping potentially dangerous path: {file_path}"
+                        )
+                        continue
 
-            logger.info("Backup completed successfully")
+                    source_path = self.install_dir / file_path
+                    dest_path = backup_path / file_path
+
+                    if source_path.exists():
+                        # Ensure the destination directory exists
+                        dest_path.parent.mkdir(parents=True, exist_ok=True)
+
+                        if source_path.is_file():
+                            shutil.copy2(source_path, dest_path)
+                            logger.info(f"Backed up file: {file_path}")
+                        elif source_path.is_dir():
+                            shutil.copytree(source_path, dest_path)
+                            logger.info(f"Backed up directory: {file_path}")
+                    else:
+                        logger.warning(f"File not found for backup: {file_path}")
+
+                if self.files_to_backup_file.exists():
+                    shutil.copy2(
+                        self.files_to_backup_file,
+                        backup_path / self.files_to_backup_file.name,
+                    )
+
+                logger.info("Selective backup completed successfully")
+
             return backup_path
 
         except Exception as e:
@@ -222,6 +284,65 @@ class UpdateManager:
                         f"Failed to clean up backup directory: {str(cleanup_error)}"
                     )
             return None
+
+    def delete_files(self):
+        """
+        Delete files based on configuration.
+
+        If delete_all is True, deletes everything in the installation directory
+        except the backup directory. Otherwise, deletes only the files specified
+        in the files_to_delete.json file.
+        """
+        try:
+            if self.delete_all:
+                # Delete everything in the installation directory except the backup directory
+                logger.warning("Deleting entire installation directory contents")
+                for item in self.install_dir.iterdir():
+                    if item.is_file():
+                        item.unlink()
+                        logger.info(f"Deleted file: {item.name}")
+                    elif item.is_dir():
+                        shutil.rmtree(item)
+                        logger.info(f"Deleted directory: {item.name}")
+
+                logger.info("Full deletion completed successfully")
+            else:
+                # Delete files specified in files_to_delete.json
+                files_to_delete = self.get_files_to_delete()
+
+                if not files_to_delete:
+                    logger.info("No files specified for deletion")
+                    return True
+
+                logger.info(
+                    f"Deleting {len(files_to_delete)} specified files/directories"
+                )
+                for file_path in files_to_delete:
+                    # Safety check: Skip dangerous paths
+                    if not self.is_safe_path(file_path):
+                        logger.warning(
+                            f"Skipping potentially dangerous path: {file_path}"
+                        )
+                        continue
+
+                    delete_path = self.install_dir / file_path
+                    if delete_path.exists():
+                        if delete_path.is_file():
+                            delete_path.unlink()
+                            logger.info(f"Deleted file: {file_path}")
+                        elif delete_path.is_dir():
+                            shutil.rmtree(delete_path)
+                            logger.info(f"Deleted directory: {file_path}")
+                    else:
+                        logger.warning(f"Path not found for deletion: {file_path}")
+
+                logger.info("Selective deletion completed successfully")
+
+            return True
+
+        except Exception as e:
+            logger.error(f"Deletion failed: {str(e)}")
+            return False
 
     def run_update_scripts(self):
         """
@@ -316,19 +437,10 @@ class UpdateManager:
         Install the update by replacing files.
         """
         try:
-            # Delete files specified in files_to_delete.json
-            files_to_delete = self.get_files_to_delete()
-            for file_path in files_to_delete:
-                delete_path = self.install_dir / file_path
-                if delete_path.exists():
-                    if delete_path.is_file():
-                        delete_path.unlink()
-                        logger.info(f"Deleted file: {file_path}")
-                    elif delete_path.is_dir():
-                        shutil.rmtree(delete_path)
-                        logger.info(f"Deleted directory: {file_path}")
-                else:
-                    logger.warning(f"Path not found for deletion: {file_path}")
+            # First delete files according to configuration
+            if not self.delete_files():
+                logger.error("Failed to delete files before installation")
+                return False
 
             # Copy files from the extract path to the install dir
             logger.info("Installing update files")
@@ -336,10 +448,6 @@ class UpdateManager:
                 if item.is_file():
                     # Get relative path
                     rel_path = item.relative_to(extract_path)
-
-                    # Skip files_to_delete.json file
-                    if rel_path.name == "files_to_delete.json":
-                        continue
 
                     dest_path = self.install_dir / rel_path
 

@@ -120,7 +120,7 @@ echo "Installing and update pi dependencies"
 apt-get update
 apt-get upgrade -y
 apt-get autoremove
-apt-get install -y nginx python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero
+apt-get install -y nginx python3-pip python3-numpy libjpeg-dev zlib1g-dev python3-pil python3-gpiozero libssl-dev pkg-config libffi-dev gcc musl-dev
 echo "Installing and update pi dependencies done"
 
 # nginx conf for dashboard
@@ -132,17 +132,23 @@ ln -s /etc/nginx/sites-available/shareframe-dashboard /etc/nginx/sites-enabled/
 systemctl restart nginx
 echo "Configuring nginx for dashboard done"
 
-# python env via poetry
+# python env via poetry and its dependencies
 echo "Installing Poetry for user frame"
 sudo -u "$USER" bash <<EOF
 
 cd "$USER_DIR"
-curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
 
+echo 'installing poetry dependencies'
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+export PATH=$PATH:~/.cargo/bin
+export CRYPTOGRAPHY_DONT_BUILD_RUST=1
+
+echo 'installing poetry'
+curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
 /home/frame/.local/bin/poetry config virtualenvs.options.system-site-packages true
 
+echo 'installing project python dependencies'
 cd "$APPLICATION_DIR/"
-
 /home/frame/.local/bin/poetry install
 
 EOF
