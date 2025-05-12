@@ -2,14 +2,14 @@ import { Store } from "redux";
 import axiosInstance from "./api";
 import { refreshToken } from "@/store/entities/authentication/authentication.actions";
 import { RootState } from "@/store";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 
 const MAX_AUTH_FAILURES = 3;
 let authFailureCount = 0;
 
 const handleLogout = () => {
   localStorage.clear();
-  window.location.href = getHomeUrl();
+  window.location.href = getAuthenticationUrl() + getSignInUrl()
 };
 
 const apiSetup = (store: Store<RootState>) => {
