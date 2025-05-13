@@ -7,10 +7,6 @@ type SliceState = {
     loading: boolean;
     lastFetch: number | null;
   };
-  loggedIn: boolean;
-  accessToken: string | null;
-  refreshToken: string | null;
-  persistToken: string | null;
   me: IUser;
 };
 
@@ -19,10 +15,6 @@ const initialState: SliceState = {
     loading: false,
     lastFetch: null,
   },
-  loggedIn: false,
-  accessToken: null,
-  refreshToken: null,
-  persistToken: null,
   me: {
     id: 0,
     email: "",
@@ -69,16 +61,20 @@ const userSlice = createSlice({
       user.api.loading = true;
     },
     authenticationFulfilled: (user, action) => {
-      user.accessToken = action.payload.access;
-      user.refreshToken = action.payload.refresh;
       localStorage.setItem("loggedIn", "true");
       localStorage.setItem("refreshToken", action.payload.refresh);
       localStorage.setItem("accessToken", action.payload.access);
-      user.loggedIn = true;
       user.api.lastFetch = Date.now();
       user.api.loading = false;
     },
     authenticationRejected: (user) => {
+      user.api.loading = false;
+    },
+    tokenRefreshFulfilled: (user, action) => {
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("refreshToken", action.payload.refresh);
+      localStorage.setItem("accessToken", action.payload.access);
+      user.api.lastFetch = Date.now();
       user.api.loading = false;
     },
     getUserDataPending: (user) => {
@@ -99,7 +95,6 @@ const userSlice = createSlice({
       return initialState;
     },
     userFetchFulfilled: (user, action) => {
-      user.loggedIn = true;
       user.me = action.payload;
       user.api.loading = false;
       user.api.lastFetch = Date.now();
@@ -172,10 +167,6 @@ const userSlice = createSlice({
     },
     userDeleteFulfilled: (user) => {
       user.api.loading = false;
-      user.loggedIn = false;
-      user.accessToken = null;
-      user.refreshToken = null;
-      user.persistToken = null;
       user.me = {
         id: 0,
         email: "",
@@ -208,6 +199,7 @@ export const {
   authenticationPending,
   authenticationFulfilled,
   authenticationRejected,
+  tokenRefreshFulfilled,
   getUserDataPending,
   getUserDataFulfilled,
   getUserDataRejected,

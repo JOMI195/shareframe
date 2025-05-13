@@ -1,5 +1,4 @@
-import { useAppSelector } from '@/store';
-import { getUser } from '@/store/entities/authentication/authentication.slice';
+import axiosInstance from '@/services/api';
 import { Box } from '@mui/material';
 import React, { useState, useEffect, useRef } from 'react';
 
@@ -26,8 +25,6 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const imgRef = useRef<HTMLDivElement>(null);
-
-    const user = useAppSelector(getUser);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -61,24 +58,12 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         const loadImage = async (): Promise<void> => {
             try {
                 setIsLoading(true);
-                const token = user.accessToken;
 
-                if (!token) {
-                    throw new Error('Authentication token not found');
-                }
-
-                const response = await fetch(url, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                const response = await axiosInstance.get(url, {
+                    responseType: 'blob'
                 });
 
-                if (!response.ok) {
-                    throw new Error(`Failed to load image: ${response.statusText}`);
-                }
-
-                const blob = await response.blob();
-                const objectUrl = URL.createObjectURL(blob);
+                const objectUrl = URL.createObjectURL(response.data);
 
                 if (isMounted) {
                     setImageSrc(objectUrl);
@@ -88,6 +73,8 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 setIsLoading(false);
                 if (error instanceof Error) {
                     onError?.(error);
+                } else {
+                    onError?.(new Error('Failed to load image'));
                 }
             }
         };
@@ -100,7 +87,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 URL.revokeObjectURL(imageSrc);
             }
         };
-    }, [isVisible]);
+    }, [url, isVisible, onError]);
 
     if (isLoading && isVisible) {
         return (

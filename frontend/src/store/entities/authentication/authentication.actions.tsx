@@ -61,7 +61,7 @@ export const refreshToken = (token: string) =>
     url: authEndpoints.getTokenRefreshUrl(),
     method: "post",
     data: { refresh: token },
-    onSuccess: userSlice.authenticationFulfilled.type,
+    onSuccess: userSlice.tokenRefreshFulfilled.type,
   });
 
 export const setPassword = (passwords: {

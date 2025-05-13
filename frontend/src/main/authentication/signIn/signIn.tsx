@@ -57,10 +57,10 @@ export default function SignIn() {
   }, [errorMessage]);
 
   useEffect(() => {
-    if (user.loggedIn === true) {
+    if (localStorage.getItem("loggedIn") === "true") {
       setErrorMessage("");
       dispatch(loadMyUserProfile());
-      navigate(getHomeUrl(), { replace: true });
+      navigate(getHomeUrl());
     }
   }, [user]);
 
