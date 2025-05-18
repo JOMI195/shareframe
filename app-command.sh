@@ -34,18 +34,40 @@ else
 fi
 BUILD_VERSION="${BUILD_DATE}-${BUILD_UUID}"
 
-export VITE_APP_BUILD_VERSION=$BUILD_VERSION
+# Export the build versions into the environment
+export APP_BUILD_VERSION="$BUILD_VERSION"
+export VITE_APP_BUILD_VERSION="$BUILD_VERSION"
+
+# Create a backup of the original env file
+cp "$ENV_FILE" "${ENV_FILE}.backup"
+
+# Append build version variables to the existing env file
+echo "" >> "$ENV_FILE"  # Add a newline for clarity
+echo "# Build version variables generated on $(date)" >> "$ENV_FILE"
+echo "APP_BUILD_VERSION=$BUILD_VERSION" >> "$ENV_FILE"
+echo "VITE_APP_BUILD_VERSION=$BUILD_VERSION" >> "$ENV_FILE"
+
+echo "Added build version variables to env file"
 
 # Run the Docker Compose command
 if [ "$CONTAINER_NAME" == "all" ]; then
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" $DOCKER_COMPOSE_COMMAND
 else
-  # Check if the specified container exists
-  if ! docker compose -f "$DOCKER_COMPOSE_FILE" ps -q "$CONTAINER_NAME" > /dev/null; then
-    echo "Error: Container '$CONTAINER_NAME' not found in the Docker Compose file!"
-    exit 1
+  # Check if the specified container exists in the configuration
+  if ! grep -q "^\s*$CONTAINER_NAME:" "$DOCKER_COMPOSE_FILE" && ! grep -q "^\s*services:.*$CONTAINER_NAME:" "$DOCKER_COMPOSE_FILE"; then
+    echo "Warning: Container '$CONTAINER_NAME' not explicitly found in the Docker Compose file."
+    echo "Proceeding anyway as it might be a valid service name or command parameter..."
   fi
 
   # Run the command on the specified container
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" $DOCKER_COMPOSE_COMMAND "$CONTAINER_NAME"
 fi
+
+RESULT=$?
+
+# Restore the original env file
+mv "${ENV_FILE}.backup" "$ENV_FILE"
+echo "Restored original env file"
+
+echo "Docker Compose operation completed with exit code: $RESULT"
+exit $RESULT

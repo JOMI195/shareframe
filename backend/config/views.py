@@ -1,3 +1,4 @@
+import os
 from frames.auth import FrameTokenAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -5,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.exceptions import PermissionDenied
 from django.conf import settings
 from django.db.models import Q
+from rest_framework import status
 
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
@@ -122,3 +124,12 @@ class ChangelogsAccessView(APIView):
         # nginx proxy_pass: /app/backend/mediafiles/changelogs/
         response["X-Accel-Redirect"] = "/api/media/protected/changelogs/" + path
         return response
+
+
+class VersionView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        app_version = settings.APP_BUILD_VERSION
+        version_value = None if app_version == "" else app_version
+        return Response({"version": version_value}, status=status.HTTP_200_OK)

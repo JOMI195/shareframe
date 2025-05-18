@@ -34,6 +34,7 @@ CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS").split(" ")
 CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS").split(" ")
 
 PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
+APP_BUILD_VERSION = os.environ.get("APP_BUILD_VERSION", "")
 
 # Application definition
 

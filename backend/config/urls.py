@@ -4,7 +4,12 @@ from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
-from .views import FrameUpdatesAccessView, MediaAccessView, ChangelogsAccessView
+from .views import (
+    FrameUpdatesAccessView,
+    MediaAccessView,
+    ChangelogsAccessView,
+    VersionView,
+)
 
 urlpatterns = [
     # general
@@ -13,6 +18,7 @@ urlpatterns = [
     path("api/auth/", include("authentication.urls")),
     path("api/auth/", include("djoser.urls.jwt")),
     # apps
+    path("api/version/", VersionView.as_view(), name="app-version"),
     path("api/", include("frames.urls")),
     path("api/", include("frame_updates.urls")),
     path("api/", include("images.urls")),

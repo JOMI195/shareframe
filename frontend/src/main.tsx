@@ -8,7 +8,6 @@ import { Suspense } from 'react';
 import ErrorBoundary from './common/components/error/errorBoundary/errorBoundary.tsx';
 import LoadingFallback from './common/components/loadingFallback.tsx';
 import { PersistGate } from 'redux-persist/integration/react';
-import localStorageBuildVersionUpdate from './common/components/localStorageBuildVersionUpdateService.ts';
 
 const AppWrapper = () => {
   return (
@@ -22,7 +21,6 @@ const AppWrapper = () => {
   );
 };
 
-localStorageBuildVersionUpdate();
 http.apiSetup(store);
 const container = document.getElementById("root");
 const root = createRoot(container!);

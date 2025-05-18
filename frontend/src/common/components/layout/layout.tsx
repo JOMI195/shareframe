@@ -5,6 +5,7 @@ import Sidebar from "./sidebar/sidebar";
 import NewChangelogDialog from "@/main/changelogs/dialogs/newChangelogDialog";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";
 import { useEffect } from "react";
+import BuildVersionChecker from "../buildVersionChecker";
 
 const MainLayout: React.FC = () => {
     const theme = useTheme();
@@ -48,6 +49,7 @@ const MainLayout: React.FC = () => {
                 <Outlet />
             </Container>
             <NewChangelogDialog />
+            <BuildVersionChecker />
         </Box>
     );
 };
