@@ -1,5 +1,3 @@
-from typing import List
-
 from frames.auth import FrameTokenAuthentication
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -105,4 +103,22 @@ class FrameUpdatesAccessView(APIView):
         response = Response(status=200)
         # nginx proxy_pass: /app/backend/mediafiles/frame-updates/
         response["X-Accel-Redirect"] = "/api/media/protected/frame-updates/" + path
+        return response
+
+
+class ChangelogsAccessView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, path: str):
+        user = request.user
+
+        if path.strip() == "":
+            raise PermissionDenied("No valid path")
+
+        if not user.is_authenticated:
+            raise PermissionDenied("Media not found or not authorized to access.")
+
+        response = Response(status=200)
+        # nginx proxy_pass: /app/backend/mediafiles/changelogs/
+        response["X-Accel-Redirect"] = "/api/media/protected/changelogs/" + path
         return response

@@ -13,8 +13,6 @@ import {
     Theme,
     SxProps,
     Tooltip,
-    Button,
-    Grid
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import { SlideTransition, ZoomTransition } from "./dialogTransitions";
@@ -50,6 +48,13 @@ const CustomDialog: React.FC<ReusableDialogProps> = ({
             fullScreen={isSmallScreen}
             {...dialogProps}
             onClose={onClose}
+            PaperProps={{
+                sx: {
+                    maxHeight: isSmallScreen ? '100%' : '80vh',
+                    display: 'flex',
+                    flexDirection: 'column'
+                }
+            }}
         >
             <AppBar sx={{ position: 'relative', py: 1 }} color='inherit'>
                 <Toolbar variant="dense">
@@ -78,59 +83,66 @@ const CustomDialog: React.FC<ReusableDialogProps> = ({
                 </Toolbar>
             </AppBar>
 
-            <DialogContent sx={contentSx}>
+            <DialogContent
+                sx={{
+                    overflow: 'auto',
+                    flexGrow: 1,
+                    ...contentSx
+                }}
+            >
                 <Box display="flex" flexDirection="column" alignItems="center">
                     {children}
-
-                    {actions && actions.length > 0 && (
-                        <Box>
-                            <Toolbar
-                                sx={{
-                                    justifyContent: "flex-end",
-                                    backgroundColor: (theme) => theme.palette.background.default,
-                                    borderRadius: 1,
-                                    mt: 1,
-                                    ...toolbarSx
-                                }}
-                            >
-                                {actions.map((action, index) => (
-                                    <Tooltip
-                                        title={action.label}
-                                        key={index}
-                                    >
-                                        <IconButton
-                                            disabled={action.disabled || false}
-                                            onClick={action.onClick}
-                                            color={action.color || 'inherit'}
-                                            aria-label={action.label}
-                                        >
-                                            {action.icon}
-                                        </IconButton>
-                                    </Tooltip>
-                                ))}
-                            </Toolbar>
-                        </Box>
-                    )}
-
-                    <Grid
-                        container
-                        display={"flex"} justifyContent={"center"} alignItems={"center"}
-                        sx={{ mt: 2 }}
-                    >
-                        <Grid item xs={6} >
-                            <Button
-                                onClick={onClose}
-                                color="primary"
-                                variant="outlined"
-                                fullWidth
-                                sx={{ display: { xs: "block", sm: "none" } }}
-                            >
-                                Zurück
-                            </Button>
-                        </Grid>
-                    </Grid>
                 </Box>
             </DialogContent>
+
+            {actions && actions.length > 0 && (
+                <Box>
+                    <Toolbar
+                        sx={{
+                            justifyContent: "center",
+                            backgroundColor: (theme) => theme.palette.background.default,
+                            borderRadius: 1,
+                            mx: 2,
+                            my: 1,
+                            ...toolbarSx
+                        }}
+                    >
+                        {actions.map((action, index) => (
+                            <Tooltip
+                                title={action.label}
+                                key={index}
+                            >
+                                <IconButton
+                                    disabled={action.disabled || false}
+                                    onClick={action.onClick}
+                                    color={action.color || 'inherit'}
+                                    aria-label={action.label}
+                                >
+                                    {action.icon}
+                                </IconButton>
+                            </Tooltip>
+                        ))}
+                    </Toolbar>
+                </Box>
+            )}
+
+            {/* <Grid
+                container
+                display={"flex"} justifyContent={"center"} alignItems={"center"}
+                sx={{ mt: 2 }}
+            >
+                <Grid item xs={6} >
+                    <Button
+                        onClick={onClose}
+                        color="primary"
+                        variant="outlined"
+                        fullWidth
+                        sx={{ display: { xs: "block", sm: "none" } }}
+                    >
+                        Zurück
+                    </Button>
+                </Grid>
+            </Grid> */}
         </Dialog>
     );
 };

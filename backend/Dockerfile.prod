@@ -44,8 +44,16 @@ ENV APP_HOME=/home/app/backend
 RUN mkdir $APP_HOME
 RUN mkdir $APP_HOME/staticfiles
 RUN mkdir $APP_HOME/mediafiles
+
+# brand
 RUN mkdir $APP_HOME/mediafiles/brand
+# frame-updates
 RUN mkdir $APP_HOME/mediafiles/frame-updates
+# changelog
+RUN mkdir $APP_HOME/mediafiles/changelogs
+RUN mkdir $APP_HOME/mediafiles/changelogs/content
+RUN mkdir $APP_HOME/mediafiles/changelogs/images
+
 COPY ./images/brand/logo-email-light-full-shareframe.png $APP_HOME/mediafiles/brand
 WORKDIR $APP_HOME
 

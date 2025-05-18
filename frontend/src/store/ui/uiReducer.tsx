@@ -8,6 +8,7 @@ import friendshipsReducer from "./friendships/friendships.slice";
 import framesReducer from "./frames/frames.slice";
 import imagesReducer from "./images/images.slice";
 import sentImagesReducer from "./sentImages/sentImages.slice";
+import changelogsReducer from "./changelogs/changelogs.slice";
 
 export default combineReducers({
   navigation: navigationReducer,
@@ -18,4 +19,5 @@ export default combineReducers({
   frames: framesReducer,
   images: imagesReducer,
   sentImages: sentImagesReducer,
+  changelogs: changelogsReducer,
 });

@@ -17,6 +17,7 @@ import {
     Settings as SettingsIcon,
 } from '@mui/icons-material';
 import LogoutIcon from '@mui/icons-material/Logout';
+import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
@@ -24,7 +25,7 @@ import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
-import { getContactUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getChangelogsUrl, getContactUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 
 
@@ -73,6 +74,7 @@ const Sidebar: React.FC<SidebarProps> = () => {
 
     const sidebarBottomItems = [
         { name: 'Abmelden', icon: <LogoutIcon />, url: getAuthenticationUrl() + getSignOutUrl() },
+        { name: 'Änderungen', icon: <TipsAndUpdatesIcon />, url: getChangelogsUrl() },
         {
             name: "Account",
             icon: (

@@ -3,7 +3,7 @@ import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
-import { getActivityUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getActivityUrl, getChangelogsUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
@@ -19,6 +19,7 @@ import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
 import Layout from '@/main/legals/layout';
 import Home from '@/main/home/home';
+import Changelogs from '@/main/changelogs/changelogs';
 
 const Routing = createBrowserRouter([
   {
@@ -87,6 +88,10 @@ const Routing = createBrowserRouter([
                   {
                     path: getActivityUrl(),
                     element: <SentImages />
+                  },
+                  {
+                    path: getChangelogsUrl(),
+                    element: <Changelogs />
                   }
                 ]
               },

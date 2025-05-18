@@ -1,13 +1,15 @@
-export const getHomeUrl = () => "/"
+export const getHomeUrl = () => "/";
 
-export const getImageUrl = () => "fotos/"
+export const getImageUrl = () => "fotos/";
 
-export const getContactUrl = () => "kontakt/"
+export const getContactUrl = () => "kontakt/";
 
-export const getEnterWallUrl = () => "comingSoon/"
+export const getEnterWallUrl = () => "comingSoon/";
 
-export const getFriendsUrl = () => "freunde/"
+export const getFriendsUrl = () => "freunde/";
 
-export const getActivityUrl = () => "aktivitaeten/"
+export const getActivityUrl = () => "aktivitaeten/";
 
-export const getFramesUrl = () => "bilderrahmen/"
+export const getFramesUrl = () => "bilderrahmen/";
+
+export const getChangelogsUrl = () => "aenderungen/";
