@@ -267,7 +267,7 @@ class WebsocketClient:
                 )
 
                 status_message = {
-                    "type": "check_mssing_images",
+                    "type": "check_missing_images",
                     "sent_image_ids": user_frame_images,
                 }
 
