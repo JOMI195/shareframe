@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from datetime import timedelta
+import logging
 import os
 from pathlib import Path
 
@@ -77,6 +78,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "utils.request_logging.middleware.LoggingMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -99,6 +101,164 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"
+
+# Logging
+LOGS_DIR = os.path.join(BASE_DIR, "logs")
+os.makedirs(LOGS_DIR, exist_ok=True)
+
+LOG_FILES = {
+    "default": "backend-default.log",
+    "application": "backend-application.log",
+    "websockets": "backend-websockets.log",
+    "celery": "backend-celery.log",
+    "django": "backend-django.log",
+    "application-server": "backend-application-server.log",
+}
+
+for key, filename in LOG_FILES.items():
+    LOG_FILES[key] = os.path.join(LOGS_DIR, filename)
+
+DJANGO_LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
+
+LOGGING_FILE_HANDLER_DEFAULTS = {
+    "level": DJANGO_LOG_LEVEL,
+    "class": "logging.handlers.RotatingFileHandler",
+    "maxBytes": 10 * 1024 * 1024,  # 10 MB
+    "backupCount": 2,
+    "formatter": "default",
+}
+
+
+# Function to generate file handlers with common configuration
+def create_file_handlers(handler_configs=None):
+    """
+    Create file handlers with default settings that can be overridden.
+    """
+    handler_configs = handler_configs or {}
+    handlers = {}
+
+    for handler_name, log_file in LOG_FILES.items():
+        handler_key = f"{handler_name}-file" if handler_name != "default" else "file"
+
+        handler_config = LOGGING_FILE_HANDLER_DEFAULTS.copy()
+
+        handler_config["filename"] = log_file
+
+        if handler_key in handler_configs:
+            handler_config.update(handler_configs[handler_key])
+
+        handlers[handler_key] = handler_config
+
+    return handlers
+
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "{asctime} [{levelname}] {name} - {funcName} - {message}",
+            "style": "{",
+        },
+    },
+    "filters": {
+        "require_debug_false": {
+            "()": "django.utils.log.RequireDebugFalse",
+        },
+    },
+    "handlers": {
+        "console": {
+            "level": DJANGO_LOG_LEVEL,
+            "class": "logging.StreamHandler",
+            "formatter": "default",
+        },
+        **create_file_handlers(
+            {
+                # overriding defaults for specific handlers
+                "application-file": {
+                    "maxBytes": 100 * 1024 * 1024,
+                    "backupCount": 3,
+                },
+                "celery-file": {
+                    "maxBytes": 100 * 1024 * 1024,
+                    "backupCount": 3,
+                },
+                "websockets-file": {
+                    "maxBytes": 100 * 1024 * 1024,
+                    "backupCount": 3,
+                },
+                "django-file": {
+                    "maxBytes": 100 * 1024 * 1024,
+                    "backupCount": 3,
+                },
+            }
+        ),  # Add all file handlers with ability to override defaults
+    },
+    "loggers": {
+        # application servers
+        "daphne": {
+            "handlers": ["application-server-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        "gunicorn": {
+            "handlers": ["application-server-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        # django
+        "django": {
+            "handlers": ["django-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": True,
+        },
+        "django.server": {
+            "handlers": ["django-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": True,
+        },
+        "django.request": {
+            "handlers": ["django-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        # celery
+        "celery": {
+            "handlers": ["celery-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        "celery.frames": {
+            "handlers": ["celery-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        # websockets
+        "websockets": {
+            "handlers": ["websockets-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        "websockets.frames": {
+            "handlers": ["websockets-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        # application
+        "images": {
+            "handlers": ["application-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+    },
+}
+
+REQUEST_LOGGING_DATA_LOG_LEVEL = getattr(
+    logging, DJANGO_LOG_LEVEL.upper(), logging.INFO
+)
+DJANGO_REQUEST_LOGGING_LOG_BODY_DEFAULT_VALUE = True
+DJANGO_REQUEST_LOGGING_LOG_RESPONSE_DEFAULT_VALUE = False
+REQUEST_LOGGING_ENABLE_COLORIZE = False
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

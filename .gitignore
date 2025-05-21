@@ -5,6 +5,8 @@
 __pycache__
 db.sqlite3
 
+logs/
+
 # django assets
 **staticfiles/
 **mediafiles/

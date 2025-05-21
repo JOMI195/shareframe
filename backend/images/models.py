@@ -1,11 +1,14 @@
 import os
 import uuid
+import logging
 from io import BytesIO
 from django.conf import settings
 from django.db import models
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from PIL import Image as PILImage
+
+logger = logging.getLogger("images")
 
 
 def get_image_upload_path(instance, filename, size_suffix=""):
@@ -100,8 +103,12 @@ class Image(models.Model):
     def generate_sized_images(self):
         """Generate different sized versions of the image based on ImageSize models"""
         if not self.image:
+            logger.warning(
+                f"Cannot generate variants for image ID {self.id} - original image is missing"
+            )
             return
 
+        logger.info(f"Generating image variants for image ID {self.id}")
         # Open the original image
         img = PILImage.open(self.image)
 
@@ -118,6 +125,9 @@ class Image(models.Model):
             self._create_resized_image(
                 img, size.name, size.width, size.height, size.quality, size
             )
+        logger.info(
+            f"Successfully generated {image_sizes.count()} image variants for image ID {self.id}"
+        )
 
     def _create_resized_image(
         self, img, size_name, width, height, quality=85, size_model=None
@@ -181,12 +191,27 @@ class Image(models.Model):
             return None
 
     def save(self, *args, **kwargs):
+        update_fields_only = kwargs.pop("update_fields_only", False)
+
+        if update_fields_only:
+            logger.debug(f"Limited field update in save for Image with ID {self.pk}")
+            super().save(*args, **kwargs)
+            return
+
         is_new = not self.pk
+
+        if is_new:
+            logger.info("Creating new image")
+        else:
+            logger.info(f"Updating existing image ID {self.pk}")
 
         if self.pk:
             try:
                 old_instance = Image.objects.get(pk=self.pk)
                 if old_instance.image != self.image:
+                    logger.info(
+                        f"Image file changed for ID {self.pk}, removing old files"
+                    )
                     # Delete old image file
                     old_instance.image.delete(save=False)
 
@@ -214,7 +239,11 @@ class Image(models.Model):
             # Save again to store updated metadata
             super(Image, self).save(update_fields=["width", "height", "format"])
 
+        logger.info(f"Image ID {self.id} saved successfully")
+
     def delete(self, *args, **kwargs):
+        logger.info(f"Permanently deleting image ID {self.id}")
+
         # Delete all image files
         image_paths = []
         dirs_to_check = set()
@@ -241,3 +270,7 @@ class Image(models.Model):
         for dir_path in dirs_to_check:
             if os.path.exists(dir_path) and not os.listdir(dir_path):
                 os.rmdir(dir_path)
+
+        logger.info(
+            f"Image ID {self.id} and associated variant files successfully deleted ({len(image_paths)} files)"
+        )

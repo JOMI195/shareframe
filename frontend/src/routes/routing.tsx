@@ -17,7 +17,7 @@ import Friendships from '@/main/friendships/friendships';
 import Frames from '@/main/frames/frames';
 import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
-import Layout from '@/main/legals/layout';
+import PublicLayout from '@/main/legals/layout';
 import Home from '@/main/home/home';
 import Changelogs from '@/main/changelogs/changelogs';
 
@@ -35,7 +35,7 @@ const Routing = createBrowserRouter([
         children: authenticationRoutes,
       },
       {
-        element: <Layout />,
+        element: <PublicLayout />,
         children: [
           {
             element: <FeatureSelectorWrapper feature="legals" />,

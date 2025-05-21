@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Button, Snackbar, Alert } from '@mui/material';
+import { Button, Snackbar, Alert, useTheme, useMediaQuery } from '@mui/material';
 import { getAppVersion } from '@/store/entities/app/app.slice';
 import { fetchAppVersion } from '@/store/entities/app/app.actions';
 import { useAppDispatch, useAppSelector } from '@/store';
@@ -8,6 +8,9 @@ const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 
 const BuildVersionChecker: React.FC = () => {
   const dispatch = useAppDispatch();
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
   const backendVersion = useAppSelector(getAppVersion);
   const [open, setOpen] = useState<boolean>(false);
 
@@ -42,25 +45,42 @@ const BuildVersionChecker: React.FC = () => {
     setOpen(false);
     window.location.reload();
   };
-
   return (
     <Snackbar
       open={open}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      sx={{ mt: 2 }}
+      sx={{
+        width: isSmallScreen ? '90%' : 'auto',
+        bottom: 16
+      }}
       onClose={handleClose}
     >
       <Alert
         severity="info"
         variant="filled"
         action={
-          <Button color="inherit" size="small" onClick={handleReload}>
+          <Button
+            variant='outlined'
+            color="inherit"
+            size="small"
+            onClick={handleReload}
+            sx={{
+              ml: !isSmallScreen ? 1 : 0,
+            }}
+          >
             Jetzt neu laden
           </Button>
         }
         onClose={handleClose}
         sx={{
-          color: (theme) => theme.palette.common.white,
+          width: '100%',
+          color: theme.palette.common.white,
+          flexDirection: isSmallScreen ? 'column' : 'row',
+          alignItems: isSmallScreen ? 'flex-start' : 'center',
+          '& .MuiAlert-action': {
+            alignSelf: isSmallScreen ? 'flex-end' : 'center',
+            padding: isSmallScreen ? '8px 0 0' : 0
+          }
         }}
       >
         Eine neue Version von Shareframe ist verfügbar! Bitte lade diese Seite erneut.

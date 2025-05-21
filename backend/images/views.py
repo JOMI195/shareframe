@@ -1,3 +1,4 @@
+import logging
 from django.db import transaction
 from rest_framework import status
 from rest_framework.parsers import FormParser, MultiPartParser
@@ -16,6 +17,8 @@ from .serializers import (
     ImageDestroySerializer,
 )
 from sent_images.models import SentImage
+
+logger = logging.getLogger("images")
 
 
 class ImagesPagination(PageNumberPagination):
@@ -86,6 +89,8 @@ class ImagesViewSet(ModelViewSet):
     )
     @transaction.atomic
     def create(self, request, *args, **kwargs):
+        logger.info(f"New image upload requested by user {request.user.id}")
+
         request_data_updated = request.data.dict()
         request_data_updated = {
             **request_data_updated,
@@ -97,6 +102,7 @@ class ImagesViewSet(ModelViewSet):
         element = serializer.save()
         serializer = ImageRetrieveSerializer(element)
 
+        logger.info(f"Image ID {element.id} successfully created")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @extend_schema(
@@ -105,16 +111,24 @@ class ImagesViewSet(ModelViewSet):
     )
     def destroy(self, request, *args, **kwargs):
         pk_to_delete = self.kwargs["pk"]
+
+        logger.info(
+            f"Deletion request for image {pk_to_delete} by user {request.user.id}"
+        )
         try:
             element = Image.objects.get(
                 pk=pk_to_delete, user=request.user, markedAsDeleted=False
             )
         except Image.DoesNotExist:
+            logger.warning(
+                f"Image {pk_to_delete} not found or user has no permission to delete"
+            )
             raise NotFound("Image not found or you don't have permission to delete it.")
 
         # dont delete images directly, instead mark them as deleted
         element.markedAsDeleted = True
-        element.save()
+        element.save(update_fields_only=True)
 
+        logger.info(f"Image {element.id} marked as deleted")
         serializer = ImageRetrieveSerializer(element)
         return Response(serializer.data)

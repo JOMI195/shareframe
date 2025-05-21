@@ -1,23 +1,38 @@
 import os
+import logging
 from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from .checksum import get_sha256_sum_from_file
 from .models import Image, ImageSize, ImageVariant
 
+logger = logging.getLogger("images")
+
 
 class ImagesValidationMixin:
     def validate_file(self, file, expected_hash):
+        logger.debug(f"Validating file: {file.name if file else 'No file provided'}")
         if not file.name or file.name.strip() == "":
+            logger.warning("File validation failed: empty filename")
             raise ValidationError("Filename cannot be empty")
         if not self.is_supported_file(file.name):
+            logger.warning(
+                f"File validation failed: unsupported format for {file.name}"
+            )
             raise ValidationError("The file format is invalid")
         if not self.respects_filesize_limit(file.size):
+            logger.warning(
+                f"File validation failed: file size exceeds limit for {file.name}"
+            )
             raise ValidationError("The file size is too large")
         if not self.verify_checksum(file, expected_hash):
+            logger.warning(
+                f"File validation failed: checksum verification failed for {file.name}"
+            )
             raise ValidationError(
                 "Checksum verification failed. The file may be corrupted on upload."
             )
+        logger.debug(f"File validation successful: {file.name}")
         return file
 
     def is_supported_file(self, file_name):
