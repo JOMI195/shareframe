@@ -1,7 +1,12 @@
+import os
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 import semver
+
+
+def release_file_upload_path(instance, filename):
+    return os.path.join("frame-updates", filename)
 
 
 class Release(models.Model):
@@ -22,7 +27,7 @@ class Release(models.Model):
         ],
     )
     release_date = models.DateTimeField(auto_now_add=True)
-    download_url = models.URLField(max_length=500)
+    file = models.FileField(upload_to=release_file_upload_path, null=True)
     checksum = models.CharField(max_length=64)
     is_active = models.BooleanField(default=True)
     release_notes = models.TextField(blank=True)
@@ -42,8 +47,23 @@ class Release(models.Model):
             raise ValidationError({"version": "Invalid semantic version format"})
 
     def save(self, *args, **kwargs):
+        try:
+            old = Release.objects.get(pk=self.pk)
+        except Release.DoesNotExist:
+            old = None
+
+        # If updating and the file has changed, delete the old file
+        if old and old.file != self.file:
+            if old.file and old.file.storage.exists(old.file.name):
+                old.file.delete(save=False)
+
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.file and self.file.storage.exists(self.file.name):
+            self.file.delete(save=False)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return f"ShareFrame v{self.version} ({self.criticality})"

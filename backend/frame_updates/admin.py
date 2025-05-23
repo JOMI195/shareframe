@@ -16,3 +16,23 @@ class ReleaseAdmin(admin.ModelAdmin):
     )
     search_fields = ("version",)
     ordering = ("-release_date",)
+    readonly_fields = ("release_date",)
+    fieldsets = (
+        (
+            None,
+            {
+                "fields": (
+                    "version",
+                    "criticality",
+                    "is_active",
+                    "file",
+                    "checksum",
+                    "release_notes",
+                )
+            },
+        ),
+        (
+            "Timestamps",
+            {"fields": ("release_date",)},
+        ),
+    )

@@ -5,7 +5,7 @@ import DialogContent from "@mui/material/DialogContent";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { closeCreateFriendshipsDialog, getDialogs } from "@/store/ui/friendships/friendships.slice";
+import { closeCreateFriendshipsDialog, getDialogs, openFriendshipsAlertSnackbar } from "@/store/ui/friendships/friendships.slice";
 import { IFriendshipCreateForm, isIFriendship } from "@/types";
 import { sendFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
 import { AppBar, Box, Divider, Grid, IconButton, Paper, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
@@ -57,8 +57,13 @@ const FriendshipCreateDialog: React.FC = () => {
     form.resetForm();
   };
 
-  const handleCopyCode = () => {
+  const handleCopyCode = async () => {
     navigator.clipboard.writeText(friendshipCode);
+    await new Promise(resolve => setTimeout(resolve, 200));
+    dispatch(openFriendshipsAlertSnackbar({
+      message: "Eigener Freundescode in die Zwischenablage kopiert",
+      severity: "success",
+    }))
   };
 
   return (

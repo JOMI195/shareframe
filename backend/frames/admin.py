@@ -84,7 +84,7 @@ class FrameAdmin(admin.ModelAdmin):
 class FrameTokenAdmin(admin.ModelAdmin):
     list_display = ("id", "frame")
     list_filter = ("access_token_expires_at", "last_obtained")
-    readonly_fields = ("access_token", "access_token_expires_at", "last_obtained")
+    readonly_fields = ("last_obtained",)
 
 
 @admin.register(FrameWebsocketConnection)
