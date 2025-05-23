@@ -27,7 +27,7 @@ class Release(models.Model):
         ],
     )
     release_date = models.DateTimeField(auto_now_add=True)
-    file = models.FileField(upload_to=release_file_upload_path, null=True)
+    file = models.FileField(upload_to=release_file_upload_path)
     checksum = models.CharField(max_length=64)
     is_active = models.BooleanField(default=True)
     release_notes = models.TextField(blank=True)
