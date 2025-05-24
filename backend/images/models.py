@@ -175,7 +175,7 @@ class Image(models.Model):
 
             # Save the new file
             variant.file.save(
-                original_filename,  # We don't need to modify the filename as the upload_to function handles it
+                original_filename,
                 ContentFile(output.read()),
                 save=True,
             )
