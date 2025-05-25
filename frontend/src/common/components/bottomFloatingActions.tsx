@@ -48,8 +48,8 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
             return {
                 ...baseStyles,
                 position: "absolute",
-                bottom: 16,
-                right: 16,
+                bottom: { xs: 16, md: 30 },
+                right: { xs: 16, md: 30 },
             };
         }
     };

@@ -56,7 +56,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
             onClose={onDialogClose}
             PaperProps={{
                 sx: {
-                    maxHeight: isSmallScreen ? '100%' : '80vh',
+                    maxHeight: isSmallScreen ? '100%' : '85vh',
                     display: 'flex',
                     flexDirection: 'column'
                 }
@@ -93,7 +93,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                 sx={{
                     overflow: 'auto',
                     flexGrow: 1,
-                    mb: 5,
+                    mb: 12,
                     ...dialogContentSx
                 }}
             >
