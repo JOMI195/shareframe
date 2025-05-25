@@ -93,7 +93,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                 sx={{
                     overflow: 'auto',
                     flexGrow: 1,
-                    mb: 12,
+                    mb: 10,
                     ...dialogContentSx
                 }}
             >
