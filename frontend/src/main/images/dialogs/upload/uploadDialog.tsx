@@ -167,7 +167,7 @@ const UploadDialog: React.FC = () => {
         fullScreen={matches ? false : true}
         open={open}
         TransitionComponent={matches ? ZoomTransition : SlideTransition}
-        onDialogClose={handleDialogClose}
+        onClose={handleDialogClose}
         aria-describedby='dialog-slide-upload'
         maxWidth="md"
         fullWidth

@@ -41,7 +41,7 @@ const SentImageDeactivateDialog = () => {
             fullScreen={matches ? false : true}
             open={deactivateDialog.open}
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
-            onDialogClose={handleDialogClose}
+            onClose={handleDialogClose}
             aria-describedby='deactivate-image-dialog'
             maxWidth="sm"
             fullWidth

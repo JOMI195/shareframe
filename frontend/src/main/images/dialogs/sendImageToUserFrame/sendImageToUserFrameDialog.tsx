@@ -74,7 +74,7 @@ const SendImageToUserFrameDialog = () => {
             fullScreen={matches ? false : true}
             open={sendDialog.open}
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
-            onDialogClose={handleDialogClose}
+            onClose={handleDialogClose}
             aria-describedby='send-image-dialog'
             maxWidth="sm"
             fullWidth

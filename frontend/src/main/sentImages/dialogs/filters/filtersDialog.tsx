@@ -54,7 +54,7 @@ const FiltersDialog = () => {
             fullScreen={!matches}
             open={filterDialog.open}
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
-            onDialogClose={handleDialogClose}
+            onClose={handleDialogClose}
             aria-describedby="filter-dialog"
             maxWidth="sm"
             fullWidth

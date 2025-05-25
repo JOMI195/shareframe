@@ -71,7 +71,7 @@ const FriendshipCreateDialog: React.FC = () => {
       fullScreen={matches ? false : true}
       open={open}
       TransitionComponent={matches ? ZoomTransition : SlideTransition}
-      onDialogClose={handleDialogClose}
+      onClose={handleDialogClose}
       aria-describedby="friendship-create-dialog"
       maxWidth="xs"
       fullWidth

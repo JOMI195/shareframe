@@ -42,7 +42,7 @@ const NewChangelogDialog: React.FC = () => {
             <ShareframeMainDialog
                 open={open}
                 onDialogClose={handleClose}
-                dialogTitle="What's New"
+                dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
             >
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <CircularProgress />
