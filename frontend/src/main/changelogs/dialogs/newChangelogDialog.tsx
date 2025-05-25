@@ -6,7 +6,7 @@ import {
     Typography,
 } from '@mui/material';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
-import CustomDialog from '@/common/components/dialog';
+import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
 
 const NewChangelogDialog: React.FC = () => {
@@ -39,15 +39,15 @@ const NewChangelogDialog: React.FC = () => {
 
     if (isLoading) {
         return (
-            <CustomDialog
+            <ShareframeMainDialog
                 open={open}
-                onClose={handleClose}
-                title="What's New"
+                onDialogClose={handleClose}
+                dialogTitle="What's New"
             >
                 <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
                     <CircularProgress />
                 </Box>
-            </CustomDialog>
+            </ShareframeMainDialog>
         );
     }
 
@@ -56,11 +56,11 @@ const NewChangelogDialog: React.FC = () => {
     }
 
     return (
-        <CustomDialog
+        <ShareframeMainDialog
             open={open}
-            onClose={handleClose}
-            title={"✨ Neue Änderungen während deiner Abwesenheit"}
-            subtitle={new Date(newestChangelog.date).toLocaleDateString()}
+            onDialogClose={handleClose}
+            dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
+            dialogSubtitle={new Date(newestChangelog.date).toLocaleDateString()}
             maxWidth="md"
             fullWidth
         >
@@ -87,7 +87,7 @@ const NewChangelogDialog: React.FC = () => {
                     Schließen
                 </Button>
             </Box>
-        </CustomDialog>
+        </ShareframeMainDialog>
     );
 };
 

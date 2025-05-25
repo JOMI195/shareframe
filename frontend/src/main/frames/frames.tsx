@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Box, Container } from "@mui/material";
-import { AddButton } from "./buttons/addButton";
+import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import FramesGallery from "./gallery/framesGallery";
 import { useAppDispatch } from "@/store";
@@ -35,7 +35,7 @@ const Frames: React.FC = () => {
             }}>
                 <FramesGallery />
             </Box>
-            <AddButton />
+            <Actions />
             <Dialogs />
         </Container>
     );

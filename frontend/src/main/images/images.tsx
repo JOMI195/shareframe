@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Box, Container } from "@mui/material";
-import { AddButton } from "./buttons/addButton";
+import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchImages } from "@/store/entities/images/images.actions";
@@ -34,7 +34,7 @@ const Images: React.FC = () => {
             >
                 <ImagesGallery />
             </Box>
-            <AddButton />
+            <Actions />
             <Dialogs />
         </Container>
     );

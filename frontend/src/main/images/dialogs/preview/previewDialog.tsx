@@ -6,7 +6,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import DownloadIcon from '@mui/icons-material/Download';
 import { downloadImage } from "@/store/entities/images/images.actions";
-import CustomDialog from "@/common/components/dialog";
+import ShareframeMainDialog from "@/common/components/shareframeMainDialog";
 import { DialogAction } from "@/types";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import { getVariant } from "@/common/utils/images";
@@ -46,31 +46,34 @@ const ImagePreviewDialog = () => {
 
     const dialogActions: DialogAction[] = [
         {
-            icon: <SendIcon />,
-            onClick: () => handleSend(),
-            label: 'Foto senden'
-        },
-        {
             icon: <DownloadIcon />,
-            onClick: () => handleDownloadFileButtonClick(),
+            onClick: handleDownloadFileButtonClick,
             label: 'Foto herunterladen'
         },
         {
             icon: <DeleteIcon />,
-            onClick: () => handleDelete(),
+            onClick: handleDelete,
             label: 'Foto löschen',
             color: 'error'
         }
     ];
 
+    const primaryAction: DialogAction = {
+        icon: <SendIcon />,
+        onClick: handleSend,
+        label: 'Foto senden',
+        color: 'primary',
+    };
+
     return (
-        <CustomDialog
+        <ShareframeMainDialog
             open={dialog.open}
-            onClose={handleCloseImagePreview}
-            title={selectedImage?.display_name ?? selectedImage?.name}
-            //subtitle="Optional subtitle or description"
-            actions={dialogActions}
-            contentSx={{ padding: 2 }}
+            onDialogClose={handleCloseImagePreview}
+            dialogTitle={selectedImage?.display_name ?? selectedImage?.name}
+            dialogContentSx={{ padding: 2 }}
+            actionsSecondary={dialogActions}
+            actionPrimary={primaryAction}
+            actionsShown={true}
         >
             <Box display="flex" flexDirection="column" alignItems="flex-start">
                 {selectedImage && (
@@ -90,7 +93,7 @@ const ImagePreviewDialog = () => {
                 )}
 
             </Box>
-        </CustomDialog>
+        </ShareframeMainDialog>
     );
 };
 

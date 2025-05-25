@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Badge, Box, Container, Divider, Tab, Tabs } from "@mui/material";
-import { AddButton } from "./buttons/addButton";
+import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import CustomTabPanel, { a11yProps } from "./tabs/tabs";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -102,7 +102,7 @@ const Friendships: React.FC = () => {
                     <FriendshipRequestsGallery />
                 </CustomTabPanel>
             </Box>
-            <AddButton />
+            <Actions />
             <Dialogs />
         </Container>
     );

@@ -37,7 +37,7 @@ const ImageDeleteDialog = () => {
             fullScreen={matches ? false : true}
             open={deleteDialog.open}
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
-            onClose={handleDialogClose}
+            onDialogClose={handleDialogClose}
             aria-describedby='dedlete-image-dialog'
             maxWidth="sm"
             fullWidth

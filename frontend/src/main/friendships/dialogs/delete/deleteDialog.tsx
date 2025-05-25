@@ -41,7 +41,7 @@ const FriendshipDeleteDialog = () => {
             fullWidth
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
             open={deleteDialog.open}
-            onClose={handleDialogClose}
+            onDialogClose={handleDialogClose}
             aria-describedby='dialog-delete-friendship'
         >
             {!matches && (

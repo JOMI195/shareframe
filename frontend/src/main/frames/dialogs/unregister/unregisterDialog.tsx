@@ -36,7 +36,7 @@ const UnregisterFrameDialog = () => {
             fullScreen={matches ? false : true}
             open={unregisterDialog.open}
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
-            onClose={handleDialogClose}
+            onDialogClose={handleDialogClose}
             aria-describedby='delete-frame-dialog'
             maxWidth="sm"
             fullWidth

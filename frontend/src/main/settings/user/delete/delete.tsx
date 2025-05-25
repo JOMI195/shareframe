@@ -71,7 +71,7 @@ const Delete = () => {
                 </Grid>
             </Box>
 
-            <Dialog open={openDialog} onClose={handleDialogClose}>
+            <Dialog open={openDialog} onDialogClose={handleDialogClose}>
                 <Box
                     sx={{ m: 2 }}
                     component='form'

@@ -58,7 +58,7 @@ const RegisterFrameDialog: React.FC = () => {
       fullScreen={matches ? false : true}
       open={open}
       TransitionComponent={matches ? ZoomTransition : SlideTransition}
-      onClose={handleDialogClose}
+      onDialogClose={handleDialogClose}
       aria-describedby='dialog-slide-upload'
       maxWidth="xs"
       fullWidth
