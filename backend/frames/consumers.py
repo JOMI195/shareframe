@@ -439,7 +439,10 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 logger.info(f"Received text message from frame {frame_id}: {content}")
             elif message_type == "check_sent_images_expiry":
                 await self.handle_check_user_frame_images_expiry(message)
-            elif message_type == "check_missing_images":  # Fixed typo in method name
+            elif message_type == "check_missing_images":
+                await self.handle_check_user_frame_missing_images(message)
+            # TODO delete when all frames updated with typo fix
+            elif message_type == "check_mssing_images":
                 await self.handle_check_user_frame_missing_images(message)
             else:
                 logger.warning(
