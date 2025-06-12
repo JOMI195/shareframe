@@ -1,8 +1,27 @@
 from django.contrib import admin
 from django.utils.html import format_html
 from django.db.models import Case, When
+from django.contrib.admin.views.main import ChangeList
+from django.http import HttpRequest
 from .models import Release
 import semver
+
+
+class SemverChangeList(ChangeList):
+    def get_queryset(self, request: HttpRequest):
+        qs = super().get_queryset(request)
+
+        sorted_qs = sorted(
+            qs,
+            key=lambda r: semver.VersionInfo.parse(r.version),
+            reverse=True,
+        )
+
+        sorted_ids = [r.pk for r in sorted_qs]
+
+        preserved = Case(*[When(pk=pk, then=pos) for pos, pk in enumerate(sorted_ids)])
+
+        return qs.filter(pk__in=sorted_ids).order_by(preserved)
 
 
 @admin.register(Release)
@@ -50,24 +69,8 @@ class ReleaseAdmin(admin.ModelAdmin):
         ),
     )
 
-    def get_queryset(self, request):
-        qs = super().get_queryset(request)
-        # Create a sorted list of IDs based on semantic versioning
-        sorted_ids = sorted(
-            qs,
-            key=lambda r: semver.VersionInfo.parse(r.version),
-            reverse=True,
-        )
-        id_order = [r.pk for r in sorted_ids]
-
-        if not id_order:
-            return qs.none()
-
-        # Use a CASE WHEN to preserve order at the DB level
-        preserved_order = Case(
-            *[When(pk=pk, then=pos) for pos, pk in enumerate(id_order)]
-        )
-        return qs.filter(pk__in=id_order).order_by(preserved_order)
+    def get_changelist(self, request, **kwargs):
+        return SemverChangeList
 
     def group_list(self, obj):
         groups = obj.groups.all()
