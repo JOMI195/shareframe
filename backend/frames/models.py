@@ -9,6 +9,15 @@ import uuid
 import random
 
 
+class FrameGroup(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+
 class Frame(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
@@ -16,6 +25,12 @@ class Frame(models.Model):
 
     public_serial_number = models.CharField(max_length=100, unique=True)
     private_serial_number = models.CharField(max_length=100, unique=True)
+
+    groups = models.ManyToManyField(
+        FrameGroup,
+        blank=True,
+        related_name="frames",
+    )
 
     is_active = models.BooleanField(default=True)
 

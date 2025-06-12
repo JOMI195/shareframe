@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import Frame, FrameToken, FrameWebsocketConnection
+from .models import Frame, FrameGroup, FrameToken, FrameWebsocketConnection
 
 
 class FrameTokenInline(admin.TabularInline):
@@ -19,6 +19,20 @@ class FrameWebsocketConnectionInline(admin.TabularInline):
     can_delete = False
 
 
+@admin.register(FrameGroup)
+class FrameGroupAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "description", "frame_count", "created_at")
+    search_fields = ("name", "description")
+    readonly_fields = ("created_at",)
+    list_per_page = 50
+
+    def frame_count(self, obj):
+        count = obj.frames.count()
+        return format_html('<span style="font-weight: bold;">{}</span>', count)
+
+    frame_count.short_description = "Frames"
+
+
 @admin.register(Frame)
 class FrameAdmin(admin.ModelAdmin):
     list_display = (
@@ -27,11 +41,13 @@ class FrameAdmin(admin.ModelAdmin):
         "user",
         "version",
         "is_active",
+        "group_list",
         "has_ws_connection",
     )
     list_filter = ("is_active", "version")
     search_fields = ("public_serial_number", "user__username")
     list_per_page = 50
+    filter_horizontal = ("groups",)
 
     inlines = [FrameTokenInline, FrameWebsocketConnectionInline]
     readonly_fields = (
@@ -47,6 +63,12 @@ class FrameAdmin(admin.ModelAdmin):
             None,
             {
                 "fields": ("user", "is_active", "version"),
+            },
+        ),
+        (
+            "Groups",
+            {
+                "fields": ("groups",),
             },
         ),
         (
@@ -78,6 +100,18 @@ class FrameAdmin(admin.ModelAdmin):
         )
 
     has_ws_connection.short_description = "has_ws_connection"
+
+    def group_list(self, obj):
+        groups = obj.groups.all()
+        if not groups:
+            return format_html('<span style="color: red;">No groups</span>')
+
+        group_names = [group.name for group in groups]
+        return format_html(
+            '<span style="font-size: 12px;">{}</span>', ", ".join(group_names)
+        )
+
+    group_list.short_description = "Groups"
 
 
 @admin.register(FrameToken)

@@ -1,12 +1,16 @@
 import os
+import uuid
 from django.db import models
 from django.core.validators import RegexValidator
 from django.core.exceptions import ValidationError
 import semver
 
+from frames.models import FrameGroup
+
 
 def release_file_upload_path(instance, filename):
-    return os.path.join("frame-updates", filename)
+    unique_filename = f"{uuid.uuid4().hex}_{filename}"
+    return os.path.join("frame-updates", unique_filename)
 
 
 class Release(models.Model):
@@ -25,6 +29,11 @@ class Release(models.Model):
                 message="Version must be in semantic versioning format (e.g., 1.0.0)",
             )
         ],
+    )
+    groups = models.ManyToManyField(
+        FrameGroup,
+        blank=True,
+        related_name="releases",
     )
     release_date = models.DateTimeField(auto_now_add=True)
     file = models.FileField(upload_to=release_file_upload_path)

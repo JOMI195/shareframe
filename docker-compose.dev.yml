@@ -1,7 +1,7 @@
 services:
   backend: &backend
-    container_name: backend
-    restart: always
+    container_name: backend-dev
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: ./Dockerfile.dev
@@ -19,8 +19,8 @@ services:
         condition: service_healthy
 
   websockets:
-    container_name: websockets
-    restart: always
+    container_name: websockets-dev
+    restart: unless-stopped
     build:
       context: ./backend
       dockerfile: ./Dockerfile.dev
@@ -39,9 +39,9 @@ services:
         condition: service_healthy
 
   backend_db:
-    container_name: backend_db
+    container_name: backend_db-dev
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     ports:
       - 5432:5432
     volumes:
@@ -55,12 +55,12 @@ services:
       retries: 5
 
   redis:
-    container_name: redis
+    container_name: redis-dev
     image: redis:6.2-alpine
+    restart: unless-stopped
     command: redis-server  --appendonly yes  --appendfsync everysec  --save 60 1  --loglevel notice
     ports:
       - 6379:6379
-    restart: always
     volumes:
       - redis_data:/data
     healthcheck:
@@ -70,7 +70,7 @@ services:
       retries: 3
 
   celery:
-    container_name: celery
+    container_name: celery-dev
     <<: *backend
     command: celery -A config worker --loglevel=info -n worker1
     depends_on:
@@ -79,7 +79,7 @@ services:
     ports: []
 
   celery-beat:
-    container_name: celery-beat
+    container_name: celery-beat-dev
     <<: *backend
     command: celery -A config beat
     depends_on:
@@ -88,8 +88,8 @@ services:
     ports: []
 
   frontend:
-    container_name: frontend
-    restart: always
+    container_name: frontend-dev
+    restart: unless-stopped
     build:
       context: ./frontend
       dockerfile: Dockerfile.dev

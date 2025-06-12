@@ -1,7 +1,7 @@
 services:
   backend: &backend
     container_name: backend
-    restart: always
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
@@ -26,7 +26,7 @@ services:
 
   websockets:
     container_name: websockets
-    restart: always
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
@@ -52,7 +52,7 @@ services:
   backend_db:
     container_name: backend_db
     image: postgres:15
-    restart: always
+    restart: unless-stopped
     env_file:
       - ./.env.prod.local
     volumes:
@@ -71,7 +71,7 @@ services:
     command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice
     expose:
       - 6379
-    restart: always
+    restart: unless-stopped
     volumes:
       - redis_data:/data
     healthcheck:
@@ -85,7 +85,7 @@ services:
   celery:
     <<: *backend
     container_name: celery
-    restart: always
+    restart: unless-stopped
     command: celery -A config worker --loglevel=info -n worker1
     depends_on:
       redis:
@@ -101,7 +101,7 @@ services:
   celery-beat:
     <<: *backend
     container_name: celery-beat
-    restart: always
+    restart: unless-stopped
     command: celery -A config beat --loglevel=INFO
     depends_on:
       redis:
@@ -116,7 +116,7 @@ services:
 
   nginx:
     container_name: nginx
-    restart: always
+    restart: unless-stopped
     build:
       context: .
       dockerfile: ./frontend/Dockerfile.prod.local

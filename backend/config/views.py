@@ -10,6 +10,8 @@ from rest_framework import status
 
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
+from frame_updates.models import Release
+from frames.models import Frame
 
 
 class MediaAccessView(APIView):
@@ -95,12 +97,35 @@ class FrameUpdatesAccessView(APIView):
 
     def get(self, request, path: str):
         user = request.user
+        frame: Frame | None = getattr(request, "auth", None)
 
         if path.strip() == "":
             raise PermissionDenied("No valid path")
 
         if not user.is_authenticated:
             raise PermissionDenied("Media not found or not authorized to access.")
+
+        if not frame or not frame.groups.exists():
+            raise PermissionDenied("Frame has no valid groups assigned.")
+
+        frame_groups = frame.groups.all()
+
+        accessible_releases = Release.objects.filter(
+            is_active=True, groups__in=frame_groups
+        ).distinct()
+
+        file_access_granted = False
+        for release in accessible_releases:
+            if release.file and release.file.name:
+                release_filename = os.path.basename(release.file.name)
+                requested_filename = os.path.basename(path)
+
+                if release_filename == requested_filename:
+                    file_access_granted = True
+                    break
+
+        if not file_access_granted:
+            raise PermissionDenied("File not found or not authorized to access.")
 
         response = Response(status=200)
         # nginx proxy_pass: /app/backend/mediafiles/frame-updates/
