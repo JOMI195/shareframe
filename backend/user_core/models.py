@@ -80,6 +80,14 @@ class User(AbstractBaseUser, PermissionsMixin):
         app_label = "user_core"
         db_table = "user"
 
+    def get_short_name(self):
+        """Return the short name for the user."""
+        return self.email
+
+    def get_full_name(self):
+        """Return the full name for the user."""
+        return self.email
+
     def has_perm(self, perm, obj=None):
         """Check if the user have a specific permission."""
         # Simplest possible answer: Yes, always
