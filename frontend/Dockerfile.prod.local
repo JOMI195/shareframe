@@ -8,6 +8,7 @@ WORKDIR /app/frontend
 COPY ./frontend/package.json .
 COPY ./frontend/package-lock.json .
 
+RUN npm install -g npm@latest
 RUN npm install
 
 COPY ./frontend .
