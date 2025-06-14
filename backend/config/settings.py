@@ -37,6 +37,13 @@ CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS").split(" ")
 PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
 APP_BUILD_VERSION = os.environ.get("APP_BUILD_VERSION", "")
 
+if PRODUCTION:
+    # Trust proxy headers and force HTTPS in production
+    SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+    SECURE_SSL_REDIRECT = True
+else:
+    SECURE_SSL_REDIRECT = False
+
 # Application definition
 
 INSTALLED_APPS = [
