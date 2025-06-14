@@ -644,13 +644,13 @@ def frame_slideshow_update_display_images_loop_interval():
                 400,
             )
 
-        # Set reasonable bounds (e.g., minimum 5 mins (300 seconds), maximum 24 hours)
-        if interval_seconds < 300:
+        # Set reasonable bounds (e.g., minimum 3 mins (180 seconds), maximum 24 hours)
+        if interval_seconds < 180:
             return (
                 jsonify(
                     {
                         "success": False,
-                        "message": "Interval must be at least 300 seconds (5 mins)",
+                        "message": "Interval must be at least 180 seconds (3 mins)",
                     }
                 ),
                 400,

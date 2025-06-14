@@ -4,6 +4,7 @@ import Typography from "@mui/material/Typography";
 import Logo from "@/common/components/logo";
 import Stack from "@mui/material/Stack";
 import { Outlet } from "react-router";
+import { useMediaQuery, useTheme } from "@mui/material";
 
 function Copyright(props: any) {
   return (
@@ -25,8 +26,19 @@ function Copyright(props: any) {
 }
 
 const AuthenticationLayout = () => {
+  const theme = useTheme();
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+
   return (
-    <Container component="main" maxWidth="xs" disableGutters sx={{ my: 2, }}>
+    <Container
+      component="main"
+      maxWidth="xs"
+      disableGutters
+      sx={{
+        px: isSmallScreen ? 2 : 0,
+        py: isSmallScreen ? 2 : 5,
+      }}
+    >
       <Box
         sx={{
           display: "flex",
