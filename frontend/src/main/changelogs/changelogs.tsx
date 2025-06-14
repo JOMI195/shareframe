@@ -64,7 +64,19 @@ const Changelogs: React.FC = () => {
                     {[...changelogs]
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                         .map((changelog, index) => (
-                            <Accordion square={true} key={changelog.id} sx={{ mb: 2 }} defaultExpanded={index === 0}>
+                            <Accordion
+                                key={changelog.id}
+                                elevation={1}
+                                square={true}
+                                sx={{
+                                    mb: 2,
+                                    borderRadius: `${theme.shape.borderRadius}px`,
+                                    "&.MuiAccordion-root:before": {
+                                        backgroundColor: "transparent"
+                                    }
+                                }}
+                                defaultExpanded={index === 0}
+                            >
                                 <AccordionSummary
                                     expandIcon={<ExpandMoreIcon />}
                                     sx={{

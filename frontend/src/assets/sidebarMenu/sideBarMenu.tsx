@@ -10,26 +10,26 @@ export const sidebarMenuItems: IAppBarMenuItem[] = [
     {
         name: "Start",
         url: getHomeUrl(),
-        icon: HomeIcon
+        icon: <HomeIcon />
     },
     {
         name: "Fotos",
         url: getImageUrl(),
-        icon: ImageIcon
+        icon: <ImageIcon />
     },
     {
         name: "Aktivitäten",
         url: getActivityUrl(),
-        icon: ShareIcon
+        icon: <ShareIcon />
     },
     {
         name: "Freunde",
         url: getFriendsUrl(),
-        icon: GroupIcon
+        icon: <GroupIcon />
     },
     {
         name: "Bilderrahmen",
         url: getFramesUrl(),
-        icon: FilterFramesIcon
+        icon: <FilterFramesIcon />
     },
 ];

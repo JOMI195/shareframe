@@ -9,7 +9,7 @@ export interface IAccountMenuItem {
 export interface IAppBarMenuItem {
     name: string;
     url: string;
-    icon: SvgIconComponent;
+    icon: JSX.Element;
 }
 
 export interface DialogAction {

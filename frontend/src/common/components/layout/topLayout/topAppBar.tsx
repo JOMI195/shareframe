@@ -35,16 +35,18 @@ function TopAppBar() {
             }}
         >
             <Toolbar sx={{ height: "100%" }}>
-                <IconButton
-                    size="small"
-                    aria-label="account of current user"
-                    aria-haspopup="true"
-                    onClick={handleSidebarButtonClick}
-                    className='ignore-clickaway'
-                    sx={{ mr: 2 }}
-                >
-                    {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
-                </IconButton>
+                <Tooltip title={`Seitenmenü ${sidebarOpen ? "schließen" : "öffnen"}`} placement="bottom">
+                    <IconButton
+                        size="small"
+                        aria-label="account of current user"
+                        aria-haspopup="true"
+                        onClick={handleSidebarButtonClick}
+                        className='ignore-clickaway'
+                        sx={{ mr: 2 }}
+                    >
+                        {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+                    </IconButton>
+                </Tooltip>
                 <Logo
                     darkLogoSrc="/logo-dark-full-shareframe.svg"
                     lightLogoSrc="/logo-light-full-shareframe.svg"

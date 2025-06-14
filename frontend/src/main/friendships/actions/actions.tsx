@@ -21,7 +21,6 @@ export const Actions: React.FC = () => {
   return (
     <BottomFloatingActions
       actionPrimary={action}
-      actionsSecondary={[]}
     />
   );
 };

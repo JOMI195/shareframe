@@ -10,24 +10,23 @@ import { DialogAction } from '@/types';
 
 interface BottomMainFloatingActionsProps {
     actionPrimary?: DialogAction;
-    actionsSecondary: DialogAction[];
+    actionSecondary?: DialogAction;
+    actionsAdditional?: DialogAction[];
     disabled?: boolean;
     position?: 'fixed' | 'absolute';
+    speedDialIcon?: React.ReactNode;
 }
 
 const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
-    actionsSecondary,
+    actionsAdditional = [],
     actionPrimary,
+    actionSecondary,
     disabled = false,
     position = 'fixed',
+    speedDialIcon = <MoreHorizIcon />,
 }) => {
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
     const actionsRef = useRef<HTMLDivElement>(null);
-
-    const mainAction = actionPrimary || actionsSecondary[0];
-    const speedDialActions = actionPrimary
-        ? actionsSecondary
-        : actionsSecondary.slice(1);
 
     const getPositionStyles = () => {
         const baseStyles = {
@@ -59,26 +58,46 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
             ref={actionsRef}
             sx={getPositionStyles()}
         >
-            {mainAction && (
+            {actionPrimary && (
                 <Fab
-                    color={mainAction.color === 'primary' ? 'primary' : 'default'}
+                    color={actionPrimary.color}
                     size="large"
-                    onClick={mainAction.onClick}
-                    disabled={disabled || mainAction.disabled}
+                    onClick={actionPrimary.onClick}
+                    disabled={disabled || actionPrimary.disabled}
                     variant='extended'
-                    sx={{ alignSelf: "flex-end" }}
+                    sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
                 >
-                    <Box sx={{ mr: { xs: 1 }, display: 'flex' }}>
-                        {mainAction.icon}
-                    </Box>
-                    {mainAction.label}
+                    {actionPrimary.icon && (
+                        <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
+                            {actionPrimary.icon}
+                        </Box>
+                    )}
+                    {actionPrimary.label}
                 </Fab>
             )}
 
-            {speedDialActions.length > 0 && (
+            {actionSecondary && (
+                <Fab
+                    color={actionSecondary.color}
+                    size="large"
+                    onClick={actionSecondary.onClick}
+                    disabled={disabled || actionSecondary.disabled}
+                    variant='extended'
+                    sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
+                >
+                    {actionSecondary && (
+                        <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
+                            {actionSecondary.icon}
+                        </Box>
+                    )}
+                    {actionSecondary.label}
+                </Fab>
+            )}
+
+            {actionsAdditional.length > 0 && (
                 <SpeedDial
                     ariaLabel={"Aktionen"}
-                    icon={<MoreHorizIcon />}
+                    icon={speedDialIcon}
                     onClose={() => setSpeedDialOpen(false)}
                     onOpen={() => setSpeedDialOpen(true)}
                     open={speedDialOpen}
@@ -94,10 +113,16 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                         },
                         '& .MuiTooltip-tooltip': {
                             whiteSpace: 'nowrap',
-                        }
+                        },
+                        '& .MuiFab-primary': {
+                            borderRadius: '10px',
+                        },
+                        '& .MuiSpeedDialAction-fab': {
+                            borderRadius: '10px',
+                        },
                     }}
                 >
-                    {speedDialActions.map((action, index) => (
+                    {actionsAdditional.map((action, index) => (
                         <SpeedDialAction
                             key={`${action.label}-${index}`}
                             icon={action.icon}
