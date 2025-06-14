@@ -1,18 +1,10 @@
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import Logo from "@/common/components/logo";
 import { useAppSelector } from "@/store";
 import { selectLoadingWallState } from "@/store/loadingWall/loadingWall.Slice";
 import { Box, Typography } from "@mui/material";
-import { useEffect } from "react";
-import { useNavigate } from "react-router";
 
 const LoadingWall = () => {
-    const navigate = useNavigate();
     const { message } = useAppSelector(selectLoadingWallState);
-
-    useEffect(() => {
-        navigate(getHomeUrl());
-    }, [navigate]);
 
     return (
         <Box

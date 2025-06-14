@@ -4,16 +4,18 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { closeUpdatesConfirmUpdateDialog, getDialogs } from "@/store/dialogs/dialogs.Slice";
 import { performUpdate } from "@/store/updates/updates.Slice";
 import { Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router";
 
 const Dialogs = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { isConnected } = usePiConnection();
 
     const isUpdateConfirmDialogOpen = useAppSelector(getDialogs).updates.confirmUpdate.open;
 
     const handleConfirmUpdate = async () => {
         dispatch(closeUpdatesConfirmUpdateDialog());
-        await dispatch(performUpdate());
+        await dispatch(performUpdate(navigate));
     };
 
     return (

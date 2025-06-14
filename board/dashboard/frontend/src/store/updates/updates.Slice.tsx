@@ -6,6 +6,7 @@ import { IServerResponse } from '@/types';
 import { fetchWithTimeout } from '@/common/utils/fetch';
 import { getLatestReleaseUrl, getPerformUpdateUrl } from '@/assets/endpoints/api/frame';
 import { showLoadingWall } from '../loadingWall/loadingWall.Slice';
+import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 
 interface Release {
     version: string;
@@ -49,7 +50,7 @@ export const fetchLatestRelease = createAsyncThunk(
 
 export const performUpdate = createAsyncThunk(
     'updates/performUpdate',
-    async (_, { dispatch, rejectWithValue }) => {
+    async (navigate: (path: string) => void, { dispatch, rejectWithValue }) => {
         const snackbarId = uuid();
         try {
             dispatch(addLoadingSnackbar(snackbarId, "Starte Updateprozess"));
@@ -59,6 +60,7 @@ export const performUpdate = createAsyncThunk(
 
             if (payload.success) {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess gestartet", "success"));
+                navigate(getHomeUrl());
                 dispatch(showLoadingWall("Die Updates werden installiert. Während dieser Zeit ist das Dashboard nicht verfügbar. Die Applikation wird anschließend neu gestartet. Lade diese Seite in ein paar Minuten einfach ein paar Mal erneut, bis sie wieder verfügbar ist."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess fehlgeschlagen", "error"));

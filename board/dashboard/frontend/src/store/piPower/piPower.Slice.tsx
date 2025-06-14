@@ -7,6 +7,7 @@ import { fetchWithTimeout } from '@/common/utils/fetch';
 import { getClearDisplayUrl, getRestartPiUrl, getShutdownPiUrl } from '@/assets/endpoints/api/frame';
 import { showLoadingWall } from '../loadingWall/loadingWall.Slice';
 import { toggleSlideshowThunk } from '../slideshowOperation/slideshowOperation.Slice';
+import { getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
 
 export interface PiPowerState {
 }
@@ -17,9 +18,9 @@ const initialState: PiPowerState = {
 
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-export const restartPi = createAsyncThunk<void, void, { state: RootState, dispatch: AppDispatch }>(
+export const restartPi = createAsyncThunk<void, (path: string) => void, { state: RootState, dispatch: AppDispatch }>(
     'piPower/restartPi',
-    async (_, { dispatch, rejectWithValue }) => {
+    async (navigate, { dispatch, rejectWithValue }) => {
         const snackbarId = uuid();
         try {
             dispatch(addLoadingSnackbar(snackbarId, "Starte Neustartprozess"));
@@ -29,6 +30,7 @@ export const restartPi = createAsyncThunk<void, void, { state: RootState, dispat
 
             if (payload.success) {
                 dispatch(addAlertSnackbar(uuid(), "Neustartprozess gestartet", "success"));
+                navigate(getHomeUrl());
                 dispatch(showLoadingWall("Der Bilderrahmen wird neu gestartet. Während dieser Zeit ist das Dashboard nicht verfügbar. Lade diese Seite in ein paar Minuten erneut bis es wieder verfügbar ist."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Neustartprozess fehlgeschlagen", "error"));
@@ -44,9 +46,9 @@ export const restartPi = createAsyncThunk<void, void, { state: RootState, dispat
     }
 );
 
-export const shutdownPi = createAsyncThunk<void, void, { state: RootState, dispatch: AppDispatch }>(
+export const shutdownPi = createAsyncThunk<void, (path: string) => void, { state: RootState, dispatch: AppDispatch }>(
     'piPower/shutdownPi',
-    async (_, { dispatch, rejectWithValue, getState }) => {
+    async (navigate, { dispatch, rejectWithValue, getState }) => {
         const snackbarId = uuid();
         try {
             dispatch(addLoadingSnackbar(snackbarId, "Fahre Bilderrahmen herunter. Dies kann einige Minuten in Anpruch nehmen."));
@@ -64,6 +66,7 @@ export const shutdownPi = createAsyncThunk<void, void, { state: RootState, dispa
 
             if (payload.success) {
                 await delay(90000);
+                navigate(getHomeUrl());
                 dispatch(showLoadingWall("Der Bilderrahmen wurde erfolgreich heruntergefahren. Das Dashboard ist nun nicht mehr verfügbar. Um ihn neu zu starten musst du die Stromzufuhr unterbrechen und wieder herstellen."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Herunterfahrprozess fehlgeschlagen", "error"));

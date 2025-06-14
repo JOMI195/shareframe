@@ -4,9 +4,11 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { closeRestartDialog, closeShutdownDialog, getDialogs } from "@/store/dialogs/dialogs.Slice";
 import { restartPi, shutdownPi } from "@/store/piPower/piPower.Slice";
 import { Stack, Typography } from "@mui/material";
+import { useNavigate } from "react-router";
 
 const Dialogs = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { isConnected } = usePiConnection();
 
     const isRestartDialogOpen = useAppSelector(getDialogs).general.restart.open;
@@ -14,12 +16,12 @@ const Dialogs = () => {
 
     const handleConfirmRestart = async () => {
         dispatch(closeRestartDialog())
-        await dispatch(restartPi());
+        await dispatch(restartPi(navigate));
     };
 
     const handleConfirmShutdown = async () => {
         dispatch(closeShutdownDialog())
-        await dispatch(shutdownPi());
+        await dispatch(shutdownPi(navigate));
     };
 
     return (
