@@ -13,6 +13,7 @@ import {
     CardActions,
     Tooltip,
     IconButton,
+    useMediaQuery,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
@@ -27,6 +28,8 @@ const ITEMS_PER_PAGE = 6;
 const FriendshipsGallery: React.FC = () => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const friendships = useAppSelector(getFriendships);
     const friendshipsLoading = useAppSelector(getApi).loading;
@@ -124,33 +127,12 @@ const FriendshipsGallery: React.FC = () => {
         );
     };
 
+    interface PaginationComponentProps {
+        showCount?: boolean;
+    }
 
-    return (
-        <Stack spacing={2}>
-            <Box sx={{ px: 2 }}>
-                {friendshipsLoading ? (
-                    <Grid container spacing={2}>
-                        {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                            <Grid item key={index} xs={6} sm={4} md={3}>
-                                <LoadingSkeletonCard />
-                            </Grid>
-                        ))}
-                    </Grid>
-                ) : currentFriendships.filter((friendship) => friendship.status === "accepted").length !== 0 ? (
-                    <Grid container spacing={2}>
-                        {currentFriendships
-                            .filter((friendship) => friendship.status === "accepted")
-                            .map((friendship) => (
-                                <Grid item key={friendship.id} xs={6} sm={4} md={3}>
-                                    <FriendCard friendship={friendship} />
-                                </Grid>
-                            ))}
-                    </Grid>
-                ) : (
-                    <DataNotFound notFoundMessage={"Keine Freundschaften vorhanden"} />
-                )}
-            </Box>
-
+    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+        return (
             <Box
                 sx={{
                     display: "flex",
@@ -175,12 +157,47 @@ const FriendshipsGallery: React.FC = () => {
                             />
                         )}
 
-                        <Typography variant="subtitle2" color="textSecondary" textAlign="center">
-                            {friendships.filter((friendship) => friendship.status === "accepted").length} Freund{friendships.filter((friendship) => friendship.status === "accepted").length !== 1 ? "e" : ""}
-                        </Typography>
+                        {showCount && (
+                            <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                                {friendships.filter((friendship) => friendship.status === "accepted").length} Freund{friendships.filter((friendship) => friendship.status === "accepted").length !== 1 ? "e" : ""}
+                            </Typography>
+                        )}
                     </>
                 )}
             </Box>
+        );
+    }
+
+    return (
+        <Stack spacing={2}>
+            {isSmallScreen && currentPage > 1 && (
+                <PaginationComponent />
+            )}
+            <Box sx={{ px: 2 }}>
+                {friendshipsLoading ? (
+                    <Grid container spacing={2}>
+                        {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+                            <Grid item key={index} xs={6} sm={4} md={3}>
+                                <LoadingSkeletonCard />
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : currentFriendships.filter((friendship) => friendship.status === "accepted").length !== 0 ? (
+                    <Grid container spacing={2}>
+                        {currentFriendships
+                            .filter((friendship) => friendship.status === "accepted")
+                            .map((friendship) => (
+                                <Grid item key={friendship.id} xs={6} sm={4} md={3}>
+                                    <FriendCard friendship={friendship} />
+                                </Grid>
+                            ))}
+                    </Grid>
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine Freundschaften vorhanden"} />
+                )}
+            </Box>
+
+            <PaginationComponent showCount={true} />
         </Stack>
     );
 };

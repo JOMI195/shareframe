@@ -143,94 +143,108 @@ const SentImagesGallery = () => {
         </ImageList>
     );
 
+    interface PaginationComponentProps {
+        showCount?: boolean;
+    }
+
+    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
+                {loading ? (
+                    <Skeleton width={200} height={40} />
+                ) : (
+                    <>
+                        {totalPages > 1 && (
+                            <Pagination
+                                count={totalPages}
+                                page={currentPage}
+                                onChange={handlePageChange}
+                                color="primary"
+                                size={"large"}
+                                showFirstButton
+                                showLastButton
+                            />
+                        )}
+
+                        {showCount && (
+                            <>
+                                <Typography textAlign={"center"} variant="subtitle2" color="textSecondary">
+                                    {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
+                                </Typography>
+                                <Typography textAlign={"center"} variant="caption" color="textSecondary">
+                                    (Abgelaufene Aktivität wird nach 14 Tagen gelöscht)
+                                </Typography>
+                            </>
+                        )}
+                    </>
+                )}
+            </Box>
+        );
+    }
+
     return (
-        <Box sx={{ width: '100%' }}>
+        <Stack spacing={2}>
             <FilterControls
                 images={sentImages}
                 currentUser={user.me}
                 onFilteredImagesChange={setFilteredImages}
                 disabled={loading}
             />
-            <Stack spacing={2}>
-                {(loading || friendshipsLoading) ? (
-                    <LoadingSkeleton />
-                ) : currentImages.length !== 0 ? (
-                    <ImageList cols={cols} gap={8}>
-                        {currentImages.map((sentImage) => {
-                            const expiryDate = new Date(sentImage.expires_at);
-                            const isExpired = expiryDate < new Date();
+            {isSmallScreen && currentPage > 1 && (
+                <PaginationComponent />
+            )}
+            {(loading || friendshipsLoading) ? (
+                <LoadingSkeleton />
+            ) : currentImages.length !== 0 ? (
+                <ImageList cols={cols} gap={8}>
+                    {currentImages.map((sentImage) => {
+                        const expiryDate = new Date(sentImage.expires_at);
+                        const isExpired = expiryDate < new Date();
 
-                            return (
-                                <ImageListItem
-                                    key={sentImage.id}
-                                    onClick={() => handleImageClick(sentImage)}
-                                    style={{ cursor: "pointer" }}
-                                >
-                                    <AuthenticatedImage
-                                        url={`${MEDIA_BASE_URL}${getVariant(sentImage.image, "thumbnail")?.url}`}
-                                        alt={sentImage.image.name}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            borderRadius: 8,
-                                        }}
-                                        hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username) : false}
-                                    />
-                                    <ImageListItemBar
-                                        sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
-                                        title={
-                                            renderSenderReceiverInfo(sentImage)
-                                        }
-                                        subtitle={
-                                            <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
-                                                {formatGermanDateTime(new Date(sentImage.sent_at))}
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                    {getStatusIcon(isExpired)}
-                                                    <Typography variant="caption">
-                                                        {isExpired ? 'Abgelaufen' : 'Aktiv'}
-                                                    </Typography>
-                                                </Box>
-                                            </Box>
-                                        }
-                                    />
-                                </ImageListItem>
-                            );
-                        })}
-                    </ImageList>
-                ) : (
-                    <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos vorhanden"} />
-                )}
-
-
-                <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                    {loading ? (
-                        <Skeleton width={200} height={40} />
-                    ) : (
-                        <>
-                            {totalPages > 1 && (
-                                <Pagination
-                                    count={totalPages}
-                                    page={currentPage}
-                                    onChange={handlePageChange}
-                                    color="primary"
-                                    size={"large"}
-                                    showFirstButton
-                                    showLastButton
+                        return (
+                            <ImageListItem
+                                key={sentImage.id}
+                                onClick={() => handleImageClick(sentImage)}
+                                style={{ cursor: "pointer" }}
+                            >
+                                <AuthenticatedImage
+                                    url={`${MEDIA_BASE_URL}${getVariant(sentImage.image, "thumbnail")?.url}`}
+                                    alt={sentImage.image.name}
+                                    style={{
+                                        width: "100%",
+                                        height: "100%",
+                                        objectFit: "cover",
+                                        borderRadius: 8,
+                                    }}
+                                    hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username) : false}
                                 />
-                            )}
+                                <ImageListItemBar
+                                    sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
+                                    title={
+                                        renderSenderReceiverInfo(sentImage)
+                                    }
+                                    subtitle={
+                                        <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
+                                            {formatGermanDateTime(new Date(sentImage.sent_at))}
+                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                                {getStatusIcon(isExpired)}
+                                                <Typography variant="caption">
+                                                    {isExpired ? 'Abgelaufen' : 'Aktiv'}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
+                                    }
+                                />
+                            </ImageListItem>
+                        );
+                    })}
+                </ImageList>
+            ) : (
+                <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos vorhanden"} />
+            )}
 
-                            <Typography textAlign={"center"} variant="subtitle2" color="textSecondary">
-                                {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
-                            </Typography>
-                            <Typography textAlign={"center"} variant="caption" color="textSecondary">
-                                (Abgelaufene Aktivität wird nach 14 Tagen gelöscht)
-                            </Typography>
-                        </>
-                    )}
-                </Box>
-            </Stack >
-        </Box>
+            <PaginationComponent showCount={true} />
+        </Stack >
     );
 };
 

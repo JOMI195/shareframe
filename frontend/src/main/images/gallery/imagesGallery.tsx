@@ -76,9 +76,50 @@ const ImagesGallery: React.FC = () => {
     // Calculate total pages from the count in the paginated response
     const totalPages = Math.ceil(imagesPaginated.count / pageSize);
 
+    interface PaginationComponentProps {
+        showCount?: boolean;
+    }
+
+    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+        return (
+            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
+                {(imagesLoading || friendshipsLoading) ? (
+                    <Skeleton width={200} height={40} />
+                ) : (
+                    <>
+                        {totalPages > 1 && (
+                            <Pagination
+                                count={totalPages}
+                                page={imagesPaginated.page}
+                                onChange={handlePageChange}
+                                color="primary"
+                                size={"large"}
+                                showFirstButton
+                                showLastButton
+                            />
+                        )}
+
+                        {showCount && (
+                            <Typography
+                                variant="subtitle2"
+                                color="textSecondary"
+                                textAlign={"center"}
+                            >
+                                {imagesPaginated.count} Foto{imagesPaginated.count !== 1 ? "s" : ""}
+                            </Typography>
+                        )}
+                    </>
+                )}
+            </Box>
+        );
+    }
+
     return (
         <Stack spacing={2}>
             <FilterControls />
+            {isSmallScreen && imagesPaginated.page > 1 && (
+                <PaginationComponent />
+            )}
             {(imagesLoading || friendshipsLoading) ? (
                 <LoadingSkeleton />
             ) :
@@ -108,33 +149,7 @@ const ImagesGallery: React.FC = () => {
                         <DataNotFound notFoundMessage={"Keine Fotos vorhanden"} />
                     )}
 
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                {(imagesLoading || friendshipsLoading) ? (
-                    <Skeleton width={200} height={40} />
-                ) : (
-                    <>
-                        {totalPages > 1 && (
-                            <Pagination
-                                count={totalPages}
-                                page={imagesPaginated.page}
-                                onChange={handlePageChange}
-                                color="primary"
-                                size={"large"}
-                                showFirstButton
-                                showLastButton
-                            />
-                        )}
-
-                        <Typography
-                            variant="subtitle2"
-                            color="textSecondary"
-                            textAlign={"center"}
-                        >
-                            {imagesPaginated.count} Foto{imagesPaginated.count !== 1 ? "s" : ""}
-                        </Typography>
-                    </>
-                )}
-            </Box>
+            <PaginationComponent showCount={true} />
         </Stack>
     );
 };

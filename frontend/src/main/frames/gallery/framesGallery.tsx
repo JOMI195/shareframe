@@ -14,6 +14,7 @@ import {
     IconButton,
     Chip,
     Button,
+    useMediaQuery,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IFrame } from "@/types";
@@ -31,6 +32,8 @@ const ITEMS_PER_PAGE = 6;
 const FramesGallery: React.FC = () => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
+
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
@@ -166,32 +169,12 @@ const FramesGallery: React.FC = () => {
         );
     };
 
+    interface PaginationComponentProps {
+        showCount?: boolean;
+    }
 
-    return (
-        <Stack spacing={2}>
-            <Box sx={{ px: 2 }}>
-                {loading ? (
-                    <Grid container spacing={2}>
-                        {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                            <Grid item key={index} xs={12} md={4}>
-                                <LoadingSkeletonCard />
-                            </Grid>
-                        ))}
-                    </Grid>
-                ) : currentFrames.length !== 0 ? (
-                    <Grid container spacing={2}>
-                        {currentFrames
-                            .map((frame) => (
-                                <Grid item key={frame.id} xs={12} md={4}>
-                                    <FrameCard frame={frame} />
-                                </Grid>
-                            ))}
-                    </Grid>
-                ) : (
-                    <DataNotFound notFoundMessage={"Keine hinzugefügten Bilderrahmen vorhanden"} />
-                )}
-            </Box>
-
+    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+        return (
             <Box
                 sx={{
                     display: "flex",
@@ -216,12 +199,46 @@ const FramesGallery: React.FC = () => {
                             />
                         )}
 
-                        <Typography variant="subtitle2" color="textSecondary" textAlign="center">
-                            {frames.length} Bilderrahmen
-                        </Typography>
+                        {showCount && (
+                            <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                                {frames.length} Bilderrahmen
+                            </Typography>
+                        )}
                     </>
                 )}
             </Box>
+        );
+    }
+
+    return (
+        <Stack spacing={2}>
+            {isSmallScreen && currentPage > 1 && (
+                <PaginationComponent />
+            )}
+            <Box sx={{ px: 2 }}>
+                {loading ? (
+                    <Grid container spacing={2}>
+                        {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
+                            <Grid item key={index} xs={12} md={4}>
+                                <LoadingSkeletonCard />
+                            </Grid>
+                        ))}
+                    </Grid>
+                ) : currentFrames.length !== 0 ? (
+                    <Grid container spacing={2}>
+                        {currentFrames
+                            .map((frame) => (
+                                <Grid item key={frame.id} xs={12} md={4}>
+                                    <FrameCard frame={frame} />
+                                </Grid>
+                            ))}
+                    </Grid>
+                ) : (
+                    <DataNotFound notFoundMessage={"Keine hinzugefügten Bilderrahmen vorhanden"} />
+                )}
+            </Box>
+
+            <PaginationComponent showCount={true} />
         </Stack>
     );
 };

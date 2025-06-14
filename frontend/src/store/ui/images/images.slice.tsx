@@ -150,13 +150,13 @@ const imagesSlice = createSlice({
       .addCase(sendImageToUserFramePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Foto an Bilderrahmen des Empfängers schicken",
+          message: "Foto an Bilderrahmen der Empfänger schicken",
         };
       })
       .addCase(sendImageToUserFrameFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Foto an Bilderrahmen des Empfängers schicken erfolgreich",
+          message: "Foto an Bilderrahmen der Empfänger schicken erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -167,7 +167,7 @@ const imagesSlice = createSlice({
       .addCase(sendImageToUserFrameFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Foto an Bilderrahmen des Empfängers schicken fehlgeschlagen",
+          message: "Foto an Bilderrahmen der Empfänger schicken fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {

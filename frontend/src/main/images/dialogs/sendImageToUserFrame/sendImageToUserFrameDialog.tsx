@@ -4,7 +4,6 @@ import {
     Dialog,
     DialogContent,
     Grid,
-    DialogTitle,
     Typography,
     useMediaQuery,
     useTheme,
@@ -14,7 +13,11 @@ import {
     Select,
     MenuItem,
     FormControl,
-    InputLabel
+    InputLabel,
+    Chip,
+    Box,
+    OutlinedInput,
+    SelectChangeEvent
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IImage } from "@/types";
@@ -27,6 +30,17 @@ import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import ExpirationSelector from './expirationSelector';
 
+const ITEM_HEIGHT = 48;
+const ITEM_PADDING_TOP = 8;
+const MenuProps = {
+    PaperProps: {
+        style: {
+            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+            width: 250,
+        },
+    },
+};
+
 const SendImageToUserFrameDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
@@ -37,36 +51,66 @@ const SendImageToUserFrameDialog = () => {
     const imageToSend = imagesPaginated.results.find((image => image.id === sendDialog.imageId)) as IImage | undefined;
 
     const user = useAppSelector(getUser);
-
     const friendships = useAppSelector(getFriendships);
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-    const [receiverUsername, setReceiverUsername] = useState('');
+    const [receiverUsernames, setReceiverUsernames] = useState<string[]>([]);
     const [expirationOption, setExpirationOption] = useState<number>(24);
+    const [sendingInProgress, setSendingInProgress] = useState(false);
+    const [selectOpen, setSelectOpen] = useState(false);
+
+    const availableReceivers = [
+        ...friendships
+            .filter(friendship => friendship.status === "accepted")
+            .map(friendship => friendship.sender !== user.me.username ? friendship.sender : friendship.reciever),
+        user.me.username
+    ];
 
     const handleDialogClose = () => {
-        dispatch(closeSendImageToUserFrameDialog());
+        if (!sendingInProgress) {
+            dispatch(closeSendImageToUserFrameDialog());
+            setReceiverUsernames([]);
+        }
+    };
+
+    const handleReceiverChange = (event: SelectChangeEvent<typeof receiverUsernames>) => {
+        const value = event.target.value;
+        setReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
+        setTimeout(() => setSelectOpen(false), 100);
     };
 
     const handleConfirmSend = async () => {
-        try {
-            if (imageToSend !== undefined && receiverUsername) {
-                const expirationTimestamp = Math.floor(
-                    Date.now() / 1000 + (expirationOption * 3600)
-                );
+        if (!imageToSend || receiverUsernames.length === 0) {
+            return;
+        }
 
-                await dispatch(sendImageToUserFrames(
+        setSendingInProgress(true);
+
+        try {
+            const expirationTimestamp = Math.floor(
+                Date.now() / 1000 + (expirationOption * 3600)
+            );
+
+            const sendPromises = receiverUsernames.map(receiverUsername =>
+                dispatch(sendImageToUserFrames(
                     receiverUsername,
                     imageToSend.id,
                     expirationTimestamp.toString()
-                ));
-            }
+                ))
+            );
+
+            await Promise.all(sendPromises);
         } catch (error) {
             console.error('Error sending image:', error);
         } finally {
+            setSendingInProgress(false);
             handleDialogClose();
         }
+    };
+
+    const getReceiverDisplayName = (username: string) => {
+        return username === user.me.username ? "deine eigenen Bilderrahmen" : username;
     };
 
     return (
@@ -90,41 +134,55 @@ const SendImageToUserFrameDialog = () => {
                             color='inherit'
                             onClick={handleDialogClose}
                             aria-label='cancel'
+                            disabled={sendingInProgress}
                         >
                             <CloseIcon />
                         </IconButton>
                     </Toolbar>
                 </AppBar>
             )}
-            <DialogTitle>{`Foto ${imageToSend?.display_name ?? imageToSend?.name} senden`}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>Wähle den Empfänger und die Ablaufzeit. Das Foto wird an alle Bilderrahmen des Empfängers geschickt und dort bis zu der angegebenen Ablaufzeit angezeigt.</Typography>
+                <Typography sx={{ mb: 3 }}>
+                    Wähle die Empfänger und die Ablaufzeit. Das Foto wird an alle Bilderrahmen der ausgewählten Empfänger geschickt und dort bis zum Ender der angegebenen Ablaufzeit, bzw. bis der Empfänger dieses deaktiviert, angezeigt.
+                </Typography>
 
                 <FormControl fullWidth sx={{ mb: 1 }}>
                     <InputLabel>Empfänger</InputLabel>
                     <Select
-                        value={receiverUsername}
-                        label="Empfänger"
-                        onChange={(e) => setReceiverUsername(e.target.value as string)}
-                    >
-                        {friendships.filter(friendship => friendship.status === "accepted").map((friendship) => {
-                            const reciever = friendship.sender !== user.me.username ? friendship.sender : friendship.reciever;
-                            return (
-                                <MenuItem
-                                    key={reciever}
-                                    value={reciever}
-                                >
-                                    {reciever}
-                                </MenuItem>
-                            );
-                        }
+                        multiple
+                        value={receiverUsernames}
+                        onChange={handleReceiverChange}
+                        open={selectOpen}
+                        onOpen={() => setSelectOpen(true)}
+                        onClose={() => setSelectOpen(false)}
+                        input={<OutlinedInput label="Empfänger" />}
+                        renderValue={(selected) => (
+                            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                                {selected.map((value) => (
+                                    <Chip
+                                        key={value}
+                                        label={getReceiverDisplayName(value)}
+                                        size="small"
+                                    />
+                                ))}
+                            </Box>
                         )}
-                        <MenuItem
-                            key={user.me.username}
-                            value={user.me.username}
-                        >
-                            {"deine eigenen Bilderrahmen"}
-                        </MenuItem>
+                        MenuProps={MenuProps}
+                        disabled={sendingInProgress}
+                    >
+                        {availableReceivers.map((receiver) => (
+                            <MenuItem
+                                key={receiver}
+                                value={receiver}
+                                style={{
+                                    fontWeight: receiverUsernames.indexOf(receiver) === -1
+                                        ? theme.typography.fontWeightRegular
+                                        : theme.typography.fontWeightMedium,
+                                }}
+                            >
+                                {getReceiverDisplayName(receiver)}
+                            </MenuItem>
+                        ))}
                     </Select>
                 </FormControl>
 
@@ -149,6 +207,7 @@ const SendImageToUserFrameDialog = () => {
                             color="primary"
                             variant="outlined"
                             fullWidth
+                            disabled={sendingInProgress}
                         >
                             Abbrechen
                         </Button>
@@ -157,11 +216,14 @@ const SendImageToUserFrameDialog = () => {
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
-                            disabled={loading || !receiverUsername}
+                            disabled={loading || receiverUsernames.length === 0 || sendingInProgress}
                             variant="contained"
                             fullWidth
                         >
-                            Senden bestätigen
+                            {sendingInProgress
+                                ? `Sende an ${receiverUsernames.length} Empfänger...`
+                                : `An ${receiverUsernames.length} Empfänger senden`
+                            }
                         </Button>
                     </Grid>
                 </Grid>
