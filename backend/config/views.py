@@ -12,6 +12,7 @@ from images.models import Image, ImageVariant
 from sent_images.models import SentImage
 from frame_updates.models import Release
 from frames.models import Frame
+from changelogs.models import ChangelogImage
 
 
 class MediaAccessView(APIView):
@@ -144,6 +145,46 @@ class ChangelogsAccessView(APIView):
 
         if not user.is_authenticated:
             raise PermissionDenied("Media not found or not authorized to access.")
+
+        user_frames = Frame.objects.filter(user=user, is_active=True)
+
+        if not user_frames.exists():
+            raise PermissionDenied("User has no connected frames.")
+
+        user_frame_groups = set()
+        for frame in user_frames:
+            user_frame_groups.update(frame.groups.all())
+
+        if not user_frame_groups:
+            raise PermissionDenied("User's frames have no valid groups assigned.")
+
+        file_access_granted = False
+
+        changelog_images = ChangelogImage.objects.select_related("changelog").all()
+        for changelog_image in changelog_images:
+            if changelog_image.image and changelog_image.image.name:
+
+                image_filename = os.path.basename(changelog_image.image.name)
+                requested_filename = os.path.basename(path)
+
+                if image_filename == requested_filename:
+                    changelog = changelog_image.changelog
+
+                    if not changelog.is_published:
+                        continue
+
+                    changelog_groups = set(changelog.groups.all())
+
+                    if not changelog_groups:
+                        file_access_granted = True
+                        break
+
+                    if user_frame_groups.intersection(changelog_groups):
+                        file_access_granted = True
+                        break
+
+        if not file_access_granted:
+            raise PermissionDenied("File not found or not authorized to access.")
 
         response = Response(status=200)
         # nginx proxy_pass: /app/backend/mediafiles/changelogs/

@@ -1,8 +1,9 @@
 import os
 import time
 import uuid
-from django.conf import settings
 from django.db import models
+
+from frames.models import FrameGroup
 
 
 def changelogs_markdown_upload_path(instance, filename):
@@ -24,6 +25,11 @@ class Changelog(models.Model):
     title = models.CharField(max_length=255)
     content_file = models.FileField(
         upload_to=changelogs_markdown_upload_path, blank=True
+    )
+    groups = models.ManyToManyField(
+        FrameGroup,
+        blank=True,
+        related_name="changelogs",
     )
     is_published = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+
 from .models import Changelog, ChangelogImage
 from .forms import ChangelogAdminForm
 
@@ -20,10 +22,12 @@ class ChangelogAdmin(admin.ModelAdmin):
         "title",
         "is_published",
         "updated_at",
+        "group_list",
     )
-    list_filter = ("date", "is_published")
+    list_filter = ("date", "is_published", "groups")
     search_fields = ("title",)
     readonly_fields = ("created_at", "updated_at")
+    filter_horizontal = ("groups",)
     fieldsets = (
         (
             None,
@@ -38,8 +42,25 @@ class ChangelogAdmin(admin.ModelAdmin):
             },
         ),
         (
+            "Groups",
+            {
+                "fields": ("groups",),
+            },
+        ),
+        (
             "Timestamps",
             {"fields": ("created_at", "updated_at")},
         ),
     )
     inlines = [ChangelogImageInline]
+
+    def group_list(self, obj):
+        groups = obj.groups.all()
+        if not groups:
+            return format_html('<span style="color: red;">No groups</span>')
+        group_names = [group.name for group in groups]
+        return format_html(
+            '<span style="font-size: 12px;">{}</span>', ", ".join(group_names)
+        )
+
+    group_list.short_description = "Groups"
