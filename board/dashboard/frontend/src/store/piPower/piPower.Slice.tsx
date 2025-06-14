@@ -15,6 +15,8 @@ const initialState: PiPowerState = {
 
 };
 
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export const restartPi = createAsyncThunk<void, void, { state: RootState, dispatch: AppDispatch }>(
     'piPower/restartPi',
     async (_, { dispatch, rejectWithValue }) => {
@@ -30,7 +32,7 @@ export const restartPi = createAsyncThunk<void, void, { state: RootState, dispat
                 dispatch(showLoadingWall("Der Bilderrahmen wird neu gestartet. Während dieser Zeit ist das Dashboard nicht verfügbar. Lade diese Seite in ein paar Minuten erneut bis es wieder verfügbar ist."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Neustartprozess fehlgeschlagen", "error"));
-                return rejectWithValue('Failed start update process');
+                return rejectWithValue('Neustartprozess fehlgeschlagen');
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -47,7 +49,7 @@ export const shutdownPi = createAsyncThunk<void, void, { state: RootState, dispa
     async (_, { dispatch, rejectWithValue, getState }) => {
         const snackbarId = uuid();
         try {
-            dispatch(addLoadingSnackbar(snackbarId, "Starte Herunterfahrprozess"));
+            dispatch(addLoadingSnackbar(snackbarId, "Fahre Bilderrahmen herunter. Dies kann einige Minuten in Anpruch nehmen."));
 
             const state = getState() as RootState;
 
@@ -61,11 +63,11 @@ export const shutdownPi = createAsyncThunk<void, void, { state: RootState, dispa
             const payload: IServerResponse = await response.json();
 
             if (payload.success) {
-                dispatch(addAlertSnackbar(uuid(), "Herunterfahrprozess gestartet", "success"));
-                dispatch(showLoadingWall("Der Bilderrahmen wird heruntergefahren. Anschließend ist das Dashboard nicht mehr verfügbar. Um ihn neu zu starten musst du die Stromzufuhr unterbrechen und wieder herstellen."));
+                await delay(90000);
+                dispatch(showLoadingWall("Der Bilderrahmen wurde erfolgreich heruntergefahren. Das Dashboard ist nun nicht mehr verfügbar. Um ihn neu zu starten musst du die Stromzufuhr unterbrechen und wieder herstellen."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Herunterfahrprozess fehlgeschlagen", "error"));
-                return rejectWithValue('Failed start update process');
+                return rejectWithValue('Herunterfahrprozess fehlgeschlagen');
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';

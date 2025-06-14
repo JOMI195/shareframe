@@ -5,7 +5,7 @@ import { addAlertSnackbar, addLoadingSnackbar, removeLoadingSnackbar } from '../
 import { fetchWithTimeout } from '@/common/utils/fetch';
 import { IServerResponse } from '@/types';
 import { addTimer, resetTimer, startTimer } from '../timers/timers.Slice';
-import { getClearDisplayUrl, getSkipSlideshowImageUrl, getSlideshowIsActiveUrl, getSlideshowUrl } from '@/assets/endpoints/api/frame';
+import { getClearDisplayUrl, getDisplayImagesLoopIntervalUrl, getSkipSlideshowImageUrl, getSlideshowIsActiveUrl, getSlideshowUrl } from '@/assets/endpoints/api/frame';
 
 
 const MAX_OPERATION_WAIT_TIME = 10 * 60 * 1000; // 10 minutes
@@ -15,6 +15,9 @@ interface SlideshowOperationState {
     isToggling: boolean;
     isClearingDisplay: boolean;
     isSkippingImage: boolean;
+    isUpdatingInterval: boolean;
+    isFetchingInterval: boolean;
+    displayImagesIntervalMins: number;
     error: string | null;
     startTime: number | null;
 }
@@ -24,6 +27,9 @@ const initialState: SlideshowOperationState = {
     isToggling: false,
     isClearingDisplay: false,
     isSkippingImage: false,
+    isUpdatingInterval: false,
+    isFetchingInterval: false,
+    displayImagesIntervalMins: 15,
     error: null,
     startTime: null,
 };
@@ -51,6 +57,20 @@ export const slideshowOperationSlice = createSlice({
             state.isSkippingImage = action.payload.isSkippingImage;
             state.startTime = action.payload.isSkippingImage ? Date.now() : null;
         },
+        setUpdateIntervalStatus: (state, action: PayloadAction<{
+            isUpdatingInterval: boolean;
+        }>) => {
+            state.isUpdatingInterval = action.payload.isUpdatingInterval;
+            state.startTime = action.payload.isUpdatingInterval ? Date.now() : null;
+        },
+        setFetchIntervalStatus: (state, action: PayloadAction<{
+            isFetchingInterval: boolean;
+        }>) => {
+            state.isFetchingInterval = action.payload.isFetchingInterval;
+        },
+        setDisplayRefreshInterval: (state, action: PayloadAction<number>) => {
+            state.displayImagesIntervalMins = action.payload;
+        },
         setError: (state, action: PayloadAction<string | null>) => {
             state.error = action.payload;
         },
@@ -58,11 +78,141 @@ export const slideshowOperationSlice = createSlice({
             state.isToggling = false;
             state.isClearingDisplay = false;
             state.isSkippingImage = false;
+            state.isUpdatingInterval = false;
+            state.isFetchingInterval = false;
             state.error = null;
             state.startTime = null;
         }
     }
 });
+
+export const fetchDisplayImagesLoopInterval = () => async (
+    dispatch: AppDispatch,
+    getState: () => RootState
+) => {
+    const currentState = getState().slideshowOperation;
+
+    // Prevent operation if already fetching
+    if (currentState.isFetchingInterval) {
+        return;
+    }
+
+    try {
+        dispatch(slideshowOperationSlice.actions.setFetchIntervalStatus({
+            isFetchingInterval: true,
+        }));
+
+        const response = await fetchWithTimeout(getDisplayImagesLoopIntervalUrl());
+        const payload: IServerResponse & { interval_seconds: number } = await response.json();
+
+        if (payload.success && payload.interval_seconds !== undefined) {
+            // Convert seconds to minutes for consistency
+            const intervalMins = Math.round(payload.interval_seconds / 60);
+            dispatch(slideshowOperationSlice.actions.setDisplayRefreshInterval(intervalMins));
+        } else {
+            throw new Error('Failed to fetch display interval');
+        }
+
+        dispatch(slideshowOperationSlice.actions.setFetchIntervalStatus({
+            isFetchingInterval: false,
+        }));
+
+    } catch (error) {
+        dispatch(slideshowOperationSlice.actions.setFetchIntervalStatus({
+            isFetchingInterval: false,
+        }));
+
+        dispatch(slideshowOperationSlice.actions.setError(
+            error instanceof Error ? error.message : 'Unbekannter Fehler'
+        ));
+
+        dispatch(addAlertSnackbar(
+            uuid(),
+            'Abrufen des Intervalls der Bilderwiedergabe fehlgeschlagen',
+            'error'
+        ));
+    }
+};
+
+export const updateDisplayImagesLoopInterval = (intervalMins: number) => async (
+    dispatch: AppDispatch,
+    getState: () => RootState
+) => {
+    const currentState = getState().slideshowOperation;
+
+    // Prevent multiple simultaneous operations
+    if (currentState.isToggling || currentState.isClearingDisplay ||
+        currentState.isSkippingImage || currentState.isUpdatingInterval) {
+        return;
+    }
+
+    const actionId = uuid();
+
+    try {
+        dispatch(slideshowOperationSlice.actions.setUpdateIntervalStatus({
+            isUpdatingInterval: true,
+        }));
+
+        dispatch(addLoadingSnackbar(
+            actionId,
+            'Intervall der Bilderwiedergabe wird aktualisiert'
+        ));
+
+        // Convert minutes to seconds for the API
+        const intervalSeconds = intervalMins * 60;
+
+        const response = await fetchWithTimeout(getDisplayImagesLoopIntervalUrl(), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                interval_seconds: intervalSeconds
+            })
+        });
+
+        const payload: IServerResponse & { interval_seconds: number } = await response.json();
+
+        if (payload.success) {
+            dispatch(slideshowOperationSlice.actions.setDisplayRefreshInterval(intervalMins));
+
+            dispatch(addAlertSnackbar(
+                uuid(),
+                `Intervall der Bilderwiedergabe erfolgreich auf ${intervalMins} Minuten aktualisiert`,
+                'success'
+            ));
+
+            // Start timer
+            dispatch(resetTimer('slideshow-actions-timer'));
+            dispatch(startTimer('slideshow-actions-timer'));
+        } else {
+            throw new Error(payload.message || 'Failed to update display interval');
+        }
+
+        dispatch(slideshowOperationSlice.actions.setUpdateIntervalStatus({
+            isUpdatingInterval: false,
+        }));
+
+        dispatch(removeLoadingSnackbar(actionId));
+
+    } catch (error) {
+        dispatch(slideshowOperationSlice.actions.setUpdateIntervalStatus({
+            isUpdatingInterval: false,
+        }));
+
+        dispatch(slideshowOperationSlice.actions.setError(
+            error instanceof Error ? error.message : 'Unbekannter Fehler'
+        ));
+
+        dispatch(addAlertSnackbar(
+            uuid(),
+            'Aktualisierung des Intervalls der Bilderwiedergabes fehlgeschlagen',
+            'error'
+        ));
+
+        dispatch(removeLoadingSnackbar(actionId));
+    }
+};
 
 export const skipImageThunk = () => async (
     dispatch: AppDispatch,
@@ -71,7 +221,8 @@ export const skipImageThunk = () => async (
     const currentState = getState().slideshowOperation;
 
     // Prevent multiple simultaneous operations
-    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
+    if (currentState.isToggling || currentState.isClearingDisplay ||
+        currentState.isSkippingImage || currentState.isUpdatingInterval) {
         return;
     }
 
@@ -140,7 +291,8 @@ export const clearDisplayThunk = () => async (
     const currentState = getState().slideshowOperation;
 
     // Prevent multiple simultaneous operations
-    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
+    if (currentState.isToggling || currentState.isClearingDisplay ||
+        currentState.isSkippingImage || currentState.isUpdatingInterval) {
         return;
     }
 
@@ -216,7 +368,8 @@ export const toggleSlideshowThunk = () => async (
     const currentState = getState().slideshowOperation;
 
     // Prevent multiple simultaneous operations
-    if (currentState.isToggling || currentState.isClearingDisplay || currentState.isSkippingImage) {
+    if (currentState.isToggling || currentState.isClearingDisplay ||
+        currentState.isSkippingImage || currentState.isUpdatingInterval) {
         return;
     }
 
@@ -349,11 +502,23 @@ export const toggleSlideshowThunk = () => async (
     }
 };
 
+// Selectors
 export const selectSlideshowOperation = (state: RootState) => state.slideshowOperation;
+export const selectDisplayRefreshInterval = (state: RootState) => state.slideshowOperation.displayImagesIntervalMins;
+export const selectIsUpdatingInterval = (state: RootState) => state.slideshowOperation.isUpdatingInterval;
+export const selectIsFetchingInterval = (state: RootState) => state.slideshowOperation.isFetchingInterval;
+export const selectIsAnyOperationActive = (state: RootState) => {
+    const ops = state.slideshowOperation;
+    return ops.isToggling || ops.isClearingDisplay || ops.isSkippingImage || ops.isUpdatingInterval;
+};
 
 export const {
     setToggleStatus,
     setClearDisplayStatus,
+    setSkipImageStatus,
+    setUpdateIntervalStatus,
+    setFetchIntervalStatus,
+    setDisplayRefreshInterval,
     setError,
     resetOperation
 } = slideshowOperationSlice.actions;

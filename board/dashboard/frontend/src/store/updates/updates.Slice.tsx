@@ -59,7 +59,7 @@ export const performUpdate = createAsyncThunk(
 
             if (payload.success) {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess gestartet", "success"));
-                dispatch(showLoadingWall("Die Updates werden ausgeführt. Während dieser Zeit ist das Dashboard nicht verfügbar. Die Applikation wird anschließend neu gestartet. Lade diese Seite in ein paar Minuten erneut bis sie wieder verfügbar ist."));
+                dispatch(showLoadingWall("Die Updates werden installiert. Während dieser Zeit ist das Dashboard nicht verfügbar. Die Applikation wird anschließend neu gestartet. Lade diese Seite in ein paar Minuten einfach ein paar Mal erneut, bis sie wieder verfügbar ist."));
             } else {
                 dispatch(addAlertSnackbar(uuid(), "Updateprozess fehlgeschlagen", "error"));
                 return rejectWithValue('Failed start update process');

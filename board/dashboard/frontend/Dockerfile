@@ -12,6 +12,7 @@ RUN apt-get update && apt-get install -y \
 COPY frontend/package*.json ./
 
 # Install npm dependencies
+RUN npm install -g npm@latest
 RUN npm install
 
 # Copy the rest of the frontend code

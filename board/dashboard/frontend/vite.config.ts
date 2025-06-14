@@ -3,12 +3,13 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 import compression from 'vite-plugin-compression2';
 
-const envDir = path.resolve(__dirname, '../../../../');
+const envDir = path.resolve(__dirname, '../');
 const buildDir = path.resolve(__dirname, '../../app/dashboard/frontend/');
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(function (_a) {
+  const mode = _a.mode;
   return {
-    envDir,
+    envDir: envDir,
     plugins: [
       react(),
       compression({
@@ -35,7 +36,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react', '@mui/x-data-grid'],
+      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react'],
     },
     define: {
       'process.env': {

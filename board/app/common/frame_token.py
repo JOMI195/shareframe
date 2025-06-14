@@ -9,7 +9,7 @@ from config import settings
 
 class TokenManager:
     logger = logging.getLogger(__name__)
-    token_cache_path = settings.TOKEN_CACHE_PATH
+    token_cache_path = settings.FRAME_ACCESS_TOKEN_FILE_PATH
 
     logger.info("Initializing token manager")
 

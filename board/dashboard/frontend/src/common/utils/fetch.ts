@@ -1,3 +1,7 @@
+const apiBaseUrl = import.meta.env.VITE_APP_PRODUCTION === "False"
+    ? import.meta.env.VITE_DEV_API_BASE_URL
+    : window.location.origin;
+
 export const fetchWithTimeout = async (
     url: string,
     options: RequestInit = {},
@@ -7,7 +11,7 @@ export const fetchWithTimeout = async (
     const id = setTimeout(() => controller.abort(), timeout);
 
     try {
-        const response = await fetch(`${window.location.origin}${url}`, { // `http://127.0.0.1:5000${url}`
+        const response = await fetch(`${apiBaseUrl}${url}`, {
             ...options,
             credentials: 'include',
             signal: controller.signal

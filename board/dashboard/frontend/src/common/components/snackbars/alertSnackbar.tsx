@@ -34,7 +34,6 @@ const AlertSnackbar = ({ snackbar, closeSnackbar }: IAlertSnackbarProps) => {
 
         return () => {
             clearTimeout(timer);
-            console.log("Snackbar timer cleared");
         };
     }, []);
 

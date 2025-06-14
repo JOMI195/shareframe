@@ -21,6 +21,8 @@ export const getSlideshowIsActiveUrl = () => `${frameBaseUrl()}/slideshow/is-act
 
 export const getSkipSlideshowImageUrl = () => `${frameBaseUrl()}/slideshow/skip-slideshow-image`;
 
+export const getDisplayImagesLoopIntervalUrl = () => `${frameBaseUrl()}/slideshow/display-images-loop-interval`;
+
 // Updates
 export const getLatestReleaseUrl = () => `${frameBaseUrl()}/updates/latest`;
 

@@ -1,20 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Box, CircularProgress } from '@mui/material';
-import Authentication from './main/authentication/authentication';
-import Dashboard from './main/dashboard/dashboard';
 import { useAppDispatch, useAppSelector } from './store';
 import {
   checkAuthStatusThunk,
-  selectAuth
 } from './store/auth/auth.Slice';
-import MainLayout from './common/components/layout/layout';
 import Logo from './common/components/logo';
 import { hideLoadingWall, selectLoadingWallState } from './store/loadingWall/loadingWall.Slice';
 import LoadingWall from './main/loadingWall/loadingWall';
+import { RouterProvider } from 'react-router';
+import Routing from './routes/routing';
 
 const App = () => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector(selectAuth);
+
   const { isLoadingWallVisible } = useAppSelector(selectLoadingWallState);
   const [initialLoad, setInitialLoad] = useState(true);
   const [authCheckComplete, setAuthCheckComplete] = useState(false);
@@ -99,15 +97,9 @@ const App = () => {
   }
 
   return (
-    <MainLayout>
-      <Box sx={{ width: '100%' }}>
-        {isAuthenticated ? (
-          <Dashboard />
-        ) : (
-          <Authentication />
-        )}
-      </Box>
-    </MainLayout>
+    <RouterProvider
+      router={Routing}
+    />
   );
 }
 

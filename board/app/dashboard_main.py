@@ -595,6 +595,179 @@ def frame_slideshow_skip_slideshow_image():
         )
 
 
+@app.route("/api/frame/slideshow/display-images-loop-interval", methods=["POST"])
+@login_required
+def frame_slideshow_update_display_images_loop_interval():
+    """
+    Update the display images loop interval for the slideshow.
+
+    Expected JSON payload:
+    {
+        "interval_seconds": 300
+    }
+    """
+    try:
+        # Get JSON data from request
+        data = request.get_json()
+
+        if not data:
+            return jsonify({"success": False, "message": "No JSON data provided"}), 400
+
+        # Extract interval from request
+        interval_seconds = data.get("interval_seconds")
+
+        # Validate interval
+        if interval_seconds is None:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "interval_seconds parameter is required",
+                    }
+                ),
+                400,
+            )
+
+        # Ensure interval is a positive integer
+        try:
+            interval_seconds = int(interval_seconds)
+            if interval_seconds <= 0:
+                raise ValueError("Interval must be positive")
+        except (ValueError, TypeError):
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "interval_seconds must be a positive integer",
+                    }
+                ),
+                400,
+            )
+
+        # Set reasonable bounds (e.g., minimum 5 mins (300 seconds), maximum 24 hours)
+        if interval_seconds < 300:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Interval must be at least 300 seconds (5 mins)",
+                    }
+                ),
+                400,
+            )
+
+        if interval_seconds > 86400:  # 24 hours
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Interval cannot exceed 24 hours (86400 seconds)",
+                    }
+                ),
+                400,
+            )
+
+        # Call the update script
+        subprocess.run(
+            [
+                str(settings.DISPLAY_UPDATE_IMAGES_LOOP_INTERVAL_FILE_PATH),
+                str(interval_seconds),
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "message": f"Successfully updated slideshow interval to {interval_seconds} seconds",
+                "interval_seconds": interval_seconds,
+            }
+        )
+
+    except subprocess.CalledProcessError as e:
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "message": f"Failed to update slideshow interval: {str(e)}",
+                    "stderr": e.stderr if hasattr(e, "stderr") else None,
+                }
+            ),
+            500,
+        )
+
+    except Exception as e:
+        return (
+            jsonify(
+                {"success": False, "message": f"Unexpected error occurred: {str(e)}"}
+            ),
+            500,
+        )
+
+
+@app.route("/api/frame/slideshow/display-images-loop-interval", methods=["GET"])
+@login_required
+def frame_slideshow_get_display_images_loop_interval():
+    """
+    Get the current display images loop interval from the control file.
+    """
+    try:
+        import json
+
+        display_images_loop_interval_file = (
+            settings.DISPLAY_IMAGES_LOOP_INTERVAL_FILE_PATH
+        )
+
+        if not display_images_loop_interval_file.exists():
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "Display images loop interval file not found",
+                    }
+                ),
+                404,
+            )
+
+        with open(display_images_loop_interval_file, "r") as f:
+            control_data = json.load(f)
+
+        interval_seconds = control_data.get("interval_secs")
+
+        if interval_seconds is None:
+            return (
+                jsonify(
+                    {
+                        "success": False,
+                        "message": "No interval found in display images loop interval file",
+                    }
+                ),
+                404,
+            )
+
+        return jsonify(
+            {
+                "success": True,
+                "interval_seconds": interval_seconds,
+                "message": f"Current interval is {interval_seconds} seconds",
+            }
+        )
+
+    except json.JSONDecodeError:
+        return (
+            jsonify({"success": False, "message": "Invalid JSON in control file"}),
+            500,
+        )
+
+    except Exception as e:
+        return (
+            jsonify({"success": False, "message": f"Error reading interval: {str(e)}"}),
+            500,
+        )
+
+
 # -------- FRAME INFOS
 @app.route("/api/frame/infos", methods=["GET"])
 @login_required
@@ -607,7 +780,6 @@ def frame_infos():
                 "data": {
                     "public_serial_number": settings.PUBLIC_SERIAL_NUMBER,
                     "version": settings.VERSION,
-                    "display_refresh_interval_mins": settings.IMAGES_LOOP_INTERVALL_MINUTES,
                 },
             }
         )

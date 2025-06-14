@@ -2,7 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import compression from 'vite-plugin-compression2';
-var envDir = path.resolve(__dirname, '../../../../');
+var envDir = path.resolve(__dirname, '../');
 var buildDir = path.resolve(__dirname, '../../app/dashboard/frontend/');
 export default defineConfig(function (_a) {
     var mode = _a.mode;

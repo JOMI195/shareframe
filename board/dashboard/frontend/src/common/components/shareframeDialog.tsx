@@ -85,6 +85,17 @@ const ShareframeDialog: React.FC<ShareframeDialogProps> = ({
                             sx={{ mt: 2 }}
                             spacing={1}
                         >
+                            <Grid item xs={6} >
+                                <Button
+                                    variant="outlined"
+                                    color="secondary"
+                                    onClick={onClose}
+                                    sx={{ px: 5 }}
+                                    fullWidth
+                                >
+                                    {cancelText}
+                                </Button>
+                            </Grid>
                             {onConfirm && (
                                 <Grid item xs={6} >
                                     <Button
@@ -98,17 +109,6 @@ const ShareframeDialog: React.FC<ShareframeDialogProps> = ({
                                     </Button>
                                 </Grid>
                             )}
-                            <Grid item xs={6} >
-                                <Button
-                                    variant="outlined"
-                                    color="secondary"
-                                    onClick={onClose}
-                                    sx={{ px: 5 }}
-                                    fullWidth
-                                >
-                                    {cancelText}
-                                </Button>
-                            </Grid>
                         </Grid>
                     )}
                 </Box>

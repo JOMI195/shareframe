@@ -47,7 +47,7 @@ export const commonThemeOptions = {
     ].join(','),
   },
   shape: {
-    borderRadius: 20,
+    borderRadius: 10,
   },
   layout: {
     appbar: {

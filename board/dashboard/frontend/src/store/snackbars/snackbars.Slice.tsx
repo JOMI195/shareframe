@@ -55,6 +55,9 @@ const snackbarsSlice = createSlice({
             state.snackbars.alerts = [];
             state.snackbars.loading = [];
         },
+        clearAllLoadingSnackbars(state) {
+            state.snackbars.loading = [];
+        },
     },
 });
 
@@ -87,12 +90,21 @@ export const removeLoadingSnackbar = (id: string) => ({
     payload: id,
 });
 
+export const removeAllLoadingSnackbars = () => ({
+    type: clearAllLoadingSnackbars.type,
+});
+
+export const removeAllSnackbars = () => ({
+    type: clearAllSnackbars.type,
+});
+
 export const {
     alertSnackbarAdded,
     alertSnackbarRemoved,
     loadingSnackbarAdded,
     loadingSnackbarRemoved,
-    clearAllSnackbars
+    clearAllSnackbars,
+    clearAllLoadingSnackbars
 } = snackbarsSlice.actions;
 
 export const getSnackbars = (state: RootState) => state.snackbars.snackbars;

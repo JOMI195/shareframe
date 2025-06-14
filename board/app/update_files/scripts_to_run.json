@@ -6,5 +6,9 @@
     {
         "name": "02-non-sudo-test.sh",
         "sudo": false
+    },
+    {
+        "name": "05-add-display-images-loop-interval-updater.sh",
+        "sudo": true
     }
 ]

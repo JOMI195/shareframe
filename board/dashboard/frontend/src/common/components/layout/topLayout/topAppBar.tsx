@@ -1,32 +1,40 @@
 import React, { useState } from 'react';
 import AppBar from '@mui/material/AppBar';
-import LogoutIcon from '@mui/icons-material/Logout';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import MenuIcon from '@mui/icons-material/Menu';
+import MenuOpenIcon from '@mui/icons-material/MenuOpen';
+import LogoutIcon from '@mui/icons-material/Logout';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContext';
 import { Badge, Typography, useMediaQuery, useTheme } from '@mui/material';
 import Logo from '../../logo';
 import { usePiConnection } from '@/context/piConnection/piConnectionContext';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { logoutThunk, selectAuth } from '@/store/auth/auth.Slice';
 import SignalWifiStatusbarConnectedNoInternet4Icon from '@mui/icons-material/SignalWifiStatusbarConnectedNoInternet4';
 import SignalWifiStatusbar4BarIcon from '@mui/icons-material/SignalWifiStatusbar4Bar';
 import InfoIcon from '@mui/icons-material/Info';
-import ShareframeDialog from '../../shareframeDialog';
 import { selectUpdatesState } from '@/store/updates/updates.Slice';
 import { selectFrameInfoState } from '@/store/frameInfo/frameInfo.Slice';
 import { isVersionNewer } from '@/common/utils/version';
 import UpdateIcon from '@mui/icons-material/Update';
 import { getBadgeNumber } from '@/common/utils/badge';
+import { closeSidebar, getSidebar, openSidedbar } from '@/store/navigation/navigation.Slice';
+import { selectAuth } from '@/store/auth/auth.Slice';
+import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
+import { useNavigate } from 'react-router';
 
 const TopAppBar = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
+
     const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
     const { isConnected } = usePiConnection();
+    const sidebarOpen = useAppSelector(getSidebar).open;
+
     const { isAuthenticated } = useAppSelector(selectAuth);
 
     const { latest_release } = useAppSelector(selectUpdatesState);
@@ -37,11 +45,12 @@ const TopAppBar = () => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-    // State for connection status menu
+    const handleSidebarButtonClick = () => {
+        dispatch(sidebarOpen ? closeSidebar() : openSidedbar());
+    }
+
     const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
     const open = Boolean(anchorEl);
-
-    const [isLogOutDialogOpen, setIsLogOutDialogOpen] = useState(false);
 
     const handleInfoClick = (event: React.MouseEvent<HTMLButtonElement>) => {
         setAnchorEl(event.currentTarget);
@@ -51,13 +60,13 @@ const TopAppBar = () => {
         setAnchorEl(null);
     };
 
-    const handleLogout = () => {
-        dispatch(logoutThunk());
-    };
+    const handleLogoutButtonClick = () => {
+        navigate(getAuthenticationUrl() + getSignOutUrl());
+    }
 
     const ConnectionStatusIcon = isConnected ? SignalWifiStatusbar4BarIcon : SignalWifiStatusbarConnectedNoInternet4Icon;
 
-    const badgeNumber = getBadgeNumber(!isConnected, (isAuthenticated && isNewVersion));
+    const badgeNumber = getBadgeNumber(!isConnected, isNewVersion);
 
     return (
         <>
@@ -71,6 +80,18 @@ const TopAppBar = () => {
                 }}
             >
                 <Toolbar sx={{ height: "100%" }}>
+                    <Tooltip title={`Seitenmenü ${sidebarOpen ? "schließen" : "öffnen"}`} placement="bottom">
+                        <IconButton
+                            size="small"
+                            aria-label="toggle sidebar"
+                            aria-haspopup="true"
+                            onClick={handleSidebarButtonClick}
+                            className='ignore-clickaway'
+                            sx={{ mr: 2 }}
+                        >
+                            {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+                        </IconButton>
+                    </Tooltip>
                     <Logo
                         darkLogoSrc="/logo-dark-full-shareframe.svg"
                         lightLogoSrc="/logo-light-full-shareframe.svg"
@@ -97,7 +118,7 @@ const TopAppBar = () => {
                     </Tooltip>
                     {isAuthenticated && (
                         <Tooltip title={"Abmelden"}>
-                            <IconButton color="error" onClick={() => setIsLogOutDialogOpen(true)}>
+                            <IconButton onClick={handleLogoutButtonClick}>
                                 <LogoutIcon fontSize={isSmallScreen ? "medium" : "medium"} />
                             </IconButton>
                         </Tooltip>
@@ -132,7 +153,7 @@ const TopAppBar = () => {
                         </Box>
                     </MenuItem>
                 )}
-                {isAuthenticated && isNewVersion && (
+                {isNewVersion && (
                     <MenuItem onClick={handleInfoClose} sx={{ pointerEvents: 'none', width: "100%", minWidth: "400px" }}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                             <UpdateIcon color={"error"} />
@@ -141,22 +162,6 @@ const TopAppBar = () => {
                     </MenuItem>
                 )}
             </Menu>
-
-            <ShareframeDialog
-                open={isLogOutDialogOpen}
-                title="Abmelden"
-                onClose={() => setIsLogOutDialogOpen(false)}
-                onConfirm={() => {
-                    setIsLogOutDialogOpen(false);
-                    handleLogout();
-                }}
-                confirmText="Abmelden"
-                cancelText="Abbrechen"
-            >
-                <Typography variant="body1">
-                    Möchtest du dich wirklich abmelden?
-                </Typography>
-            </ShareframeDialog>
         </>
     );
 }

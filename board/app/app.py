@@ -1,3 +1,4 @@
+import json
 import os
 from pathlib import Path
 from typing import List
@@ -34,12 +35,66 @@ async def cancel_all_tasks():
     await asyncio.gather(*tasks, return_exceptions=True)
 
 
+def _read_or_create_display_interval_file():
+    """Read display interval from file or create with default value if not exists."""
+    display_images_loop_interval_file = settings.DISPLAY_IMAGES_LOOP_INTERVAL_FILE_PATH
+    default_interval = settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
+
+    if not display_images_loop_interval_file.exists():
+        logging.info(
+            f"Display images loop interval file {display_images_loop_interval_file} does not exist, creating default"
+        )
+        try:
+            with open(display_images_loop_interval_file, "w") as f:
+                json.dump({"interval_secs": default_interval}, f)
+            return default_interval
+        except Exception as e:
+            logging.error(
+                f"Error creating display images loop interval file: {e}", exc_info=True
+            )
+            return default_interval
+
+    try:
+        with open(display_images_loop_interval_file, "r") as f:
+            control_data = json.load(f)
+
+        stored_interval = control_data.get("interval_secs")
+        if (
+            stored_interval is not None
+            and isinstance(stored_interval, (int, float))
+            and stored_interval > 0
+        ):
+            logging.info(
+                f"Loaded display images loop interval from file: {stored_interval} seconds"
+            )
+            return stored_interval
+        else:
+            logging.warning(
+                f"Invalid interval value in control file: {stored_interval}, using default: {default_interval} seconds"
+            )
+            return default_interval
+    except Exception as e:
+        logging.error(
+            f"Error reading display images loop interval file: {e}, using default: {default_interval} seconds",
+            exc_info=True,
+        )
+        return default_interval
+
+
+# Signal Handlers
 def setup_signal_handlers(app):
     def handle_usr1_signal(signum, frame):
         logging.info("Received SIGUSR1 signal - skipping current image")
         asyncio.create_task(trigger_skip_image(app))
 
+    def handle_usr2_signal(signum, frame):
+        logging.info(
+            "Received SIGUSR2 signal - checking for display images loop interval changes"
+        )
+        asyncio.create_task(check_display_images_loop_interval_change(app))
+
     signal.signal(signal.SIGUSR1, handle_usr1_signal)
+    signal.signal(signal.SIGUSR2, handle_usr2_signal)
     logging.info("Signal handlers configured")
 
 
@@ -47,6 +102,20 @@ async def trigger_skip_image(app):
     app.display.skip_current_image()
 
 
+async def check_display_images_loop_interval_change(app):
+    """Check for interval changes in the control file and update if needed."""
+    new_interval = _read_or_create_display_interval_file()
+
+    if new_interval != app.display_interval:
+        logging.info(
+            f"Updating display images loop interval from {app.display_interval} to {new_interval} seconds"
+        )
+        await app.update_display_images_loop_interval(new_interval)
+    else:
+        logging.info(f"Display images loop interval unchanged: {new_interval} seconds")
+
+
+# Application
 class FrameApplication:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
@@ -63,6 +132,9 @@ class FrameApplication:
             get_user_frame_images_info=self._get_user_frame_images_info,
             get_user_frame_images_ids_info=self._get_user_frame_images_ids_info,
         )
+
+        self.display_task = None
+        self.display_interval = self._initialize_display_images_loop_interval()
 
         self.logger.info("Initializing main frame application successful")
 
@@ -143,27 +215,60 @@ class FrameApplication:
         if message.get("type") == "clear_display":
             await self.display.clear_display_task()
 
+    # Misc functions
+    def _initialize_display_images_loop_interval(self):
+        """Initialize display loop images interval from file or use default settings."""
+        self.display_interval = _read_or_create_display_interval_file()
+
+    async def update_display_images_loop_interval(self, new_interval_secs):
+        """Update the display images loop interval and restart the display task."""
+        self.display_interval = new_interval_secs
+
+        if self.display_task and not self.display_task.done():
+            self.logger.info("Cancelling existing display images loop task")
+            self.display_task.cancel()
+            try:
+                await self.display_task
+            except asyncio.CancelledError:
+                self.logger.info(
+                    "Previous display images loop task cancelled successfully"
+                )
+
+        self.display_task = asyncio.create_task(
+            self.safe_task(
+                self.display.display_images_in_loop_task(
+                    interval_secs=self.display_interval
+                ),
+                "display_images_loop",
+            )
+        )
+        self.logger.info(
+            f"Display loop restarted with new interval: {self.display_interval} seconds"
+        )
+
+    async def safe_task(self, coro, name):
+        try:
+            await coro
+        except asyncio.CancelledError:
+            self.logger.info(f"Task {name} was cancelled")
+        except Exception as e:
+            self.logger.error(f"Task {name} failed: {e}", exc_info=True)
+
     # Main method
     async def run(self):
         self.logger.info("Starting main async methods")
 
-        async def safe_task(coro, name):
-            try:
-                await coro
-            except Exception as e:
-                self.logger.error(f"Task {name} failed: {e}", exc_info=True)
-
-        display_task = asyncio.create_task(
-            safe_task(
+        self.display_task = asyncio.create_task(
+            self.safe_task(
                 self.display.display_images_in_loop_task(
-                    interval_secs=settings.IMAGES_LOOP_INTERVALL_MINUTES * 60
+                    interval_secs=self.display_interval
                 ),
                 "display_images_loop",
             )
         )
 
-        clear_task = asyncio.create_task(
-            safe_task(
+        asyncio.create_task(
+            self.safe_task(
                 self.display.periodic_clear_display_task(),
                 "clear_display_scheduler",
             )

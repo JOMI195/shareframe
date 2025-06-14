@@ -9,7 +9,6 @@ import { fetchWithTimeout } from '@/common/utils/fetch';
 export interface FrameInfo {
     public_serial_number: string;
     version: string;
-    display_refresh_interval_mins: number;
 }
 
 export interface FrameInfoState {

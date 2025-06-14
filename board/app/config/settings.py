@@ -11,18 +11,24 @@ PUBLIC_SERIAL_NUMBER = os.getenv("PUBLIC_SERIAL_NUMBER")
 FRAME_AUTH_SECRET_KEY = os.getenv("FRAME_AUTH_SECRET_KEY")
 UPDATE_HASH_SECRET_KEY = os.getenv("UPDATE_HASH_SECRET_KEY")
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-MEDIA_FOLDER = "media"
-
 APPLICATION_SERVICE_NAME = "shareframe.service"
 
-# Logging config
+##### shareframe dirs
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+APPLICATION_DIR_PATH = BASE_DIR
+MEDIA_DEFAULT_FOLDER_PATH = APPLICATION_DIR_PATH / "media"
+
+MEDIA_FOLDER_PATH = BASE_DIR.parent / ".media"
+SETTINGS_PERSIST_DIR_PATH = BASE_DIR.parent / ".settings"
+CACHE_DIR_PATH = BASE_DIR.parent / ".cache"
+
+##### Logging config
 LOGGING_SAVE_DIR = "/var/log/shareframe"
 LOGGING_FILE = "shareframe-application.log"
 LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{LOGGING_FILE}"
 
-# Websocket client config
+##### Websocket client config
 BASE_URL = os.getenv("BASE_URL")
 HTTP_TIMEOUT_SEC = 600
 WEBSOCKET_RECV_TIMEOUT = 60
@@ -43,30 +49,35 @@ WS_FRAME_URL = f"{WS_BASE_URL}/ws/frames/"
 HTTP_OBTAIN_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/obtain-frame-auth-token/"
 HTTP_VERIFY_TOKEN_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-auth-token/"
 
-TOKEN_CACHE_DIR = ".cache"
-TOKEN_CACHE_FILE = f"{TOKEN_CACHE_DIR}/frame_access_token.json"
-TOKEN_CACHE_PATH = BASE_DIR.parent / TOKEN_CACHE_FILE
+FRAME_ACCESS_TOKEN_FILE_PATH = CACHE_DIR_PATH / "frame_access_token.json"
 
 IMAGES_STATUS_CHECK_INTERVAL_MINUTES = 15
 
 WEBSOCKET_MESSAGE_MAX_SIZE = 120 * 1024 * 1024  # 120MB
 
-# Display config
-USER_IMAGES_SAVE_DIR = f".{MEDIA_FOLDER}/recieved-user-images"
-USER_IMAGES_SAVE_PATH = BASE_DIR.parent / USER_IMAGES_SAVE_DIR
+##### Display config
+# user images
+USER_IMAGES_SAVE_PATH = MEDIA_FOLDER_PATH / "recieved-user-images"
 
-DEFAULT_FRAME_IMAGES_DIR = f"{MEDIA_FOLDER}/frame"
-DEFAULT_FRAME_IMAGES_PATH = BASE_DIR / DEFAULT_FRAME_IMAGES_DIR
+# frame brand photos
+DEFAULT_FRAME_IMAGES_PATH = MEDIA_DEFAULT_FOLDER_PATH / "frame"
 
-DEFAULT_IMAGES_DIR = f"{MEDIA_FOLDER}/default"
-DEFAULT_IMAGES_PATH = BASE_DIR / DEFAULT_IMAGES_DIR
+# static photos
+DEFAULT_IMAGES_PATH = MEDIA_DEFAULT_FOLDER_PATH / "default"
 
 MINIMAL_REFRESH_INTERVAL_HOURS = 24
 NEXT_REFRESH_WAITING_INTERVALL_MINUTES = 3
 IMAGES_LOOP_INTERVALL_MINUTES = 15
 CLEAR_DISPLAY_TIMES = ["02:00"]
 
-# Updates
+DISPLAY_IMAGES_LOOP_INTERVAL_FILE_PATH = (
+    SETTINGS_PERSIST_DIR_PATH / "display_images_loop_interval.json"
+)
+DISPLAY_UPDATE_IMAGES_LOOP_INTERVAL_FILE_PATH = (
+    APPLICATION_DIR_PATH / "display" / "update_display_images_loop_interval.sh"
+)
+
+##### Updates
 UPDATE_SERVICE_NAME = "shareframe-update-all.service"
 UPDATE_LOGGING_FILE = "shareframe-update.log"
 UPDATE_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
@@ -79,14 +90,14 @@ UPDATE_BACKUP_DIR_NAME = ".app_backup"
 
 HTTP_UPDATE_LATEST_URL = f"{HTTP_BASE_URL}/api/frame-updates/latest/"
 
-# Dashbaord
+##### Dashbaord
 DASHBOARD_SERVICE_NAME = "shareframe-dashboard.service"
 DASHBOARD_LOGGING_FILE = "shareframe-dashboard.log"
 DASHBOARD_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{UPDATE_LOGGING_FILE}"
 
 DASHBOARD_HTTP_VERIFY_OTP_URL = f"{HTTP_BASE_URL}/api/frames/verify-frame-otp/"
 
-# Heartbeat
+##### Heartbeat
 HEARTBEAT_SERVICE_NAME = "shareframe-heartbeat.service"
 HEARTBEAT_LOGGING_FILE = "shareframe-heartbeat.log"
 HEARTBEAT_LOGGING_FULL_FILE_PATH = f"{LOGGING_SAVE_DIR}/{HEARTBEAT_LOGGING_FILE}"

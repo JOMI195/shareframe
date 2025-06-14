@@ -10,6 +10,8 @@ import updatesReducer from "./updates/updates.Slice";
 import loadingWallReducer from "./loadingWall/loadingWall.Slice";
 import piPowerReducer from "./piPower/piPower.Slice";
 import frameLogsReducer from "./frameLogs/frameLogs.Slice";
+import navigationReducer from "./navigation/navigation.Slice";
+import dialogsReducer from "./dialogs/dialogs.Slice";
 
 const rootReducer = combineReducers({
   snackbars: snackbarsReducer,
@@ -23,6 +25,8 @@ const rootReducer = combineReducers({
   loadingWall: loadingWallReducer,
   piPower: piPowerReducer,
   frameLogs: frameLogsReducer,
+  navigation: navigationReducer,
+  dialogs: dialogsReducer,
 });
 
 export default rootReducer;
