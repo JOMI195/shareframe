@@ -218,7 +218,7 @@ class FrameApplication:
     # Misc functions
     def _initialize_display_images_loop_interval(self):
         """Initialize display loop images interval from file or use default settings."""
-        self.display_interval = _read_or_create_display_interval_file()
+        return _read_or_create_display_interval_file()
 
     async def update_display_images_loop_interval(self, new_interval_secs):
         """Update the display images loop interval and restart the display task."""

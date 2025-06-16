@@ -262,74 +262,111 @@ class Display:
         self.logger.info(f"Starting display loop with interval: {interval_secs}s")
 
         while True:
-            images_to_display = (
-                self.user_image_paths
-                if self.user_image_paths
-                else self.static_image_paths
-            )
-            self.logger.info(f"Current display queue: {len(images_to_display)} images")
-
-            for image_data in list(images_to_display):
-                if (
-                    images_to_display == self.static_image_paths
-                    and self.user_image_paths
-                ):
-                    self.logger.info(
-                        "User images available while displaying static images, restarting display loop"
-                    )
-                    break
-
-                image_path = (
-                    image_data["path"] if isinstance(image_data, dict) else image_data
+            try:
+                images_to_display = (
+                    self.user_image_paths
+                    if self.user_image_paths
+                    else self.static_image_paths
+                )
+                self.logger.info(
+                    f"Current display queue: {len(images_to_display)} images"
                 )
 
-                if not os.path.exists(image_path):
-                    self.logger.warning(
-                        f"Image path does not exist: {image_path}, skipping..."
-                    )
-                    continue
+                for image_data in list(images_to_display):
+                    try:
+                        if (
+                            images_to_display == self.static_image_paths
+                            and self.user_image_paths
+                        ):
+                            self.logger.info(
+                                "User images available while displaying static images, restarting display loop"
+                            )
+                            break
 
-                expires_at = (
-                    image_data.get("expires_at")
-                    if isinstance(image_data, dict)
-                    else None
-                )
+                        image_path = (
+                            image_data["path"]
+                            if isinstance(image_data, dict)
+                            else image_data
+                        )
 
-                if expires_at:
-                    expires_at = datetime.fromtimestamp(
-                        int(expires_at), tz=timezone.utc
-                    )
-                    if datetime.now(timezone.utc) > expires_at:
-                        self.logger.info(f"Removing expired image: {image_path}")
-                        self.user_image_paths.remove(image_data)
-                        if os.path.exists(image_path):
-                            try:
-                                os.remove(image_path)
+                        if not os.path.exists(image_path):
+                            self.logger.warning(
+                                f"Image path does not exist: {image_path}, skipping..."
+                            )
+                            continue
+
+                        expires_at = (
+                            image_data.get("expires_at")
+                            if isinstance(image_data, dict)
+                            else None
+                        )
+
+                        if expires_at:
+                            expires_at = datetime.fromtimestamp(
+                                int(expires_at), tz=timezone.utc
+                            )
+                            if datetime.now(timezone.utc) > expires_at:
                                 self.logger.info(
-                                    f"Deleted expired image file: {image_path}"
+                                    f"Removing expired image: {image_path}"
                                 )
-                            except OSError as e:
-                                self.logger.error(
-                                    f"Failed to delete expired image: {str(e)}"
+                                self.user_image_paths.remove(image_data)
+                                if os.path.exists(image_path):
+                                    try:
+                                        os.remove(image_path)
+                                        self.logger.info(
+                                            f"Deleted expired image file: {image_path}"
+                                        )
+                                    except OSError as e:
+                                        self.logger.error(
+                                            f"Failed to delete expired image: {str(e)}"
+                                        )
+                                continue
+
+                        await self._display_image(image_path)
+
+                        # Reset the event and wait for interval or skip signal
+                        self.skip_current_image_event.clear()
+
+                        self.logger.info(
+                            f"Wait ({interval_secs}s) until showing the next image"
+                        )
+
+                        try:
+                            # Wait for either the interval to pass or the skip event to be set
+                            await asyncio.wait_for(
+                                self.skip_current_image_event.wait(),
+                                timeout=interval_secs,
+                            )
+                            if self.skip_current_image_event.is_set():
+                                self.logger.info(
+                                    "Skipping sleep interval due to external trigger"
                                 )
+                        except asyncio.TimeoutError:
+                            # This is expected when the timeout is reached normally
+                            self.logger.info(
+                                f"Completed {interval_secs}s wait, proceeding to next image"
+                            )
+                            pass
+                        except Exception as e:
+                            self.logger.error(
+                                f"Error during wait interval: {str(e)}", exc_info=True
+                            )
+                            # Continue to next image even if there's an error
+                            pass
+
+                    except Exception as e:
+                        self.logger.error(
+                            f"Error processing image {image_data}: {str(e)}",
+                            exc_info=True,
+                        )
+                        # Continue to next image
                         continue
 
-                await self._display_image(image_path)
-                # await asyncio.sleep(interval_secs)
-
-                self.skip_current_image_event.clear()  # Reset the event
-                try:
-                    # Wait for either the interval to pass or the skip event to be set
-                    await asyncio.wait_for(
-                        self.skip_current_image_event.wait(), timeout=interval_secs
-                    )
-                    if self.skip_current_image_event.is_set():
-                        self.logger.info(
-                            "Skipping sleep interval due to external trigger"
-                        )
-                except asyncio.TimeoutError:
-                    # This is expected when the timeout is reached normally
-                    pass
+            except Exception as e:
+                self.logger.error(f"Error in display loop: {str(e)}", exc_info=True)
+                # Wait a bit before retrying the whole loop
+                await asyncio.sleep(10)
+                continue
 
     def skip_current_image(self):
         self.logger.info("Skip current image requested")

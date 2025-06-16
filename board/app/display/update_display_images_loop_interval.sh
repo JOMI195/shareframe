@@ -4,7 +4,7 @@
 # Usage: ./update_display_images_loop_interval.sh [interval_in_seconds]
 
 # Default settings path
-CONTROL_FILE="/home/frame/shareframe/.cache/display_images_loop_interval.json"
+CONTROL_FILE="/home/frame/shareframe/.settings/display_images_loop_interval.json"
 
 # Check if argument is provided
 if [ $# -eq 0 ]; then
