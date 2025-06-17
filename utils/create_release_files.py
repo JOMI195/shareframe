@@ -28,6 +28,9 @@ def encode_with_hmac(message, key):
 
 
 def main():
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    os.chdir(script_dir)
+
     load_dotenv(".env.release")
 
     folder_path = os.getenv("FOLDER_PATH")
