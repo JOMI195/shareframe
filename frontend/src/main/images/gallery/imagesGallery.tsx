@@ -141,6 +141,7 @@ const ImagesGallery: React.FC = () => {
                                 <ImageListItem
                                     key={image.id}
                                     onClick={() => handleImageClick(image)}
+                                    //onTouchStart={() => handleImageClick(image)}
                                     style={{ cursor: "pointer" }}
                                 >
                                     <SelectableElement

@@ -70,7 +70,7 @@ const ImagePreviewDialog = () => {
         <ShareframeMainDialog
             open={dialog.open}
             onDialogClose={handleCloseImagePreview}
-            dialogTitle={selectedImage?.display_name ?? selectedImage?.name}
+            dialogTitle={"Hochgeladenes Foto"}
             dialogContentSx={{ padding: 2 }}
             actionsAdditional={dialogActions}
             actionPrimary={primaryAction}

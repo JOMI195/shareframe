@@ -37,6 +37,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
             flexDirection: "row",
             gap: 1,
             zIndex: 1050,
+            pointerEvents: 'none',
         };
 
         if (position === 'fixed') {
@@ -69,7 +70,11 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                         onClick={actionPrimary.onClick}
                         disabled={allActionsdisabled || actionPrimary.disabled}
                         variant='extended'
-                        sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
+                        sx={{
+                            alignSelf: "flex-end",
+                            borderRadius: '10px',
+                            pointerEvents: 'auto'
+                        }}
                     >
                         {actionPrimary.icon && (
                             <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
@@ -89,7 +94,11 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                         onClick={actionSecondary.onClick}
                         disabled={allActionsdisabled || actionSecondary.disabled}
                         variant='extended'
-                        sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
+                        sx={{
+                            alignSelf: "flex-end",
+                            borderRadius: '10px',
+                            pointerEvents: 'auto'
+                        }}
                     >
                         {actionSecondary.icon && (
                             <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
@@ -108,11 +117,20 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                     onClose={() => setSpeedDialOpen(false)}
                     onOpen={() => setSpeedDialOpen(true)}
                     open={speedDialOpen}
+                    direction="up"
                     FabProps={{
                         size: "medium",
-                        disabled: allActionsdisabled || speedDialDisabled
+                        disabled: allActionsdisabled || speedDialDisabled,
+                        sx: { pointerEvents: 'auto' }
                     }}
                     sx={{
+                        '& .MuiSpeedDial-fab': {
+                            pointerEvents: 'auto',
+                        },
+                        '& .MuiSpeedDial-actions': {
+                            pointerEvents: speedDialOpen ? 'auto' : 'none',
+                            visibility: speedDialOpen ? 'visible' : 'hidden',
+                        },
                         '& .MuiSpeedDialAction-staticTooltipLabel': {
                             whiteSpace: 'nowrap',
                             minWidth: 'auto',
