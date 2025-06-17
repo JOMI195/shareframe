@@ -1,6 +1,6 @@
 import { Box, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog } from "@/store/ui/images/images.slice";
+import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog, selectImage } from "@/store/ui/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
@@ -28,13 +28,14 @@ const ImagePreviewDialog = () => {
 
     const handleDelete = () => {
         if (selectedImage !== null) {
-            dispatch(openDeleteImageDialog({ imageId: selectedImage.id }));
+            dispatch(openDeleteImageDialog());
         }
     };
 
     const handleSend = () => {
         if (selectedImage !== null) {
-            dispatch(openSendImageToUserFrameDialog({ imageId: selectedImage.id }));
+            dispatch(selectImage({ image: selectedImage }));
+            dispatch(openSendImageToUserFrameDialog());
         }
     };
 
@@ -71,7 +72,7 @@ const ImagePreviewDialog = () => {
             onDialogClose={handleCloseImagePreview}
             dialogTitle={selectedImage?.display_name ?? selectedImage?.name}
             dialogContentSx={{ padding: 2 }}
-            actionsSecondary={dialogActions}
+            actionsAdditional={dialogActions}
             actionPrimary={primaryAction}
             actionsShown={true}
         >

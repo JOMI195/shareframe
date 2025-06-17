@@ -118,7 +118,6 @@ export const downloadImage = (url: string, fileName: string) => {
       })
     } catch (error) {
       dispatch({ type: ImagesSlice.downloadImageFailed.type });
-      console.error('Error downloading file:', error);
     }
   }
 }

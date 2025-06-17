@@ -11,7 +11,7 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { openPreviewImageDialog } from "@/store/ui/images/images.slice";
+import { getDialogs as imagesDialogs, openPreviewImageDialog, selectImage } from "@/store/ui/images/images.slice";
 import {
     getApi as imagesApi,
     getImagesPaginated,
@@ -24,19 +24,26 @@ import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
 import { getVariant } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
+import SelectableElement from "../../../common/components/selectableElement";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
 
 const ImagesGallery: React.FC = () => {
+    const theme = useTheme();
     const dispatch = useAppDispatch();
+
     const imagesPaginated = useAppSelector(getImagesPaginated);
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
     const friendshipsLoading = useAppSelector(friendshipsApi).loading;
-    const theme = useTheme();
+
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
+
+    const selectionDialog = useAppSelector(imagesDialogs).selection;
+    const isSelectionDialogOpen = selectionDialog.open;
+    const selectedImages = selectionDialog.selectedImages;
 
     // Adjust the number of columns based on screen size
     let cols = 3;
@@ -47,6 +54,10 @@ const ImagesGallery: React.FC = () => {
     }
 
     const handleImageClick = (image: IImage) => {
+        if (isSelectionDialogOpen) {
+            dispatch(selectImage({ image: image }));
+            return;
+        }
         dispatch(openPreviewImageDialog({ image: image }));
     };
 
@@ -132,16 +143,22 @@ const ImagesGallery: React.FC = () => {
                                     onClick={() => handleImageClick(image)}
                                     style={{ cursor: "pointer" }}
                                 >
-                                    <AuthenticatedImage
-                                        url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
-                                        alt={image.name}
-                                        style={{
-                                            width: "100%",
-                                            height: "100%",
-                                            objectFit: "cover",
-                                            borderRadius: 8
-                                        }}
-                                    />
+                                    <SelectableElement
+                                        elementToSelect={image}
+                                        selectedElements={selectedImages}
+                                        selectionEnabled={isSelectionDialogOpen}
+                                    >
+                                        <AuthenticatedImage
+                                            url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
+                                            alt={image.name}
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                                objectFit: "cover",
+                                                borderRadius: 8
+                                            }}
+                                        />
+                                    </SelectableElement>
                                 </ImageListItem>
                             ))}
                         </ImageList>

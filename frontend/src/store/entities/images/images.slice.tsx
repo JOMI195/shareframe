@@ -79,15 +79,11 @@ const imagesSlice = createSlice({
     deleteImageFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
-    downloadImageRequested: (sliceState) => {
-      sliceState.api.loading = true;
+    downloadImageRequested: (_sliceState) => {
     },
-    downloadImageReceived: (sliceState) => {
-      sliceState.api.lastFetch = Date.now();
-      sliceState.api.loading = false;
+    downloadImageReceived: (_sliceState) => {
     },
-    downloadImageFailed: (sliceState) => {
-      sliceState.api.loading = false;
+    downloadImageFailed: (_sliceState) => {
     },
 
     sentImagesRequested: (sliceState) => {

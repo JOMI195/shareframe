@@ -63,9 +63,9 @@ const SentImageDeactivateDialog = () => {
                     </Toolbar>
                 </AppBar>
             )}
-            <DialogTitle>{`Gesendetes Foto ${sentImageToDeactivate?.image.name} wirklich deaktivieren?`}</DialogTitle>
+            <DialogTitle>{"Gesendetes Foto wirklich deaktivieren?"}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von den Bilderrahmen von ${sentImageToDeactivate?.reciever === user.me.username ? "dir" : sentImageToDeactivate?.reciever} entfernt und dort nicht mehr angezeigt.`}</Typography>
+                <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von ${sentImageToDeactivate?.reciever === user.me.username ? "deinen" : `${sentImageToDeactivate?.reciever}s`} Bilderrahmen entfernt und dort nicht mehr angezeigt.`}</Typography>
                 <Grid
                     container
                     display={"flex"} justifyContent={"space-between"} alignItems={"center"}

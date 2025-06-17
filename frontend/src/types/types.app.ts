@@ -15,7 +15,8 @@ export interface IAppBarMenuItem {
 export interface DialogAction {
     icon: React.ReactNode;
     onClick: () => void;
-    label: string;
+    label?: string;
+    tooltip?: string;
     color?: "inherit" | "primary" | "secondary" | "error" | "info" | "success" | "warning";
     disabled?: boolean;
 }

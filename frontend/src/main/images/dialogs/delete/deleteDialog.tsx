@@ -1,8 +1,8 @@
 import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { IImage, isIImage } from "@/types";
-import { closeDeleteImageDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
-import { getApi, getImagesPaginated } from "@/store/entities/images/images.slice";
+import { isIImage } from "@/types";
+import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { getApi as imagesApi } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
@@ -12,9 +12,8 @@ const ImageDeleteDialog = () => {
     const dispatch = useAppDispatch();
 
     const { delete: deleteDialog } = useAppSelector(getDialogs);
-    const imagesPaginated = useAppSelector(getImagesPaginated);
-    const loading = useAppSelector(getApi).loading
-    const imageToDelete = imagesPaginated.results.find((image => image.id === deleteDialog.imageId)) as IImage | undefined;
+    const loading = useAppSelector(imagesApi).loading
+    const imagesToDelete = deleteDialog.imagesToDelete;
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -23,13 +22,15 @@ const ImageDeleteDialog = () => {
     };
 
     const handleConfirmDelete = async () => {
-        if (imageToDelete !== undefined) {
-            const deletedImage = await dispatch(deleteImage(imageToDelete.id, imageToDelete.name));
-            if (isIImage(deletedImage)) {
-                handleDialogClose();
-                dispatch(closePreviewImageDialog());
+        imagesToDelete.forEach(async image => {
+            const deletedImage = await dispatch(deleteImage(image.id, image.name));
+            if (!isIImage(deletedImage)) {
+                return;
             }
-        }
+        });
+        handleDialogClose();
+        dispatch(closePreviewImageDialog());
+        dispatch(closeSelectionDialog());
     };
 
     return (
@@ -59,9 +60,9 @@ const ImageDeleteDialog = () => {
                     </Toolbar>
                 </AppBar>
             )}
-            <DialogTitle>{`Foto ${imageToDelete?.display_name ?? imageToDelete?.name} wirklich löschen?`}</DialogTitle>
+            <DialogTitle>{`Ausgewählte${imagesToDelete.length === 1 ? "s" : ""} Foto${imagesToDelete.length > 1 ? "s" : ""} wirklich löschen?`}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>Das Löschen des Fotos ist unwiderruflich. Es kann nicht wieder hergestellt werden.</Typography>
+                <Typography sx={{ mb: 3 }}>Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden</Typography>
                 <Grid
                     container
                     display={"flex"} justifyContent={"space-between"} alignItems={"center"}
@@ -81,7 +82,7 @@ const ImageDeleteDialog = () => {
                         <Button
                             onClick={handleConfirmDelete}
                             color="error"
-                            disabled={loading}
+                            disabled={loading || imagesToDelete.length === 0}
                             variant="contained"
                             fullWidth
                         >

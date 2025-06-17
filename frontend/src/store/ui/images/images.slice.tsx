@@ -7,14 +7,14 @@ import { createSlice } from "@reduxjs/toolkit";
 type SliceState = {
   dialogs: {
     create: { open: boolean },
-    delete: { open: boolean, imageId: number | null },
+    delete: { open: boolean, imagesToDelete: IImage[] },
     preview: {
       open: boolean;
       selectedImage: IImage | null
     },
-    sendToFrame: { open: boolean, imageId: number | null },
-
+    sendToFrame: { open: boolean, imagesToSend: IImage[] },
     deactivate: { open: boolean, sentImageId: number | null },
+    selection: { open: boolean, selectedImages: IImage[] },
   };
   snackbar: {
     alert: { open: boolean; message: string; severity: AlertColor };
@@ -25,14 +25,14 @@ type SliceState = {
 const initialState: SliceState = {
   dialogs: {
     create: { open: false },
-    delete: { open: false, imageId: null },
+    delete: { open: false, imagesToDelete: [] },
     preview: {
       open: false,
       selectedImage: null
     },
-    sendToFrame: { open: false, imageId: null },
-
+    sendToFrame: { open: false, imagesToSend: [] },
     deactivate: { open: false, sentImageId: null },
+    selection: { open: false, selectedImages: [] },
   },
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
@@ -99,13 +99,13 @@ const imagesSlice = createSlice({
       .addCase(deleteImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bild löschen",
+          message: "Bilder löschen",
         };
       })
       .addCase(deleteImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bild löschen erfolgreich",
+          message: "Bilder löschen erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -116,7 +116,7 @@ const imagesSlice = createSlice({
       .addCase(deleteImageFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bild löschen fehlgeschlagen",
+          message: "Bilder löschen fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -150,13 +150,13 @@ const imagesSlice = createSlice({
       .addCase(sendImageToUserFramePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Foto an Bilderrahmen der Empfänger schicken",
+          message: "Fotos an Bilderrahmen der Empfänger schicken",
         };
       })
       .addCase(sendImageToUserFrameFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Foto an Bilderrahmen der Empfänger schicken erfolgreich",
+          message: "Fotos an Bilderrahmen der Empfänger schicken erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -167,7 +167,7 @@ const imagesSlice = createSlice({
       .addCase(sendImageToUserFrameFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Foto an Bilderrahmen der Empfänger schicken fehlgeschlagen",
+          message: "Fotos an Bilderrahmen der Empfänger schicken fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -211,13 +211,13 @@ const imagesSlice = createSlice({
     createImageDialogClosed: (sliceState) => {
       sliceState.dialogs.create.open = false;
     },
-    deleteImageDialogOpened: (sliceState, action) => {
+    deleteImageDialogOpened: (sliceState) => {
+      sliceState.dialogs.delete.imagesToDelete = sliceState.dialogs.selection.selectedImages;
       sliceState.dialogs.delete.open = true;
-      sliceState.dialogs.delete.imageId = action.payload.imageId;
     },
     deleteImageDialogClosed: (sliceState) => {
       sliceState.dialogs.delete.open = false;
-      sliceState.dialogs.delete.imageId = null;
+      sliceState.dialogs.delete.imagesToDelete = [];
     },
     previewImageDialogOpened: (sliceState, action) => {
       sliceState.dialogs.preview.open = true;
@@ -227,13 +227,13 @@ const imagesSlice = createSlice({
       sliceState.dialogs.preview.open = false;
       sliceState.dialogs.preview.selectedImage = null;
     },
-    sendImageToUserFrameDialogOpened: (sliceState, action) => {
+    sendImageToUserFrameDialogOpened: (sliceState) => {
+      sliceState.dialogs.sendToFrame.imagesToSend = sliceState.dialogs.selection.selectedImages;
       sliceState.dialogs.sendToFrame.open = true;
-      sliceState.dialogs.sendToFrame.imageId = action.payload.imageId;
     },
     sendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.sendToFrame.open = false;
-      sliceState.dialogs.sendToFrame.imageId = null;
+      sliceState.dialogs.sendToFrame.imagesToSend = [];
     },
     deactivateSendImageToUserFrameDialogOpened: (sliceState, action) => {
       sliceState.dialogs.deactivate.open = true;
@@ -242,6 +242,26 @@ const imagesSlice = createSlice({
     deactivateSendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.deactivate.open = false;
       sliceState.dialogs.deactivate.sentImageId = null;
+    },
+    selectionDialogOpened: (sliceState) => {
+      sliceState.dialogs.selection.selectedImages = [];
+      sliceState.dialogs.selection.open = true;
+    },
+    selectionDialogClosed: (sliceState) => {
+      sliceState.dialogs.selection.open = false;
+      sliceState.dialogs.selection.selectedImages = [];
+    },
+    imageSelected: (sliceState, action) => {
+      const elementIndex = sliceState.dialogs.selection.selectedImages.findIndex(
+        (image: IImage) => image.id === action.payload.image.id
+      );
+      if (elementIndex === -1) {
+        sliceState.dialogs.selection.selectedImages[
+          sliceState.dialogs.selection.selectedImages.length
+        ] = action.payload.image;
+      } else {
+        sliceState.dialogs.selection.selectedImages.splice(elementIndex, 1);
+      };
     },
     alertSnackbarOpened: (images, action) => {
       images.snackbar.alert = {
@@ -279,9 +299,8 @@ export const closeCreateImageDialog = () => ({
   type: createImageDialogClosed.type,
 });
 
-export const openDeleteImageDialog = (payload: { imageId: number }) => ({
+export const openDeleteImageDialog = () => ({
   type: deleteImageDialogOpened.type,
-  payload
 });
 
 export const closeDeleteImageDialog = () => ({
@@ -297,9 +316,8 @@ export const closePreviewImageDialog = () => ({
   type: previewImageDialogClosed.type,
 });
 
-export const openSendImageToUserFrameDialog = (payload: { imageId: number }) => ({
+export const openSendImageToUserFrameDialog = () => ({
   type: sendImageToUserFrameDialogOpened.type,
-  payload
 });
 
 export const closeSendImageToUserFrameDialog = () => ({
@@ -313,6 +331,19 @@ export const openDeactivateSendImageFrameDialog = (payload: { sentImageId: numbe
 
 export const closeDeactivateSendImageFrameDialog = () => ({
   type: deactivateSendImageToUserFrameDialogClosed.type,
+});
+
+export const openSelectionDialog = () => ({
+  type: selectionDialogOpened.type,
+});
+
+export const closeSelectionDialog = () => ({
+  type: selectionDialogClosed.type,
+});
+
+export const selectImage = (payload: { image: IImage }) => ({
+  type: imageSelected.type,
+  payload,
 });
 
 export const openImagesAlertSnackbar = (payload: {
@@ -352,7 +383,10 @@ export const {
   sendImageToUserFrameDialogClosed,
   sendImageToUserFrameDialogOpened,
   deactivateSendImageToUserFrameDialogClosed,
-  deactivateSendImageToUserFrameDialogOpened
+  deactivateSendImageToUserFrameDialogOpened,
+  selectionDialogOpened,
+  selectionDialogClosed,
+  imageSelected
 } = imagesSlice.actions;
 
 export default imagesSlice.reducer;

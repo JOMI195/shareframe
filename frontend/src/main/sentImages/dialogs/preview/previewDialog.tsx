@@ -73,7 +73,7 @@ const ImagePreviewDialog = () => {
             dialogTitle={"Gesendetes Foto"}
             dialogContentSx={{ padding: 2 }}
             //subtitle="Optional subtitle or description"
-            actionsSecondary={dialogActions}
+            actionsAdditional={dialogActions}
             actionPrimary={primaryAction}
             actionsShown={true}
         >

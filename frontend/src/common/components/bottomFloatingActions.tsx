@@ -4,6 +4,7 @@ import {
     SpeedDial,
     SpeedDialAction,
     Fab,
+    Tooltip,
 } from "@mui/material";
 import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
 import { DialogAction } from '@/types';
@@ -12,18 +13,20 @@ interface BottomMainFloatingActionsProps {
     actionPrimary?: DialogAction;
     actionSecondary?: DialogAction;
     actionsAdditional?: DialogAction[];
-    disabled?: boolean;
     position?: 'fixed' | 'absolute';
     speedDialIcon?: React.ReactNode;
+    speedDialDisabled?: boolean;
+    allActionsdisabled?: boolean;
 }
 
 const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
     actionsAdditional = [],
     actionPrimary,
     actionSecondary,
-    disabled = false,
     position = 'fixed',
     speedDialIcon = <MoreHorizIcon />,
+    speedDialDisabled = false,
+    allActionsdisabled = false,
 }) => {
     const [speedDialOpen, setSpeedDialOpen] = useState(false);
     const actionsRef = useRef<HTMLDivElement>(null);
@@ -59,39 +62,43 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
             sx={getPositionStyles()}
         >
             {actionPrimary && (
-                <Fab
-                    color={actionPrimary.color}
-                    size="large"
-                    onClick={actionPrimary.onClick}
-                    disabled={disabled || actionPrimary.disabled}
-                    variant='extended'
-                    sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
-                >
-                    {actionPrimary.icon && (
-                        <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
-                            {actionPrimary.icon}
-                        </Box>
-                    )}
-                    {actionPrimary.label}
-                </Fab>
+                <Tooltip title={actionPrimary.tooltip}>
+                    <Fab
+                        color={actionPrimary.color}
+                        size="large"
+                        onClick={actionPrimary.onClick}
+                        disabled={allActionsdisabled || actionPrimary.disabled}
+                        variant='extended'
+                        sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
+                    >
+                        {actionPrimary.icon && (
+                            <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
+                                {actionPrimary.icon}
+                            </Box>
+                        )}
+                        {actionPrimary.label && actionPrimary.label}
+                    </Fab>
+                </Tooltip>
             )}
 
             {actionSecondary && (
-                <Fab
-                    color={actionSecondary.color}
-                    size="large"
-                    onClick={actionSecondary.onClick}
-                    disabled={disabled || actionSecondary.disabled}
-                    variant='extended'
-                    sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
-                >
-                    {actionSecondary && (
-                        <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
-                            {actionSecondary.icon}
-                        </Box>
-                    )}
-                    {actionSecondary.label}
-                </Fab>
+                <Tooltip title={actionSecondary.tooltip}>
+                    <Fab
+                        color={actionSecondary.color}
+                        size="large"
+                        onClick={actionSecondary.onClick}
+                        disabled={allActionsdisabled || actionSecondary.disabled}
+                        variant='extended'
+                        sx={{ alignSelf: "flex-end", borderRadius: '10px' }}
+                    >
+                        {actionSecondary.icon && (
+                            <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
+                                {actionSecondary.icon}
+                            </Box>
+                        )}
+                        {actionSecondary.label && actionSecondary.label}
+                    </Fab>
+                </Tooltip>
             )}
 
             {actionsAdditional.length > 0 && (
@@ -103,7 +110,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                     open={speedDialOpen}
                     FabProps={{
                         size: "medium",
-                        disabled: disabled
+                        disabled: allActionsdisabled || speedDialDisabled
                     }}
                     sx={{
                         '& .MuiSpeedDialAction-staticTooltipLabel': {
@@ -133,7 +140,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                                 action.onClick();
                             }}
                             FabProps={{
-                                disabled: disabled || action.disabled,
+                                disabled: allActionsdisabled || speedDialDisabled || action.disabled,
                             }}
                             sx={{
                                 '& .MuiFab-root': {

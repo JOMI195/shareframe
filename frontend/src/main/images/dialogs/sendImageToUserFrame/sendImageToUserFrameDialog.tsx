@@ -20,9 +20,8 @@ import {
     SelectChangeEvent
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { IImage } from "@/types";
-import { closeSendImageToUserFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
-import { getApi, getImagesPaginated } from "@/store/entities/images/images.slice";
+import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { getApi } from "@/store/entities/images/images.slice";
 import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
@@ -46,9 +45,8 @@ const SendImageToUserFrameDialog = () => {
     const dispatch = useAppDispatch();
 
     const { sendToFrame: sendDialog } = useAppSelector(getDialogs);
-    const imagesPaginated = useAppSelector(getImagesPaginated);
     const loading = useAppSelector(getApi).loading;
-    const imageToSend = imagesPaginated.results.find((image => image.id === sendDialog.imageId)) as IImage | undefined;
+    const imagesToSend = sendDialog.imagesToSend;
 
     const user = useAppSelector(getUser);
     const friendships = useAppSelector(getFriendships);
@@ -81,7 +79,7 @@ const SendImageToUserFrameDialog = () => {
     };
 
     const handleConfirmSend = async () => {
-        if (!imageToSend || receiverUsernames.length === 0) {
+        if (imagesToSend.length === 0 || receiverUsernames.length === 0) {
             return;
         }
 
@@ -92,20 +90,22 @@ const SendImageToUserFrameDialog = () => {
                 Date.now() / 1000 + (expirationOption * 3600)
             );
 
-            const sendPromises = receiverUsernames.map(receiverUsername =>
-                dispatch(sendImageToUserFrames(
-                    receiverUsername,
-                    imageToSend.id,
-                    expirationTimestamp.toString()
-                ))
-            );
+            imagesToSend.forEach(async imageToSend => {
+                const sendPromises = receiverUsernames.map(receiverUsername =>
+                    dispatch(sendImageToUserFrames(
+                        receiverUsername,
+                        imageToSend.id,
+                        expirationTimestamp.toString()
+                    ))
+                );
 
-            await Promise.all(sendPromises);
+                await Promise.all(sendPromises);
+            });
         } catch (error) {
-            console.error('Error sending image:', error);
         } finally {
             setSendingInProgress(false);
             handleDialogClose();
+            dispatch(closeSelectionDialog());
         }
     };
 
@@ -120,14 +120,14 @@ const SendImageToUserFrameDialog = () => {
             TransitionComponent={matches ? ZoomTransition : SlideTransition}
             onClose={handleDialogClose}
             aria-describedby='send-image-dialog'
-            maxWidth="sm"
+            maxWidth="md"
             fullWidth
         >
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
                     <Toolbar>
                         <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            Foto senden
+                            {`Ausgewählte${imagesToSend.length === 1 ? "s" : ""} Foto${imagesToSend.length > 1 ? "s" : ""} senden`}
                         </Typography>
                         <IconButton
                             edge='start'
@@ -143,7 +143,7 @@ const SendImageToUserFrameDialog = () => {
             )}
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>
-                    Wähle die Empfänger und die Ablaufzeit. Das Foto wird an alle Bilderrahmen der ausgewählten Empfänger geschickt und dort bis zum Ender der angegebenen Ablaufzeit, bzw. bis der Empfänger dieses deaktiviert, angezeigt.
+                    {`Wähle die Empfänger und die Ablaufzeit. ${imagesToSend.length === 1 ? "Das" : "Die"} ${imagesToSend.length > 1 ? "ausgewählten" : "ausgewählte"} ${imagesToSend.length > 1 ? "Fotos" : "Foto"} ${imagesToSend.length === 1 ? "wird" : "werden"} an alle Bilderrahmen der ausgewählten Empfänger geschickt und dort bis zum Ender der angegebenen Ablaufzeit, bzw. bis der Empfänger ${imagesToSend.length === 1 ? "dieses" : "diese"} deaktiviert, angezeigt.`}
                 </Typography>
 
                 <FormControl fullWidth sx={{ mb: 1 }}>
@@ -221,8 +221,8 @@ const SendImageToUserFrameDialog = () => {
                             fullWidth
                         >
                             {sendingInProgress
-                                ? `Sende an ${receiverUsernames.length} Empfänger...`
-                                : `An ${receiverUsernames.length} Empfänger senden`
+                                ? `Sende ${imagesToSend.length} ${receiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${receiverUsernames.length} Empfänger...`
+                                : `${imagesToSend.length} ${receiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${receiverUsernames.length} Empfänger senden`
                             }
                         </Button>
                     </Grid>

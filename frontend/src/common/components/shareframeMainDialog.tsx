@@ -27,7 +27,7 @@ interface ReusableDialogProps extends Omit<DialogProps, 'title'> {
     // actions props
     actionsShown?: boolean;
     actionPrimary?: DialogAction;
-    actionsSecondary?: DialogAction[];
+    actionsAdditional?: DialogAction[];
     actionsDisabled?: boolean;
 }
 
@@ -37,8 +37,8 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
     dialogContentSx,
     onDialogClose,
     actionsShown = false,
-    actionsSecondary,
     actionPrimary,
+    actionsAdditional = [],
     actionsDisabled = false,
     children,
     ...dialogProps
@@ -102,11 +102,11 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                 </Box>
             </DialogContent>
 
-            {actionsShown && actionsSecondary && actionsSecondary.length > 0 && (
+            {actionsShown && ((actionsAdditional.length > 0) || (actionPrimary)) && (
                 <BottomFloatingActions
                     actionPrimary={actionPrimary}
-                    actionsAdditional={actionsSecondary}
-                    disabled={actionsDisabled}
+                    actionsAdditional={actionsAdditional}
+                    allActionsdisabled={actionsDisabled}
                     position={"absolute"}
                 />
             )}
