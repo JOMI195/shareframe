@@ -17,6 +17,18 @@ const BuildVersionChecker: React.FC = () => {
   const frontendVersion = import.meta.env.VITE_APP_BUILD_VERSION;
 
   useEffect(() => {
+    const getAppVersion = () => {
+      dispatch(fetchAppVersion());
+    };
+
+    window.addEventListener('focus', getAppVersion);
+
+    return () => {
+      window.removeEventListener('focus', getAppVersion);
+    };
+  }, []);
+
+  useEffect(() => {
     dispatch(fetchAppVersion());
 
     const intervalId = setInterval(() => {

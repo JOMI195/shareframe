@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import {
   AppBar,
   Box,
-  Button,
   Dialog,
   DialogContent,
   IconButton,
@@ -15,23 +14,23 @@ import {
   Step,
   StepLabel,
   StepContent,
-  Grid
 } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
-import CloseIcon from '@mui/icons-material/Close';
-import FileUploadForm from './form'
-import Cropper from './cropper/cropper'
-import { validateImage } from './validation'
+import CloseIcon from '@mui/icons-material/Close'
+
+import { validateImage } from './imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
 import { closeCreateImageDialog, getDialogs } from '@/store/ui/images/images.slice'
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
 import { getApi } from '@/store/entities/images/images.slice'
-import { Area } from 'react-easy-crop';
-import { getCroppedImg } from './cropper/utils'
+import { Area } from 'react-easy-crop'
+import { getCroppedImg } from './imageCropping/cropper/utils'
+import ImageUpload from './imageUpload/imageUpload'
+import ImageCropping from './imageCropping/imageCropping'
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -51,115 +50,216 @@ const SlideTransition = React.forwardRef(function Transition(
   return <Slide ref={ref} {...props} />
 })
 
-const steps = ['Foto auswählen', 'Foto zuschneiden und hochladen'];
+export interface ImageStatus {
+  id: string;
+  file: File;
+  status: 'pending' | 'cropping' | 'uploaded';
+  croppedFile?: File;
+}
+
+const steps = ['Fotos auswählen', 'Fotos zuschneiden und hochladen']
 
 const UploadDialog: React.FC = () => {
-  const theme = useTheme()
-  const dispatch = useAppDispatch()
-  const matches = useMediaQuery(theme.breakpoints.up('md'))
-  const loading = useAppSelector(getApi).loading;
+  const theme = useTheme();
+  const dispatch = useAppDispatch();
+  const matches = useMediaQuery(theme.breakpoints.up('md'));
+  const sending = useAppSelector(getApi).sending;
 
-  const [activeStep, setActiveStep] = useState(0);
-  const [image, setImage] = useState<File | null>(null);
+  const [activeStep, setActiveStep] = useState(0)
+  const [imageStatuses, setImageStatuses] = useState<ImageStatus[]>([]);
+  const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
+
+  const [imagePreviews, setImagePreviews] = useState<{ [id: string]: string }>({});
 
   const CROPPER_PROPS_INITIAL_STATE = {
     rotation: 0,
     croppedAreaPixels: { x: 0, y: 0, width: 0, height: 0 }
-  };
+  }
 
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels);
-  const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
+  const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
 
-
-  const open = useAppSelector(getDialogs).create.open;
+  const open = useAppSelector(getDialogs).create.open
 
   const handleDialogClose = () => {
     dispatch(closeCreateImageDialog());
-    setImage(null);
+    setImageStatuses([]);
     setActiveStep(0);
+    setCurrentImageIndex(null);
+    resetCropperState();
+    setImagePreviews({});
+  }
+
+  const resetCropperState = () => {
+    setCroppedAreaPixels(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
+    setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
   }
 
   const handleNext = () => {
-    if (activeStep === 0 && !image) {
-      return;
+    if (activeStep === 0 && imageStatuses.length === 0) {
+      return
     }
-    else if (activeStep === 1 && image) {
-      handleDialogUpload();
-      return;
-    }
-    setActiveStep((prevActiveStep) => prevActiveStep + 1);
-  };
+    setActiveStep((prevActiveStep) => prevActiveStep + 1)
+  }
 
   const handleBack = () => {
     if (activeStep === 0) {
-      handleDialogClose();
+      handleDialogClose()
     } else {
-      setActiveStep((prevActiveStep) => prevActiveStep - 1);
-    }
-  };
-
-  const handleDialogUpload = async () => {
-    if (!croppedAreaPixels || !image) {
-      return;
-    }
-
-    try {
-      const croppedBlob = await getCroppedImg(image, croppedAreaPixels, rotation);
-
-      const croppedFile = new File([croppedBlob], image?.name || 'cropped-image.jpg', {
-        type: 'image/jpeg',
-        lastModified: Date.now()
-      });
-
-      const validation: IImageValidationResponse = validateImage(croppedFile, 0);
-      if (validation.valid) {
-        const upload_image_sha256_hex_hash = await fileToSha256Hex(croppedFile);
-
-        const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash));
-
-        if (isIImage(newImage)) {
-          handleDialogClose();
-          setCroppedAreaPixels(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels);
-          setRotation(CROPPER_PROPS_INITIAL_STATE.rotation);
-        }
-      } else {
-
-      }
-    } catch (error) {
-
-    }
-  };
-
-
-
-  const getStepContent = (step: number) => {
-    switch (step) {
-      case 0:
-        return (
-          <FileUploadForm
-            setImage={setImage}
-            image={image}
-          />
-        );
-      case 1:
-        return image ? (
-          <Cropper
-            image={image}
-            setCroppedAreaPixels={setCroppedAreaPixels}
-            rotation={rotation}
-            setRotation={setRotation}
-          />
-        ) : null;
-      default:
-        return 'Unbekannter Schritt';
+      setActiveStep((prevActiveStep) => prevActiveStep - 1)
     }
   }
 
+  const setImages = (files: File[]) => {
+    const newImageStatuses: ImageStatus[] = files.map(file => ({
+      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
+      file,
+      status: 'pending'
+    }))
+    setImageStatuses(newImageStatuses)
+  }
+
+  const activeUrlRefs = useRef<{ [id: string]: string }>({});
+
   useEffect(() => {
-    if (activeStep !== steps.length - 1 && image !== null) {
-      handleNext();
+    const newPreviewsMap: { [id: string]: string } = {}; // This will be the map for the new state update
+    const currentImageIdsInStatus = new Set(imageStatuses.map(status => status.id));
+
+    // Identify URLs from the *previous* successful effect run that are no longer needed
+    const urlsToRevokeFromPreviousActiveSet: string[] = [];
+    for (const imageId in activeUrlRefs.current) { // Check against the ref's stored URLs
+      if (!currentImageIdsInStatus.has(imageId)) {
+        urlsToRevokeFromPreviousActiveSet.push(activeUrlRefs.current[imageId]);
+      }
     }
-  }, [image]);
+
+    // Populate newPreviewsMap: reuse existing if available in *activeUrlRefs*, otherwise create new
+    imageStatuses.forEach(imageStatus => {
+      if (activeUrlRefs.current[imageStatus.id]) { // Check against the ref for reuse
+        newPreviewsMap[imageStatus.id] = activeUrlRefs.current[imageStatus.id];
+      } else {
+        newPreviewsMap[imageStatus.id] = URL.createObjectURL(imageStatus.file);
+      }
+    });
+
+    // Update the React state
+    setImagePreviews(newPreviewsMap);
+
+    // Update the mutable ref to reflect the URLs that are now active
+    activeUrlRefs.current = newPreviewsMap;
+
+    // Perform immediate revocations
+    urlsToRevokeFromPreviousActiveSet.forEach(url => URL.revokeObjectURL(url));
+
+    // Cleanup function: This runs when the component unmounts.
+    // It should revoke ALL URLs that are currently in the ref.
+    return () => {
+      Object.values(activeUrlRefs.current).forEach(url => URL.revokeObjectURL(url));
+      activeUrlRefs.current = {}; // Clear the ref on unmount
+    };
+  }, [imageStatuses, activeStep]);
+
+  const selectImageForCropping = (index: number) => {
+    if (imageStatuses[index].status === 'uploaded') return
+
+    resetCropperState()
+    setCurrentImageIndex(index)
+    setImageStatuses(prev =>
+      prev.map((status, i) => ({
+        ...status,
+        status: i === index ? 'cropping' : (status.status === 'cropping' ? 'pending' : status.status)
+      }))
+    )
+  }
+
+  const handleCropAndUpload = async (index: number) => {
+    if (!croppedAreaPixels || !imageStatuses[index]) {
+      return
+    }
+
+    const imageStatus = imageStatuses[index]
+
+    try {
+      const croppedBlob = await getCroppedImg(imageStatus.file, croppedAreaPixels, rotation)
+
+      const croppedFile = new File([croppedBlob], imageStatus.file.name || 'cropped-image.jpg', {
+        type: 'image/jpeg',
+        lastModified: Date.now()
+      })
+
+      const validation: IImageValidationResponse = validateImage(croppedFile, 0)
+      if (validation.valid) {
+        const upload_image_sha256_hex_hash = await fileToSha256Hex(croppedFile)
+
+        const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash))
+
+        if (isIImage(newImage)) {
+          // Mark this image as uploaded
+          setImageStatuses(prev =>
+            prev.map((status, i) =>
+              i === index
+                ? { ...status, status: 'uploaded', croppedFile }
+                : status
+            )
+          )
+
+          // Find next pending image to crop
+          const nextPendingIndex = imageStatuses.findIndex((status, i) =>
+            i !== index && status.status === 'pending'
+          )
+
+          if (nextPendingIndex !== -1) {
+            selectImageForCropping(nextPendingIndex)
+          } else {
+            setCurrentImageIndex(null)
+            // Check if all images are uploaded
+            const allUploaded = imageStatuses.every((status, i) =>
+              i === index || status.status === 'uploaded'
+            )
+            if (allUploaded) {
+              handleDialogClose()
+            }
+          }
+        }
+      } else {
+        alert(validation.errors.join(' | '))
+      }
+    } catch (error) {
+      console.error('Error cropping and uploading image:', error)
+    }
+  }
+
+  // Auto-select first image when moving to step 2
+  useEffect(() => {
+    if (activeStep === 1 && imageStatuses.length > 0) {
+      let targetIndex: number | null = null;
+
+      // First, try to re-select the image that was last being cropped, if it's still in 'cropping' status.
+      if (currentImageIndex !== null && imageStatuses[currentImageIndex]?.status === 'cropping') {
+        targetIndex = currentImageIndex;
+      } else {
+        // If no image is currently being cropped, or the current one is no longer 'cropping',
+        // find the very first image that is still 'pending'.
+        const firstPendingIdx = imageStatuses.findIndex(status => status.status === 'pending');
+        if (firstPendingIdx !== -1) {
+          targetIndex = firstPendingIdx;
+        }
+      }
+
+      // Only update the selection if a valid target is found and it's different from the current selection.
+      if (targetIndex !== null && currentImageIndex !== targetIndex) {
+        selectImageForCropping(targetIndex);
+      }
+      // If there are no pending or actively cropping images, and something was selected, deselect it.
+      else if (targetIndex === null && currentImageIndex !== null) {
+        setCurrentImageIndex(null);
+      }
+    }
+  }, [activeStep, imageStatuses, currentImageIndex, selectImageForCropping, setCurrentImageIndex]);
+
+  const totalImages = imageStatuses.length;
+  const uploadedImagesCount = imageStatuses.filter(status => status.status === 'uploaded').length;
+  const allImagesUploaded = totalImages > 0 && uploadedImagesCount === totalImages;
 
   return (
     <Container>
@@ -168,60 +268,59 @@ const UploadDialog: React.FC = () => {
         open={open}
         TransitionComponent={matches ? ZoomTransition : SlideTransition}
         onClose={handleDialogClose}
-        aria-describedby='dialog-slide-upload'
-        maxWidth="md"
+        aria-describedby="dialog-slide-upload"
+        maxWidth="lg"
         fullWidth
       >
         {!matches && (
-          <AppBar sx={{ position: 'relative' }} color='inherit'>
+          <AppBar sx={{ position: 'relative' }} color="inherit">
             <Toolbar>
-              <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                Foto hochladen
+              <Typography sx={{ flex: 1 }} variant="h6" component="div">
+                Fotos hochladen
               </Typography>
               <IconButton
-                edge='start'
-                color='inherit'
+                edge="start"
+                color="inherit"
                 onClick={handleDialogClose}
-                aria-label='cancel'
+                aria-label="cancel"
               >
                 <CloseIcon />
               </IconButton>
             </Toolbar>
           </AppBar>
         )}
-        <DialogContent>
-          <Box sx={{ width: '100%', mb: 2 }}>
+        <DialogContent sx={{ p: matches ? 3 : 1 }}>
+          <Box sx={{ width: '100%' }}>
             <Stepper orientation="vertical" activeStep={activeStep}>
-              {steps.map((label) => (
-                <Step key={label} sx={{ width: "100%" }}>
+              {steps.map((label, index) => (
+                <Step key={label} sx={{ width: "100%", height: "100%" }}>
                   <StepLabel>{label}</StepLabel>
                   <StepContent>
-                    <Grid container>
-                      <Grid item xs={12} sx={{ mt: 5 }}>
-                        {getStepContent(activeStep)}
-                      </Grid>
-                      <Grid item xs={12} sx={{ mt: 5 }}>
-                        <Button
-                          fullWidth
-                          variant="contained"
-                          onClick={handleNext}
-                          disabled={!image || (activeStep === steps.length - 1 && loading)}
-                          sx={{ mt: 1, mr: 1 }}
-                        >
-                          {activeStep === steps.length - 1 ? 'Zuschneiden und Hochladen' : 'Weiter'}
-                        </Button>
-                      </Grid>
-                      <Grid item xs={12}>
-                        <Button
-                          fullWidth
-                          variant='outlined'
-                          onClick={handleBack}
-                          sx={{ mt: 1, mr: 1 }}
-                        >
-                          Zurück
-                        </Button>
-                      </Grid>
-                    </Grid>
+                    {index === 0 && (
+                      <ImageUpload
+                        imageStatuses={imageStatuses}
+                        setImages={setImages}
+                        handleNext={handleNext}
+                        handleBack={handleBack}
+                        imagePreviews={imagePreviews}
+                      />
+                    )}
+                    {index === 1 && (
+                      <ImageCropping
+                        imageStatuses={imageStatuses}
+                        currentImageIndex={currentImageIndex}
+                        selectImageForCropping={selectImageForCropping}
+                        setCroppedAreaPixels={setCroppedAreaPixels}
+                        rotation={rotation}
+                        setRotation={setRotation}
+                        handleCropAndUpload={handleCropAndUpload}
+                        handleDialogClose={handleDialogClose}
+                        handleBack={handleBack}
+                        allImagesUploaded={allImagesUploaded}
+                        sending={sending}
+                        imagePreviews={imagePreviews}
+                      />
+                    )}
                   </StepContent>
                 </Step>
               ))}
@@ -229,8 +328,8 @@ const UploadDialog: React.FC = () => {
           </Box>
         </DialogContent>
       </Dialog>
-    </Container >
+    </Container>
   )
 }
 
-export default UploadDialog;
+export default UploadDialog

@@ -5,6 +5,7 @@ import { createSlice } from "@reduxjs/toolkit";
 type SliceState = {
   api: {
     loading: boolean;
+    sending: boolean;
     lastFetch: number | null;
   };
   imagesPaginated: IImagesPaginated;
@@ -15,6 +16,7 @@ type SliceState = {
 const initialState: SliceState = {
   api: {
     loading: false,
+    sending: false,
     lastFetch: null,
   },
   imagesPaginated: {
@@ -26,6 +28,11 @@ const initialState: SliceState = {
   },
   imagesPaginatedPageSize: 10,
   sentImages: []
+};
+
+const resetApiState = (sliceState: SliceState) => {
+  sliceState.api.loading = false;
+  sliceState.api.sending = false;
 };
 
 const imagesSlice = createSlice({
@@ -41,10 +48,10 @@ const imagesSlice = createSlice({
         page: sliceState.imagesPaginated.page,
       };
       sliceState.api.lastFetch = Date.now();
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     imagesRequestFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     imagesPageSet: (sliceState, action) => {
       sliceState.imagesPaginated.page = action.payload;
@@ -53,19 +60,19 @@ const imagesSlice = createSlice({
       sliceState.imagesPaginatedPageSize = action.payload;
     },
     createImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     createImageFulfilled: (sliceState, action) => {
       sliceState.imagesPaginated.results.unshift(action.payload);
       sliceState.imagesPaginated.count += 1;
       sliceState.api.lastFetch = Date.now();
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     createImageFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     deleteImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     deleteImageFulfilled: (sliceState, action) => {
       const oldCreation = action.payload;
@@ -74,10 +81,10 @@ const imagesSlice = createSlice({
       );
       sliceState.imagesPaginated.results.splice(index, 1);
       sliceState.imagesPaginated.count -= 1;
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     deleteImageFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     downloadImageRequested: (_sliceState) => {
     },
@@ -92,19 +99,19 @@ const imagesSlice = createSlice({
     sentImagesReceived: (sliceState, action) => {
       sliceState.sentImages = action.payload;
       sliceState.api.lastFetch = Date.now();
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     sentImagesRequestFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     sendImageToUserFramePending: (sliceState) => {
       sliceState.api.loading = true;
     },
     sendImageToUserFrameFulfilled: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     sendImageToUserFrameFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     deactivateSentImagePending: (sliceState) => {
       sliceState.api.loading = true;
@@ -117,10 +124,10 @@ const imagesSlice = createSlice({
       if (index !== -1) {
         sliceState.sentImages[index] = updatedImage;
       }
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
     deactivateSentImageFailed: (sliceState) => {
-      sliceState.api.loading = false;
+      resetApiState(sliceState);
     },
   },
 });
@@ -153,6 +160,7 @@ export const {
 export default imagesSlice.reducer;
 
 export const getApi = (state: RootState) => state.entities.images.api;
+export const getApiState = (state: RootState) => state.entities.images.api.loading || state.entities.images.api.sending;
 export const getImagesPaginated = (state: RootState) => state.entities.images.imagesPaginated;
 export const getImagesPaginatedPageSize = (state: RootState) => state.entities.images.imagesPaginatedPageSize;
 export const getSentImages = (state: RootState) => state.entities.images.sentImages;

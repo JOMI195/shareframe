@@ -49,10 +49,13 @@ const Cropper: React.FC<CropperProps> = ({
     useEffect(() => {
         if (image) {
             const reader = new FileReader();
-            reader.onload = () => {
+            reader.onloadend = () => {
                 setImageSrc(reader.result as string);
+                onCropperReset();
             };
             reader.readAsDataURL(image);
+        } else {
+            setImageSrc('');
         }
     }, [image]);
 
