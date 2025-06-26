@@ -1,15 +1,10 @@
 import { FC } from 'react';
 import { Card, CardContent, Typography, Box, useTheme } from "@mui/material";
 import ActivityDayBar from './activityDayBar';
-
-interface DayActivity {
-    day: string;
-    sentCount: number;
-    receivedCount: number;
-}
+import { IDayActivity } from '@/types';
 
 interface WeeklyActivityProps {
-    activityData: DayActivity[];
+    activityData: IDayActivity[];
 }
 
 const WeeklyActivity: FC<WeeklyActivityProps> = ({ activityData }) => {
@@ -40,8 +35,8 @@ const WeeklyActivity: FC<WeeklyActivityProps> = ({ activityData }) => {
                         <ActivityDayBar
                             key={index}
                             day={day.day}
-                            sentCount={day.sentCount}
-                            receivedCount={day.receivedCount}
+                            sentCount={day.sent_count}
+                            receivedCount={day.received_count}
                         />
                     ))}
                 </Box>

@@ -57,13 +57,64 @@ export const deleteImage = (imageId: number, imageName: string) =>
     onStartPayload: imageName,
   });
 
-export const fetchSentImages = () =>
-  apiRequest({
-    url: ImagesEndpoints.getSentImagesUrl(),
+export const fetchSentImagesPaginated = (
+  page: number = 1,
+  page_size: number = 12,
+  filters?: {
+    status?: string;
+    shipping?: string;
+    sender?: string;
+    receiver?: string;
+  }
+) => {
+  const params = new URLSearchParams({
+    page: page.toString(),
+    page_size: page_size.toString(),
+  });
+
+  // Add filters to params if they exist
+  if (filters) {
+    if (filters.status && filters.status !== 'all') {
+      params.append('status', filters.status);
+    }
+    if (filters.shipping && filters.shipping !== 'all') {
+      params.append('shipping', filters.shipping);
+    }
+    if (filters.sender) {
+      params.append('sender', filters.sender);
+    }
+    if (filters.receiver) {
+      params.append('receiver', filters.receiver);
+    }
+  }
+
+  return apiRequest({
+    url: `${ImagesEndpoints.getSentImagesUrl()}?${params.toString()}`,
     onStart: ImagesSlice.sentImagesRequested.type,
     onSuccess: ImagesSlice.sentImagesReceived.type,
     onError: ImagesSlice.sentImagesRequestFailed.type,
   });
+};
+
+export const setSentImagesPaginatedPage = (page: number) => ({
+  type: ImagesSlice.sentImagesPageSet.type,
+  payload: page,
+});
+
+export const setSentImagesPaginatedPageSize = (pageSize: number) => ({
+  type: ImagesSlice.sentImagesPageSizeSet.type,
+  payload: pageSize,
+});
+
+export const setSentImagesFilters = (filters: {
+  status?: string;
+  shipping?: string;
+  sender?: string;
+  receiver?: string;
+}) => ({
+  type: ImagesSlice.sentImagesFiltersSet.type,
+  payload: filters,
+});
 
 export const sendImageToUserFrames = (
   reciever_username: string,

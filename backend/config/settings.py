@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     "friendships",
     "sent_images",
     "changelogs",
+    "dashboard",
 ]
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB

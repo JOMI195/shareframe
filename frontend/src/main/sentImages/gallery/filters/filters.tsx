@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
     Box,
     Grid,
@@ -14,27 +14,34 @@ import {
 } from '@mui/material';
 import HideImageIcon from '@mui/icons-material/HideImage';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { ISentImage, ShippingFilter, StatusFilter } from '@/types';
+import { ShippingFilter, StatusFilter } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { getDialogs, openFilterDialog, resetFilters, setHideToYouFilter, setShippingFilter, setStatusFilter } from '@/store/ui/sentImages/sentImages.slice';
-import { getUser } from '@/store/entities/authentication/authentication.slice';
+import {
+    getDialogs,
+    openFilterDialog,
+    resetFilters,
+    setHideToYouFilter,
+    setShippingFilter,
+    setStatusFilter
+} from '@/store/ui/sentImages/sentImages.slice';
 
 export interface FilterControlsProps {
-    images: ISentImage[];
-    currentUser: { username: string };
-    onFilteredImagesChange: (filteredImages: ISentImage[]) => void;
+    onFiltersChange: (filters: {
+        status: StatusFilter;
+        shipping: ShippingFilter;
+        sender: string;
+        receiver: string;
+        hideToYou: boolean;
+    }) => void;
     disabled?: boolean;
 }
 
 const FilterControls: React.FC<FilterControlsProps> = ({
-    images,
-    currentUser,
-    onFilteredImagesChange,
+    onFiltersChange,
     disabled = false
 }) => {
     const dispatch = useAppDispatch();
     const { filter: filterDialog } = useAppSelector(getDialogs);
-    const user = useAppSelector(getUser);
 
     const statusFilter = filterDialog.statusFilter;
     const shippingFilter = filterDialog.shippingFilter;
@@ -42,94 +49,82 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     const receiverFilter = filterDialog.receiverFilter;
     const hideToYouFilter = filterDialog.hideToYouFilter;
 
-    const filterByStatus = (image: ISentImage, status: StatusFilter): boolean => {
-        const expiryDate = new Date(image.expires_at);
-        const isExpired = expiryDate < new Date();
-
-        switch (status) {
-            case 'active':
-                return !isExpired;
-            case 'expired':
-                return isExpired;
-            default:
-                return true;
-        }
-    };
-
-    const filterByShipping = (image: ISentImage, status: ShippingFilter): boolean => {
-        switch (status) {
-            case 'sentToYou':
-                return image.reciever == user.me.username;
-            case 'sentByYou':
-                return image.sender == user.me.username;
-            default:
-                return true;
-        }
-    };
-
-    const filterBySender = (image: ISentImage, searchTerm: string): boolean => {
-        if (!searchTerm) return true;
-
-        const isSender = image.sender === currentUser.username;
-        const searchTermLower = searchTerm.toLowerCase();
-
-        return isSender ?
-            "Du".toLowerCase().includes(searchTermLower) :
-            image.sender.toLowerCase().includes(searchTermLower);
-    };
-
-    const filterByReceiver = (image: ISentImage, searchTerm: string): boolean => {
-        if (!searchTerm) return true;
-
-        const isReceiver = image.reciever === currentUser.username;
-        const searchTermLower = searchTerm.toLowerCase();
-
-        return isReceiver ?
-            "Du".toLowerCase().includes(searchTermLower) :
-            image.reciever.toLowerCase().includes(searchTermLower);
-    };
-
-    const applyFilters = () => {
-        const filteredImages = images.filter(image =>
-            filterByStatus(image, statusFilter) &&
-            filterByShipping(image, shippingFilter) &&
-            filterBySender(image, senderFilter) &&
-            filterByReceiver(image, receiverFilter)
-        );
-        onFilteredImagesChange(filteredImages);
+    const notifyFiltersChange = () => {
+        onFiltersChange({
+            status: statusFilter,
+            shipping: shippingFilter,
+            sender: senderFilter,
+            receiver: receiverFilter,
+            hideToYou: hideToYouFilter
+        });
     };
 
     const handleStatusChange = (event: SelectChangeEvent) => {
-        dispatch(setStatusFilter({ statusFilter: event.target.value }));
+        const newStatus = event.target.value as StatusFilter;
+        dispatch(setStatusFilter({ statusFilter: newStatus }));
+
+        // Use setTimeout to ensure Redux state is updated before calling the callback
+        setTimeout(() => {
+            onFiltersChange({
+                status: newStatus,
+                shipping: shippingFilter,
+                sender: senderFilter,
+                receiver: receiverFilter,
+                hideToYou: hideToYouFilter
+            });
+        }, 0);
     };
 
     const handleHideToYouChange = () => {
-        dispatch(setHideToYouFilter({ hideToYouFilter: !hideToYouFilter }));
+        const newHideToYou = !hideToYouFilter;
+        dispatch(setHideToYouFilter({ hideToYouFilter: newHideToYou }));
+
+        // Use setTimeout to ensure Redux state is updated before calling the callback
+        setTimeout(() => {
+            onFiltersChange({
+                status: statusFilter,
+                shipping: shippingFilter,
+                sender: senderFilter,
+                receiver: receiverFilter,
+                hideToYou: newHideToYou
+            });
+        }, 0);
     };
 
     const handleShippingChange = (event: SelectChangeEvent) => {
-        dispatch(setShippingFilter({ shippingFilter: event.target.value }));
+        const newShipping = event.target.value as ShippingFilter;
+        dispatch(setShippingFilter({ shippingFilter: newShipping }));
+
+        // Use setTimeout to ensure Redux state is updated before calling the callback
+        setTimeout(() => {
+            onFiltersChange({
+                status: statusFilter,
+                shipping: newShipping,
+                sender: senderFilter,
+                receiver: receiverFilter,
+                hideToYou: hideToYouFilter
+            });
+        }, 0);
     };
 
     const handleClearFilters = () => {
         dispatch(resetFilters());
+
+        // Use setTimeout to ensure Redux state is updated before calling the callback
+        setTimeout(() => {
+            onFiltersChange({
+                status: 'all',
+                shipping: 'all',
+                sender: '',
+                receiver: '',
+                hideToYou: false
+            });
+        }, 0);
     };
 
     const handleOpenExtendedFilters = () => {
         dispatch(openFilterDialog());
     };
-
-
-    useEffect(() => {
-        applyFilters();
-    }, [
-        statusFilter,
-        shippingFilter,
-        senderFilter,
-        receiverFilter,
-        hideToYouFilter,
-        images
-    ]);
 
     return (
         <Box sx={{ width: '100%', mb: 2 }}>
@@ -161,7 +156,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                             labelId="image-shipping-filter-label"
                             id="image-shipping-filter"
                             value={shippingFilter}
-                            label="Status Filter"
+                            label="Versand Filter"
                             onChange={handleShippingChange}
                         >
                             <MenuItem value="all">Alle Fotos</MenuItem>

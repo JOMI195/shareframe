@@ -26,6 +26,23 @@ export interface IImagesPaginated {
     results: IImage[];
 };
 
+export interface ISentImagesPaginated {
+    count: number;
+    next: string | null;
+    previous: string | null;
+    page: number;
+    results: ISentImage[];
+};
+
+type StatusFilter = 'all' | 'active' | 'expired';
+type ShippingFilter = 'all' | 'sentToYou' | 'sentByYou';
+export interface ISentImagesFilters {
+    status: StatusFilter;
+    shipping: ShippingFilter;
+    sender: string;
+    receiver: string;
+}
+
 export const isIImage = (obj: any): obj is IImage => {
     return (
         obj &&

@@ -5,6 +5,7 @@ import framesReducer from "./frames/frames.slice";
 import imagesReducer from "./images/images.slice";
 import changelogsReducer from "./changelogs/changelogs.slice";
 import appReducer from "./app/app.slice";
+import dashboardReducer from "./dashboard/dashboard.slice";
 
 export default combineReducers({
     app: appReducer,
@@ -13,4 +14,5 @@ export default combineReducers({
     frames: framesReducer,
     images: imagesReducer,
     changelogs: changelogsReducer,
+    dashboard: dashboardReducer,
 });

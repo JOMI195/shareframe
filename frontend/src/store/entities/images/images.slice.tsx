@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { IImagesPaginated, ISentImage } from "@/types";
+import { IImagesPaginated, ISentImagesFilters, ISentImagesPaginated } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -10,7 +10,9 @@ type SliceState = {
   };
   imagesPaginated: IImagesPaginated;
   imagesPaginatedPageSize: number;
-  sentImages: ISentImage[];
+  sentImagesPaginated: ISentImagesPaginated;
+  sentImagesPaginatedPageSize: number;
+  sentImagesFilters: ISentImagesFilters;
 };
 
 const initialState: SliceState = {
@@ -27,7 +29,20 @@ const initialState: SliceState = {
     results: []
   },
   imagesPaginatedPageSize: 10,
-  sentImages: []
+  sentImagesPaginated: {
+    count: 0,
+    next: null,
+    previous: null,
+    results: [],
+    page: 1,
+  },
+  sentImagesPaginatedPageSize: 10,
+  sentImagesFilters: {
+    status: 'all',
+    shipping: 'all',
+    sender: '',
+    receiver: '',
+  },
 };
 
 const resetApiState = (sliceState: SliceState) => {
@@ -92,20 +107,34 @@ const imagesSlice = createSlice({
     },
     downloadImageFailed: (_sliceState) => {
     },
-
     sentImagesRequested: (sliceState) => {
       sliceState.api.loading = true;
     },
     sentImagesReceived: (sliceState, action) => {
-      sliceState.sentImages = action.payload;
+      sliceState.sentImagesPaginated = {
+        ...action.payload,
+        page: sliceState.sentImagesPaginated.page,
+      };
       sliceState.api.lastFetch = Date.now();
       resetApiState(sliceState);
     },
     sentImagesRequestFailed: (sliceState) => {
       resetApiState(sliceState);
     },
+    sentImagesPageSet: (sliceState, action) => {
+      sliceState.sentImagesPaginated.page = action.payload;
+    },
+    sentImagesPageSizeSet: (sliceState, action) => {
+      sliceState.sentImagesPaginatedPageSize = action.payload;
+    },
+    sentImagesFiltersSet: (sliceState, action) => {
+      sliceState.sentImagesFilters = {
+        ...sliceState.sentImagesFilters,
+        ...action.payload,
+      };
+    },
     sendImageToUserFramePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     sendImageToUserFrameFulfilled: (sliceState) => {
       resetApiState(sliceState);
@@ -118,11 +147,11 @@ const imagesSlice = createSlice({
     },
     deactivateSentImageFulfilled: (sliceState, action) => {
       const updatedImage = action.payload;
-      const index = sliceState.sentImages.findIndex(
+      const index = sliceState.sentImagesPaginated.results.findIndex(
         (image) => image.sent_at === updatedImage.sent_at
       );
       if (index !== -1) {
-        sliceState.sentImages[index] = updatedImage;
+        sliceState.sentImagesPaginated.results[index] = updatedImage;
       }
       resetApiState(sliceState);
     },
@@ -150,17 +179,24 @@ export const {
   sentImagesReceived,
   sentImagesRequestFailed,
   sentImagesRequested,
+  sentImagesPageSet,
+  sentImagesPageSizeSet,
+  sentImagesFiltersSet,
   sendImageToUserFrameFailed,
   sendImageToUserFrameFulfilled,
   sendImageToUserFramePending,
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
-  deactivateSentImagePending
+  deactivateSentImagePending,
 } = imagesSlice.actions;
 export default imagesSlice.reducer;
 
 export const getApi = (state: RootState) => state.entities.images.api;
 export const getApiState = (state: RootState) => state.entities.images.api.loading || state.entities.images.api.sending;
+
 export const getImagesPaginated = (state: RootState) => state.entities.images.imagesPaginated;
 export const getImagesPaginatedPageSize = (state: RootState) => state.entities.images.imagesPaginatedPageSize;
-export const getSentImages = (state: RootState) => state.entities.images.sentImages;
+
+export const getSentImagesPaginated = (state: RootState) => state.entities.images.sentImagesPaginated;
+export const getSentImagesPaginatedPageSize = (state: RootState) => state.entities.images.sentImagesPaginatedPageSize;
+export const getSentImagesFilters = (state: RootState) => state.entities.images.sentImagesFilters;

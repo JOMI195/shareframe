@@ -1,22 +1,23 @@
 import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ISentImage } from "@/types";
-import { closeDeactivateSendImageFrameDialog, closePreviewImageDialog, getDialogs } from "@/store/ui/images/images.slice";
-import { getApi, getSentImages } from "@/store/entities/images/images.slice";
+import { closeDeactivateSendImageFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { getApi, getSentImagesPaginated } from "@/store/entities/images/images.slice";
 import { deactivateSentImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
 import { getUser } from "@/store/entities/authentication/authentication.slice";
+import { closePreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 
 const SentImageDeactivateDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const { deactivate: deactivateDialog } = useAppSelector(getDialogs);
-    const sentImages = useAppSelector(getSentImages);
+    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getApi).loading
-    const sentImageToDeactivate = sentImages.find((sentImage => sentImage.id === deactivateDialog.sentImageId)) as ISentImage | undefined;
+    const sentImageToDeactivate = sentImagesPaginated.results.find((sentImage => sentImage.id === deactivateDialog.sentImageId)) as ISentImage | undefined;
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
@@ -28,7 +29,7 @@ const SentImageDeactivateDialog = () => {
         try {
             if (sentImageToDeactivate !== undefined) {
                 await dispatch(deactivateSentImage(sentImageToDeactivate.id));
-                dispatch(closePreviewImageDialog());
+                dispatch(closePreviewSentImageDialog());
             }
         } catch (error) {
         } finally {

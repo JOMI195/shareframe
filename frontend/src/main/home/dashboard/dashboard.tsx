@@ -1,40 +1,32 @@
 import { Box, Typography } from "@mui/material";
 import { useAppSelector } from "@/store";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
-import { getFrames, getApi as getFramesApi } from "@/store/entities/frames/frames.slice";
-import { getApi as getImagesApi, getImagesPaginated, getSentImages } from "@/store/entities/images/images.slice";
 import Header from "./header/header";
 import LoadingSkeleton from "./loading/loadingSkeleton";
 import QuickAccess from "./quickAccess/quickAccess";
-import { useWeeklyActivityData } from "./stats/weeklyActivity/useWeeklyActivityData";
 import StatsSection from "./stats/stats";
-import { ISentImage } from "@/types";
+import { getDashboardData, getApi as getDashboardApi } from "@/store/entities/dashboard/dashboard.slice";
 
 const Dashboard: React.FC = () => {
     const user = useAppSelector(getUser);
-    const imagesCount = useAppSelector(getImagesPaginated).count;
-    const sentImages = useAppSelector(getSentImages);
-    const frames = useAppSelector(getFrames);
+    const dashboardStats = useAppSelector(getDashboardData);
 
-    const imagesLoading = useAppSelector(getImagesApi).loading;
-    const framesLoading = useAppSelector(getFramesApi).loading;
+    const dashboardLoading = useAppSelector(getDashboardApi).loading;
 
-    const toMeSentImagesCount = sentImages.filter(
-        (image: ISentImage) =>
-            new Date(image.expires_at) > new Date() &&
-            image.reciever === user.me.username
-    ).length;
+    const imagesStats = dashboardStats?.images;
+    const sentImagesStats = dashboardStats?.sent_images;
+    const framesStats = dashboardStats?.frames;
 
-    const latestExpiringImage = sentImages
-        .filter((image: ISentImage) =>
-            new Date(image.expires_at) > new Date() &&
-            image.reciever === user.me.username
-        )
-        .sort((a: ISentImage, b: ISentImage) =>
-            new Date(b.expires_at).getTime() - new Date(a.expires_at).getTime()
-        )[0];
+    // images
+    const imagesCount = imagesStats ? imagesStats.uploaded_images_by_me_count : 0;
 
-    const activityData = useWeeklyActivityData(sentImages, user.me.username);
+    // sent images
+    const toMeSentImagesCount = sentImagesStats ? sentImagesStats.active_images_to_me_count : 0;
+    const latestExpiringImage = (sentImagesStats && sentImagesStats.latest_expiring_image != null) ? sentImagesStats.latest_expiring_image : undefined;
+    const activityData = sentImagesStats ? sentImagesStats.weekly_activity : undefined;
+
+    // frames
+    const frames = framesStats ? framesStats : [];
 
     return (
         <Box sx={{
@@ -56,14 +48,14 @@ const Dashboard: React.FC = () => {
             <Typography mb={1} variant="subtitle1">
                 Statistiken
             </Typography>
-            {imagesLoading || framesLoading ? (
+            {dashboardLoading ? (
                 <LoadingSkeleton count={1} />
             ) : (
                 <StatsSection
                     toMeSentImagesCount={toMeSentImagesCount}
                     latestExpiringImage={latestExpiringImage}
                     imagesCount={imagesCount}
-                    frames={frames}
+                    frameStats={frames}
                     activityData={activityData}
                 />
             )}

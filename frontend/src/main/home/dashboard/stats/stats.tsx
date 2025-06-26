@@ -9,20 +9,19 @@ import WifiIcon from '@mui/icons-material/Wifi';
 import { Chip, Stack, } from "@mui/material";
 import { isFrameActive } from "@/common/utils/frame";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
-import { IFrame, ISentImage } from "@/types";
+import { IDayActivity, IDashboardFrameStats, ILatestExpiringImage } from "@/types";
 import StatCard from './card/statCard';
-import { DayActivity } from './weeklyActivity/useWeeklyActivityData';
 import WeeklyActivity from './weeklyActivity/weeklyActivity';
 
 interface StatsSectionProps {
     toMeSentImagesCount: number;
-    latestExpiringImage: ISentImage | undefined;
+    latestExpiringImage: ILatestExpiringImage | undefined;
     imagesCount: number;
-    frames: IFrame[];
-    activityData: DayActivity[];
+    frameStats: IDashboardFrameStats[];
+    activityData: IDayActivity[] | undefined;
 }
 
-const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiringImage, imagesCount, frames, activityData }) => {
+const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiringImage, imagesCount, frameStats, activityData }) => {
     return (
         <Grid container spacing={1} sx={{ mb: 2 }}>
             <Grid item xs={5} sx={{ display: "flex" }}>
@@ -57,8 +56,8 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                     title="Bilderrahmen"
                     customContent={
                         <Stack spacing={1}>
-                            {frames.map((frame, index) => {
-                                const hasConnection = isFrameActive(frame);
+                            {frameStats.map((frameStat, index) => {
+                                const hasConnection = isFrameActive(frameStat.last_board_heartbeat);
                                 return (
                                     <Chip
                                         key={index}
@@ -77,9 +76,11 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                 />
             </Grid>
 
-            <Grid item xs={12}>
-                <WeeklyActivity activityData={activityData} />
-            </Grid>
+            {activityData && (
+                <Grid item xs={12}>
+                    <WeeklyActivity activityData={activityData} />
+                </Grid>
+            )}
         </Grid>
     );
 };

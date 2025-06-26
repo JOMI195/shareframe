@@ -7,6 +7,7 @@ import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSend
 import { useEffect, useState } from "react";
 import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
+import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 
 const FiltersDialog = () => {
     const theme = useTheme();
@@ -29,15 +30,26 @@ const FiltersDialog = () => {
             setSenderFilterLocal(filterDialog.senderFilter || '');
             setReceiverFilterLocal(filterDialog.receiverFilter || '');
         }
-    }, [filterDialog.open]);
+    }, [filterDialog.open, filterDialog.senderFilter, filterDialog.receiverFilter]);
 
     const handleDialogClose = () => {
         dispatch(closeFilterDialog());
     };
 
     const handleApplyFilters = () => {
+
         dispatch(setSenderFilter({ senderFilter: senderFilterLocal }));
         dispatch(setRecieverFilter({ receiverFilter: receiverFilterLocal }));
+
+        dispatch(setSentImagesFilters({
+            status: filterDialog.statusFilter,
+            shipping: filterDialog.shippingFilter,
+            sender: senderFilterLocal,
+            receiver: receiverFilterLocal,
+        }));
+
+        dispatch(setSentImagesPaginatedPage(1));
+
         handleDialogClose();
     };
 
@@ -46,7 +58,40 @@ const FiltersDialog = () => {
         setReceiverFilterLocal('');
 
         dispatch(resetFilters());
+
+        dispatch(setSentImagesFilters({
+            status: 'all',
+            shipping: 'all',
+            sender: '',
+            receiver: '',
+        }));
+
+        dispatch(setSentImagesPaginatedPage(1));
+
         handleDialogClose();
+    };
+
+    const getAvailableUsernames = () => {
+        const usernames = new Set<string>();
+
+        usernames.add(user.me.username);
+
+        friendships
+            .filter(friendship => friendship.status === "accepted")
+            .forEach((friendship) => {
+                const friendUsername = friendship.sender !== user.me.username
+                    ? friendship.sender
+                    : friendship.reciever;
+                usernames.add(friendUsername);
+            });
+
+        return Array.from(usernames);
+    };
+
+    const availableUsernames = getAvailableUsernames();
+
+    const getUserDisplayName = (username: string) => {
+        return username === user.me.username ? 'Du' : username;
     };
 
     return (
@@ -59,7 +104,6 @@ const FiltersDialog = () => {
             maxWidth="sm"
             fullWidth
         >
-
             <AppBar sx={{ position: 'relative' }} color="inherit">
                 <Toolbar>
                     <Typography sx={{ flex: 1 }} variant="h6" component="div">
@@ -78,76 +122,56 @@ const FiltersDialog = () => {
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                        Verfeinerne deine Suche nach geteilten Fotos.
+                        Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
-                    <Grid container spacing={1}>
+                    <Grid container spacing={2}>
                         <Grid item xs={12}>
-                            <FormControl fullWidth sx={{ mb: 1 }}>
-                                <InputLabel>Suche nach Sender</InputLabel>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel shrink>Suche nach Sender</InputLabel>
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={senderFilterLocal}
-                                    label="Sender"
+                                    label="Suche nach Sender"
                                     onChange={(e) => setSenderFilterLocal(e.target.value as string)}
+                                    displayEmpty
+                                    notched
                                 >
-                                    {friendships
-                                        .filter(friendship => friendship.status === "accepted")
-                                        .map((friendship) => {
-                                            const friendUsername = friendship.sender !== user.me.username
-                                                ? friendship.sender
-                                                : friendship.reciever;
-
-                                            return (
-                                                <MenuItem
-                                                    key={friendUsername}
-                                                    value={friendUsername}
-                                                >
-                                                    {friendUsername}
-                                                </MenuItem>
-                                            );
-                                        })
-                                    }
-                                    <MenuItem
-                                        key={user.me.username}
-                                        value={"Du"}
-                                    >
-                                        {"Du"}
+                                    <MenuItem value="">
+                                        <em>Alle Sender</em>
                                     </MenuItem>
+                                    {availableUsernames.map((username) => (
+                                        <MenuItem
+                                            key={username}
+                                            value={username}
+                                        >
+                                            {getUserDisplayName(username)}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12}>
-                            <FormControl fullWidth sx={{ mb: 1 }}>
-                                <InputLabel>Suche nach Empfänger</InputLabel>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel shrink>Suche nach Empfänger</InputLabel>
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={receiverFilterLocal}
-                                    label="Empfänger"
+                                    label="Suche nach Empfänger"
                                     onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
+                                    displayEmpty
+                                    notched
                                 >
-                                    {friendships
-                                        .filter(friendship => friendship.status === "accepted")
-                                        .map((friendship) => {
-                                            const friendUsername = friendship.sender !== user.me.username
-                                                ? friendship.sender
-                                                : friendship.reciever;
-
-                                            return (
-                                                <MenuItem
-                                                    key={friendUsername}
-                                                    value={friendUsername}
-                                                >
-                                                    {friendUsername}
-                                                </MenuItem>
-                                            );
-                                        })
-                                    }
-                                    <MenuItem
-                                        key={user.me.username}
-                                        value={"Du"}
-                                    >
-                                        {"Du"}
+                                    <MenuItem value="">
+                                        <em>Alle Empfänger</em>
                                     </MenuItem>
+                                    {availableUsernames.map((username) => (
+                                        <MenuItem
+                                            key={username}
+                                            value={username}
+                                        >
+                                            {getUserDisplayName(username)}
+                                        </MenuItem>
+                                    ))}
                                 </Select>
                             </FormControl>
                         </Grid>
@@ -169,7 +193,7 @@ const FiltersDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={4} >
+                    <Grid item xs={12} sm={4}>
                         <Button
                             onClick={handleClearFilters}
                             color="inherit"
@@ -180,8 +204,7 @@ const FiltersDialog = () => {
                             Filter löschen
                         </Button>
                     </Grid>
-
-                    <Grid item xs={12} sm={4} >
+                    <Grid item xs={12} sm={4}>
                         <Button
                             onClick={handleApplyFilters}
                             color="primary"

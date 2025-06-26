@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
     Box,
     ImageList,
@@ -12,7 +12,11 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getApi as getImagesApi, getSentImages } from "@/store/entities/images/images.slice";
+import {
+    getApi as getImagesApi,
+    getSentImagesPaginated,
+    getSentImagesPaginatedPageSize,
+} from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
@@ -20,30 +24,29 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SendIcon from '@mui/icons-material/Send';
 import PanoramaIcon from '@mui/icons-material/Panorama';
-import { ISentImage } from "@/types";
+import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariant } from "@/common/utils/images";
 import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import DataNotFound from "@/common/components/dataNotFound";
-
+import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
-const ITEMS_PER_PAGE = 12;
 const SKELETON_COLS = 3;
 
 const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
-    const sentImages = useAppSelector(getSentImages);
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
     const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
     const theme = useTheme();
 
+    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
+    const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
+
     const { filter: filterDialog } = useAppSelector(getDialogs);
     const hideToYouFilter = filterDialog.hideToYouFilter;
-
-    const [filteredImages, setFilteredImages] = useState<ISentImage[]>(sentImages);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -55,6 +58,9 @@ const SentImagesGallery = () => {
     } else if (isMediumUp) {
         cols = 3;
     }
+
+    const currentPage = sentImagesPaginated.page;
+    const totalPages = Math.ceil(sentImagesPaginated.count / pageSize);
 
     const handleImageClick = (sentImage: ISentImage) => {
         dispatch(openPreviewSentImageDialog({ sentImage: sentImage }));
@@ -68,16 +74,20 @@ const SentImagesGallery = () => {
         );
     };
 
-    const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(filteredImages.length / ITEMS_PER_PAGE);
-    const currentImages = filteredImages.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE
-    );
-
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
-        setCurrentPage(page);
+        dispatch(setSentImagesPaginatedPage(page));
         window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleFiltersChange = (newFilters: ISentImagesFilters) => {
+        dispatch(setSentImagesFilters({
+            status: newFilters.status,
+            shipping: newFilters.shipping,
+            sender: newFilters.sender,
+            receiver: newFilters.receiver,
+        }));
+
+        dispatch(setSentImagesPaginatedPage(1));
     };
 
     const renderSenderReceiverInfo = (sentImage: ISentImage) => {
@@ -169,7 +179,7 @@ const SentImagesGallery = () => {
                         {showCount && (
                             <>
                                 <Typography textAlign={"center"} variant="subtitle2" color="textSecondary">
-                                    {filteredImages.length} geteilte{filteredImages.length !== 1 ? " Fotos" : "s Foto"}
+                                    {sentImagesPaginated.count} geteilte{sentImagesPaginated.count !== 1 ? " Fotos" : "s Foto"}
                                 </Typography>
                                 <Typography textAlign={"center"} variant="caption" color="textSecondary">
                                     (Abgelaufene Aktivität wird nach 14 Tagen gelöscht)
@@ -185,9 +195,7 @@ const SentImagesGallery = () => {
     return (
         <Stack spacing={2}>
             <FilterControls
-                images={sentImages}
-                currentUser={user.me}
-                onFilteredImagesChange={setFilteredImages}
+                onFiltersChange={handleFiltersChange}
                 disabled={loading}
             />
             {isSmallScreen && currentPage > 1 && (
@@ -195,11 +203,14 @@ const SentImagesGallery = () => {
             )}
             {(loading || friendshipsLoading) ? (
                 <LoadingSkeleton />
-            ) : currentImages.length !== 0 ? (
+            ) : sentImagesPaginated.results.length !== 0 ? (
                 <ImageList cols={cols} gap={8}>
-                    {currentImages.map((sentImage) => {
+                    {sentImagesPaginated.results.map((sentImage) => {
                         const expiryDate = new Date(sentImage.expires_at);
                         const isExpired = expiryDate < new Date();
+
+                        const shouldHide = hideToYouFilter &&
+                            (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username);
 
                         return (
                             <ImageListItem
@@ -216,7 +227,7 @@ const SentImagesGallery = () => {
                                         objectFit: "cover",
                                         borderRadius: 8,
                                     }}
-                                    hideToYouFilter={hideToYouFilter ? (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username) : false}
+                                    hideToYouFilter={shouldHide}
                                 />
                                 <ImageListItemBar
                                     sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
@@ -240,7 +251,7 @@ const SentImagesGallery = () => {
                     })}
                 </ImageList>
             ) : (
-                <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos vorhanden"} />
+                <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden"} />
             )}
 
             <PaginationComponent showCount={true} />

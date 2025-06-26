@@ -25,6 +25,7 @@ urlpatterns = [
     path("api/", include("sent_images.urls")),
     path("api/", include("friendships.urls")),
     path("api/", include("changelogs.urls")),
+    path("api/", include("dashboard.urls")),
 ]
 
 if not bool(settings.DEBUG):
