@@ -14,7 +14,6 @@ const migration5 = (state: RootState): RootState => {
           page: 1,
           results: []
         },
-        sentImages: []
       }
     },
   };
