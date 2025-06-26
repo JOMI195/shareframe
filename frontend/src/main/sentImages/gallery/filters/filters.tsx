@@ -61,16 +61,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     const handleHideToYouChange = () => {
         const newHideToYou = !hideToYouFilter;
         dispatch(setHideToYouFilter({ hideToYouFilter: newHideToYou }));
-
-        // Use setTimeout to ensure Redux state is updated before calling the callback
-        setTimeout(() => {
-            onFiltersChange({
-                status: statusFilter,
-                shipping: shippingFilter,
-                sender: senderFilter,
-                receiver: receiverFilter,
-            });
-        }, 0);
     };
 
     const handleShippingChange = (event: SelectChangeEvent) => {
