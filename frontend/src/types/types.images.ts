@@ -34,8 +34,8 @@ export interface ISentImagesPaginated {
     results: ISentImage[];
 };
 
-type StatusFilter = 'all' | 'active' | 'expired';
-type ShippingFilter = 'all' | 'sentToYou' | 'sentByYou';
+export type StatusFilter = 'all' | 'active' | 'expired';
+export type ShippingFilter = 'all' | 'sentToYou' | 'sentByYou';
 export interface ISentImagesFilters {
     status: StatusFilter;
     shipping: ShippingFilter;

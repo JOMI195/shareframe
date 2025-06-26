@@ -14,7 +14,6 @@ import {
 } from '@mui/material';
 import HideImageIcon from '@mui/icons-material/HideImage';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import { ShippingFilter, StatusFilter } from '@/types';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
     getDialogs,
@@ -24,15 +23,10 @@ import {
     setShippingFilter,
     setStatusFilter
 } from '@/store/ui/sentImages/sentImages.slice';
+import { ISentImagesFilters, ShippingFilter, StatusFilter } from '@/types';
 
 export interface FilterControlsProps {
-    onFiltersChange: (filters: {
-        status: StatusFilter;
-        shipping: ShippingFilter;
-        sender: string;
-        receiver: string;
-        hideToYou: boolean;
-    }) => void;
+    onFiltersChange: (filters: ISentImagesFilters) => void;
     disabled?: boolean;
 }
 
@@ -49,16 +43,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     const receiverFilter = filterDialog.receiverFilter;
     const hideToYouFilter = filterDialog.hideToYouFilter;
 
-    const notifyFiltersChange = () => {
-        onFiltersChange({
-            status: statusFilter,
-            shipping: shippingFilter,
-            sender: senderFilter,
-            receiver: receiverFilter,
-            hideToYou: hideToYouFilter
-        });
-    };
-
     const handleStatusChange = (event: SelectChangeEvent) => {
         const newStatus = event.target.value as StatusFilter;
         dispatch(setStatusFilter({ statusFilter: newStatus }));
@@ -70,7 +54,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 shipping: shippingFilter,
                 sender: senderFilter,
                 receiver: receiverFilter,
-                hideToYou: hideToYouFilter
             });
         }, 0);
     };
@@ -86,7 +69,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 shipping: shippingFilter,
                 sender: senderFilter,
                 receiver: receiverFilter,
-                hideToYou: newHideToYou
             });
         }, 0);
     };
@@ -102,7 +84,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 shipping: newShipping,
                 sender: senderFilter,
                 receiver: receiverFilter,
-                hideToYou: hideToYouFilter
             });
         }, 0);
     };
@@ -117,7 +98,6 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 shipping: 'all',
                 sender: '',
                 receiver: '',
-                hideToYou: false
             });
         }, 0);
     };
