@@ -96,6 +96,7 @@ services:
     ports: []
     networks:
       - backend_network
+      - backend_db_network
       - redis_network
 
   celery-beat:
@@ -112,6 +113,7 @@ services:
     ports: []
     networks:
       - backend_network
+      - backend_db_network
       - redis_network
 
   nginx:
