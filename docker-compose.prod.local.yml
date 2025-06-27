@@ -90,6 +90,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      backend_db:
+        condition: service_healthy
       backend:
         condition: service_started
     entrypoint: []
@@ -106,6 +108,8 @@ services:
     command: celery -A config beat --loglevel=INFO
     depends_on:
       redis:
+        condition: service_healthy
+      backend_db:
         condition: service_healthy
       backend:
         condition: service_started
