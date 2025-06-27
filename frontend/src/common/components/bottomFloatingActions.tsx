@@ -147,34 +147,40 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                         },
                     }}
                 >
-                    {actionsAdditional.map((action, index) => (
-                        <SpeedDialAction
-                            key={`${action.label}-${index}`}
-                            icon={action.icon}
-                            tooltipTitle={action.label}
-                            tooltipOpen
-                            onClick={() => {
-                                setSpeedDialOpen(false);
-                                action.onClick();
-                            }}
-                            FabProps={{
-                                disabled: allActionsdisabled || speedDialDisabled || action.disabled,
-                            }}
-                            sx={{
-                                '& .MuiFab-root': {
-                                    backgroundColor: action.color ? `${action.color}.main` : 'default',
-                                    '&:hover': {
-                                        backgroundColor: action.color ? `${action.color}.light` : 'action.hover'
+                    {actionsAdditional.map((action, index) => {
+                        const isAdditionalActionDisabled = allActionsdisabled || speedDialDisabled || action.disabled;
+
+                        return (
+                            <SpeedDialAction
+                                key={`${action.label}-${index}`}
+                                icon={action.icon}
+                                tooltipTitle={action.label}
+                                tooltipOpen
+                                onClick={() => {
+                                    if (!isAdditionalActionDisabled) {
+                                        setSpeedDialOpen(false);
+                                        action.onClick();
                                     }
-                                },
-                                '& .MuiSpeedDialAction-staticTooltipLabel': {
-                                    whiteSpace: 'nowrap',
-                                    minWidth: 'auto',
-                                    maxWidth: 'none',
-                                },
-                            }}
-                        />
-                    ))}
+                                }}
+                                FabProps={{
+                                    disabled: isAdditionalActionDisabled,
+                                }}
+                                sx={{
+                                    '& .MuiFab-root': {
+                                        backgroundColor: action.color ? `${action.color}.main` : 'default',
+                                        '&:hover': {
+                                            backgroundColor: action.color ? `${action.color}.light` : 'action.hover'
+                                        }
+                                    },
+                                    '& .MuiSpeedDialAction-staticTooltipLabel': {
+                                        whiteSpace: 'nowrap',
+                                        minWidth: 'auto',
+                                        maxWidth: 'none',
+                                    },
+                                }}
+                            />
+                        );
+                    })}
                 </SpeedDial>
             )}
         </Box>
