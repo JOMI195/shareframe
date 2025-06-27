@@ -28,6 +28,7 @@ const ImagePreviewDialog = () => {
 
     const handleDelete = () => {
         if (selectedImage !== null) {
+            dispatch(selectImage({ image: selectedImage }));
             dispatch(openDeleteImageDialog());
         }
     };
