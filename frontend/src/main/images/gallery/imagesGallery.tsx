@@ -55,7 +55,8 @@ const ImagesGallery: React.FC = () => {
 
     const handleImageClick = (image: IImage) => {
         if (isSelectionDialogOpen) {
-            dispatch(selectImage({ image: image }));
+            // when clicked again on the image, deselect with keepImage: false
+            dispatch(selectImage({ image: image, keepImageOnReSelect: false }));
             return;
         }
         dispatch(openPreviewImageDialog({ image: image }));

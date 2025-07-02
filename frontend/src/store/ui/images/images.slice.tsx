@@ -2,7 +2,7 @@ import { RootState } from "@/store";
 import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed } from "@/store/entities/images/images.slice";
 import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SliceState = {
   dialogs: {
@@ -220,12 +220,14 @@ const imagesSlice = createSlice({
       sliceState.dialogs.delete.imagesToDelete = [];
     },
     previewImageDialogOpened: (sliceState, action) => {
+      sliceState.dialogs.selection.selectedImages = [];
       sliceState.dialogs.preview.open = true;
       sliceState.dialogs.preview.selectedImage = action.payload.image
     },
     previewImageDialogClosed: (sliceState) => {
       sliceState.dialogs.preview.open = false;
       sliceState.dialogs.preview.selectedImage = null;
+      sliceState.dialogs.selection.selectedImages = [];
     },
     sendImageToUserFrameDialogOpened: (sliceState) => {
       sliceState.dialogs.sendToFrame.imagesToSend = sliceState.dialogs.selection.selectedImages;
@@ -251,17 +253,20 @@ const imagesSlice = createSlice({
       sliceState.dialogs.selection.open = false;
       sliceState.dialogs.selection.selectedImages = [];
     },
-    imageSelected: (sliceState, action) => {
+    imageSelected: (sliceState, action: PayloadAction<{ image: IImage; keepImageOnReSelect?: boolean }>) => {
+      const { image, keepImageOnReSelect = false } = action.payload;
       const elementIndex = sliceState.dialogs.selection.selectedImages.findIndex(
-        (image: IImage) => image.id === action.payload.image.id
+        (img: IImage) => img.id === image.id
       );
+
       if (elementIndex === -1) {
         sliceState.dialogs.selection.selectedImages[
           sliceState.dialogs.selection.selectedImages.length
-        ] = action.payload.image;
-      } else {
+        ] = image;
+      } else if (!keepImageOnReSelect) {
         sliceState.dialogs.selection.selectedImages.splice(elementIndex, 1);
-      };
+      }
+      // If keepImageOnReSelect is true and image is found, do nothing (keep it selected)
     },
     alertSnackbarOpened: (images, action) => {
       images.snackbar.alert = {
@@ -341,7 +346,7 @@ export const closeSelectionDialog = () => ({
   type: selectionDialogClosed.type,
 });
 
-export const selectImage = (payload: { image: IImage }) => ({
+export const selectImage = (payload: { image: IImage; keepImageOnReSelect?: boolean }) => ({
   type: imageSelected.type,
   payload,
 });

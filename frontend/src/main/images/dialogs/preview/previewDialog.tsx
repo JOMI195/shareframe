@@ -28,14 +28,14 @@ const ImagePreviewDialog = () => {
 
     const handleDelete = () => {
         if (selectedImage !== null) {
-            dispatch(selectImage({ image: selectedImage }));
+            dispatch(selectImage({ image: selectedImage, keepImageOnReSelect: true }));
             dispatch(openDeleteImageDialog());
         }
     };
 
     const handleSend = () => {
         if (selectedImage !== null) {
-            dispatch(selectImage({ image: selectedImage }));
+            dispatch(selectImage({ image: selectedImage, keepImageOnReSelect: true }));
             dispatch(openSendImageToUserFrameDialog());
         }
     };
