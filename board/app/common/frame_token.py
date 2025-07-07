@@ -23,15 +23,37 @@ class TokenManager:
             cls.obtain_token()
 
     @classmethod
+    def _parse_timestamp(cls, timestamp_str):
+        """Parse timestamp string with flexible format handling"""
+        # Try different timestamp formats
+        formats = [
+            "%Y-%m-%dT%H:%M:%S.%fZ",  # With microseconds
+            "%Y-%m-%dT%H:%M:%SZ",  # Without microseconds
+            "%Y-%m-%dT%H:%M:%S.%f",  # With microseconds, no Z
+            "%Y-%m-%dT%H:%M:%S",  # Without microseconds, no Z
+        ]
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(timestamp_str, fmt).replace(
+                    tzinfo=timezone.utc
+                )
+            except ValueError:
+                continue
+
+        # If none of the formats work, raise error
+        raise ValueError(f"Unable to parse timestamp: {timestamp_str}")
+
+    @classmethod
     def _load_cached_token(cls):
         cls.logger.info("Load cached access token")
         try:
             if cls.token_cache_path.exists():
                 cached_token_data = json.loads(cls.token_cache_path.read_text())
-                expires_at = datetime.strptime(
-                    cached_token_data.get("expires_at", "1970-01-01T00:00:00.000000Z"),
-                    "%Y-%m-%dT%H:%M:%S.%fZ",
-                ).replace(tzinfo=timezone.utc)
+                expires_at_str = cached_token_data.get(
+                    "expires_at", "1970-01-01T00:00:00.000000Z"
+                )
+                expires_at = cls._parse_timestamp(expires_at_str)
 
                 if datetime.now(timezone.utc) < expires_at:
                     cls.access_token = cached_token_data.get("access_token")
@@ -86,9 +108,7 @@ class TokenManager:
             cls.logger.warning("Missing token or expiration time")
             return False
         try:
-            expires_at = datetime.strptime(
-                cls.token_expires_at, "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=timezone.utc)
+            expires_at = cls._parse_timestamp(cls.token_expires_at)
             is_valid = datetime.now(timezone.utc) < expires_at
             cls.logger.debug(f"Token has valid expiry: {is_valid}")
             return is_valid
