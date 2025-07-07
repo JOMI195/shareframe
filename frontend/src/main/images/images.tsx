@@ -3,7 +3,7 @@ import { Box, Container } from "@mui/material";
 import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { fetchImages } from "@/store/entities/images/images.actions";
+import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
@@ -16,6 +16,7 @@ const Images: React.FC = () => {
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
 
     useEffect(() => {
+        dispatch(setImagesPaginatedPage(1));
         dispatch(closeSelectionDialog());
     }, [window.location.pathname]);
 

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { Box, Container } from "@mui/material";
 import Dialogs from "./dialogs/dialogs";
 import SentImagesGallery from "./gallery/sentImagesGallery";
-import { fetchSentImagesPaginated } from "@/store/entities/images/images.actions";
+import { fetchSentImagesPaginated, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import { getSentImagesFilters, getSentImagesPaginated, getSentImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
@@ -28,6 +28,10 @@ const SentImages: React.FC = () => {
             }
         ));
     }, [dispatch, currentPage, pageSize, sentImagesFilters]);
+
+    useEffect(() => {
+        dispatch(setSentImagesPaginatedPage(1));
+    }, [window.location.pathname]);
 
     useEffect(() => {
         fetchSentImagesPaginatedWithFilters();
