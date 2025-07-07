@@ -8,12 +8,17 @@ import {
     ListItemSecondaryAction,
     IconButton,
     Chip,
-    Avatar
+    Avatar,
+    Switch,
+    Box,
+    Typography,
+    Button,
+    useTheme,
+    useMediaQuery
 } from '@mui/material';
-import Box from '@mui/material/Box';
-import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CameraAltIcon from '@mui/icons-material/CameraAlt';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import { validateImage } from '../../imageValidation';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../../uploadDialog';
@@ -25,9 +30,12 @@ interface IImageUploadFormProps {
 }
 
 const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStatuses, imagePreviews }) => {
+    const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
-
     const [isOver, setIsOver] = useState(false);
+    const [useCamera, setUseCamera] = useState(false);
+
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
     const validFileExtensions = import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS.split(" ");
     const maxFiles = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES
@@ -61,7 +69,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                 const errorMessages = invalidFiles.map(item =>
                     `${item.file.name}: ${item.validation.errors.join(', ')}`
                 ).join('\n');
-                alert(`Einige Fotos konnten nicht hinzugefügen werden:\n${errorMessages}`);
+                alert(`Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`);
             }
             setImages(validFiles);
             if (inputRef.current) {
@@ -71,24 +79,36 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        if (event.target.files) {
-            const filesArray = Array.from(event.target.files);
-            const validatedFiles = filesArray.map((file, index) => {
-                const validation = validateImage(file, index, filesArray.length);
-                return { file, validation };
-            });
+        try {
+            if (event.target.files) {
+                const filesArray = Array.from(event.target.files);
+                const validatedFiles = filesArray.map((file, index) => {
+                    const validation = validateImage(file, index, filesArray.length);
+                    return { file, validation };
+                });
 
-            const validFiles = validatedFiles.filter(item => item.validation.valid).map(item => item.file);
-            const invalidFiles = validatedFiles.filter(item => !item.validation.valid);
+                const validFiles = validatedFiles.filter(item => item.validation.valid).map(item => item.file);
+                const invalidFiles = validatedFiles.filter(item => !item.validation.valid);
 
-            if (invalidFiles.length > 0) {
-                const errorMessages = invalidFiles.map(item =>
-                    `${item.file.name}: ${item.validation.errors.join(', ')}`
-                ).join('\n');
-                alert(`Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`);
+                if (invalidFiles.length > 0) {
+                    const errorMessages = invalidFiles.map(item =>
+                        `${item.file.name}: ${item.validation.errors.join(', ')}`
+                    ).join('\n');
+                    alert(`Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`);
+                }
+
+                setImages(validFiles);
+
+                // Reset input with longer delay for Android compatibility
+                setTimeout(() => {
+                    if (inputRef.current) {
+                        inputRef.current.value = '';
+                    }
+                }, 200);
             }
-
-            setImages(validFiles);
+        } catch (error) {
+            console.error('Error handling file selection:', error);
+            // Reset input on error
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
@@ -103,7 +123,25 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
     };
 
     const handleButtonClick = () => {
-        inputRef.current?.click();
+        if (inputRef.current) {
+            // Remove any existing capture attribute
+            inputRef.current.removeAttribute('capture');
+
+            // Only set capture attribute if on mobile and useCamera is true
+            if (isMobile && useCamera) {
+                inputRef.current.setAttribute('capture', 'environment');
+            }
+            // For gallery mode (default or when useCamera is false), don't set capture attribute
+
+            // Small delay can help with Android compatibility
+            setTimeout(() => {
+                inputRef.current?.click();
+            }, 10);
+        }
+    };
+
+    const handleCaptureToggle = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setUseCamera(event.target.checked);
     };
 
     return (
@@ -114,15 +152,16 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                 hidden
                 ref={inputRef}
                 onChange={handleFileChange}
-                accept="image/*"
+                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"
             />
             <Grid container spacing={2}>
                 <Grid item xs={12}>
+                    {/* Drop Zone */}
                     <Box
                         sx={{
                             border: '2px dashed',
                             borderColor: isOver ? 'primary.main' : 'grey.400',
-                            borderRadius: 2,
+                            borderRadius: 1,
                             p: 4,
                             textAlign: 'center',
                             cursor: 'pointer',
@@ -140,11 +179,14 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
                             oder
                         </Typography>
-                        <Button variant="contained">
-                            Fotos auswählen
+                        <Button variant="contained" startIcon={(isMobile && useCamera) ? <CameraAltIcon /> : <PhotoLibraryIcon />}>
+                            {(isMobile && useCamera) ? 'Foto aufnehmen' : 'Fotos auswählen'}
                         </Button>
                         <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                            Klicken Sie hier, um Dateien auszuwählen
+                            {(isMobile && useCamera)
+                                ? 'Klicken Sie hier, um die Kamera zu öffnen'
+                                : 'Klicken Sie hier, um Dateien auszuwählen'
+                            }
                         </Typography>
                         <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                             {`Nur Bilder mit Dateiendung ${validFileExtensions.map((ext: any) => ext)} werden akzeptiert`}
@@ -153,6 +195,64 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                             {`Maximal ${maxFiles} Fotos können gleichzeitig hochgeladen werden`}
                         </Typography>
                     </Box>
+                    {/* Camera/Gallery Toggle - Only show on mobile */}
+                    {isMobile && (
+                        <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2, mt: 2, maxWidth: "300px", justifySelf: "center" }}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    width: '100%',
+                                    minWidth: '280px',
+                                    border: '1px solid',
+                                    borderColor: 'grey.300',
+                                    borderRadius: 1,
+                                    padding: '8px 16px',
+                                    backgroundColor: 'action.hover',
+                                    cursor: 'pointer',
+                                }}
+                                onClick={() => handleCaptureToggle({ target: { checked: !useCamera } } as React.ChangeEvent<HTMLInputElement>)}
+                            >
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5,
+                                        color: useCamera ? 'text.secondary' : 'primary.main',
+                                        opacity: useCamera ? 0.5 : 1,
+                                        fontWeight: useCamera ? 'normal' : 'bold',
+                                        transition: 'opacity 0.3s, color 0.3s',
+                                    }}
+                                >
+                                    <PhotoLibraryIcon />
+                                    <Typography variant="body2">Galerie</Typography>
+                                </Box>
+
+                                <Switch
+                                    checked={useCamera}
+                                    onChange={handleCaptureToggle}
+                                    color="primary"
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+
+                                <Box
+                                    sx={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 0.5,
+                                        color: useCamera ? 'primary.main' : 'text.secondary',
+                                        opacity: useCamera ? 1 : 0.5,
+                                        fontWeight: useCamera ? 'bold' : 'normal',
+                                        transition: 'opacity 0.3s, color 0.3s',
+                                    }}
+                                >
+                                    <CameraAltIcon />
+                                    <Typography variant="body2">Kamera</Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                    )}
                 </Grid>
                 {
                     imageStatuses.length > 0 && (
