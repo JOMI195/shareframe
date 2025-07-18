@@ -12,7 +12,9 @@ import {
     Typography,
     useMediaQuery,
     useTheme,
-    Avatar
+    Avatar,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CropIcon from '@mui/icons-material/Crop';
@@ -21,6 +23,9 @@ import Cropper from './cropper/cropper';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../uploadDialog';
 
+const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
+    ? +import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
+    : 24;
 interface ImageCroppingProps {
     imageStatuses: ImageStatus[];
     currentImageIndex: number | null;
@@ -34,6 +39,8 @@ interface ImageCroppingProps {
     allImagesUploaded: boolean;
     sending: boolean;
     imagePreviews: { [id: string]: string };
+    autoDeleteAfterPeriod: boolean;
+    setAutoDeleteAfterPeriod: (value: boolean) => void;
 }
 
 const ImageCropping: React.FC<ImageCroppingProps> = ({
@@ -48,7 +55,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     handleBack,
     allImagesUploaded,
     sending,
-    imagePreviews
+    imagePreviews,
+    autoDeleteAfterPeriod,
+    setAutoDeleteAfterPeriod
 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -139,7 +148,30 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                 </Grid>
             </Grid>
 
-            <Grid container spacing={2} sx={{ mt: { xs: 0, md: 10 }, alignItems: "center" }}>
+            {/* Auto-Delete Option */}
+            <Box sx={{ mt: 3 }}>
+                <FormControlLabel
+                    control={
+                        <Checkbox
+                            checked={autoDeleteAfterPeriod}
+                            onChange={(e) => setAutoDeleteAfterPeriod(e.target.checked)}
+                            color="primary"
+                        />
+                    }
+                    label={
+                        <Box>
+                            <Typography variant="body1">
+                                Kurze Verwendungszeit aktivieren
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Das Bild muss innerhalb von {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Stunden an deine Freunde gesendet werden und wird anschließend automatisch gelöscht. Gesendete Bilder werden trotz der Löschung weiterhin bis zum Ablauf normal angezeigt.
+                            </Typography>
+                        </Box>
+                    }
+                />
+            </Box>
+
+            <Grid container spacing={2} sx={{ mt: { xs: 0, md: 2 }, alignItems: "center" }}>
                 {currentImage && (
                     <Grid item xs={12} md={6} order={{ xs: 1, md: 3 }}>
                         <Button

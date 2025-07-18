@@ -16,8 +16,8 @@ const hasValidExtension = (file: File): boolean => {
 }
 
 const doesntExceedFileLimit = (fileIndex: number, totalFiles: number = 1): boolean => {
-    if (import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES !== undefined) {
-        const maxFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES;
+    if (import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE !== undefined) {
+        const maxFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE;
         // For multiple files, check if the current total would exceed the limit
         if (totalFiles > maxFiles) {
             return false;
@@ -32,6 +32,14 @@ const doesntExceedFileLimit = (fileIndex: number, totalFiles: number = 1): boole
     }
 }
 
+const doesntExceedTotalFileLimit = (newFilesCount: number, existingFilesCount: number): boolean => {
+    if (import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL !== undefined) {
+        const maxTotalFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL;
+        return (existingFilesCount + newFilesCount) <= maxTotalFiles;
+    }
+    return true;
+}
+
 const hasValidFileSize = (file: File): boolean => {
     // Add file size validation if needed
     const maxSizeInMB = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_SIZE_MB;
@@ -42,7 +50,7 @@ const hasValidFileSize = (file: File): boolean => {
     return true;
 }
 
-export const validateImage = (file: File, fileIndex: number, totalFiles: number = 1): IImageValidationResponse => {
+export const validateImage = (file: File, fileIndex: number, totalFiles: number = 1, existingFilesCount: number = 0): IImageValidationResponse => {
     let errors: string[] = [];
     let valid: boolean = true;
 
@@ -52,8 +60,14 @@ export const validateImage = (file: File, fileIndex: number, totalFiles: number 
     }
 
     if (!doesntExceedFileLimit(fileIndex, totalFiles)) {
-        const maxFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES || 1;
-        errors.push(`Maximal ${maxFiles} Foto(s) können hochgeladen werden`);
+        const maxFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE || 1;
+        errors.push(`Maximal ${maxFiles} Foto(s) können auf einmal hochgeladen werden`);
+        valid = false;
+    }
+
+    if (!doesntExceedTotalFileLimit(totalFiles, existingFilesCount)) {
+        const maxTotalFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL || 100;
+        errors.push(`Maximale Gesamtanzahl von ${maxTotalFiles} hochgeladenen Foto(s) würde überschritten werden`);
         valid = false;
     }
 
@@ -67,12 +81,25 @@ export const validateImage = (file: File, fileIndex: number, totalFiles: number 
 }
 
 // Helper function to validate multiple files at once
-export const validateImages = (files: File[]): { validFiles: File[], invalidFiles: { file: File, errors: string[] }[] } => {
+export const validateImages = (files: File[], existingFilesCount: number = 0): { validFiles: File[], invalidFiles: { file: File, errors: string[] }[] } => {
     const validFiles: File[] = [];
     const invalidFiles: { file: File, errors: string[] }[] = [];
 
+    // First check if the total would exceed the limit
+    if (!doesntExceedTotalFileLimit(files.length, existingFilesCount)) {
+        const maxTotalFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL || 100;
+        // If total limit would be exceeded, mark all files as invalid
+        files.forEach((file) => {
+            invalidFiles.push({
+                file,
+                errors: [`Maximale Gesamtanzahl von ${maxTotalFiles} Foto(s) würde überschritten`]
+            });
+        });
+        return { validFiles, invalidFiles };
+    }
+
     files.forEach((file, index) => {
-        const validation = validateImage(file, index, files.length);
+        const validation = validateImage(file, index, files.length, existingFilesCount);
         if (validation.valid) {
             validFiles.push(file);
         } else {

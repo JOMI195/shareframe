@@ -20,13 +20,13 @@ import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
 import CloseIcon from '@mui/icons-material/Close'
 
-import { validateImage } from './imageValidation'
+import { validateImage } from './imageUpload/validation/imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { closeCreateImageDialog, getDialogs } from '@/store/ui/images/images.slice'
+import { closeCreateImageDialog, getDialogs, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
-import { getApi } from '@/store/entities/images/images.slice'
+import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
 import { Area } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
 import ImageUpload from './imageUpload/imageUpload'
@@ -65,9 +65,12 @@ const UploadDialog: React.FC = () => {
   const matches = useMediaQuery(theme.breakpoints.up('md'));
   const sending = useAppSelector(getApi).sending;
 
+  const imagesPaginatedCount = useAppSelector(getImagesPaginated).count;
+
   const [activeStep, setActiveStep] = useState(0)
   const [imageStatuses, setImageStatuses] = useState<ImageStatus[]>([]);
   const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
+  const [autoDeleteAfterPeriod, setAutoDeleteAfterPeriod] = useState(true);
 
   const [imagePreviews, setImagePreviews] = useState<{ [id: string]: string }>({});
 
@@ -86,6 +89,7 @@ const UploadDialog: React.FC = () => {
     setImageStatuses([]);
     setActiveStep(0);
     setCurrentImageIndex(null);
+    setAutoDeleteAfterPeriod(true);
     resetCropperState();
     setImagePreviews({});
   }
@@ -187,11 +191,11 @@ const UploadDialog: React.FC = () => {
         lastModified: Date.now()
       })
 
-      const validation: IImageValidationResponse = validateImage(croppedFile, 0)
+      const validation: IImageValidationResponse = validateImage(croppedFile, 0, 1, imagesPaginatedCount)
       if (validation.valid) {
         const upload_image_sha256_hex_hash = await fileToSha256Hex(croppedFile)
 
-        const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash))
+        const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash, autoDeleteAfterPeriod))
 
         if (isIImage(newImage)) {
           // Mark this image as uploaded
@@ -222,10 +226,13 @@ const UploadDialog: React.FC = () => {
           }
         }
       } else {
-        alert(validation.errors.join(' | '))
+        dispatch(openImagesAlertSnackbar({
+          message: validation.errors.join(' | '),
+          severity: "warning"
+        }));
       }
     } catch (error) {
-      console.error('Error cropping and uploading image:', error)
+      //console.error('Error cropping and uploading image:', error)
     }
   }
 
@@ -319,6 +326,8 @@ const UploadDialog: React.FC = () => {
                         allImagesUploaded={allImagesUploaded}
                         sending={sending}
                         imagePreviews={imagePreviews}
+                        autoDeleteAfterPeriod={autoDeleteAfterPeriod}
+                        setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
                       />
                     )}
                   </StepContent>

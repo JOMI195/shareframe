@@ -8,7 +8,7 @@ from rest_framework.viewsets import ModelViewSet
 from drf_spectacular.utils import extend_schema
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.exceptions import NotFound
-from config.throttles import BurstRateThrottle, SustainedRateThrottle
+from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 
 from .models import Image
 from .serializers import (
@@ -24,13 +24,13 @@ logger = logging.getLogger("images")
 class ImagesPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
-    max_page_size = 50
+    max_page_size = 30
 
 
 class ImagesViewSet(ModelViewSet):
     http_method_names = ["get", "post", "delete", "head", "options"]
     parser_classes = (MultiPartParser, FormParser)
-    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
+    throttle_classes = [ImagesBurstRateThrottle, ImagesSustainedRateThrottle]
     pagination_class = ImagesPagination
 
     def get_serializer_class(self):

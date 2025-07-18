@@ -53,20 +53,48 @@ class ImagesValidationMixin:
         computed_hash = get_sha256_sum_from_file(file)
         return computed_hash == expected_hash
 
+    def validate_user_image_count_limit(self, user):
+        """Validate that the user hasn't exceeded the maximum number of images"""
+        max_images = getattr(settings, "IMAGES_MAX_IMAGES_NUMBER", None)
+        if max_images is None:
+            return True
+
+        current_image_count = Image.objects.filter(
+            user=user, markedAsDeleted=False
+        ).count()
+
+        if current_image_count >= max_images:
+            logger.warning(
+                f"Image count limit exceeded for user {user.id}: "
+                f"{current_image_count}/{max_images}"
+            )
+            raise ValidationError(
+                f"Maximum number of images exceeded. You can have at most {max_images} images."
+            )
+        return True
+
 
 class ImageCreateSerializer(ImagesValidationMixin, serializers.ModelSerializer):
     image = serializers.ImageField()
     upload_image_sha256_hex_hash = serializers.CharField()
+    auto_delete_after_period = serializers.BooleanField(default=False)
 
     class Meta:
         model = Image
-        fields = ("image", "upload_image_sha256_hex_hash")
+        fields = ("image", "upload_image_sha256_hex_hash", "auto_delete_after_period")
         read_only_fields = ("name", "size", "created_at", "width", "height", "format")
 
     def validate(self, data):
         image_file = data.get("image")
         upload_image_hash = data.get("upload_image_sha256_hex_hash")
+
+        # Validate file format, size, and checksum
         self.validate_file(image_file, upload_image_hash)
+
+        # Validate image count limit for the user
+        user = self.context["request"].user
+        self.validate_user_image_count_limit(user)
+
         return data
 
     def create(self, validated_data):
@@ -109,6 +137,7 @@ class ImageRetrieveSerializer(serializers.ModelSerializer):
             "created_at",
             "url",
             "variants",
+            "auto_delete_after_period",
         )
         read_only_fields = fields
 

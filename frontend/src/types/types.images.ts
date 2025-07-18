@@ -16,6 +16,7 @@ export interface IImage {
     created_at: string;
     url: string;
     variants: IImageVariant[];
+    auto_delete_after_period: boolean;
 }
 
 export interface IImagesPaginated {

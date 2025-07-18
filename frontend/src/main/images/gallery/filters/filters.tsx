@@ -37,7 +37,7 @@ const FilterControls: React.FC<FilterControlsProps> = () => {
                     >
                         <MenuItem value={10}>10</MenuItem>
                         <MenuItem value={20}>20</MenuItem>
-                        <MenuItem value={50}>50</MenuItem>
+                        <MenuItem value={30}>30</MenuItem>
                     </TextField>
                 </Grid>
             </Grid>

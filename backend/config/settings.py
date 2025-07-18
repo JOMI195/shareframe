@@ -360,7 +360,17 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "burst": "60/min",
         "sustained": "1000/day",
-    },  # "DEFAULT_THROTTLE_RATES": {"burst": "30/min", "sustained": "1000/day"},
+        # images
+        "images_burst": "3000/min",
+        "images_sustained": "10000/day",
+        # media views
+        "media_burst": "3000/min",
+        "media_sustained": "10000/day",
+        "frame_updates_burst": "20/min",
+        "frame_updates_sustained": "100/day",
+        "changelogs_burst": "1000/min",
+        "changelogs_sustained": "3000/day",
+    },
 }
 
 SIMPLE_JWT = {
@@ -457,6 +467,12 @@ DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 #### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
+IMAGES_MAX_IMAGES_NUMBER = int(
+    os.environ.get("DJANGO_IMAGES_UPLOADED_FILES_MAX_FILES_TOTAL", 100)
+)
+IMAGES_AUTO_DELETE_INTERVAL_HOURS = float(
+    os.environ.get("DJANGO_IMAGES_AUTO_DELETE_INTERVAL_HOURS", 3)
+)
 
 #### Frames
 FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 300  # seconds

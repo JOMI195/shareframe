@@ -26,3 +26,31 @@ def delete_marked_as_deleted_images_without_sent_images():
 
     logger.info(f"Cleanup completed: {deleteCount} images permanently deleted")
     return f"Deleted {deleteCount} images which are marked as deleted and dont have corresponding sentImages."
+
+
+@celery.task
+def mark_expired_images_to_be_deleted():
+    """Mark images for deletion if they have auto_delete_after_period=True and have expired"""
+    logger.info("Starting check for expired images which can be marked as deleted")
+
+    # Get all images that are marked for auto-deletion but not yet deleted
+    images_to_check = Image.objects.filter(
+        auto_delete_after_period=True, markedAsDeleted=False
+    )
+
+    logger.info(f"Found {images_to_check.count()} images to check for auto-deletion")
+
+    marked_count = 0
+    for image in images_to_check:
+        if image.should_be_auto_deleted():
+            logger.info(
+                f"Auto-marking image ID {image.id} for deletion - expired after auto-delete period"
+            )
+            image.markedAsDeleted = True
+            image.save(update_fields=["markedAsDeleted"])
+            marked_count += 1
+
+    logger.info(
+        f"Auto-deletion check completed: {marked_count} images marked for deletion"
+    )
+    return f"Auto-marked {marked_count} images for deletion based on expiry settings."

@@ -44,7 +44,11 @@ class ImagesAdmin(admin.ModelAdmin):
     fieldsets = (
         (
             None,
-            {"fields": ("user", "name", "display_name", "image", "markedAsDeleted")},
+            {"fields": ("user", "name", "display_name", "image")},
+        ),
+        (
+            "Lifecycle",
+            {"fields": ("markedAsDeleted", "auto_delete_after_period")},
         ),
         (
             "Image Properties",

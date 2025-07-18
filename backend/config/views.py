@@ -13,10 +13,19 @@ from sent_images.models import SentImage
 from frame_updates.models import Release
 from frames.models import Frame
 from changelogs.models import ChangelogImage
+from config.throttles import (
+    ChangelogsBurstRateThrottle,
+    ChangelogsSustainedRateThrottle,
+    FrameUpdatesBurstRateThrottle,
+    FrameUpdatesSustainedRateThrottle,
+    MediaBurstRateThrottle,
+    MediaSustainedRateThrottle,
+)
 
 
 class MediaAccessView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [MediaBurstRateThrottle, MediaSustainedRateThrottle]
 
     def get(self, request, path: str):
         user = request.user
@@ -95,6 +104,10 @@ class MediaAccessView(APIView):
 class FrameUpdatesAccessView(APIView):
     authentication_classes = [FrameTokenAuthentication]
     permission_classes = [IsAuthenticated]
+    throttle_classes = [
+        FrameUpdatesBurstRateThrottle,
+        FrameUpdatesSustainedRateThrottle,
+    ]
 
     def get(self, request, path: str):
         user = request.user
@@ -136,6 +149,7 @@ class FrameUpdatesAccessView(APIView):
 
 class ChangelogsAccessView(APIView):
     permission_classes = [IsAuthenticated]
+    throttle_classes = [ChangelogsBurstRateThrottle, ChangelogsSustainedRateThrottle]
 
     def get(self, request, path: str):
         user = request.user

@@ -29,6 +29,7 @@ export const setImagesPaginatedPageSize = (pageSize: number) => ({
 export const uploadImage = (
   image: File,
   upload_image_sha256_hex_hash: string,
+  autoDeleteAfterPeriod: boolean = true,
 ) =>
   apiRequest({
     url: ImagesEndpoints.getImagesUrl(),
@@ -39,7 +40,11 @@ export const uploadImage = (
     onError: ImagesSlice.createImageFailed.type,
 
     onStartPayload: image.name ? image.name : null,
-    data: { image: image, upload_image_sha256_hex_hash: upload_image_sha256_hex_hash },
+    data: {
+      image: image,
+      upload_image_sha256_hex_hash: upload_image_sha256_hex_hash,
+      auto_delete_after_period: autoDeleteAfterPeriod
+    },
     headers: {
       'content-type': 'multipart/form-data'
     },

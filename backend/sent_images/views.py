@@ -7,7 +7,7 @@ from django.utils import timezone
 from asgiref.sync import async_to_sync
 from django.db.models import Q
 from rest_framework.pagination import PageNumberPagination
-from config.throttles import BurstRateThrottle, SustainedRateThrottle
+from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 from frames.consumers import FrameWebSocketConsumer
 from .models import SentImage
 from .serializers import (
@@ -18,7 +18,7 @@ from .serializers import (
 class SentImagesPagination(PageNumberPagination):
     page_size = 10
     page_size_query_param = "page_size"
-    max_page_size = 50
+    max_page_size = 30
 
 
 class SentImagesViewSet(viewsets.ModelViewSet):
@@ -26,7 +26,7 @@ class SentImagesViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
     permission_classes = [IsAuthenticated]
     serializer_class = SentImagesRetrieveSerializer
-    throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
+    throttle_classes = [ImagesBurstRateThrottle, ImagesSustainedRateThrottle]
     pagination_class = SentImagesPagination
 
     def get_queryset(self):

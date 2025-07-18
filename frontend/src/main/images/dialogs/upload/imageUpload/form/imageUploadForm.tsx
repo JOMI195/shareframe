@@ -19,9 +19,12 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { validateImage } from '../../imageValidation';
+import { validateImage, validateImages } from '../validation/imageValidation';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../../uploadDialog';
+import { useAppDispatch, useAppSelector } from '@/store';
+import { getImagesPaginated } from '@/store/entities/images/images.slice';
+import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
 
 interface IImageUploadFormProps {
     setImages: (images: File[]) => void;
@@ -30,6 +33,7 @@ interface IImageUploadFormProps {
 }
 
 const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStatuses, imagePreviews }) => {
+    const dispatch = useAppDispatch();
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
     const [isOver, setIsOver] = useState(false);
@@ -37,10 +41,34 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
 
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    // Get existing files count for total validation
+    const imagesPaginatedCount = useAppSelector(getImagesPaginated).count;
+
     const validFileExtensions = import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS.split(" ");
     const maxFiles = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES
         ? +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES
         : 5;
+
+    // Updated file selection handler with total validation
+    const handleFileSelection = (selectedFiles: File[]) => {
+        const { validFiles, invalidFiles } = validateImages(selectedFiles, imagesPaginatedCount);
+
+        // Show errors for invalid files
+        if (invalidFiles.length > 0) {
+            const errorMessages = invalidFiles.map(({ file, errors }) =>
+                `${file.name}: ${errors.join(', ')}`
+            ).join('\n');
+            dispatch(openImagesAlertSnackbar({
+                message: `Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`,
+                severity: "warning"
+            }));
+        }
+
+        // Only set the valid files
+        if (validFiles.length > 0) {
+            setImages(validFiles);
+        }
+    };
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
         event.preventDefault();
@@ -57,21 +85,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
         setIsOver(false);
         if (event.dataTransfer.files) {
             const filesArray = Array.from(event.dataTransfer.files);
-            const validatedFiles = filesArray.map((file, index) => {
-                const validation = validateImage(file, index, filesArray.length);
-                return { file, validation };
-            });
-
-            const validFiles = validatedFiles.filter(item => item.validation.valid).map(item => item.file);
-            const invalidFiles = validatedFiles.filter(item => !item.validation.valid);
-
-            if (invalidFiles.length > 0) {
-                const errorMessages = invalidFiles.map(item =>
-                    `${item.file.name}: ${item.validation.errors.join(', ')}`
-                ).join('\n');
-                alert(`Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`);
-            }
-            setImages(validFiles);
+            handleFileSelection(filesArray);
             if (inputRef.current) {
                 inputRef.current.value = '';
             }
@@ -82,22 +96,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
         try {
             if (event.target.files) {
                 const filesArray = Array.from(event.target.files);
-                const validatedFiles = filesArray.map((file, index) => {
-                    const validation = validateImage(file, index, filesArray.length);
-                    return { file, validation };
-                });
-
-                const validFiles = validatedFiles.filter(item => item.validation.valid).map(item => item.file);
-                const invalidFiles = validatedFiles.filter(item => !item.validation.valid);
-
-                if (invalidFiles.length > 0) {
-                    const errorMessages = invalidFiles.map(item =>
-                        `${item.file.name}: ${item.validation.errors.join(', ')}`
-                    ).join('\n');
-                    alert(`Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`);
-                }
-
-                setImages(validFiles);
+                handleFileSelection(filesArray);
 
                 // Reset input with longer delay for Android compatibility
                 setTimeout(() => {
@@ -107,7 +106,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                 }, 200);
             }
         } catch (error) {
-            console.error('Error handling file selection:', error);
+            //console.error('Error handling file selection:', error);
             // Reset input on error
             if (inputRef.current) {
                 inputRef.current.value = '';
@@ -263,7 +262,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                                 </Typography>
                                 <List dense sx={{ maxHeight: 200, overflow: 'auto' }}>
                                     {imageStatuses.map((imageStatus, index) => {
-                                        const validation = validateImage(imageStatus.file, index, imageStatuses.length);
+                                        const validation = validateImage(imageStatus.file, index, imageStatuses.length, imagesPaginatedCount);
                                         return (
                                             <ListItem
                                                 key={imageStatus.id}

@@ -2,6 +2,8 @@ import os
 import uuid
 import logging
 from io import BytesIO
+from django.utils import timezone
+from datetime import timedelta
 from django.conf import settings
 from django.db import models
 from django.core.files.storage import default_storage
@@ -73,6 +75,7 @@ class Image(models.Model):
         related_name="images",
     )
     markedAsDeleted = models.BooleanField(default=False)
+    auto_delete_after_period = models.BooleanField(default=False)
 
     image = models.ImageField(upload_to=get_original_upload_path)
 
@@ -99,6 +102,20 @@ class Image(models.Model):
             return os.path.basename(self.image.name)
         else:
             return self.image.name
+
+    def should_be_auto_deleted(self):
+        """Check if this image should be automatically deleted based on settings"""
+        if not self.auto_delete_after_period or self.markedAsDeleted:
+            return False
+
+        auto_delete_interval = getattr(
+            settings, "IMAGES_AUTO_DELETE_INTERVAL_HOURS", None
+        )
+        if auto_delete_interval is None:
+            return False
+
+        expiry_time = self.created_at + timedelta(hours=auto_delete_interval)
+        return timezone.now() >= expiry_time
 
     def generate_sized_images(self):
         """Generate different sized versions of the image based on ImageSize models"""
