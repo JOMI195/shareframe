@@ -11,6 +11,10 @@ from .views import (
     VersionView,
 )
 
+admin.site.site_title = "Shareframe administration"
+admin.site.site_header = "Shareframe"
+admin.site.index_title = "Site administration"
+
 urlpatterns = [
     # general
     path("api/admin/", admin.site.urls),
