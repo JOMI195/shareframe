@@ -17,8 +17,8 @@ interface ExpirationOption {
 }
 
 interface ExpirationSelectorProps {
-    value: number;
-    onChange: (hours: number) => void;
+    expirationHours: number;
+    onExpirationHoursChange: (hours: number) => void;
 }
 
 type TimeUnit = 'hours' | 'days';
@@ -31,10 +31,13 @@ const PREDEFINED_OPTIONS: ExpirationOption[] = [
     { label: '30 Tage', hours: 720 }
 ];
 
-const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({ value, onChange }) => {
-    const [timeUnit, setTimeUnit] = useState<TimeUnit>('hours');
-    const [customValue, setCustomValue] = useState<string>(String(value));
-    const [selectedOption, setSelectedOption] = useState<SelectionMode>('predefined');
+const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
+    expirationHours,
+    onExpirationHoursChange
+}) => {
+    const [customTimeUnit, setCustomTimeUnit] = useState<TimeUnit>('hours');
+    const [customTimeValue, setCustomTimeValue] = useState<string>('1');
+    const [selectionMode, setSelectionMode] = useState<SelectionMode>('predefined');
 
     const styles = {
         container: {
@@ -58,25 +61,33 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({ value, onChange
         }
     };
 
-    const handleOptionChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSelectedOption(event.target.value as SelectionMode);
-        if (event.target.value === 'predefined') {
-            onChange(PREDEFINED_OPTIONS[0].hours);
+    const handleSelectionModeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const newMode = event.target.value as SelectionMode;
+        setSelectionMode(newMode);
+        if (newMode === 'predefined') {
+            onExpirationHoursChange(PREDEFINED_OPTIONS[0].hours);
         }
     };
 
-    const handleCustomValueChange = (newValue: string) => {
-        setCustomValue(newValue);
-        const numValue = parseInt(newValue) || 1;
-        const hours = timeUnit === 'days' ? numValue * 24 : numValue;
-        onChange(hours);
+    const handleCustomTimeValueChange = (newValue: string) => {
+        setCustomTimeValue(newValue);
+        const numericValue = parseInt(newValue) || 1;
+        const hoursValue = customTimeUnit === 'days' ? numericValue * 24 : numericValue;
+        onExpirationHoursChange(hoursValue);
+    };
+
+    const handleCustomTimeUnitChange = (newUnit: TimeUnit) => {
+        setCustomTimeUnit(newUnit);
+        const numericValue = parseInt(customTimeValue) || 1;
+        const hoursValue = newUnit === 'days' ? numericValue * 24 : numericValue;
+        onExpirationHoursChange(hoursValue);
     };
 
     return (
         <Box sx={styles.container}>
             <RadioGroup
-                value={selectedOption}
-                onChange={handleOptionChange}
+                value={selectionMode}
+                onChange={handleSelectionModeChange}
                 sx={styles.radioGroup}
             >
                 <FormControlLabel
@@ -91,13 +102,13 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({ value, onChange
                 />
             </RadioGroup>
 
-            {selectedOption === 'predefined' ? (
+            {selectionMode === 'predefined' ? (
                 <FormControl fullWidth>
                     <InputLabel>Ablaufzeit</InputLabel>
                     <Select
-                        value={value}
+                        value={expirationHours}
                         label="Ablaufzeit"
-                        onChange={(e) => onChange(Number(e.target.value))}
+                        onChange={(e) => onExpirationHoursChange(Number(e.target.value))}
                     >
                         {PREDEFINED_OPTIONS.map((option) => (
                             <MenuItem key={option.hours} value={option.hours}>
@@ -110,8 +121,8 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({ value, onChange
                 <Box sx={styles.customInputContainer}>
                     <TextField
                         type="number"
-                        value={customValue}
-                        onChange={(e) => handleCustomValueChange(e.target.value)}
+                        value={customTimeValue}
+                        onChange={(e) => handleCustomTimeValueChange(e.target.value)}
                         label="Zeit"
                         sx={styles.timeInput}
                         inputProps={{ min: 1, max: 365 }}
@@ -119,9 +130,9 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({ value, onChange
                     <FormControl sx={styles.unitSelect}>
                         <InputLabel>Einheit</InputLabel>
                         <Select
-                            value={timeUnit}
+                            value={customTimeUnit}
                             label="Einheit"
-                            onChange={(e) => setTimeUnit(e.target.value as TimeUnit)}
+                            onChange={(e) => handleCustomTimeUnitChange(e.target.value as TimeUnit)}
                         >
                             <MenuItem value="hours">Stunden</MenuItem>
                             <MenuItem value="days">Tage</MenuItem>

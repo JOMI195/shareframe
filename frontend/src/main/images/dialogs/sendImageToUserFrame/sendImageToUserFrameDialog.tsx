@@ -53,10 +53,10 @@ const SendImageToUserFrameDialog = () => {
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-    const [receiverUsernames, setReceiverUsernames] = useState<string[]>([]);
-    const [expirationOption, setExpirationOption] = useState<number>(24);
-    const [sendingInProgress, setSendingInProgress] = useState(false);
-    const [selectOpen, setSelectOpen] = useState(false);
+    const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
+    const [expirationHours, setExpirationHours] = useState<number>(24);
+    const [isSendingInProgress, setIsSendingInProgress] = useState(false);
+    const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
     const availableReceivers = [
         ...friendships
@@ -66,32 +66,32 @@ const SendImageToUserFrameDialog = () => {
     ];
 
     const handleDialogClose = () => {
-        if (!sendingInProgress) {
+        if (!isSendingInProgress) {
             dispatch(closeSendImageToUserFrameDialog());
-            setReceiverUsernames([]);
+            setSelectedReceiverUsernames([]);
         }
     };
 
-    const handleReceiverChange = (event: SelectChangeEvent<typeof receiverUsernames>) => {
+    const handleReceiverSelectionChange = (event: SelectChangeEvent<typeof selectedReceiverUsernames>) => {
         const value = event.target.value;
-        setReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
-        setTimeout(() => setSelectOpen(false), 100);
+        setSelectedReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
+        setTimeout(() => setIsReceiverSelectOpen(false), 100);
     };
 
     const handleConfirmSend = async () => {
-        if (imagesToSend.length === 0 || receiverUsernames.length === 0) {
+        if (imagesToSend.length === 0 || selectedReceiverUsernames.length === 0) {
             return;
         }
 
-        setSendingInProgress(true);
+        setIsSendingInProgress(true);
 
         try {
             const expirationTimestamp = Math.floor(
-                Date.now() / 1000 + (expirationOption * 3600)
+                Date.now() / 1000 + (expirationHours * 3600)
             );
 
             imagesToSend.forEach(async imageToSend => {
-                const sendPromises = receiverUsernames.map(receiverUsername =>
+                const sendPromises = selectedReceiverUsernames.map(receiverUsername =>
                     dispatch(sendImageToUserFrames(
                         receiverUsername,
                         imageToSend.id,
@@ -103,7 +103,7 @@ const SendImageToUserFrameDialog = () => {
             });
         } catch (error) {
         } finally {
-            setSendingInProgress(false);
+            setIsSendingInProgress(false);
             handleDialogClose();
             dispatch(closeSelectionDialog());
         }
@@ -134,7 +134,7 @@ const SendImageToUserFrameDialog = () => {
                             color='inherit'
                             onClick={handleDialogClose}
                             aria-label='cancel'
-                            disabled={sendingInProgress}
+                            disabled={isSendingInProgress}
                         >
                             <CloseIcon />
                         </IconButton>
@@ -150,11 +150,11 @@ const SendImageToUserFrameDialog = () => {
                     <InputLabel>Empfänger</InputLabel>
                     <Select
                         multiple
-                        value={receiverUsernames}
-                        onChange={handleReceiverChange}
-                        open={selectOpen}
-                        onOpen={() => setSelectOpen(true)}
-                        onClose={() => setSelectOpen(false)}
+                        value={selectedReceiverUsernames}
+                        onChange={handleReceiverSelectionChange}
+                        open={isReceiverSelectOpen}
+                        onOpen={() => setIsReceiverSelectOpen(true)}
+                        onClose={() => setIsReceiverSelectOpen(false)}
                         input={<OutlinedInput label="Empfänger" />}
                         renderValue={(selected) => (
                             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
@@ -168,14 +168,14 @@ const SendImageToUserFrameDialog = () => {
                             </Box>
                         )}
                         MenuProps={MenuProps}
-                        disabled={sendingInProgress}
+                        disabled={isSendingInProgress}
                     >
                         {availableReceivers.map((receiver) => (
                             <MenuItem
                                 key={receiver}
                                 value={receiver}
                                 style={{
-                                    fontWeight: receiverUsernames.indexOf(receiver) === -1
+                                    fontWeight: selectedReceiverUsernames.indexOf(receiver) === -1
                                         ? theme.typography.fontWeightRegular
                                         : theme.typography.fontWeightMedium,
                                 }}
@@ -187,8 +187,8 @@ const SendImageToUserFrameDialog = () => {
                 </FormControl>
 
                 <ExpirationSelector
-                    value={expirationOption}
-                    onChange={setExpirationOption}
+                    expirationHours={expirationHours}
+                    onExpirationHoursChange={setExpirationHours}
                 />
 
                 <Grid
@@ -207,7 +207,7 @@ const SendImageToUserFrameDialog = () => {
                             color="primary"
                             variant="outlined"
                             fullWidth
-                            disabled={sendingInProgress}
+                            disabled={isSendingInProgress}
                         >
                             Abbrechen
                         </Button>
@@ -216,13 +216,13 @@ const SendImageToUserFrameDialog = () => {
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
-                            disabled={loading || receiverUsernames.length === 0 || sendingInProgress}
+                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress}
                             variant="contained"
                             fullWidth
                         >
-                            {sendingInProgress
-                                ? `Sende ${imagesToSend.length} ${receiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${receiverUsernames.length} Empfänger...`
-                                : `${imagesToSend.length} ${receiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${receiverUsernames.length} Empfänger senden`
+                            {isSendingInProgress
+                                ? `Sende ${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger...`
+                                : `${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger senden`
                             }
                         </Button>
                     </Grid>
