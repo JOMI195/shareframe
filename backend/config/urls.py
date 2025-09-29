@@ -2,6 +2,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django.conf.urls.static import static
+from django_otp.admin import OTPAdminSite
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from .views import (
@@ -10,6 +11,9 @@ from .views import (
     ChangelogsAccessView,
     VersionView,
 )
+
+if bool(settings.PRODUCTION):
+    admin.site.__class__ = OTPAdminSite
 
 admin.site.site_title = "Shareframe administration"
 admin.site.site_header = "Shareframe"
