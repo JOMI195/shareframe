@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import EasyCropper, { Area } from 'react-easy-crop';
+import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
 
 const ZOOM_FACTOR = 0.1;
@@ -23,12 +24,33 @@ const Cropper: React.FC<CropperProps> = ({
     rotation,
     setRotation
 }) => {
+    const theme = useTheme();
     const cropperRef = useRef<EasyCropper>(null);
     const cropperContainerRef = useRef<HTMLDivElement>(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isTouching, setIsTouching] = useState(false);
+
+    const getCropperStyles = () => {
+        const isLight = theme.palette.mode === 'light';
+        const borderColor = isLight ? 'rgba(0, 0, 0, 0.6)' : 'rgba(255, 255, 255, 0.8)';
+        const gridColor = isLight ? 'rgba(0, 0, 0, 0.4)' : 'rgba(255, 255, 255, 0.6)';
+
+        return `
+          .reactEasyCrop_CropArea {
+            border: 2px solid ${borderColor} !important;
+          }
+          .reactEasyCrop_CropAreaGrid::before {
+            border-left: 1px solid ${gridColor} !important;
+            border-right: 1px solid ${gridColor} !important;
+          }
+          .reactEasyCrop_CropAreaGrid::after {
+            border-top: 1px solid ${gridColor} !important;
+            border-bottom: 1px solid ${gridColor} !important;
+          }
+        `;
+    };
 
     const handleTouchStart = () => setIsTouching(true);
     const handleTouchEnd = () => setIsTouching(false);
@@ -89,7 +111,14 @@ const Cropper: React.FC<CropperProps> = ({
         }}>
             {imageSrc && (
                 <>
-                    <div style={{ position: 'relative', width: '100%', height: '100%', backgroundColor: "black" }}>
+                    <style>{getCropperStyles()}</style>
+                    <div style={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                        border: theme.palette.mode === 'light' ? `1px solid ${theme.palette.divider}` : 'none'
+                    }}>
                         <EasyCropper
                             ref={cropperRef}
                             image={imageSrc}
