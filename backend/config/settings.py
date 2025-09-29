@@ -63,6 +63,8 @@ INSTALLED_APPS = [
     "drf_spectacular",
     "django_celery_results",
     "django_celery_beat",
+    "django_otp",
+    "django_otp.plugins.otp_totp",
     # APPS
     "frames",
     "frame_updates",
@@ -90,6 +92,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "utils.request_logging.middleware.LoggingMiddleware",
+    "django_otp.middleware.OTPMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
