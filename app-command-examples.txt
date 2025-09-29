@@ -1,0 +1,2 @@
+./app-command.sh docker-compose.dev.yml .env.dev "up -d --build" all
+./app-command.sh docker-compose.prod.local.yml .env.prod.local "up -d --build" all
