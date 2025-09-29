@@ -31,7 +31,7 @@ import ExpirationSelector from './expirationSelector';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
-const MenuProps = {
+const MENU_PROPS = {
     PaperProps: {
         style: {
             maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
@@ -39,6 +39,7 @@ const MenuProps = {
         },
     },
 };
+const DEFAULT_EXPIRATION_HOURS = 24;
 
 const SendImageToUserFrameDialog = () => {
     const theme = useTheme();
@@ -54,7 +55,7 @@ const SendImageToUserFrameDialog = () => {
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
-    const [expirationHours, setExpirationHours] = useState<number>(24);
+    const [expirationHours, setExpirationHours] = useState<number>(DEFAULT_EXPIRATION_HOURS);
     const [isSendingInProgress, setIsSendingInProgress] = useState(false);
     const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
@@ -69,6 +70,7 @@ const SendImageToUserFrameDialog = () => {
         if (!isSendingInProgress) {
             dispatch(closeSendImageToUserFrameDialog());
             setSelectedReceiverUsernames([]);
+            setExpirationHours(DEFAULT_EXPIRATION_HOURS);
         }
     };
 
@@ -167,7 +169,7 @@ const SendImageToUserFrameDialog = () => {
                                 ))}
                             </Box>
                         )}
-                        MenuProps={MenuProps}
+                        MenuProps={MENU_PROPS}
                         disabled={isSendingInProgress}
                     >
                         {availableReceivers.map((receiver) => (

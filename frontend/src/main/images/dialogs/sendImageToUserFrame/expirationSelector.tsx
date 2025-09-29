@@ -66,6 +66,10 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
         setSelectionMode(newMode);
         if (newMode === 'predefined') {
             onExpirationHoursChange(PREDEFINED_OPTIONS[0].hours);
+        } else {
+            setCustomTimeValue('1');
+            setCustomTimeUnit('hours');
+            onExpirationHoursChange(1);
         }
     };
 
