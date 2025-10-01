@@ -11,6 +11,4 @@ jobs:
       - name: Build and redeploy application
         working-directory: /home/jomi/shareframe
         run: |
-          echo "Starting build and deployment..."
-          sudo ./app-command.sh docker-compose.yml .env.prod "up -d --build" all 2>&1
-          echo "Deployment completed with exit code: $?"
+          sudo ./app-command.sh docker-compose.yml .env.prod "up -d --build" all
