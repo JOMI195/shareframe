@@ -1,0 +1,14 @@
+name: Pull latest changes
+
+on:
+  workflow_dispatch:
+
+jobs:
+  pull:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Pull latest code changes
+        working-directory: /home/jomi/shareframe
+        run: |
+          git pull
