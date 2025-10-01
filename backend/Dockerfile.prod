@@ -3,14 +3,14 @@
 ###########
 
 # pull official base image
-FROM python:3.11.4-slim-buster AS builder
+FROM python:3.13.6-slim-bullseye AS builder
 
 # set work directory
 WORKDIR /app/backend
 
 # set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # install system dependencies
 RUN apt-get update && \
@@ -30,7 +30,7 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/backend/wheels -r requir
 #########
 
 # pull official base image
-FROM python:3.11.4-slim-buster
+FROM python:3.13.6-slim-bullseye
 
 # create directory for the app user
 RUN mkdir -p /home/app
