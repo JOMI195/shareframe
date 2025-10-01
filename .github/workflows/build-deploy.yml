@@ -1,0 +1,14 @@
+name: Build and Deploy
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    
+    steps:
+      - name: Build and redeploy application
+        working-directory: /home/jomi/shareframe
+        run: |
+          sudo ./app-command.sh docker-compose.yml .env.prod "up -d --build" all
