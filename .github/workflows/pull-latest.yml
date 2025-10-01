@@ -11,4 +11,4 @@ jobs:
       - name: Pull latest code changes
         working-directory: /home/jomi/shareframe
         run: |
-          git pull
+          sudo -u jomi git pull
