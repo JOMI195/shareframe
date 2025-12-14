@@ -45,6 +45,8 @@ def _read_or_create_display_interval_file():
             f"Display images loop interval file {display_images_loop_interval_file} does not exist, creating default"
         )
         try:
+            settings.SETTINGS_PERSIST_DIR_PATH.mkdir(parents=True, exist_ok=True)
+
             with open(display_images_loop_interval_file, "w") as f:
                 json.dump({"interval_secs": default_interval}, f)
             return default_interval
