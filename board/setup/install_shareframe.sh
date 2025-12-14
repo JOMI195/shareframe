@@ -87,29 +87,23 @@ if [ ! -f "$WORKING_DIR/.env.secrets" ]; then
     echo "SERIAL_NUMBER=" > "$WORKING_DIR/.env.secrets"
 fi
 
-if grep -q "^SERIAL_NUMBER=" "$WORKING_DIR/.env.secrets"; then
-    sed -i "s/^SERIAL_NUMBER=.*/SERIAL_NUMBER='$SERIAL_NUMBER'/" "$WORKING_DIR/.env.secrets"
-else
-    echo "SERIAL_NUMBER='$SERIAL_NUMBER'" >> "$WORKING_DIR/.env.secrets"
-fi
+update_or_add_secret() {
+    local key=$1
+    local value=$2
+    local file=$3
+    
+    if grep -q "^${key}=" "$file"; then
+        sed -i "s|^${key}=.*|${key}='${value}'|" "$file"
+    else
+        echo "${key}='${value}'" >> "$file"
+    fi
+}
 
-if grep -q "^PUBLIC_SERIAL_NUMBER=" "$WORKING_DIR/.env.secrets"; then
-    sed -i "s/^PUBLIC_SERIAL_NUMBER=.*/PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'/" "$WORKING_DIR/.env.secrets"
-else
-    echo "PUBLIC_SERIAL_NUMBER='$PUBLIC_SERIAL_NUMBER'" >> "$WORKING_DIR/.env.secrets"
-fi
-
-if grep -q "^FRAME_AUTH_SECRET_KEY=" "$WORKING_DIR/.env.secrets"; then
-    sed -i "s/^FRAME_AUTH_SECRET_KEY=.*/FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'/" "$WORKING_DIR/.env.secrets"
-else
-    echo "FRAME_AUTH_SECRET_KEY='$FRAME_AUTH_SECRET_KEY'" >> "$WORKING_DIR/.env.secrets"
-fi
-
-if grep -q "^UPDATE_HASH_SECRET_KEY=" "$WORKING_DIR/.env.secrets"; then
-    sed -i "s/^UPDATE_HASH_SECRET_KEY=.*/UPDATE_HASH_SECRET_KEY='$UPDATE_HASH_SECRET_KEY'/" "$WORKING_DIR/.env.secrets"
-else
-    echo "UPDATE_HASH_SECRET_KEY='$UPDATE_HASH_SECRET_KEY'" >> "$WORKING_DIR/.env.secrets"
-fi
+update_or_add_secret "SERIAL_NUMBER" "$SERIAL_NUMBER" "$WORKING_DIR/.env.secrets"
+update_or_add_secret "PUBLIC_SERIAL_NUMBER" "$PUBLIC_SERIAL_NUMBER" "$WORKING_DIR/.env.secrets"
+# TODO: this wont work when reusing
+update_or_add_secret "FRAME_AUTH_SECRET_KEY" "$FRAME_AUTH_SECRET_KEY" "$WORKING_DIR/.env.secrets"
+update_or_add_secret "UPDATE_HASH_SECRET_KEY" "$UPDATE_HASH_SECRET_KEY" "$WORKING_DIR/.env.secrets"
 
 chown frame:frame "$WORKING_DIR/.env.secrets"
 chmod 644 "$WORKING_DIR/.env.secrets"
@@ -125,34 +119,58 @@ echo "Installing and update pi dependencies done"
 
 # nginx conf for dashboard
 echo "Configuring nginx for dashboard"
-rm "/etc/nginx/sites-enabled/default"
+# Safely remove default config if it exists
+if [ -f "/etc/nginx/sites-enabled/default" ]; then
+    rm "/etc/nginx/sites-enabled/default"
+fi
 cp "$APPLICATION_DIR/dashboard/nginx/shareframe-dashboard.conf" /etc/nginx/sites-available/shareframe-dashboard
 cp "$APPLICATION_DIR/dashboard/nginx/502-error.html" /usr/share/nginx/html/
+rm -f /etc/nginx/sites-enabled/shareframe-dashboard
 ln -s /etc/nginx/sites-available/shareframe-dashboard /etc/nginx/sites-enabled/
 systemctl restart nginx
 echo "Configuring nginx for dashboard done"
 
+# setup temporary chach folder because /tmp is to little
+mkdir -p ~/tmpCache
+export TMPDIR=~/tmpCache
+
 # python env via poetry and its dependencies
 echo "Installing Poetry for user frame"
-sudo -u "$USER" bash <<EOF
+sudo -u "$USER" bash <<'EOF'
 
 cd "$USER_DIR"
 
-echo 'installing poetry dependencies'
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# Check and install rustup/cargo if needed
+if ! command -v cargo &> /dev/null; then
+    echo 'Installing rustup/cargo'
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+else
+    echo 'Rustup/cargo already installed, skipping'
+fi
+
 export PATH=$PATH:~/.cargo/bin
 export CRYPTOGRAPHY_DONT_BUILD_RUST=1
 
-echo 'installing poetry'
-curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
-/home/frame/.local/bin/poetry config virtualenvs.options.system-site-packages true
+# Check and install poetry if needed
+if [ ! -f "/home/frame/.local/bin/poetry" ]; then
+    echo 'Installing poetry'
+    curl -sSL https://install.python-poetry.org | python3 - --version 2.1.2
+    /home/frame/.local/bin/poetry config virtualenvs.options.system-site-packages true
+else
+    echo 'Poetry already installed, skipping'
+fi
 
-echo 'installing project python dependencies'
+# Install/update project python dependencies
+echo 'Installing/updating project python dependencies'
 cd "$APPLICATION_DIR/"
 /home/frame/.local/bin/poetry install
 
 EOF
-echo "Poetry has been installed for user frame"
+echo "Poetry installation complete"
+
+# unset cache folder
+rm -rf ~/tmpCache
+unset TMPDIR
 
 # service setup
 echo "Installing services"
