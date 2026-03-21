@@ -446,6 +446,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameTokenAuthentication],
         permission_classes=[IsAuthenticated],
+        # TODO: fix rename url
         url_path="frame-hearbeat",
     )
     def frame_hearbeat(self, request):
