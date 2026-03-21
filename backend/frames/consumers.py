@@ -13,6 +13,7 @@ from sent_images.models import SentImage
 from images.models import Image
 from user_core.models import User
 
+from .close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
 from .models import FrameWebsocketConnection
 
 logger = logging.getLogger("websockets.frames")
@@ -399,7 +400,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             await self.save_connection(frame)
         else:
             logger.warning(f"Connection rejected - no frame in scope")
-            await self.close()
+            await self.close(code=WS_CLOSE_AUTH_REJECTED)
 
     async def disconnect(self, close_code):
         frame = self.scope.get("frame")
@@ -413,7 +414,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         frame = self.scope.get("frame")
         frame_id = frame.id if frame else "unknown"
         logger.info(f"Connection closing for frame {frame_id}")
-        await self.close()
+        await self.close(code=WS_CLOSE_TOKEN_REVOKED)
 
     async def receive(self, text_data):
         await self.update_last_active()
