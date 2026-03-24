@@ -123,9 +123,9 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                 frames_data.append(
                     {
                         "id": frame.id,
-                        "last_board_heartbeat": (
-                            frame.last_board_heartbeat.isoformat()
-                            if frame.last_board_heartbeat
+                        "last_seen": (
+                            frame.last_seen.isoformat()
+                            if frame.last_seen
                             else None
                         ),
                     }

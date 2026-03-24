@@ -469,10 +469,10 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         frame.local_ip_address = local_ip_address
         frame.version = version
-        frame.last_board_heartbeat = timezone.now()
+        frame.last_seen = timezone.now()
 
         frame.save(
-            update_fields=["local_ip_address", "version", "last_board_heartbeat"]
+            update_fields=["local_ip_address", "version", "last_seen"]
         )
 
         return Response({"message": "Recieved heartbeat."}, status=status.HTTP_200_OK)

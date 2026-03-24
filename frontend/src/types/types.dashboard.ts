@@ -24,7 +24,7 @@ export interface IDashboardSentImagesStats {
 
 export interface IDashboardFrameStats {
     id: number;
-    last_board_heartbeat: string | null;
+    last_seen: string | null;
 }
 
 export interface IDashboardData {

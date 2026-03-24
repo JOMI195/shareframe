@@ -1,5 +1,6 @@
 import logging
 from config.celery import celery
+from django.db.models import Q
 from django.utils import timezone
 from django.conf import settings
 from datetime import timedelta
@@ -17,7 +18,9 @@ def close_and_delete_long_inactive_frame_websocket_connections():
     heartbeat_timeout = getattr(settings, "FRAME_HEARTBEAT_TIMEOUT_MINUTES", 60)
     threshold_time = timezone.now() - timedelta(minutes=heartbeat_timeout)
 
-    stale_frames = Frame.objects.filter(last_board_heartbeat__lt=threshold_time)
+    stale_frames = Frame.objects.filter(
+        Q(last_seen__lt=threshold_time) | Q(last_seen__isnull=True)
+    )
     stale_connections = FrameWebsocketConnection.objects.filter(frame__in=stale_frames)
     deleted_count = stale_connections.count()
 

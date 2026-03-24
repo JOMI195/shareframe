@@ -35,12 +35,11 @@ class Frame(models.Model):
     is_active = models.BooleanField(default=True)
 
     registered_at = models.DateTimeField(auto_now_add=True)
-    last_connected = models.DateTimeField(auto_now=True)
-    last_active = models.DateTimeField(auto_now=True)
+    last_connected = models.DateTimeField(null=True, blank=True)
+    last_seen = models.DateTimeField(null=True, blank=True)
 
     version = models.CharField(max_length=100, default="1.0.0")
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)
-    last_board_heartbeat = models.DateTimeField(default=now)
 
     def get_or_create_token(self):
         """

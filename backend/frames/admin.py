@@ -53,10 +53,9 @@ class FrameAdmin(admin.ModelAdmin):
     readonly_fields = (
         "registered_at",
         "last_connected",
-        "last_active",
+        "last_seen",
         "version",
         "local_ip_address",
-        "last_board_heartbeat",
     )
     fieldsets = (
         (
@@ -80,13 +79,13 @@ class FrameAdmin(admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("registered_at", "last_connected", "last_active"),
+                "fields": ("registered_at", "last_connected", "last_seen"),
             },
         ),
         (
             "Connection",
             {
-                "fields": ("local_ip_address", "last_board_heartbeat"),
+                "fields": ("local_ip_address",),
             },
         ),
     )

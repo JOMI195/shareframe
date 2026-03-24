@@ -1,9 +1,9 @@
-export const isFrameActive = (last_board_heartbeat: string | undefined | null, maxInactivityMins: number = 30 * 60 * 1000): boolean => {
-    if (!last_board_heartbeat || typeof last_board_heartbeat !== 'string') {
+export const isFrameActive = (last_seen: string | undefined | null, maxInactivityMins: number = 30 * 60 * 1000): boolean => {
+    if (!last_seen || typeof last_seen !== 'string') {
         return false;
     }
 
-    const heartbeatTime = new Date(last_board_heartbeat);
+    const heartbeatTime = new Date(last_seen);
 
     if (isNaN(heartbeatTime.getTime())) {
         return false;

@@ -57,7 +57,7 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                     customContent={
                         <Stack spacing={1}>
                             {frameStats.map((frameStat, index) => {
-                                const hasConnection = isFrameActive(frameStat.last_board_heartbeat);
+                                const hasConnection = isFrameActive(frameStat.last_seen);
                                 return (
                                     <Chip
                                         key={index}

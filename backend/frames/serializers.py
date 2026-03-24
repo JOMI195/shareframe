@@ -17,5 +17,5 @@ class FrameRetrieveSerializer(serializers.ModelSerializer):
             "is_active",
             "registered_at",
             "local_ip_address",
-            "last_board_heartbeat",
+            "last_seen",
         ]

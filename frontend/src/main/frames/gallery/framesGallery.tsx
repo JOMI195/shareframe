@@ -82,7 +82,7 @@ const FramesGallery: React.FC = () => {
     );
 
     const FrameCard = ({ frame }: { frame: IFrame }) => {
-        const hasConnection = isFrameActive(frame.last_board_heartbeat);
+        const hasConnection = isFrameActive(frame.last_seen);
         const ipAddress = frame.local_ip_address;
 
         return (

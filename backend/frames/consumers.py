@@ -22,19 +22,19 @@ logger = logging.getLogger("websockets.frames")
 class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
-    def update_last_active(self):
+    def update_last_seen(self):
         try:
             frame = self.scope.get("frame")
             if frame:
-                frame.last_active = timezone.now()
-                frame.save(update_fields=["last_active"])
+                frame.last_seen = timezone.now()
+                frame.save(update_fields=["last_seen"])
                 connection = FrameWebsocketConnection.objects.get(
                     frame=frame, channel_name=self.channel_name
                 )
                 connection.last_active = timezone.now()
                 connection.save(update_fields=["last_active"])
         except Exception as e:
-            logger.error(f"Error updating last active fields: {str(e)}")
+            logger.error(f"Error updating last seen fields: {str(e)}")
 
     @database_sync_to_async
     def update_last_connected(self, frame):
@@ -288,6 +288,11 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.exception(f"Error handling check_images_expiry: {str(e)}")
 
+    async def handle_heartbeat(self, message):
+        frame = self.scope.get("frame")
+        frame_id = frame.id if frame else "unknown"
+        logger.debug(f"Received heartbeat from frame {frame_id}")
+
     async def handle_ping(self, message):
         timestamp = message.get("timestamp")
         logger.debug(f"Received ping with timestamp {timestamp}")
@@ -389,6 +394,10 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             raise e
 
     # ------------------------------
+    async def send(self, text_data=None, bytes_data=None, close=False):
+        await self.update_last_seen()
+        await super().send(text_data=text_data, bytes_data=bytes_data, close=close)
+
     async def connect(self):
         logger.info(f"New connection attempt")
         frame = self.scope.get("frame")
@@ -398,6 +407,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             logger.info(f"New connection accepted for frame {frame.id}")
             await self.update_last_connected(frame)
             await self.save_connection(frame)
+            await self.update_last_seen()
         else:
             logger.warning(f"Connection rejected - no frame in scope")
             await self.close(code=WS_CLOSE_AUTH_REJECTED)
@@ -417,7 +427,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         await self.close(code=WS_CLOSE_TOKEN_REVOKED)
 
     async def receive(self, text_data):
-        await self.update_last_active()
+        await self.update_last_seen()
 
         try:
             message = json.loads(text_data)
@@ -431,6 +441,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             if message_type == "close_connection":
                 await self.close_connection()
+            elif message_type == "heartbeat":
+                await self.handle_heartbeat(message)
             elif message_type == "ping":
                 await self.handle_ping(message)
             elif message_type == "config":
@@ -456,7 +468,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             logger.exception(f"Error processing message: {str(e)}")
 
     async def send_picture(self, event):
-        await self.update_last_active()
         frame = self.scope.get("frame")
         frame_id = frame.id if frame else "unknown"
 
@@ -472,7 +483,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=event["picture_data"])
 
     async def clear_specific_sent_images(self, event):
-        await self.update_last_active()
         frame = self.scope.get("frame")
         frame_id = frame.id if frame else "unknown"
 

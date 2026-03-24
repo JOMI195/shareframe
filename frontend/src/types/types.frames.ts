@@ -3,7 +3,7 @@ export interface IFrame {
     public_serial_number: string;
     is_active: boolean;
     registered_at: string;
-    last_board_heartbeat: string;
+    last_seen: string | null;
     local_ip_address: string | null;
 }
 
