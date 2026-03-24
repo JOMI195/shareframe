@@ -10,7 +10,7 @@ const App = () => {
       <CssBaseline enableColorScheme />
       <RouterProvider
         router={Routing}
-        fallbackElement={<LoadingFallback />}
+        future={{ v7_startTransition: true }}
       />
     </ColorThemeProvider>
   );

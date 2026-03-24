@@ -142,9 +142,11 @@ const RequestOTPDialog: React.FC = () => {
               <Tooltip
                 title='OTP in die Zwischenablage kopieren'
               >
-                <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="copy otp">
-                  <ContentCopyIcon />
-                </IconButton>
+                <span>
+                  <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="copy otp">
+                    <ContentCopyIcon />
+                  </IconButton>
+                </span>
               </Tooltip>
             </Grid>
           </Grid>

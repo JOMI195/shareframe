@@ -64,49 +64,51 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
         >
             {actionPrimary && (
                 <Tooltip title={actionPrimary.tooltip}>
-                    <Fab
-                        color={actionPrimary.color}
-                        size="large"
-                        onClick={actionPrimary.onClick}
-                        disabled={allActionsdisabled || actionPrimary.disabled}
-                        variant='extended'
-                        sx={{
-                            alignSelf: "flex-end",
-                            borderRadius: '10px',
-                            pointerEvents: 'auto'
-                        }}
-                    >
-                        {actionPrimary.icon && (
-                            <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
-                                {actionPrimary.icon}
-                            </Box>
-                        )}
-                        {actionPrimary.label && actionPrimary.label}
-                    </Fab>
+                    <span style={{ alignSelf: "flex-end" }}>
+                        <Fab
+                            color={actionPrimary.color}
+                            size="large"
+                            onClick={actionPrimary.onClick}
+                            disabled={allActionsdisabled || actionPrimary.disabled}
+                            variant='extended'
+                            sx={{
+                                borderRadius: '10px',
+                                pointerEvents: 'auto'
+                            }}
+                        >
+                            {actionPrimary.icon && (
+                                <Box sx={{ mr: { xs: actionPrimary.label ? 1 : 0 }, display: 'flex' }}>
+                                    {actionPrimary.icon}
+                                </Box>
+                            )}
+                            {actionPrimary.label && actionPrimary.label}
+                        </Fab>
+                    </span>
                 </Tooltip>
             )}
 
             {actionSecondary && (
                 <Tooltip title={actionSecondary.tooltip}>
-                    <Fab
-                        color={actionSecondary.color}
-                        size="large"
-                        onClick={actionSecondary.onClick}
-                        disabled={allActionsdisabled || actionSecondary.disabled}
-                        variant='extended'
-                        sx={{
-                            alignSelf: "flex-end",
-                            borderRadius: '10px',
-                            pointerEvents: 'auto'
-                        }}
-                    >
-                        {actionSecondary.icon && (
-                            <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
-                                {actionSecondary.icon}
-                            </Box>
-                        )}
-                        {actionSecondary.label && actionSecondary.label}
-                    </Fab>
+                    <span style={{ alignSelf: "flex-end" }}>
+                        <Fab
+                            color={actionSecondary.color}
+                            size="large"
+                            onClick={actionSecondary.onClick}
+                            disabled={allActionsdisabled || actionSecondary.disabled}
+                            variant='extended'
+                            sx={{
+                                borderRadius: '10px',
+                                pointerEvents: 'auto'
+                            }}
+                        >
+                            {actionSecondary.icon && (
+                                <Box sx={{ mr: { xs: actionSecondary.label ? 1 : 0 }, display: 'flex' }}>
+                                    {actionSecondary.icon}
+                                </Box>
+                            )}
+                            {actionSecondary.label && actionSecondary.label}
+                        </Fab>
+                    </span>
                 </Tooltip>
             )}
 
