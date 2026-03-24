@@ -97,6 +97,7 @@ const SendImageToUserFrameDialog = () => {
                     dispatch(sendImageToUserFrames(
                         receiverUsername,
                         imageToSend.id,
+                        // TODO: sent as number
                         expirationTimestamp.toString()
                     ))
                 );
