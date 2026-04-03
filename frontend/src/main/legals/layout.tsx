@@ -1,5 +1,5 @@
 import Container from "@mui/material/Container";
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 
 export default function PublicLayout() {
   return (

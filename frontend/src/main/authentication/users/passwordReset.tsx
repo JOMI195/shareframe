@@ -7,7 +7,7 @@ import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import { Grid } from "@mui/material";
 

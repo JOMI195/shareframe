@@ -3,7 +3,7 @@ import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typogra
 import { useAppDispatch, useAppSelector } from '@/store';
 import { allCookiesAccepted, allCookiesDeclined, getCookies } from '@/store/ui/settings/settings.slice';
 import Logo from './logo';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { getAppSettingsUrl, getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { isCookieConsentExpired } from '../utils/cookies';
 

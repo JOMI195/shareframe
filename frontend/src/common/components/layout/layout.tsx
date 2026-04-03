@@ -1,5 +1,5 @@
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
-import { Outlet, ScrollRestoration, useLocation } from "react-router-dom";
+import { Outlet, ScrollRestoration, useLocation } from "react-router";
 import TopAppbar from "./topLayout/topAppBar";
 import Sidebar from "./sidebar/sidebar";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button, Dialog, DialogContent, TextField, Typography, Box, Grid } from "@mui/material";
 import { useAppDispatch } from "@/store";
 import { deleteMyUserProfile } from "@/store/entities/authentication/authentication.actions"; // Adjust the import path as necessary
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 
 const Delete = () => {

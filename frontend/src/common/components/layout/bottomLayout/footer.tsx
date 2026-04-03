@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Typography, Grid, Container } from '@mui/material';
 import { styled } from '@mui/material/styles';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { getContactUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getAppSettingsUrl, getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';

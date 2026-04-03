@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Grid, Link } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { resendActivationEmail } from '@/store/entities/authentication/authentication.actions';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 interface SignUpConfirmationProps {
     resendActivationTo: string | null;

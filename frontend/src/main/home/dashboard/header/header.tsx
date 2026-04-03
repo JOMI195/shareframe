@@ -2,7 +2,7 @@ import { FC } from 'react';
 import { Card, CardContent, Typography, Box, IconButton, useTheme } from "@mui/material";
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getSettingsUrl, getUserSettingsUrl, getAppSettingsUrl } from "@/assets/endpoints/app/settingEndpoints";
 
 interface HeaderProps {

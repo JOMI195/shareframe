@@ -21,7 +21,7 @@ import LogoutIcon from '@mui/icons-material/Logout';
 import TipsAndUpdatesIcon from '@mui/icons-material/TipsAndUpdates';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
-import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Link as RouterLink, useLocation } from 'react-router';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';

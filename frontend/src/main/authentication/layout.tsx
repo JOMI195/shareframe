@@ -1,8 +1,8 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import Link from "@mui/material/Link";
-import { Link as RouterLink } from "react-router-dom";
-import { Outlet } from "react-router-dom";
+import { Link as RouterLink } from "react-router";
+import { Outlet } from "react-router";
 import Typography from "@mui/material/Typography";
 import Logo from "@/common/components/logo";
 import { getImprintUrl, getPrivacyPolicyUrl } from "@/assets/endpoints/app/legalEndpoints";

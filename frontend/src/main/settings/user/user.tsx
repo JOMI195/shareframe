@@ -2,7 +2,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import KeyIcon from "@mui/icons-material/Key";
 import LogoutIcon from '@mui/icons-material/Logout';
 import { Button, Grid } from "@mui/material";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import { getAuthenticationUrl, getSignOutUrl } from "@/assets/endpoints/app/authEndpoints";
 import Profile from "./profile/profile";
 import Security from "./password/password";

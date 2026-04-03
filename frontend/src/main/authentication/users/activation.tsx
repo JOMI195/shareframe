@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router";
 import { activateUser } from "@/store/entities/authentication/authentication.actions";
 import {
   getAuthenticationUrl,

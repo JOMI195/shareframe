@@ -1,6 +1,6 @@
 import { FC, ReactNode } from 'react';
 import { Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import { getImageUrl, getActivityUrl, getFriendsUrl, getFramesUrl } from "@/assets/endpoints/app/appEndpoints";
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import ShareIcon from '@mui/icons-material/Share';

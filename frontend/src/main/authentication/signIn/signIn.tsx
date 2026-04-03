@@ -10,12 +10,12 @@ import {
 } from "@/store/entities/authentication/authentication.slice";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router";
 import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 import * as yup from "yup";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";

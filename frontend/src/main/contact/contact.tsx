@@ -1,6 +1,6 @@
 import { getContactUrl } from "@/assets/endpoints/app/appEndpoints";
 import { Box, Button, Typography } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router";
 
 const Contact = () => {
     const navigate = useNavigate();

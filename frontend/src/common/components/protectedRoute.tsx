@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 
 interface ProtectedRouteProps {

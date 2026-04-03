@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router';
 import LoadingFallback from '@/common/components/loadingFallback';
 import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
@@ -108,14 +108,6 @@ const Routing = createBrowserRouter([
       },
     ],
   },
-], {
-  future: {
-    v7_relativeSplatPath: true,
-    v7_fetcherPersist: true,
-    v7_normalizeFormMethod: true,
-    v7_partialHydration: true,
-    v7_skipActionErrorRevalidation: true,
-  },
-});
+]);
 
 export default Routing;

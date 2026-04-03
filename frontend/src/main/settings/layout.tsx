@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Outlet } from "react-router";
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
 import Contact from "../contact/contact";
 import BuildVersionInfo from "@/common/components/buildVersionInfo";

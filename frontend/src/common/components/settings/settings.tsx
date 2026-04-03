@@ -4,7 +4,7 @@ import { useMediaQuery, useTheme } from "@mui/material";
 import { useAppDispatch } from "@/store";
 import { closeBottomNavigation, openBottomNavigation } from "@/store/ui/settings/settings.slice";
 import { useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 interface SettingsTab {
     label: string;
