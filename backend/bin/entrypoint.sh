@@ -24,6 +24,7 @@ if [ -n "$PRODUCTION" ]; then
     echo "PRODUCTION is set to 'True', skipping adding fixtures."
   else
     echo "Adding fixtures..."
+    python manage.py create_image_sizes
   fi
 else
   echo "PRODUCTION is not set, skipping adding fixtures."
