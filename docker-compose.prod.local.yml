@@ -145,6 +145,16 @@ services:
       - frontend_network
       - backend_network
 
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - backend_network
+
 volumes:
   backend_db_data:
   static_volume:
