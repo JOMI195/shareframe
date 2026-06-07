@@ -1,0 +1,27 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}Login erkannt{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Login erkannt</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">
+    Es wurde ein Login in deinem ShareFrame-Konto registriert.
+</p>
+<table cellpadding="8" cellspacing="0" border="0" style="font-size: 15px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif; margin: 16px 0;">
+    <tr>
+        <td style="color: #666666;"><strong>Konto:</strong></td>
+        <td>{{ user_email }}</td>
+    </tr>
+    <tr>
+        <td style="color: #666666;"><strong>IP-Adresse:</strong></td>
+        <td>{{ ip_address }}</td>
+    </tr>
+    <tr>
+        <td style="color: #666666;"><strong>Zeitpunkt:</strong></td>
+        <td>{{ timestamp }}</td>
+    </tr>
+</table>
+<p style="font-size: 14px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif; color: #666666;">
+    Falls du dich nicht gerade selbst eingeloggt hast, sichere bitte sofort dein Konto.
+</p>
+{% endblock %}

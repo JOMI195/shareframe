@@ -127,6 +127,7 @@ LOG_FILES = {
     "celery": "backend-celery.log",
     "django": "backend-django.log",
     "application-server": "backend-application-server.log",
+    "admin-audit": "backend-admin-audit.log",
 }
 
 for key, filename in LOG_FILES.items():
@@ -261,6 +262,12 @@ LOGGING = {
         # application
         "images": {
             "handlers": ["application-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
+        # admin audit
+        "admin.audit": {
+            "handlers": ["admin-audit-file", "console"],
             "level": DJANGO_LOG_LEVEL,
             "propagate": False,
         },
