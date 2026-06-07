@@ -4,6 +4,9 @@ from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django_otp.admin import OTPAdminSite
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
+from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+
+from authentication.jwt import SignalTokenObtainPairView
 
 from .views import (
     FrameUpdatesAccessView,
@@ -24,7 +27,9 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     # path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("authentication.urls")),
-    path("api/auth/", include("djoser.urls.jwt")),
+    path("api/auth/jwt/create/", SignalTokenObtainPairView.as_view(), name="jwt-create"),
+    path("api/auth/jwt/refresh/", TokenRefreshView.as_view(), name="jwt-refresh"),
+    path("api/auth/jwt/verify/", TokenVerifyView.as_view(), name="jwt-verify"),
     # apps
     path("api/version/", VersionView.as_view(), name="app-version"),
     path("api/", include("frames.urls")),
