@@ -1,5 +1,10 @@
+import os
+import base64
 from django.contrib import admin
+from django.contrib import messages
 from django.utils.html import format_html
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from .keys import public_key_fingerprint
 from .models import Frame, FrameGroup, FrameToken, FrameWebsocketConnection
 
 
@@ -33,6 +38,37 @@ class FrameGroupAdmin(admin.ModelAdmin):
     frame_count.short_description = "Frames"
 
 
+@admin.action(description="Generate OTP code (shows code once)")
+def generate_otp(modeladmin, request, queryset):
+    expiry_minutes = int(os.environ.get("DJANGO_FRAME_OTP_EXPIRY_MINUTES", 10))
+    for frame in queryset:
+        code = frame.generate_otp(expiry_minutes=expiry_minutes)
+        modeladmin.message_user(
+            request,
+            f"Frame {frame.public_serial_number} — OTP: {code} (expires in {expiry_minutes} min)",
+        )
+
+
+@admin.action(description="Generate ed25519 keypair (shows private key once)")
+def generate_keypair(modeladmin, request, queryset):
+    for frame in queryset:
+        private_key = Ed25519PrivateKey.generate()
+        public_bytes = private_key.public_key().public_bytes_raw()
+        private_seed = private_key.private_bytes_raw()
+
+        public_key_b64 = base64.b64encode(public_bytes).decode()
+        frame.public_key = public_key_b64
+        frame.public_serial_number = public_key_fingerprint(public_key_b64)
+        frame.save(update_fields=["public_key", "public_serial_number"])
+
+        modeladmin.message_user(
+            request,
+            f"Frame id {frame.public_serial_number} — private key seed "
+            f"(copy now, shown once): {base64.b64encode(private_seed).decode()}",
+            level=messages.WARNING,
+        )
+
+
 @admin.register(Frame)
 class FrameAdmin(admin.ModelAdmin):
     list_display = (
@@ -48,9 +84,11 @@ class FrameAdmin(admin.ModelAdmin):
     search_fields = ("public_serial_number", "user__username")
     list_per_page = 50
     filter_horizontal = ("groups",)
+    actions = [generate_otp, generate_keypair]
 
     inlines = [FrameTokenInline, FrameWebsocketConnectionInline]
     readonly_fields = (
+        "public_key",
         "registered_at",
         "last_connected",
         "last_seen",
@@ -71,9 +109,13 @@ class FrameAdmin(admin.ModelAdmin):
             },
         ),
         (
-            "Serial numbers",
+            "Authentication",
             {
-                "fields": ("public_serial_number", "private_serial_number"),
+                "fields": (
+                    "public_serial_number",
+                    "private_serial_number",
+                    "public_key",
+                ),
             },
         ),
         (
