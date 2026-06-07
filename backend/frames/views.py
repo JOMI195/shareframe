@@ -18,7 +18,11 @@ from .consumers import FrameWebSocketConsumer
 from user_core.models import User
 from friendships.models import Friendship
 from images.models import Image
-from .auth import FrameHTTPAuth, FrameTokenAuthentication
+from .auth import (
+    FrameSignatureAuthentication,
+    FrameHTTPAuthentication,
+    FrameTokenAuthentication,
+)
 from securePayload.securePayload import SecurePayload
 
 
@@ -26,6 +30,18 @@ class FramesViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "head", "options"]
     queryset = Frame.objects.all().order_by("-registered_at")
     throttle_classes = [BurstRateThrottle, SustainedRateThrottle]
+
+    @staticmethod
+    def _issue_token(frame):
+        frame_token = frame.get_or_create_token()
+        frame_token.last_obtained = timezone.now()
+        frame_token.save()
+        return Response(
+            {
+                "access_token": frame_token.access_token,
+                "expires_at": frame_token.access_token_expires_at,
+            }
+        )
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -289,30 +305,23 @@ class FramesViewSet(viewsets.ModelViewSet):
     @action(
         detail=False,
         methods=["POST"],
-        permission_classes=[AllowAny],
+        authentication_classes=[FrameSignatureAuthentication],
+        permission_classes=[IsAuthenticated],
+        url_path="obtain-frame-token",
+    )
+    def obtain_frame_token(self, request):
+        return self._issue_token(request.auth)
+
+    # ------- LEGACY (HMAC). Deletable once no legacy boards remain.
+    @action(
+        detail=False,
+        methods=["POST"],
+        authentication_classes=[FrameHTTPAuthentication],
+        permission_classes=[IsAuthenticated],
         url_path="obtain-frame-auth-token",
     )
     def obtain_frame_auth_token(self, request):
-        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
-            request
-        )
-
-        if not is_authenticated:
-            # If authentication failed, result is the error response
-            return result
-
-        matching_frame = result
-
-        frame_token = matching_frame.get_or_create_token()
-        frame_token.last_obtained = timezone.now()
-        frame_token.save()
-
-        return Response(
-            {
-                "access_token": frame_token.access_token,
-                "expires_at": frame_token.access_token_expires_at,
-            }
-        )
+        return self._issue_token(request.auth)
 
     # ------- LEGACY
     @action(
@@ -351,6 +360,7 @@ class FramesViewSet(viewsets.ModelViewSet):
             }
         )
 
+    # TODO also use FrameSignatureAuthentication in future here not AllowAny
     @action(
         detail=False,
         methods=["POST"],
@@ -409,6 +419,33 @@ class FramesViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(
+        detail=False,
+        methods=["POST"],
+        authentication_classes=[FrameTokenAuthentication],
+        permission_classes=[IsAuthenticated],
+        url_path="verify-otp",
+    )
+    def verify_otp(self, request):
+        frame: Frame = request.auth
+
+        otp_code = request.data.get("otp")
+
+        if not otp_code:
+            return Response(
+                {"error": "OTP is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        if not frame.verify_otp(otp_code):
+            return Response(
+                {"error": "OTP invalid or expired."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        return Response({"valid": True})
+
+    # ------- LEGACY (returns secure_payload). Deletable once no legacy boards remain.
     @action(
         detail=False,
         methods=["POST"],
