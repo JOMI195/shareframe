@@ -1,3 +1,4 @@
+import base64
 import os
 import string
 from django.conf import settings
@@ -23,8 +24,16 @@ class Frame(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
 
+    # be readonly in future - set by generation of public_key
     public_serial_number = models.CharField(max_length=100, unique=True)
     private_serial_number = models.CharField(max_length=100, unique=True)
+    public_key = models.CharField(
+        max_length=44,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text="Base64-encoded ed25519 public key (32 bytes).",
+    )
 
     groups = models.ManyToManyField(
         FrameGroup,
@@ -40,6 +49,20 @@ class Frame(models.Model):
 
     version = models.CharField(max_length=100, default="1.0.0")
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    def clean(self):
+        super().clean()
+        if self.public_key:
+            try:
+                raw = base64.b64decode(self.public_key)
+                if len(raw) != 32:
+                    raise ValidationError(
+                        {"public_key": "Key must decode to exactly 32 bytes."}
+                    )
+            except (ValueError, Exception) as e:
+                if isinstance(e, ValidationError):
+                    raise
+                raise ValidationError({"public_key": "Invalid base64 encoding."})
 
     def get_or_create_token(self):
         """
