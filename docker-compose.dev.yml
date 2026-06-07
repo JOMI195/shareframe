@@ -107,6 +107,16 @@ services:
       - backend_db_network
       - redis_network
 
+  mailhog:
+    container_name: mailhog-dev
+    image: mailhog/mailhog
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - backend_network
+
   frontend:
     container_name: frontend-dev
     restart: unless-stopped
