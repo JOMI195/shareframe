@@ -11,6 +11,7 @@ import { SlideTransition, ZoomTransition } from "@/common/components/dialogTrans
 import { obtainFrameOTP } from "@/store/entities/frames/frames.actions";
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { IFrame, isIFrameOTP } from "@/types";
+import { copyToClipboard } from "@/common/utils/clipboard/clipboard";
 
 const RequestOTPDialog: React.FC = () => {
   const theme = useTheme();
@@ -50,12 +51,12 @@ const RequestOTPDialog: React.FC = () => {
   }
 
   const handleCopyOtp = async () => {
-    navigator.clipboard.writeText(otp);
-    await new Promise(resolve => setTimeout(resolve, 200));
-    dispatch(openFramesAlertSnackbar({
-      message: "OTP in die Zwischenablage kopiert",
-      severity: "success",
-    }))
+    const ok = await copyToClipboard(otp);
+    dispatch(openFramesAlertSnackbar(
+      ok
+        ? { message: "OTP in die Zwischenablage kopiert", severity: "success" }
+        : { message: "Kopieren fehlgeschlagen", severity: "error" }
+    ));
   };
 
   useEffect(() => {

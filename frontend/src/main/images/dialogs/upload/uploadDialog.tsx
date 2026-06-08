@@ -152,16 +152,23 @@ const UploadDialog: React.FC = () => {
     // Update the mutable ref to reflect the URLs that are now active
     activeUrlRefs.current = newPreviewsMap;
 
-    // Perform immediate revocations
+    // Perform immediate revocations.
+    // Note: no cleanup that revokes ALL urls here. An effect's cleanup runs before
+    // every re-run (not only on unmount), so revoking all + clearing the ref on each
+    // imageStatuses change would defeat the reuse-by-id logic above and leave Avatar
+    // <img> src pointing at a just-revoked blob (net::ERR_FILE_NOT_FOUND). Removed
+    // images are already handled by the targeted revoke above; unmount is handled by
+    // the dedicated effect below.
     urlsToRevokeFromPreviousActiveSet.forEach(url => URL.revokeObjectURL(url));
+  }, [imageStatuses]);
 
-    // Cleanup function: This runs when the component unmounts.
-    // It should revoke ALL URLs that are currently in the ref.
+  // Revoke any remaining preview URLs only on unmount.
+  useEffect(() => {
     return () => {
       Object.values(activeUrlRefs.current).forEach(url => URL.revokeObjectURL(url));
-      activeUrlRefs.current = {}; // Clear the ref on unmount
+      activeUrlRefs.current = {};
     };
-  }, [imageStatuses, activeStep]);
+  }, []);
 
   const selectImageForCropping = (index: number) => {
     if (imageStatuses[index].status === 'uploaded') return
@@ -232,7 +239,10 @@ const UploadDialog: React.FC = () => {
         }));
       }
     } catch (error) {
-      //console.error('Error cropping and uploading image:', error)
+      dispatch(openImagesAlertSnackbar({
+        message: error instanceof Error ? error.message : 'Upload fehlgeschlagen',
+        severity: 'error'
+      }));
     }
   }
 

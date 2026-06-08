@@ -13,6 +13,7 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
+import { copyToClipboard } from "@/common/utils/clipboard/clipboard";
 
 const FriendshipCreateDialog: React.FC = () => {
   const theme = useTheme();
@@ -58,12 +59,12 @@ const FriendshipCreateDialog: React.FC = () => {
   };
 
   const handleCopyCode = async () => {
-    navigator.clipboard.writeText(friendshipCode);
-    await new Promise(resolve => setTimeout(resolve, 200));
-    dispatch(openFriendshipsAlertSnackbar({
-      message: "Eigener Freundescode in die Zwischenablage kopiert",
-      severity: "success",
-    }))
+    const ok = await copyToClipboard(friendshipCode);
+    dispatch(openFriendshipsAlertSnackbar(
+      ok
+        ? { message: "Eigener Freundescode in die Zwischenablage kopiert", severity: "success" }
+        : { message: "Kopieren fehlgeschlagen", severity: "error" }
+    ));
   };
 
   return (
