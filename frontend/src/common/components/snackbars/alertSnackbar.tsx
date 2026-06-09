@@ -33,7 +33,11 @@ const AlertSnackbar = (
 
   const snackbar: AlertSnackbar = useAppSelector(getSnackbar).alert;
 
-  const handleSnackbarClose = () => {
+  const handleSnackbarClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: string
+  ) => {
+    if (reason === 'clickaway') return;
     dispatch(closeSnackbar());
   };
 
