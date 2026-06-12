@@ -5,24 +5,30 @@
 # pull official base image
 FROM python:3.13.6-slim-bullseye AS builder
 
-# set work directory
-WORKDIR /app/backend
+# uv: resolve + install from pyproject.toml + uv.lock
+COPY --from=ghcr.io/astral-sh/uv:0.11.15 /uv /bin/uv
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV UV_COMPILE_BYTECODE=1
+ENV UV_LINK_MODE=copy
+ENV UV_PYTHON_DOWNLOADS=0
+# Build the venv at the exact path the final image uses; venvs are not
+# relocatable, so builder and final must agree on the path.
+ENV UV_PROJECT_ENVIRONMENT=/home/app/backend/.venv
 
-# install system dependencies
+WORKDIR /home/app/backend
+
+# install system dependencies (sdist build fallback for any non-wheel package)
 RUN apt-get update && \
     apt-get install -y libjpeg-dev && \
     apt-get install -y zlib1g-dev && \
     apt-get install -y libpng-dev
 
-RUN pip install --upgrade pip
-
-# install python dependencies
-COPY ./backend/requirements.txt .
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/backend/wheels -r requirements.txt
+# install python dependencies into /home/app/backend/.venv
+COPY ./backend/pyproject.toml ./backend/uv.lock ./
+RUN uv sync --frozen --no-dev
 
 
 #########
@@ -31,6 +37,9 @@ RUN pip wheel --no-cache-dir --no-deps --wheel-dir /app/backend/wheels -r requir
 
 # pull official base image
 FROM python:3.13.6-slim-bullseye
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
 # create directory for the app user
 RUN mkdir -p /home/app
@@ -58,14 +67,14 @@ RUN mkdir $APP_HOME/mediafiles/changelogs/images
 COPY ./images/brand/logo-email-light-full-shareframe.png $APP_HOME/mediafiles/brand
 WORKDIR $APP_HOME
 
-# install dependencies
+# install system runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends netcat
-COPY --from=builder /app/backend/wheels /wheels
-COPY --from=builder /app/backend/requirements.txt .
-RUN pip install --upgrade pip
-RUN pip install --no-cache /wheels/*
 
-# copy entrypoint.prod.sh
+# copy the resolved virtualenv from the builder (same path -> stays valid)
+COPY --from=builder /home/app/backend/.venv /home/app/backend/.venv
+ENV PATH="/home/app/backend/.venv/bin:$PATH"
+
+# copy entrypoint.sh
 COPY ./backend/bin/entrypoint.sh ./bin/
 RUN sed -i 's/\r$//g'  $APP_HOME/bin/entrypoint.sh
 RUN chmod +x  $APP_HOME/bin/entrypoint.sh
