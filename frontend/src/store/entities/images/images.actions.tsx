@@ -158,7 +158,7 @@ export const downloadImage = (url: string, fileName: string) => {
           responseType: "blob",
         }
       ).then(response => {
-        const type = response.headers['content-type']
+        const type = response.headers['content-type'] as string | undefined
         const blob = new Blob([response.data], { type: type })
         const file_url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
