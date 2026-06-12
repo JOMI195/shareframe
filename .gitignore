@@ -192,3 +192,6 @@ backend_db_data/
 
 # Dashboard
 /board/app/dashboard/frontend/
+
+# AI
+.claude/
