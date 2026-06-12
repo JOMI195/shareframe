@@ -1,0 +1,17 @@
+info:
+  name: image-delete
+  type: http
+  seq: 4
+
+http:
+  method: DELETE
+  url: "{{http_domain}}/api/images/1/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

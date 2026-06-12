@@ -1,0 +1,17 @@
+info:
+  name: deactivate-sent-image
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/sent-images/1/deactivate-sent-image/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

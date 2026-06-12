@@ -1,0 +1,17 @@
+info:
+  name: images-list
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{http_domain}}/api/images/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

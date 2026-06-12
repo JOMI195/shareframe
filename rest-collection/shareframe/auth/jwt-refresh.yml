@@ -1,0 +1,20 @@
+info:
+  name: jwt-refresh
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/auth/jwt/refresh/"
+  body:
+    type: json
+    data: |-
+      {
+          "refresh": "{{refresh_token}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

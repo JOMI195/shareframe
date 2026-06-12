@@ -1,0 +1,23 @@
+info:
+  name: jwt-create
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/auth/jwt/create/"
+  body:
+    type: multipart-form
+    data:
+      - name: email
+        type: text
+        value: "{{backend_admin_email}}"
+      - name: password
+        type: text
+        value: "{{backend_admin_password}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

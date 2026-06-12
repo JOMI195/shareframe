@@ -1,0 +1,24 @@
+name: local-prod
+variables:
+  - secret: true
+    name: env_auth_token
+  - secret: true
+    name: refresh_token
+  - secret: true
+    name: frame_access_token
+  - secret: true
+    name: frame_auth_hash
+  - secret: true
+    name: frame_ed25519_signature
+  - name: frame_public_serial_number
+    value: ""
+  - name: frame_private_serial_number
+    value: ""
+  - name: http_domain
+    value: http://127.0.0.1
+  - name: ws_domain
+    value: ws://127.0.0.1
+  - name: backend_admin_email
+    value: admin@shareframe.de
+  - secret: true
+    name: backend_admin_password

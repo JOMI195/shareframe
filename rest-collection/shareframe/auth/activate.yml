@@ -1,0 +1,21 @@
+info:
+  name: activate
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/auth/users/activation/"
+  body:
+    type: json
+    data: |-
+      {
+          "uid": "<uid-from-email>",
+          "token": "<token-from-email>"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

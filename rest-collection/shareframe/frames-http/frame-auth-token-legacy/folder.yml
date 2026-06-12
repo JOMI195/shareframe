@@ -1,0 +1,7 @@
+info:
+  name: frame-auth-token-legacy
+  type: folder
+  seq: 2
+
+request:
+  auth: inherit

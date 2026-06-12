@@ -1,0 +1,21 @@
+info:
+  name: obtain
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/obtain-frame-token/"
+  headers:
+    - name: X-Timestamp
+      value: "<unix-timestamp>"
+    - name: X-Frame-ID
+      value: "<frame-id>"
+    - name: Authorization
+      value: Ed25519-Sig {{frame_ed25519_signature}}
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

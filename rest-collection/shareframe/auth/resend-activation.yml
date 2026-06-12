@@ -1,0 +1,20 @@
+info:
+  name: resend-activation
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/auth/users/resend_activation/"
+  body:
+    type: json
+    data: |-
+      {
+          "email": "{{backend_admin_email}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

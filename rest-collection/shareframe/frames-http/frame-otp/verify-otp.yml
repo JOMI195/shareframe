@@ -1,0 +1,23 @@
+info:
+  name: verify-otp
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/verify-otp/"
+  headers:
+    - name: Authorization
+      value: Frame-Access-Token {{frame_access_token}}
+  body:
+    type: json
+    data: |-
+      {
+          "otp": "<otp>"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

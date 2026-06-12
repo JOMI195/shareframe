@@ -1,0 +1,7 @@
+info:
+  name: frame-otp
+  type: folder
+  seq: 3
+
+request:
+  auth: inherit

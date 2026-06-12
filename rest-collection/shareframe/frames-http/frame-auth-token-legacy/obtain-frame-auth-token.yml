@@ -1,0 +1,19 @@
+info:
+  name: obtain-frame-auth-token
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/obtain-frame-auth-token/"
+  headers:
+    - name: X-Timestamp
+      value: "<unix-timestamp>"
+    - name: Authorization
+      value: Auth-Hash {{frame_auth_hash}}
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

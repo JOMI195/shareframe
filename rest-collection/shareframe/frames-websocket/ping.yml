@@ -1,0 +1,24 @@
+info:
+  name: ping
+  type: websocket
+  seq: 2
+
+websocket:
+  url: "{{ws_domain}}/ws/frames/"
+  headers:
+    - name: Authorization
+      value: Frame-Access-Token {{frame_access_token}}
+    - name: Origin
+      value: "{{ws_domain}}"
+  message:
+    type: json
+    data: |-
+      {
+        "type": "ping",
+        "timestamp": 0
+      }
+  auth: inherit
+
+settings:
+  timeout: 0
+  keepAliveInterval: 0

@@ -1,0 +1,17 @@
+info:
+  name: reject-request
+  type: http
+  seq: 6
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/friendships/1/reject-request/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

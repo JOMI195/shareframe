@@ -1,0 +1,17 @@
+info:
+  name: frame-by-id
+  type: http
+  seq: 2
+
+http:
+  method: GET
+  url: "{{http_domain}}/api/frames/1/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

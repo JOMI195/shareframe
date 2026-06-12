@@ -1,0 +1,17 @@
+info:
+  name: obtain-frame-otp
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/1/obtain-frame-otp/"
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

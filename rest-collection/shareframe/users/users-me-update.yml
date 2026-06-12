@@ -1,0 +1,23 @@
+info:
+  name: users-me-update
+  type: http
+  seq: 4
+
+http:
+  method: PATCH
+  url: "{{http_domain}}/api/auth/users/me/"
+  body:
+    type: json
+    data: |-
+      {
+          "username": "<new-username>"
+      }
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

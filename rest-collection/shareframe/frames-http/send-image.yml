@@ -1,0 +1,25 @@
+info:
+  name: send-image
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/send-image/"
+  body:
+    type: json
+    data: |-
+      {
+          "reciever_username": "<receiver-username>",
+          "image_id": 1,
+          "expiry_unix_timestamp": "<unix-timestamp>"
+      }
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

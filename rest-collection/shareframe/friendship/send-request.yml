@@ -1,0 +1,23 @@
+info:
+  name: send-request
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/friendships/send-request/"
+  body:
+    type: json
+    data: |-
+      {
+          "reciever_friendship_user_search_code": "<friend-search-code>"
+      }
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

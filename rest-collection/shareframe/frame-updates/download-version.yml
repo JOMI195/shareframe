@@ -1,0 +1,17 @@
+info:
+  name: download-version
+  type: http
+  seq: 4
+
+http:
+  method: GET
+  url: "{{http_domain}}/api/media/frame-updates/1.0.0.tar.gz"
+  headers:
+    - name: Authorization
+      value: Frame-Access-Token {{frame_access_token}}
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

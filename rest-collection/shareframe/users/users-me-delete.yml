@@ -1,0 +1,24 @@
+info:
+  name: users-me-delete
+  type: http
+  seq: 5
+
+http:
+  method: DELETE
+  url: "{{http_domain}}/api/auth/users/me/"
+  body:
+    type: json
+    data: |-
+      {
+          "password": "{{backend_admin_password}}",
+          "anonymize": true
+      }
+  auth:
+    type: bearer
+    token: "{{env_auth_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5

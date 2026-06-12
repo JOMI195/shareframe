@@ -1,0 +1,20 @@
+info:
+  name: verify-frame-token
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/verify-frame-token/"
+  body:
+    type: json
+    data: |-
+      {
+          "access_token": "{{frame_access_token}}"
+      }
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
