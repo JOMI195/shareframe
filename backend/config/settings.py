@@ -79,8 +79,17 @@ INSTALLED_APPS = [
     "dashboard",
 ]
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
-FILE_UPLOAD_MAX_MEMORY_SIZE = 20 * 1024 * 1024  # 20 MB
+# Upload size limits. App endpoints (/api/...) get a smaller total-request cap
+# than the admin (/api/admin/), which needs room for firmware release uploads.
+ADMIN_URL_PREFIX = "/api/admin/"
+APP_UPLOAD_MAX_SIZE = 25 * 1024 * 1024  # 25 MB
+ADMIN_UPLOAD_MAX_SIZE = 100 * 1024 * 1024  # 100 MB
+
+# Must cover the admin ceiling: LoggingMiddleware reads request.body, whose
+# Content-Length check (files included) is gated by this setting.
+DATA_UPLOAD_MAX_MEMORY_SIZE = ADMIN_UPLOAD_MAX_SIZE
+# Memory -> temp-disk threshold only (rejects nothing); keeps RAM low.
+FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25 MB
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -91,6 +100,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "utils.upload_limits.middleware.UploadSizeLimitMiddleware",
     "utils.request_logging.middleware.LoggingMiddleware",
     "django_otp.middleware.OTPMiddleware",
 ]

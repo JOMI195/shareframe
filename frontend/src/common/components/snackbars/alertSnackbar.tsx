@@ -34,10 +34,17 @@ const AlertSnackbar = (
   const snackbar: AlertSnackbar = useAppSelector(getSnackbar).alert;
 
   const handleSnackbarClose = (
-    _event?: React.SyntheticEvent | Event,
+    event?: React.SyntheticEvent | Event,
     reason?: string
   ) => {
-    if (reason === 'clickaway') return;
+    // Clicking anywhere outside the snackbar dismisses it (MUI clickaway). But the
+    // copy buttons that *open* this snackbar are also "outside" it, so a copy click
+    // would clickaway-close the very snackbar it just opened (toggle). Exempt any
+    // element opting out via `.ignore-clickaway` (same pattern as sidebar.tsx).
+    if (reason === 'clickaway') {
+      const target = (event?.target ?? null) as HTMLElement | null;
+      if (target?.closest('.ignore-clickaway')) return;
+    }
     dispatch(closeSnackbar());
   };
 

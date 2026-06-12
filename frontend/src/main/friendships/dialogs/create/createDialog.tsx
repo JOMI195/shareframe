@@ -137,6 +137,7 @@ const FriendshipCreateDialog: React.FC = () => {
                 </Typography>
                 <ContentCopyIcon
                   onClick={handleCopyCode}
+                  className="ignore-clickaway"
                   sx={{
                     cursor: 'pointer',
                     color: 'text.secondary',
