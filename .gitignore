@@ -190,6 +190,10 @@ lerna-debug.log*
 backend_db_data/
 .backend_db_data/
 
+# MaxMind GeoIP databases — not redistributable, provide locally
+nginx/GeoIP.dat
+nginx/GeoIPCity.dat
+
 # Dashboard
 /board/app/dashboard/frontend/
 
