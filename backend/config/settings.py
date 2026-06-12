@@ -493,6 +493,10 @@ else:
     EMAIL_USE_SSL = False
     DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER", "dev@shareframe.local")
 
+# Recipient for admin login / failed-login notifications.
+# Falls back to DEFAULT_FROM_EMAIL when unset.
+ADMIN_NOTIFICATION_EMAIL = os.environ.get("ADMIN_NOTIFICATION_EMAIL", DEFAULT_FROM_EMAIL)
+
 #### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = 20 * 1024 * 1024  # 20 MB
