@@ -1,4 +1,4 @@
-<img width="500" height="346" alt="shareframe-title" src="https://github.com/user-attachments/assets/b1915004-cf27-4fd1-8438-6c772b75e4a8" />
+<img width="1280" height="450" alt="shareframe-title" src="https://github.com/user-attachments/assets/24b76caf-7573-45d5-be5b-5b223154e4d0" />
 
 # Sharerame (Web)
 
