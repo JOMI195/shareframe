@@ -1,4 +1,4 @@
-<img width="1280" height="450" alt="shareframe-title" src="https://github.com/user-attachments/assets/24b76caf-7573-45d5-be5b-5b223154e4d0" />
+<img width="1280" height="324" alt="shareframe-title-hero" src="https://github.com/user-attachments/assets/063b5299-2719-49e0-8a43-38dca5629506" />
 
 # Shareframe (Web)
 
