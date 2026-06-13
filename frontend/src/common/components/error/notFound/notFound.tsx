@@ -1,22 +1,44 @@
-import { Box, Typography } from "@mui/material";
+import { Button, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Link } from "react-router";
+import Logo from "../../logo";
 
 const NotFound = () => {
+    const theme = useTheme();
+    const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+
     return (
-        <Box
+        <Stack
+            spacing={2}
             sx={{
+                minHeight: '100vh',
+                width: '100%',
+                px: 2,
                 display: 'flex',
                 justifyContent: 'center',
                 alignItems: 'center',
-                minHeight: '100vh',
+                textAlign: 'center',
             }}
         >
-            <Typography variant="h5" style={{ borderRight: '0.01em solid black', padding: '0.5em', margin: '0.5em' }}>
-                404
+            <Logo
+                darkLogoSrc="/frame-3d-no-data.svg"
+                lightLogoSrc="/frame-3d-no-data.svg"
+                clickable={false}
+                marginRight={0}
+                maxWidth={isSmallScreen ? 150 : 300}
+            />
+            <Typography variant="h2">404</Typography>
+            <Typography variant="h6" color="text.secondary">
+                Seite nicht gefunden
             </Typography>
-            <Typography variant="h5">
-                Page not found
-            </Typography>
-        </Box>
+            <Button
+                component={Link}
+                to="/"
+                variant="contained"
+                sx={{ mt: 1, borderRadius: '10px' }}
+            >
+                Zur Startseite
+            </Button>
+        </Stack>
     );
 };
 
