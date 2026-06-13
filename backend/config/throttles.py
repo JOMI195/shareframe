@@ -1,4 +1,4 @@
-from rest_framework.throttling import UserRateThrottle
+from rest_framework.throttling import UserRateThrottle, SimpleRateThrottle
 
 
 class BurstRateThrottle(UserRateThrottle):
@@ -41,3 +41,22 @@ class ChangelogsBurstRateThrottle(UserRateThrottle):
 
 class ChangelogsSustainedRateThrottle(UserRateThrottle):
     scope = "changelogs_sustained"
+
+
+class _FrameScopedThrottle(SimpleRateThrottle):
+    """Key on the authenticated frame (request.auth), not the frame's owner user."""
+
+    def get_cache_key(self, request, view):
+        frame = getattr(request, "auth", None)
+        ident = getattr(frame, "pk", None)
+        if ident is None:
+            return None
+        return self.cache_format % {"scope": self.scope, "ident": ident}
+
+
+class FrameBurstRateThrottle(_FrameScopedThrottle):
+    scope = "frame_burst"
+
+
+class FrameSustainedRateThrottle(_FrameScopedThrottle):
+    scope = "frame_sustained"

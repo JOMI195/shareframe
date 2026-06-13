@@ -380,6 +380,9 @@ REST_FRAMEWORK = {
     "DEFAULT_THROTTLE_RATES": {
         "burst": "60/min",
         "sustained": "1000/day",
+        # frames
+        "frame_burst": "60/min",
+        "frame_sustained": "5000/day",
         # images
         "images_burst": "3000/min",
         "images_sustained": "10000/day",

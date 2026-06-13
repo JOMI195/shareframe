@@ -11,7 +11,12 @@ from asgiref.sync import async_to_sync
 from datetime import datetime
 from django.utils.timezone import make_aware, now
 
-from config.throttles import BurstRateThrottle, SustainedRateThrottle
+from config.throttles import (
+    BurstRateThrottle,
+    SustainedRateThrottle,
+    FrameBurstRateThrottle,
+    FrameSustainedRateThrottle,
+)
 from .models import Frame, FrameToken
 from .serializers import FrameRetrieveSerializer
 from .consumers import FrameWebSocketConsumer
@@ -307,6 +312,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameSignatureAuthentication],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="obtain-frame-token",
     )
     def obtain_frame_token(self, request):
@@ -318,6 +324,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameHTTPAuthentication],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="obtain-frame-auth-token",
     )
     def obtain_frame_auth_token(self, request):
@@ -424,6 +431,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameTokenAuthentication],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="verify-otp",
     )
     def verify_otp(self, request):
@@ -451,6 +459,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameTokenAuthentication],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="verify-frame-otp",
     )
     def verify_frame_otp(self, request):
@@ -483,6 +492,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         authentication_classes=[FrameTokenAuthentication],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         # TODO: fix rename url
         url_path="frame-hearbeat",
     )

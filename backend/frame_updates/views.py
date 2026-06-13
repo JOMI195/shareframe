@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 import semver
 
+from config.throttles import FrameBurstRateThrottle, FrameSustainedRateThrottle
 from frames.auth import FrameTokenAuthentication
 from frames.models import Frame, FrameGroup
 from .models import Release
@@ -16,6 +17,7 @@ from .serializers import (
 class UpdateAPIViewSet(viewsets.ViewSet):
     authentication_classes = [FrameTokenAuthentication]
     permission_classes = [IsAuthenticated]
+    throttle_classes = [FrameBurstRateThrottle, FrameSustainedRateThrottle]
 
     def _get_frame_from_request(self, request) -> Frame | None:
         """Get the frame from the authenticated request"""
