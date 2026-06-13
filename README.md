@@ -1,6 +1,6 @@
 <img width="500" height="346" alt="shareframe-title" src="https://github.com/user-attachments/assets/b1915004-cf27-4fd1-8438-6c772b75e4a8" />
 
-# Server side of ShareFrame
+# Sharerame (Web)
 
 Shareframe is a web application platform for sharing photos to a network of e-paper picture frames managed by raspberrypi zero microcontroller boards. Users upload and manage images through the web app and send them to their other friends picture frames. These picture frames will show them as a slideshow for a defined period of time.
 
