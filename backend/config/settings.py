@@ -378,8 +378,8 @@ REST_FRAMEWORK = {
         "config.throttles.SustainedRateThrottle",
     ],
     "DEFAULT_THROTTLE_RATES": {
-        "burst": "60/min",
-        "sustained": "1000/day",
+        "burst": "300/min",
+        "sustained": "10000/day",
         # frames
         "frame_burst": "60/min",
         "frame_sustained": "5000/day",
