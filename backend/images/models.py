@@ -207,6 +207,14 @@ class Image(models.Model):
         except ImageVariant.DoesNotExist:
             return None
 
+    def get_delivery_file(self):
+        """File to deliver to frames: prefer a downscaled variant, fall back to original."""
+        for size_name in ("large", "medium"):
+            variant_file = self.get_variant(size_name)
+            if variant_file:
+                return variant_file
+        return self.image
+
     def save(self, *args, **kwargs):
         update_fields_only = kwargs.pop("update_fields_only", False)
 

@@ -461,6 +461,7 @@ CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
         "CONFIG": {
+            "expiry": 10,
             "hosts": [
                 {
                     "address": f'redis://{os.environ.get("REDIS_HOST", "redis")}:{os.environ.get("REDIS_PORT", "6379")}/{os.environ.get("REDIS_DB", "0")}',

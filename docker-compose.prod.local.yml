@@ -30,7 +30,7 @@ services:
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
-    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-application-server.log
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-application-server.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
     entrypoint: []
     volumes:
       - media_volume:/home/app/backend/mediafiles
@@ -68,7 +68,7 @@ services:
   redis:
     container_name: redis
     image: redis:6.2-alpine
-    command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice
+    command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice --maxmemory 512mb --maxmemory-policy allkeys-lru
     expose:
       - 6379
     restart: unless-stopped

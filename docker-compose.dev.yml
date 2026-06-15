@@ -28,7 +28,7 @@ services:
     build:
       context: ./backend
       dockerfile: ./Dockerfile.dev
-    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
     entrypoint: []
     volumes:
       - ./backend/:/app/backend
@@ -68,7 +68,7 @@ services:
     container_name: redis-dev
     image: redis:6.2-alpine
     restart: unless-stopped
-    command: redis-server  --appendonly yes  --appendfsync everysec  --save 60 1  --loglevel notice
+    command: redis-server  --appendonly yes  --appendfsync everysec  --save 60 1  --loglevel notice  --maxmemory 512mb  --maxmemory-policy allkeys-lru
     ports:
       - 6379:6379
     volumes:

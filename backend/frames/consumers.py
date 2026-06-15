@@ -19,6 +19,13 @@ from .models import FrameWebsocketConnection
 logger = logging.getLogger("websockets.frames")
 
 
+@database_sync_to_async
+def _read_delivery_image_b64(image: Image) -> str:
+    delivery_file = image.get_delivery_file()
+    with open(delivery_file.path, "rb") as image_file:
+        return base64.b64encode(image_file.read()).decode("utf-8")
+
+
 class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
@@ -142,9 +149,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def prepare_image_data(self, sent_image: SentImage):
         try:
-            with open(sent_image.image.image.path, "rb") as image_file:
-                picture_data = base64.b64encode(image_file.read()).decode("utf-8")
-
             expiry_unix_timestamp = None
             if sent_image.expires_at:
                 expiry_unix_timestamp = int(sent_image.expires_at.timestamp())
@@ -155,7 +159,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 "sender": sent_image.sender,
                 "reciever": sent_image.reciever,
                 "image": sent_image.image,
-                "picture_data": picture_data,
                 "expiry_unix_timestamp": expiry_unix_timestamp,
                 "expiry_datetime": sent_image.expires_at,
                 "sent_image_id": sent_image.id,
@@ -351,10 +354,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         )
 
         try:
-            with open(image.image.path, "rb") as image_file:
-                picture_data = base64.b64encode(image_file.read()).decode("utf-8")
+            picture_data = await _read_delivery_image_b64(image)
         except Exception as e:
-            logger.error(f"Failed to read image file at {image.image.path}: {str(e)}")
+            logger.error(f"Failed to read image file for image {image.id}: {str(e)}")
             raise
 
         if sent_image_id is None:
@@ -472,25 +474,33 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         frame_id = frame.id if frame else "unknown"
 
         try:
-            message = json.loads(event["picture_data"])
-            sent_image_id = message.get("sent_image_id")
-            logger.debug(
-                f"Sending picture to frame {frame_id} (sent_image_id={sent_image_id})"
-            )
-        except (KeyError, json.JSONDecodeError):
-            logger.debug(f"Sending picture to frame {frame_id}")
+            try:
+                message = json.loads(event["picture_data"])
+                sent_image_id = message.get("sent_image_id")
+                logger.debug(
+                    f"Sending picture to frame {frame_id} (sent_image_id={sent_image_id})"
+                )
+            except (KeyError, json.JSONDecodeError):
+                logger.debug(f"Sending picture to frame {frame_id}")
 
-        await self.send(text_data=event["picture_data"])
+            await self.send(text_data=event["picture_data"])
+        except Exception as e:
+            logger.exception(f"Error sending picture to frame {frame_id}: {str(e)}")
 
     async def clear_specific_sent_images(self, event):
         frame = self.scope.get("frame")
         frame_id = frame.id if frame else "unknown"
 
         try:
-            message = json.loads(event["data"])
-            sent_image_ids = message.get("sent_image_ids", [])
-            logger.debug(f"Clearing {len(sent_image_ids)} images from frame {frame_id}")
-        except (KeyError, json.JSONDecodeError):
-            logger.debug(f"Clearing images from frame {frame_id}")
+            try:
+                message = json.loads(event["data"])
+                sent_image_ids = message.get("sent_image_ids", [])
+                logger.debug(
+                    f"Clearing {len(sent_image_ids)} images from frame {frame_id}"
+                )
+            except (KeyError, json.JSONDecodeError):
+                logger.debug(f"Clearing images from frame {frame_id}")
 
-        await self.send(text_data=event["data"])
+            await self.send(text_data=event["data"])
+        except Exception as e:
+            logger.exception(f"Error clearing images from frame {frame_id}: {str(e)}")
