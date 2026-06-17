@@ -132,6 +132,18 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         return missing_images
 
     @database_sync_to_async
+    def get_existing_sent_image_ids(
+        self, frame_user: User, sent_image_ids: list[int]
+    ):
+        return set(
+            SentImage.objects.filter(
+                reciever=frame_user,
+                id__in=sent_image_ids,
+                expires_at__gt=timezone.now(),
+            ).values_list("id", flat=True)
+        )
+
+    @database_sync_to_async
     def get_sent_image(self, frame_user: User, sent_image_id: int):
         try:
             return SentImage.objects.get(reciever=frame_user, id=sent_image_id)
@@ -209,6 +221,22 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                     expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
                     expiry_datetime=image_data["expiry_datetime"],
                     sent_image_id=image_data["sent_image_id"],
+                )
+
+            existing_ids = await self.get_existing_sent_image_ids(
+                frame.user, current_images
+            )
+            images_to_delete = [
+                image_id for image_id in current_images if image_id not in existing_ids
+            ]
+
+            logger.info(
+                f"Found {len(images_to_delete)} stale images to remove from frame {frame.id}"
+            )
+
+            if images_to_delete:
+                await self.__class__.send_clear_specific_images_to_user_frames(
+                    frame.user, images_to_delete
                 )
 
         except Exception as e:
