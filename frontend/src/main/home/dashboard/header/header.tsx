@@ -29,14 +29,14 @@ const Header: FC<HeaderProps> = ({ username }) => {
                         <IconButton
                             size="small"
                             sx={{ color: "white" }}
-                            onClick={() => navigate(getSettingsUrl() + getUserSettingsUrl())}
+                            onClick={() => navigate("/" + getSettingsUrl() + getUserSettingsUrl())}
                         >
                             <ManageAccountsIcon />
                         </IconButton>
                         <IconButton
                             size="small"
                             sx={{ color: "white" }}
-                            onClick={() => navigate(getSettingsUrl() + getAppSettingsUrl())}
+                            onClick={() => navigate("/" + getSettingsUrl() + getAppSettingsUrl())}
                         >
                             <SettingsIcon />
                         </IconButton>

@@ -21,22 +21,22 @@ const QuickAccess: FC = () => {
         {
             title: "Fotos",
             icon: <PhotoLibraryIcon color="primary" sx={{ fontSize: 40 }} />,
-            onClick: () => navigate(getImageUrl())
+            onClick: () => navigate("/" + getImageUrl())
         },
         {
             title: "Aktivitäten",
             icon: <ShareIcon color="secondary" sx={{ fontSize: 40 }} />,
-            onClick: () => navigate(getActivityUrl())
+            onClick: () => navigate("/" + getActivityUrl())
         },
         {
             title: "Freunde",
             icon: <PeopleIcon sx={{ fontSize: 40 }} />,
-            onClick: () => navigate(getFriendsUrl())
+            onClick: () => navigate("/" + getFriendsUrl())
         },
         {
             title: "Bilderrahmen",
             icon: <FilterFramesIcon sx={{ fontSize: 40 }} />,
-            onClick: () => navigate(getFramesUrl())
+            onClick: () => navigate("/" + getFramesUrl())
         }
     ];
 

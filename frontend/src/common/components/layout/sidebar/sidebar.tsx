@@ -130,7 +130,7 @@ const Sidebar: React.FC = () => {
         const listItemContent = (
             <ListItem
                 component={RouterLink}
-                to={item.url}
+                to={itemUrl}
                 key={item.name}
                 onClick={handleSidebarClose}
                 sx={{
