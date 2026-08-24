@@ -3,9 +3,21 @@ Disallow: /api
 Disallow: /api?*
 Disallow: /analytics
 Disallow: /analytics?*
-Disallow: /settings
-Disallow: /settings?*
 Disallow: /auth
 Disallow: /auth?*
+Disallow: /dashboard
+Disallow: /dashboard?*
+Disallow: /settings
+Disallow: /settings?*
+Disallow: /fotos
+Disallow: /fotos?*
+Disallow: /aktivitaeten
+Disallow: /aktivitaeten?*
+Disallow: /freunde
+Disallow: /freunde?*
+Disallow: /bilderrahmen
+Disallow: /bilderrahmen?*
+Disallow: /aenderungen
+Disallow: /aenderungen?*
 
 Sitemap: https://www.shareframe.de/sitemap.xml

@@ -26,7 +26,7 @@ import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
-import { getChangelogsUrl, getContactUrl, getHomeUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getChangelogsUrl, getContactUrl, getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 
 const Sidebar: React.FC = () => {
@@ -112,7 +112,7 @@ const Sidebar: React.FC = () => {
                 </Box>
                 <Box>
                     {"Copyright © "}
-                    <Link component={RouterLink} to={getHomeUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                    <Link component={RouterLink} to={getDashboardUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
                         {"shareframe.de"}
                     </Link>{" "}
                     {new Date().getFullYear()}
@@ -124,8 +124,7 @@ const Sidebar: React.FC = () => {
 
 
     const renderListItem = (item: any, isBottomItem = false) => {
-        const homeUrl = getHomeUrl();
-        const itemUrl = !isBottomItem && location.pathname === homeUrl ? item.url : `/${item.url}`;
+        const itemUrl = item.url.startsWith("/") ? item.url : `/${item.url}`;
         const isActive = !isBottomItem && location.pathname === itemUrl;
 
         const listItemContent = (

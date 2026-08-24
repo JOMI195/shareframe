@@ -4,7 +4,7 @@ import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
-import { getActivityUrl, getChangelogsUrl, getContactUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getActivityUrl, getChangelogsUrl, getContactUrl, getDashboardUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
@@ -20,87 +20,98 @@ import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
 import PublicLayout from '@/main/legals/layout';
 import Home from '@/main/home/home';
+import Landing from '@/main/landing/landing';
+import SeoHead from '@/seo/seoHead';
 import Changelogs from '@/main/changelogs/changelogs';
 
 const Routing = createBrowserRouter([
   {
-    element: <Snackbars />,
+    element: <SeoHead />,
     HydrateFallback: LoadingFallback,
     children: [
       {
-        path: "*",
-        element: <NotFound />,
-      },
-      {
-        path: getAuthenticationUrl(),
-        element: <FeatureSelectorWrapper feature="authentication" />,
-        children: authenticationRoutes,
-      },
-      {
-        element: <PublicLayout />,
-        children: [
-          {
-            element: <FeatureSelectorWrapper feature="legals" />,
-            children: [
-              {
-                path: getContactUrl(),
-                element: <ContactForm />,
-              },
-              {
-                path: getPrivacyPolicyUrl(),
-                element: <PrivacyPolicy />,
-              },
-              {
-                path: getImprintUrl(),
-                element: <Impressum />,
-              },
-            ],
-          },
-        ]
-      },
-      {
-        element: <MainLayout />,
+        element: <Snackbars />,
         children: [
           {
             path: "*",
             element: <NotFound />,
           },
           {
-            element: <ProtectedRoute />,
+            path: getHomeUrl(),
+            element: <Landing />,
+          },
+          {
+            path: getAuthenticationUrl(),
+            element: <FeatureSelectorWrapper feature="authentication" />,
+            children: authenticationRoutes,
+          },
+          {
+            element: <PublicLayout />,
             children: [
               {
-                element: <FeatureSelectorWrapper feature="app" />,
+                element: <FeatureSelectorWrapper feature="legals" />,
                 children: [
                   {
-                    path: getHomeUrl(),
-                    element: <Home />
+                    path: getContactUrl(),
+                    element: <ContactForm />,
                   },
                   {
-                    path: getImageUrl(),
-                    element: <Images />
+                    path: getPrivacyPolicyUrl(),
+                    element: <PrivacyPolicy />,
                   },
                   {
-                    path: getFriendsUrl(),
-                    element: <Friendships />
+                    path: getImprintUrl(),
+                    element: <Impressum />,
                   },
-                  {
-                    path: getFramesUrl(),
-                    element: <Frames />
-                  },
-                  {
-                    path: getActivityUrl(),
-                    element: <SentImages />
-                  },
-                  {
-                    path: getChangelogsUrl(),
-                    element: <Changelogs />
-                  }
-                ]
+                ],
+              },
+            ]
+          },
+          {
+            element: <MainLayout />,
+            children: [
+              {
+                path: "*",
+                element: <NotFound />,
               },
               {
-                path: getSettingsUrl() + "*",
-                element: <FeatureSelectorWrapper feature="settings" />,
-                children: settingsRoutes,
+                element: <ProtectedRoute />,
+                children: [
+                  {
+                    element: <FeatureSelectorWrapper feature="app" />,
+                    children: [
+                      {
+                        path: getDashboardUrl(),
+                        element: <Home />
+                      },
+                      {
+                        path: getImageUrl(),
+                        element: <Images />
+                      },
+                      {
+                        path: getFriendsUrl(),
+                        element: <Friendships />
+                      },
+                      {
+                        path: getFramesUrl(),
+                        element: <Frames />
+                      },
+                      {
+                        path: getActivityUrl(),
+                        element: <SentImages />
+                      },
+                      {
+                        path: getChangelogsUrl(),
+                        element: <Changelogs />
+                      }
+                    ]
+                  },
+                  {
+                    path: getSettingsUrl() + "*",
+                    element: <FeatureSelectorWrapper feature="settings" />,
+                    children: settingsRoutes,
+                  },
+                ],
               },
             ],
           },

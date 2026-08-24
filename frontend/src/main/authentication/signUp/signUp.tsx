@@ -23,7 +23,7 @@ import {
   getSignUpConfirmationUrl,
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { ICoreUser, isICoreUser } from "@/types";
 import { Alert } from "@mui/material";
 
@@ -56,7 +56,7 @@ export default function SignUp() {
   };
 
   const handleCancel = () => {
-    navigate(getHomeUrl(), { replace: true });
+    navigate(getDashboardUrl(), { replace: true });
   };
 
   const handleMouseDownPassword = (

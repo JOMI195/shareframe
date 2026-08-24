@@ -8,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useNavigate } from "react-router";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { Grid } from "@mui/material";
 
 export default function PasswordReset() {
@@ -48,7 +48,7 @@ export default function PasswordReset() {
   }
 
   const handleCancel = () => {
-    navigate(getHomeUrl(), { replace: true });
+    navigate(getDashboardUrl(), { replace: true });
     setIsDisabled(false);
   };
 

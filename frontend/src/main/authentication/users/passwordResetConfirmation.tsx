@@ -18,7 +18,7 @@ import {
 } from "@/assets/endpoints/app/authEndpoints";
 import { useAppDispatch } from "@/store";
 import { resetPasswordConfirm } from "@/store/entities/authentication/authentication.actions";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 
 export default function PasswordResetConfirmation() {
   const { uid, token } = useParams();
@@ -31,7 +31,7 @@ export default function PasswordResetConfirmation() {
   });
 
   const handleCancel = () => {
-    navigate(getHomeUrl(), { replace: true });
+    navigate(getDashboardUrl(), { replace: true });
   };
 
   const handleClickShowPassword = (key: keyof typeof showPassword) => {
