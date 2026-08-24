@@ -10,9 +10,9 @@
   "version": 8,
   "editable": true,
   "graphTooltip": 1,
-  "refresh": "30s",
+  "refresh": "60s",
   "time": {
-    "from": "now-15m",
+    "from": "now-5m",
     "to": "now"
   },
   "templating": {
