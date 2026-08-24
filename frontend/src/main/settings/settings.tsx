@@ -1,4 +1,4 @@
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import ProtectedRoute from "@/common/components/protectedRoute";
 import NotFound from "@/common/components/error/notFound/notFound";
 import Layout from "./layout";
@@ -19,7 +19,7 @@ const settingsRoutes = [
         element: <App />,
       },
       {
-        element: <ProtectedRoute redirectPath={getHomeUrl()} />,
+        element: <ProtectedRoute redirectPath={getDashboardUrl()} />,
         children: [
           {
             path: getUserSettingsUrl(),

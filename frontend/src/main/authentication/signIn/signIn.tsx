@@ -29,7 +29,7 @@ import {
   getResetPasswordUrl,
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
-import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getIn, useFormik } from "formik";
 import { Alert } from "@mui/material";
 import { ICoreUserCredentials, isICoreUserCredentials } from "@/types";
@@ -60,7 +60,7 @@ export default function SignIn() {
     if (localStorage.getItem("loggedIn") === "true") {
       setErrorMessage("");
       dispatch(loadMyUserProfile());
-      navigate(getHomeUrl());
+      navigate(getDashboardUrl());
     }
   }, [user]);
 

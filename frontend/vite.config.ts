@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import compression from 'vite-plugin-compression2';
+import prerenderPlugin from './vite/prerenderPlugin';
 
 const envDir = path.resolve(__dirname, '../');
 
@@ -15,6 +16,7 @@ export default defineConfig(({ mode }) => {
         include: /\.(js|css|html|svg|json|txt|ico|xml)$/,
         deleteOriginalAssets: false,
       }),
+      prerenderPlugin(),
     ],
     server: {
       host: true,

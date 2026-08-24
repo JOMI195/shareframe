@@ -1,44 +1,9 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
-import Link from "@mui/material/Link";
-import { Link as RouterLink } from "react-router";
 import { Outlet } from "react-router";
-import Typography from "@mui/material/Typography";
 import Logo from "@/common/components/logo";
-import { getImprintUrl, getPrivacyPolicyUrl } from "@/assets/endpoints/app/legalEndpoints";
-import { getContactUrl, getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
+import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
 import Stack from "@mui/material/Stack";
-
-function Copyright(props: any) {
-  return (
-    <Typography
-      variant="caption"
-      color="text.secondary"
-      align="center"
-      {...props}
-    >
-      <Box>
-        <Link component={RouterLink} to={"/" + getContactUrl()} color="inherit">
-          {"Kontakt"}
-        </Link>{" "}
-        <Link component={RouterLink} to={"/" + getPrivacyPolicyUrl()} color="inherit">
-          {"Datenschutzerklärung"}
-        </Link>{" "}
-        <Link component={RouterLink} to={"/" + getImprintUrl()} color="inherit">
-          {"Impressum"}
-        </Link>
-      </Box>
-      <Box>
-        {"Copyright © "}
-        <Link component={RouterLink} to={getHomeUrl()} color="inherit">
-          {"shareframe.de"}
-        </Link>{" "}
-        {new Date().getFullYear()}
-        {"."}
-      </Box>
-    </Typography>
-  );
-}
 
 export default function Layout() {
   return (
@@ -56,9 +21,9 @@ export default function Layout() {
           <Logo
             darkLogoSrc="/logo-dark-full-shareframe.svg"
             lightLogoSrc="/logo-light-full-shareframe.svg"
-            marginRight={16}
+            marginRight={0}
             clickable={false}
-            maxWidth={100}
+            maxWidth={220}
           />
           <Logo
             darkLogoSrc="/frame-3d.svg"
@@ -69,7 +34,7 @@ export default function Layout() {
         </Stack>
         <Outlet />
       </Box>
-      <Copyright />
+      <PublicFooter />
     </Container>
   );
 }
