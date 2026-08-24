@@ -1,6 +1,6 @@
 {
   "uid": "shareframe-logs-nginx",
-  "title": "4 Logs \u00b7 nginx",
+  "title": "Logs \u00b7 nginx",
   "description": "nginx access and error logs from Loki. Only populated where nginx runs (prod, prod.local).",
   "tags": [
     "shareframe"
@@ -62,6 +62,39 @@
         "hide": 0,
         "sort": 1,
         "description": "Which nginx server block served the request. Deselect the monitoring vhost to hide Grafana's own traffic."
+      },
+      {
+        "type": "query",
+        "name": "host",
+        "label": "Host header",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values({job=\"nginx\", logtype=\"access\"}, http_host)",
+        "query": {
+          "label": "http_host",
+          "type": 1,
+          "stream": "{job=\"nginx\", logtype=\"access\"}",
+          "refId": "LokiVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ],
+          "selected": true
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1,
+        "description": "Host header the client sent. Unknown hosts collapse into \"other\"; the log line still shows the raw value."
       },
       {
         "type": "custom",
@@ -211,7 +244,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} [$__auto]))"
+          "expr": "sum(rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} [$__auto]))"
         }
       ],
       "description": "Requests per second across the selected vhosts.",
@@ -273,7 +306,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} [$__range]))"
+          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} [$__range]))"
         }
       ],
       "description": "Total requests in the dashboard time range.",
@@ -344,7 +377,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", status=~\"4..\"} [$__range])) / sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} [$__range])) * 100"
+          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\", status=~\"4..\"} [$__range])) / sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} [$__range])) * 100"
         }
       ],
       "description": "Client errors as a share of all requests.",
@@ -410,7 +443,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", status=~\"5..\"} [$__range])) or vector(0)"
+          "expr": "sum(count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\", status=~\"5..\"} [$__range])) or vector(0)"
         }
       ],
       "description": "Server errors in the range. Anything above zero is worth a look.",
@@ -481,7 +514,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", status!=\"101\"} | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()"
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\", status!=\"101\"} | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()"
         }
       ],
       "description": "95th percentile of nginx request_time. Websocket upgrades (101) are excluded, they stay open for hours.",
@@ -544,7 +577,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} | regexp `\"body_bytes_sent\": \"(?P<sent>[0-9]+)\"` | unwrap sent [$__auto]))"
+          "expr": "sum(rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} | regexp `\"body_bytes_sent\": \"(?P<sent>[0-9]+)\"` | unwrap sent [$__auto]))"
         }
       ],
       "description": "Response body throughput.",
@@ -685,7 +718,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (status) (rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} [$__auto]))",
+          "expr": "sum by (status) (rate({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} [$__auto]))",
           "legendFormat": "{{status}}"
         }
       ],
@@ -742,7 +775,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (path) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} | regexp `\"request_uri\": \"(?P<path>[^?\"]*)` [$__range])))",
+          "expr": "topk(10, sum by (path) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} | regexp `\"request_uri\": \"(?P<path>[^?\"]*)` [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -814,7 +847,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} [$__range])))",
+          "expr": "topk(10, sum by (country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -886,7 +919,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (ua) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} | regexp `\"http_user_agent\": \"(?P<ua>[^\"]*)\"` [$__range])))",
+          "expr": "topk(10, sum by (ua) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} | regexp `\"http_user_agent\": \"(?P<ua>[^\"]*)\"` [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -958,7 +991,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (ip) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` [$__range])))",
+          "expr": "topk(10, sum by (ip) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -1010,7 +1043,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\"} |= \"$search\" | json | line_format \"{{.remote_addr}} {{.request_method}} {{.request_uri}} -> {{.status}} ({{.request_time}}s, {{.body_bytes_sent}}b) {{.http_user_agent}}\""
+          "expr": "{job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", http_host=~\"$host\"} |= \"$search\" | json | line_format \"{{.remote_addr}} {{.request_method}} {{.http_host}}{{.request_uri}} -> {{.status}} ({{.request_time}}s, {{.body_bytes_sent}}b) {{.http_user_agent}}\""
         }
       ],
       "description": "One line per request. Expand a line to see every JSON field.",

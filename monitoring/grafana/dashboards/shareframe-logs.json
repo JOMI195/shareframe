@@ -1,6 +1,6 @@
 {
   "uid": "shareframe-logs",
-  "title": "3 Logs \u00b7 Application",
+  "title": "Logs \u00b7 Application",
   "description": "Django, Celery and websocket logs from Loki, filterable by logger and level.",
   "tags": [
     "shareframe"

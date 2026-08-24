@@ -1,6 +1,6 @@
 {
   "uid": "shareframe-host",
-  "title": "2 Host",
+  "title": "Host",
   "description": "node-exporter host metrics: CPU, memory, disk and stored-image growth.",
   "tags": [
     "shareframe"
@@ -12,7 +12,7 @@
   "graphTooltip": 1,
   "refresh": "1m",
   "time": {
-    "from": "now-6h",
+    "from": "now-24h",
     "to": "now"
   },
   "templating": {

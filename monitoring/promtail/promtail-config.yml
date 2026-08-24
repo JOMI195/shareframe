@@ -35,6 +35,7 @@ scrape_configs:
             request_method: request_method
             request_uri: request_uri
             request_time: request_time
+            http_host: http_host
             server_name: server_name
             country: geoip_country_code
       # Access lines carry no level; Grafana shows them as "unknown".
@@ -44,9 +45,14 @@ scrape_configs:
       - template:
           source: country
           template: '{{ if .country }}{{ .country }}{{ else }}unknown{{ end }}'
+      # Unknown hosts collapse into one label, else any Host header mints a stream.
+      - template:
+          source: http_host
+          template: '{{ if regexMatch "^([a-z0-9-]+\\.)*shareframe\\.de(:[0-9]+)?$|^([a-z0-9-]+\\.)?localhost(:[0-9]+)?$|^[0-9.]+(:[0-9]+)?$" .http_host }}{{ .http_host }}{{ else }}other{{ end }}'
       - labels:
           status:
           request_method:
+          http_host:
           server_name:
           level:
           country:
