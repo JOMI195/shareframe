@@ -19,6 +19,10 @@ from .models import FrameWebsocketConnection
 logger = logging.getLogger("websockets.frames")
 
 
+def _count_level(count: int) -> int:
+    return logging.INFO if count else logging.DEBUG
+
+
 @database_sync_to_async
 def _read_delivery_image_b64(image: Image) -> str:
     delivery_file = image.get_delivery_file()
@@ -61,7 +65,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             frame=frame,
             channel_name=self.channel_name,
         )
-        logger.info(
+        logger.debug(
             f"Created new connection for frame {frame.id} with channel {self.channel_name}"
         )
         return connection
@@ -72,7 +76,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             channel_name=self.channel_name
         ).delete()[0]
         if deleted_count > 0:
-            logger.info(f"Removed connection with channel {self.channel_name}")
+            logger.debug(f"Removed connection with channel {self.channel_name}")
         return deleted_count
 
     @database_sync_to_async
@@ -83,8 +87,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 old_ip = frame.local_ip_address
                 frame.local_ip_address = local_ip_address
                 frame.save(update_fields=["local_ip_address"])
-                logger.info(
-                    f"Updated local IP for frame {frame.id} from {old_ip} to {local_ip_address}"
+                logger.log(
+                    _count_level(old_ip != local_ip_address),
+                    f"Updated local IP for frame {frame.id} from {old_ip} to {local_ip_address}",
                 )
         except Exception as e:
             logger.error(f"Error updating connection IP: {str(e)}")
@@ -97,8 +102,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 old_version = frame.version
                 frame.version = version
                 frame.save(update_fields=["version"])
-                logger.info(
-                    f"Updated version for frame {frame.id} from {old_version} to {version}"
+                logger.log(
+                    _count_level(old_version != version),
+                    f"Updated version for frame {frame.id} from {old_version} to {version}",
                 )
         except Exception as e:
             logger.error(f"Error updating frame version: {str(e)}")
@@ -148,7 +154,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         try:
             return SentImage.objects.get(reciever=frame_user, id=sent_image_id)
         except SentImage.DoesNotExist:
-            logger.warning(
+            logger.debug(
                 f"SentImage with ID {sent_image_id} not found for user {frame_user.username}"
             )
             return None
@@ -192,7 +198,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             current_images = message_data.get("sent_image_ids", [])
 
-            logger.info(
+            logger.debug(
                 f"Checking missing images for user {frame.user.username}, "
                 f"frame {frame.id}, "
                 f"comparing {len(current_images)} existing images"
@@ -207,8 +213,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 if sent_image.id not in current_images:
                     images_to_send.append(sent_image)
 
-            logger.info(
-                f"Found {len(images_to_send)} missing images to send to frame {frame.id}"
+            logger.log(
+                _count_level(len(images_to_send)),
+                f"Found {len(images_to_send)} missing images to send to frame {frame.id}",
             )
 
             for sent_image in images_to_send:
@@ -230,8 +237,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 image_id for image_id in current_images if image_id not in existing_ids
             ]
 
-            logger.info(
-                f"Found {len(images_to_delete)} stale images to remove from frame {frame.id}"
+            logger.log(
+                _count_level(len(images_to_delete)),
+                f"Found {len(images_to_delete)} stale images to remove from frame {frame.id}",
             )
 
             if images_to_delete:
@@ -251,7 +259,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
             current_images: List[dict] = message_data.get("user_frame_images", [])
 
-            logger.info(
+            logger.debug(
                 f"Checking expiry for user {frame.user.username}, "
                 f"frame {frame.id}, "
                 f"comparing {len(current_images)} existing images"
@@ -292,11 +300,13 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                     )
                     images_to_delete.append(board_image_id)
 
-            logger.info(
-                f"Found {len(images_to_send)} images to update for frame {frame.id}"
+            logger.log(
+                _count_level(len(images_to_send)),
+                f"Found {len(images_to_send)} images to update for frame {frame.id}",
             )
-            logger.info(
-                f"Found {len(images_to_delete)} expired images to delete from frame {frame.id}"
+            logger.log(
+                _count_level(len(images_to_delete)),
+                f"Found {len(images_to_delete)} expired images to delete from frame {frame.id}",
             )
 
             for sent_image in images_to_send:
@@ -331,7 +341,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def handle_config_transmit(self, message):
         frame = self.scope.get("frame")
-        logger.info(f"Received config for frame {frame.id if frame else 'unknown'}")
+        logger.debug(f"Received config for frame {frame.id if frame else 'unknown'}")
 
         local_ip_address = message.get("local_ip_address")
         if local_ip_address:
@@ -419,7 +429,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             logger.error(f"Error sending picture to channels: {str(e)}")
             if sent_image_id is None and "sent_image" in locals():
-                logger.info(f"Cleaning up sent_image {sent_image.id} after error")
+                logger.warning(f"Cleaning up sent_image {sent_image.id} after error")
                 await database_sync_to_async(sent_image.delete)()
             raise e
 
@@ -429,7 +439,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         await super().send(text_data=text_data, bytes_data=bytes_data, close=close)
 
     async def connect(self):
-        logger.info(f"New connection attempt")
+        logger.debug("New connection attempt")
         frame = self.scope.get("frame")
 
         if frame:
@@ -439,7 +449,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             await self.save_connection(frame)
             await self.update_last_seen()
         else:
-            logger.warning(f"Connection rejected - no frame in scope")
+            logger.warning("Connection rejected - no frame in scope")
             await self.close(code=WS_CLOSE_AUTH_REJECTED)
 
     async def disconnect(self, close_code):
@@ -493,7 +503,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 )
 
         except json.JSONDecodeError:
-            logger.error("Received invalid JSON")
+            logger.warning("Received invalid JSON")
         except Exception as e:
             logger.exception(f"Error processing message: {str(e)}")
 

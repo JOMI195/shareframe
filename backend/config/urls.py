@@ -7,6 +7,7 @@ from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
 
 from authentication.jwt import SignalTokenObtainPairView
+from metrics.views import metrics_view
 
 from .views import (
     FrameUpdatesAccessView,
@@ -23,6 +24,8 @@ admin.site.site_header = "Shareframe"
 admin.site.index_title = "Site administration"
 
 urlpatterns = [
+    # not exposed through nginx
+    path("metrics", metrics_view, name="prometheus-metrics"),
     # general
     path("api/admin/", admin.site.urls),
     # path("api/auth/", include("djoser.urls")),

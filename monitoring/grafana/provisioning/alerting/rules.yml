@@ -1,0 +1,119 @@
+apiVersion: 1
+
+groups:
+  - orgId: 1
+    name: security
+    folder: ShareFrame
+    interval: 1m
+    rules:
+      - uid: shareframe_grafana_login
+        title: GrafanaLogin
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: info
+        annotations:
+          summary: 'Grafana login: userID {{ $labels.userID }} from {{ $labels.clientIP }} ({{ $labels.userAgent }})'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum by (userID, clientIP, userAgent) (count_over_time({job="grafana", logger="auth"} |= "User auth token created" | logfmt [1m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
+      - uid: shareframe_grafana_failed_logins
+        title: GrafanaFailedLogins
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'More than 3 failed Grafana logins in 5m'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum (count_over_time({job="grafana", logger="authn.service"} |= "Failed to authenticate request" |= "client=auth.client.form" [5m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [3]
