@@ -28,6 +28,9 @@ scrape_configs:
         regex: "/grafana-dev"
         target_label: job
         replacement: grafana
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(backend|websockets|celery|celery-beat|grafana)-dev"
+        action: keep
     pipeline_stages:
       - match:
           selector: '{job="backend"}'

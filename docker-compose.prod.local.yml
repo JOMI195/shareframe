@@ -1,11 +1,18 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "2"
+
 services:
   backend: &backend
+    logging: *default-logging
     container_name: backend
     restart: unless-stopped
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
-    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile /home/app/backend/logs/backend-application-server.log --error-logfile /home/app/backend/logs/backend-application-server.log
+    command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile - --error-logfile -
     volumes:
       - static_volume:/home/app/backend/staticfiles
       - media_volume:/home/app/backend/mediafiles
@@ -25,12 +32,13 @@ services:
       - redis_network
 
   websockets:
+    logging: *default-logging
     container_name: websockets
     restart: unless-stopped
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
-    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-application-server.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-daphne-access.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
     entrypoint: []
     volumes:
       - media_volume:/home/app/backend/mediafiles
@@ -50,6 +58,7 @@ services:
       - redis_network
 
   backend_db:
+    logging: *default-logging
     container_name: backend_db
     image: postgres:15
     restart: unless-stopped
@@ -66,6 +75,7 @@ services:
       - backend_db_network
 
   redis:
+    logging: *default-logging
     container_name: redis
     image: redis:6.2-alpine
     command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice --maxmemory 512mb --maxmemory-policy allkeys-lru
@@ -121,6 +131,7 @@ services:
       - redis_network
 
   nginx:
+    logging: *default-logging
     container_name: nginx
     restart: unless-stopped
     build:
@@ -146,6 +157,7 @@ services:
       - backend_network
 
   mailhog:
+    logging: *default-logging
     container_name: mailhog
     image: mailhog/mailhog
     restart: unless-stopped
@@ -157,12 +169,14 @@ services:
 
   # ---- Monitoring ----
   prometheus:
+    logging: *default-logging
     container_name: prometheus
     image: prom/prometheus:v3.14.0
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=30d
+      - --storage.tsdb.retention.size=1GB
     volumes:
       - ./monitoring/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
@@ -171,6 +185,7 @@ services:
       - backend_network
 
   grafana:
+    logging: *default-logging
     container_name: grafana
     image: grafana/grafana:13.2.0
     restart: unless-stopped
@@ -185,6 +200,8 @@ services:
       GF_LOG_MODE: "console file"
       # login alerts read the auth logger's debug lines
       GF_LOG_FILTERS: "auth:debug"
+      GF_LOG_FILE_MAX_SIZE_SHIFT: "24"
+      GF_LOG_FILE_MAX_DAYS: "7"
       # read by the Grafana alerting contact point
       ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
       # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
@@ -210,6 +227,7 @@ services:
       - backend_network
 
   node-exporter:
+    logging: *default-logging
     container_name: node-exporter
     image: prom/node-exporter:v1.12.1
     restart: unless-stopped
@@ -226,6 +244,7 @@ services:
       - monitoring_network
 
   loki:
+    logging: *default-logging
     container_name: loki
     image: grafana/loki:3.7.6
     restart: unless-stopped
@@ -237,6 +256,7 @@ services:
       - monitoring_network
 
   promtail:
+    logging: *default-logging
     container_name: promtail
     image: grafana/promtail:3.6.11
     restart: unless-stopped

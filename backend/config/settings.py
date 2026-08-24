@@ -208,19 +208,19 @@ LOGGING = {
             {
                 # overriding defaults for specific handlers
                 "application-file": {
-                    "maxBytes": 100 * 1024 * 1024,
+                    "maxBytes": 20 * 1024 * 1024,
                     "backupCount": 3,
                 },
                 "celery-file": {
-                    "maxBytes": 100 * 1024 * 1024,
+                    "maxBytes": 20 * 1024 * 1024,
                     "backupCount": 3,
                 },
                 "websockets-file": {
-                    "maxBytes": 100 * 1024 * 1024,
+                    "maxBytes": 20 * 1024 * 1024,
                     "backupCount": 3,
                 },
                 "django-file": {
-                    "maxBytes": 100 * 1024 * 1024,
+                    "maxBytes": 20 * 1024 * 1024,
                     "backupCount": 3,
                 },
             }

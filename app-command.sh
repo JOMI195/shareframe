@@ -69,5 +69,11 @@ RESULT=$?
 mv "${ENV_FILE}.backup" "$ENV_FILE"
 echo "Restored original env file"
 
+# Builds happen on the host, so the cache would otherwise grow unbounded.
+if [ $RESULT -eq 0 ] && [[ "$DOCKER_COMPOSE_COMMAND" == *"--build"* ]]; then
+  docker builder prune -f --keep-storage 2GB
+  docker image prune -f
+fi
+
 echo "Docker Compose operation completed with exit code: $RESULT"
 exit $RESULT

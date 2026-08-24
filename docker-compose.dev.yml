@@ -1,5 +1,12 @@
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "2"
+
 services:
   backend: &backend
+    logging: *default-logging
     container_name: backend-dev
     restart: unless-stopped
     build:
@@ -23,6 +30,7 @@ services:
       - redis_network
 
   websockets:
+    logging: *default-logging
     container_name: websockets-dev
     restart: unless-stopped
     build:
@@ -47,6 +55,7 @@ services:
       - redis_network
 
   backend_db:
+    logging: *default-logging
     container_name: backend_db-dev
     image: postgres:15
     restart: unless-stopped
@@ -65,6 +74,7 @@ services:
       - backend_db_network
 
   redis:
+    logging: *default-logging
     container_name: redis-dev
     image: redis:6.2-alpine
     restart: unless-stopped
@@ -108,6 +118,7 @@ services:
       - redis_network
 
   mailhog:
+    logging: *default-logging
     container_name: mailhog-dev
     image: mailhog/mailhog
     restart: unless-stopped
@@ -118,6 +129,7 @@ services:
       - backend_network
 
   frontend:
+    logging: *default-logging
     container_name: frontend-dev
     restart: unless-stopped
     build:
@@ -137,12 +149,14 @@ services:
 
   # ---- Monitoring ----
   prometheus:
+    logging: *default-logging
     container_name: prometheus-dev
     image: prom/prometheus:v3.14.0
     restart: unless-stopped
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=15d
+      - --storage.tsdb.retention.size=512MB
     volumes:
       - ./monitoring/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
@@ -151,6 +165,7 @@ services:
       - backend_network
 
   grafana:
+    logging: *default-logging
     container_name: grafana-dev
     image: grafana/grafana:13.2.0
     restart: unless-stopped
@@ -189,6 +204,7 @@ services:
       - backend_network
 
   node-exporter:
+    logging: *default-logging
     container_name: node-exporter-dev
     image: prom/node-exporter:v1.12.1
     restart: unless-stopped
@@ -205,6 +221,7 @@ services:
       - monitoring_network
 
   loki:
+    logging: *default-logging
     container_name: loki-dev
     image: grafana/loki:3.7.6
     restart: unless-stopped
@@ -216,6 +233,7 @@ services:
       - monitoring_network
 
   promtail:
+    logging: *default-logging
     container_name: promtail-dev
     image: grafana/promtail:3.6.11
     restart: unless-stopped

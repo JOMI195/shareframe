@@ -24,6 +24,12 @@ COPY ./nginx/production/nginx.conf /etc/nginx
 COPY ./nginx/GeoIP.dat /etc/nginx
 COPY ./nginx/GeoIPCity.dat /etc/nginx
 
+RUN apk add --no-cache logrotate
+COPY ./nginx/logrotate-shareframe /etc/logrotate.d/shareframe
+COPY ./nginx/logrotate-cron /etc/periodic/15min/logrotate
+COPY ./nginx/start-crond.sh /docker-entrypoint.d/99-start-crond.sh
+RUN chmod +x /etc/periodic/15min/logrotate /docker-entrypoint.d/99-start-crond.sh
+
 WORKDIR /usr/share/nginx/html
 COPY --from=build-app /app/frontend/build .
 

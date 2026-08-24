@@ -1,0 +1,23 @@
+/home/app/backend/logs/nginx-*.log {
+    size 25M
+    rotate 4
+    compress
+    delaycompress
+    missingok
+    notifempty
+    sharedscripts
+    postrotate
+        [ -f /var/run/nginx.pid ] && kill -USR1 "$(cat /var/run/nginx.pid)"
+    endscript
+}
+
+# daphne runs in another container, so no signal can reach it.
+/home/app/backend/logs/backend-daphne-access.log {
+    size 20M
+    rotate 3
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}
