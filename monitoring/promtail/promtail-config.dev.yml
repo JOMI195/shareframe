@@ -1,0 +1,52 @@
+server:
+  http_listen_port: 9080
+
+positions:
+  filename: /positions/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  # Dev has no logs_volume and no nginx: scrape container stdout instead,
+  # relabelled to the same job/level/logger the prod config produces.
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: stream
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(backend|websockets|celery|celery-beat)-dev"
+        target_label: job
+        replacement: backend
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/grafana-dev"
+        target_label: job
+        replacement: grafana
+    pipeline_stages:
+      - match:
+          selector: '{job="backend"}'
+          stages:
+            - regex:
+                expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+) \[(?P<level>\w+)\] (?P<logger>\S+) - (?P<func>\S+) - (?P<message>.*)$'
+            - labels:
+                level:
+                logger:
+      - match:
+          selector: '{job="grafana"}'
+          stages:
+            - replace:
+                expression: 'authToken=(\w+)'
+                replace: 'REDACTED'
+            - logfmt:
+                mapping:
+                  level:
+                  logger:
+            - labels:
+                level:
+                logger:

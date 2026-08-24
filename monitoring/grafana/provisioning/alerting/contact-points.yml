@@ -1,0 +1,13 @@
+apiVersion: 1
+
+contactPoints:
+  - orgId: 1
+    name: shareframe-admin
+    receivers:
+      - uid: shareframe_admin_email
+        type: email
+        # Every login would otherwise be followed by a "Resolved" mail.
+        disableResolveMessage: true
+        settings:
+          addresses: $__env{ADMIN_NOTIFICATION_EMAIL}
+          singleEmail: true

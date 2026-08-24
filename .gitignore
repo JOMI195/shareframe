@@ -118,7 +118,10 @@ env.bak/
 venv.bak/
 !.env.example
 
-# mkdocs documentation 
+# Backup copies
+*.old
+
+# mkdocs documentation
 /site 
 
 # mypy 

@@ -1,0 +1,46 @@
+groups:
+  - name: shareframe
+    rules:
+      - alert: BackendMetricsDown
+        expr: up{job="django"} == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Backend /metrics target is down"
+
+      - alert: TargetDown
+        expr: up{job!="django"} == 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Scrape target {{ $labels.job }} is down"
+
+      - alert: HostDiskAlmostFull
+        expr: >
+          (1 - (node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs|zfs", mountpoint!~"/(run|var/lib/docker)(/.*)?"}
+          / node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs|zfs", mountpoint!~"/(run|var/lib/docker)(/.*)?"})) > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk above 85% on {{ $labels.mountpoint }}"
+
+      - alert: HostMemoryAlmostFull
+        expr: >
+          (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Host memory above 90%"
+
+      - alert: HighHttp5xxRate
+        expr: >
+          sum(rate(django_http_responses_total_by_status_total{status=~"5.."}[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Backend serving >1 HTTP 5xx/s over 5m"

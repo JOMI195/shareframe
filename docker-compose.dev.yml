@@ -135,10 +135,108 @@ services:
     networks:
       - frontend_network
 
+  # ---- Monitoring ----
+  prometheus:
+    container_name: prometheus-dev
+    image: prom/prometheus:v3.14.0
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+      - prometheus_data:/prometheus
+    networks:
+      - monitoring_network
+      - backend_network
+
+  grafana:
+    container_name: grafana-dev
+    image: grafana/grafana:13.2.0
+    restart: unless-stopped
+    environment:
+      GF_SERVER_ROOT_URL: http://localhost:3001
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      # unauthenticated endpoint, nothing scrapes it
+      GF_METRICS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      # login alerts read the auth logger's debug lines
+      GF_LOG_FILTERS: "auth:debug"
+      # read by the Grafana alerting contact point
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
+      # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
+      GF_SMTP_USER: ""
+      GF_SMTP_PASSWORD: ""
+      GF_SMTP_FROM_ADDRESS: ${EMAIL_HOST_USER}
+      GF_SMTP_FROM_NAME: ShareFrame Monitoring
+      GF_SMTP_SKIP_VERIFY: "true"
+      GF_SMTP_STARTTLS_POLICY: NoStartTLS
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - monitoring_network
+      - backend_network
+
+  node-exporter:
+    container_name: node-exporter-dev
+    image: prom/node-exporter:v1.12.1
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+      - --no-collector.diskstats
+    pid: host
+    volumes:
+      - /:/host:ro
+    networks:
+      - monitoring_network
+
+  loki:
+    container_name: loki-dev
+    image: grafana/loki:3.7.6
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    networks:
+      - monitoring_network
+
+  promtail:
+    container_name: promtail-dev
+    image: grafana/promtail:3.6.11
+    restart: unless-stopped
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./monitoring/promtail/promtail-config.dev.yml:/etc/promtail/promtail-config.yml:ro
+      - promtail_positions:/positions
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    depends_on:
+      - loki
+    networks:
+      - monitoring_network
+
 volumes:
   backend_db_data:
   node_modules: {}
   redis_data:
+  prometheus_data:
+  grafana_data:
+  loki_data:
+  promtail_positions:
 
 networks:
   frontend_network:
@@ -148,4 +246,6 @@ networks:
   backend_db_network:
     driver: bridge
   redis_network:
+    driver: bridge
+  monitoring_network:
     driver: bridge

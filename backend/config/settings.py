@@ -44,6 +44,9 @@ if PRODUCTION:
 else:
     SECURE_SSL_REDIRECT = False
 
+# Prometheus scrapes /metrics over plain HTTP on the container network.
+SECURE_REDIRECT_EXEMPT = [r"^metrics$"]
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -65,6 +68,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "django_otp",
     "django_otp.plugins.otp_totp",
+    "django_prometheus",
     # APPS
     "frames",
     "frame_updates",
@@ -77,6 +81,7 @@ INSTALLED_APPS = [
     "sent_images",
     "changelogs",
     "dashboard",
+    "metrics",
 ]
 
 # Upload size limits. App endpoints (/api/...) get a smaller total-request cap
@@ -92,6 +97,7 @@ DATA_UPLOAD_MAX_MEMORY_SIZE = ADMIN_UPLOAD_MAX_SIZE
 FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25 MB
 
 MIDDLEWARE = [
+    "django_prometheus.middleware.PrometheusBeforeMiddleware",
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -103,6 +109,7 @@ MIDDLEWARE = [
     "utils.upload_limits.middleware.UploadSizeLimitMiddleware",
     "utils.request_logging.middleware.LoggingMiddleware",
     "django_otp.middleware.OTPMiddleware",
+    "django_prometheus.middleware.PrometheusAfterMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
