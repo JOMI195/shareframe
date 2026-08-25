@@ -717,6 +717,18 @@
           {
             "matcher": {
               "id": "byName",
+              "options": "Last seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
               "options": "CPU %"
             },
             "properties": [
@@ -1224,6 +1236,14 @@
       },
       "targets": [
         {
+          "refId": "S",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last seen\" | unwrap seen [$__range]) by (serial_number, health_state, fw_version, version, kernel, boot_slot, local_ip_address, metric)"
+        },
+        {
           "refId": "A",
           "datasource": {
             "type": "loki",
@@ -1386,7 +1406,7 @@
           "interval": "$__range"
         }
       ],
-      "description": "Every field the frame reports, from its most recent heartbeat. time_iso is omitted: it changes each heartbeat, so it cannot be a column without minting a series per heartbeat.",
+      "description": "Every field the frame reports, from its most recent heartbeat. Last seen is the log timestamp of that heartbeat. time_iso is omitted: it changes each heartbeat, so it cannot be a column without minting a series per heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -1555,6 +1575,12 @@
                   "lastNotNull"
                 ],
                 "operation": "aggregate"
+              },
+              "Last seen": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
               }
             }
           }
@@ -1565,30 +1591,31 @@
             "excludeByName": {},
             "indexByName": {
               "serial_number": 0,
-              "health_state": 1,
-              "fw_version": 2,
-              "version": 3,
-              "kernel": 4,
-              "boot_slot": 5,
-              "local_ip_address": 6,
-              "CPU temp": 7,
-              "CPU %": 8,
-              "CPU MHz": 9,
-              "RAM %": 10,
-              "RAM free": 11,
-              "RAM total": 12,
-              "Disk %": 13,
-              "Disk free": 14,
-              "Disk total": 15,
-              "Load 1m": 16,
-              "Load 5m": 17,
-              "Load 15m": 18,
-              "Uptime": 19,
-              "Boots": 20,
-              "Dashboard": 21,
-              "Display": 22,
-              "Update": 23,
-              "Websocket": 24
+              "health_state": 2,
+              "fw_version": 3,
+              "version": 4,
+              "kernel": 5,
+              "boot_slot": 6,
+              "local_ip_address": 7,
+              "CPU temp": 8,
+              "CPU %": 9,
+              "CPU MHz": 10,
+              "RAM %": 11,
+              "RAM free": 12,
+              "RAM total": 13,
+              "Disk %": 14,
+              "Disk free": 15,
+              "Disk total": 16,
+              "Load 1m": 17,
+              "Load 5m": 18,
+              "Load 15m": 19,
+              "Uptime": 20,
+              "Boots": 21,
+              "Dashboard": 22,
+              "Display": 23,
+              "Update": 24,
+              "Websocket": 25,
+              "Last seen": 1
             },
             "renameByName": {
               "health_state (lastNotNull)": "health_state",
@@ -1614,7 +1641,8 @@
               "Dashboard (lastNotNull)": "Dashboard",
               "Display (lastNotNull)": "Display",
               "Update (lastNotNull)": "Update",
-              "Websocket (lastNotNull)": "Websocket"
+              "Websocket (lastNotNull)": "Websocket",
+              "Last seen (max)": "Last seen"
             }
           }
         }
