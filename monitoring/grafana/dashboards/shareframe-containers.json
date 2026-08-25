@@ -613,7 +613,7 @@
         "uid": "prometheus"
       },
       "gridPos": {
-        "h": 10,
+        "h": 20,
         "w": 24,
         "x": 0,
         "y": 4
@@ -950,7 +950,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 14
+        "y": 24
       },
       "fieldConfig": {
         "defaults": {
@@ -1016,7 +1016,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 14
+        "y": 24
       },
       "fieldConfig": {
         "defaults": {
@@ -1082,7 +1082,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 22
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {
@@ -1157,7 +1157,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 22
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {
@@ -1223,7 +1223,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 30
+        "y": 40
       },
       "fieldConfig": {
         "defaults": {
@@ -1289,7 +1289,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 37
+        "y": 47
       },
       "options": {
         "showTime": true,

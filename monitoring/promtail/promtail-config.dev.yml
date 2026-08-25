@@ -42,10 +42,9 @@ scrape_configs:
                 level:
                 logger:
 
-      # Heartbeat bodies carry the fleet telemetry the Frames dashboard reads.
-      # Legacy firmware posts only local_ip_address + version, so it is keyed by IP.
+      # Frame heartbeat bodies carry the fleet telemetry the Frames dashboard reads.
       - match:
-          selector: '{job="backend"} |= "log - b" |= "local_ip_address"'
+          selector: '{job="backend"} |= "log - b" |= "serial_number"'
           stages:
             - regex:
                 expression: "log - b'(?P<payload>\\{.*\\})'$"
@@ -54,13 +53,9 @@ scrape_configs:
                 expressions:
                   serial_number:
                   fw_version:
-                  frame_ip: local_ip_address
-                  frame_version: version
             - labels:
                 serial_number:
                 fw_version:
-                frame_ip:
-                frame_version:
       - match:
           selector: '{job="grafana"}'
           stages:

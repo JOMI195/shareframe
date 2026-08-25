@@ -131,8 +131,8 @@
       "panels": []
     },
     {
-      "type": "grafana-polystat-panel",
-      "title": "Fleet",
+      "type": "marcusolsson-dynamictext-panel",
+      "title": "Frame cards",
       "id": 2,
       "datasource": {
         "type": "loki",
@@ -155,68 +155,29 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 2
               }
             ]
-          },
-          "decimals": 0
+          }
         },
         "overrides": []
       },
       "options": {
-        "globalDisplayMode": "all",
-        "globalDisplayTextTriggeredEmpty": "OK",
-        "globalOperatorName": "current",
-        "globalUnitFormat": "short",
-        "globalDecimals": 0,
-        "globalThresholds": [
-          {
-            "color": "green",
-            "state": 0,
-            "value": 0
-          },
-          {
-            "color": "yellow",
-            "state": 1,
-            "value": 1
-          },
-          {
-            "color": "red",
-            "state": 2,
-            "value": 2
-          }
-        ],
-        "globalFillColor": "#0a50a1",
-        "globalTextFontSize": 12,
-        "globalAutoScaleFonts": true,
-        "polygonBorderColor": "black",
-        "polygonBorderSize": 2,
-        "shape": "hexagon_pointed_top",
-        "columnAutoSize": true,
-        "rowAutoSize": true,
-        "sortByDirection": 1,
-        "sortByField": "name",
-        "tooltipDisplayMode": "all",
-        "tooltipPrimarySortDirection": 2,
-        "tooltipSecondarySortDirection": 1,
-        "compositeConfig": {
-          "animationSpeed": 250,
-          "composites": [],
-          "enabled": false
+        "content": "<div class=\"frame-card\">\n  <div class=\"frame-head\">\n    <span class=\"serial\">{{serial_number}}</span>\n    <span class=\"state s-{{health}}\">{{#if health}}ok{{else}}degraded{{/if}}</span>\n  </div>\n  <div class=\"frame-meta\">\n    <span>fw {{fw_version}}</span>\n    <span>slot {{#if slot}}B{{else}}A{{/if}}</span>\n    <span>boot #{{boots}}</span>\n    <span>{{local_ip_address}}</span>\n  </div>\n  <div class=\"frame-meta kernel\">{{kernel}}</div>\n  <div class=\"badges\">\n    <span class=\"badge b-{{dashboard}}\">dashboard</span>\n    <span class=\"badge b-{{display}}\">display</span>\n    <span class=\"badge b-{{update}}\">update</span>\n    <span class=\"badge b-{{websocket}}\">websocket</span>\n  </div>\n</div>",
+        "defaultContent": "No frame reported in this range.",
+        "contentPartials": [],
+        "editor": {
+          "format": "auto",
+          "language": "html",
+          "height": 400
         },
-        "overrideConfig": {
-          "overrides": [],
-          "enabled": false
-        }
+        "editors": [],
+        "externalStyles": [],
+        "helpers": "",
+        "renderMode": "everyRow",
+        "styles": ".frame-card {\n  border: 1px solid rgba(127,127,127,0.3);\n  border-radius: 4px;\n  padding: 10px 12px;\n  margin-bottom: 10px;\n}\n.frame-head { display: flex; justify-content: space-between; align-items: center; }\n.serial { font-weight: 600; letter-spacing: 0.5px; }\n.state { font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: rgba(200,60,60,0.35); }\n.state.s-1 { background: rgba(60,160,90,0.35); }\n.frame-meta { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; opacity: 0.8; margin-top: 6px; }\n.kernel { opacity: 0.55; }\n.badges { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }\n.badge { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(200,60,60,0.35); }\n.badge.b-1 { background: rgba(60,160,90,0.35); }",
+        "wrap": true
       },
       "targets": [
         {
@@ -225,11 +186,79 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format frame_status=`{{ if or (ne .health_state \"ok\") (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}2{{ else if or (gt (float64 .cpu_temp_celsius) 70.0) (gt (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 0.9) (gt (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 0.9) }}1{{ else }}0{{ end }}` | unwrap frame_status [$__range]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"health\" | unwrap healthy [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"dashboard\" | unwrap flag [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"display\" | unwrap flag [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"update\" | unwrap flag [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"websocket\" | unwrap flag [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"boots\" | unwrap boot_count [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"B\" }}1{{ else }}0{{ end }}` | label_format metric=\"slot\" | unwrap slot [$__range]) by (serial_number, fw_version, kernel, local_ip_address, metric)",
+          "queryType": "instant"
         }
       ],
-      "description": "One hexagon per frame. Green: healthy. Yellow: CPU temp, RAM or disk over threshold. Red: health_state not ok, or a service down."
+      "description": "One card per frame, showing its latest reported state.",
+      "transformations": [
+        {
+          "id": "joinByLabels",
+          "options": {
+            "value": "metric",
+            "join": [
+              "serial_number",
+              "fw_version",
+              "kernel",
+              "local_ip_address"
+            ]
+          }
+        }
+      ]
     },
     {
       "type": "gauge",
@@ -496,7 +525,7 @@
           "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))"
         }
       ],
-      "description": "Distinct frames that sent telemetry in the range. Legacy firmware sends no serial and is counted separately below."
+      "description": "Distinct frames that sent a telemetry heartbeat in the range."
     },
     {
       "type": "stat",
@@ -559,10 +588,10 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | health_state != \"ok\" [$__range]))) or vector(0)"
+          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
         }
       ],
-      "description": "Frames that reported health_state other than ok at any point in the range."
+      "description": "Frames whose most recent heartbeat reported health_state other than ok."
     },
     {
       "type": "stat",
@@ -788,11 +817,12 @@
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
-      ]
+      ],
+      "description": "Green while the frame reported health_state ok. A service being down does not change this; see the Latest state table."
     },
     {
-      "type": "state-timeline",
-      "title": "Services",
+      "type": "timeseries",
+      "title": "Heartbeats in range",
       "id": 12,
       "datasource": {
         "type": "loki",
@@ -808,180 +838,7 @@
         "defaults": {
           "unit": "short",
           "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "down",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "up",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "rowHeight": 0.9,
-        "mergeValues": true,
-        "alignValue": "center",
-        "perPage": 20,
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format s=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | unwrap s [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 dashboard"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format s=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | unwrap s [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 display"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format s=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | unwrap s [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 update"
-        },
-        {
-          "refId": "D",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format s=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | unwrap s [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 websocket"
-        }
-      ],
-      "description": "One lane per frame and service. A red band is a service the frame reported as not running."
-    },
-    {
-      "type": "status-history",
-      "title": "Heartbeats received",
-      "id": 13,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 20
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "auto",
-        "rowHeight": 0.9,
-        "colWidth": 0.9,
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__auto]))",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "Heartbeats per interval. A gap is a frame that went silent."
-    },
-    {
-      "type": "marcusolsson-dynamictext-panel",
-      "title": "Frame cards",
-      "id": 14,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 20
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "mappings": [],
           "thresholds": {
@@ -992,25 +849,39 @@
                 "value": null
               }
             ]
+          },
+          "custom": {
+            "drawStyle": "bars",
+            "lineWidth": 0,
+            "fillOpacity": 70,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
           }
         },
         "overrides": []
       },
       "options": {
-        "content": "<div class=\"frame-card\">\n  <div class=\"frame-head\">\n    <span class=\"serial\">{{serial_number}}</span>\n    <span class=\"state state-{{health_state}}\">{{health_state}}</span>\n  </div>\n  <div class=\"frame-meta\">\n    <span>fw {{fw_version}}</span>\n    <span>slot {{boot_slot}}</span>\n    <span>boot #{{boot_count}}</span>\n    <span>{{local_ip_address}}</span>\n  </div>\n  <div class=\"frame-meta kernel\">{{kernel}} \u00b7 {{time_iso}}</div>\n  <div class=\"badges\">\n    <span class=\"badge b-{{dashboard_running}}\">dashboard</span>\n    <span class=\"badge b-{{display_running}}\">display</span>\n    <span class=\"badge b-{{update_running}}\">update</span>\n    <span class=\"badge b-{{websocket_running}}\">websocket</span>\n  </div>\n</div>",
-        "defaultContent": "No frame reported in this range.",
-        "contentPartials": [],
-        "editor": {
-          "format": "auto",
-          "language": "html",
-          "height": 400
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         },
-        "editors": [],
-        "externalStyles": [],
-        "helpers": "",
-        "renderMode": "everyRow",
-        "styles": ".frame-card {\n  border: 1px solid rgba(127,127,127,0.3);\n  border-radius: 4px;\n  padding: 8px 10px;\n  margin-bottom: 8px;\n}\n.frame-head { display: flex; justify-content: space-between; align-items: center; }\n.serial { font-weight: 600; letter-spacing: 0.5px; }\n.state { font-size: 11px; text-transform: uppercase; padding: 1px 6px; border-radius: 3px; background: rgba(127,127,127,0.25); }\n.state-ok { background: rgba(60,160,90,0.35); }\n.frame-meta { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; opacity: 0.8; margin-top: 4px; }\n.kernel { opacity: 0.55; }\n.badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }\n.badge { font-size: 11px; padding: 1px 6px; border-radius: 3px; background: rgba(200,60,60,0.35); }\n.badge.b-true { background: rgba(60,160,90,0.35); }",
-        "wrap": true
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        }
       },
       "targets": [
         {
@@ -1019,30 +890,30 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number, health_state, fw_version, kernel, boot_slot, boot_count, local_ip_address, time_iso, dashboard_running, display_running, update_running, websocket_running)",
-          "queryType": "instant",
-          "format": "table"
+          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval]))",
+          "legendFormat": "{{serial_number}}",
+          "interval": "5m"
         }
       ],
-      "description": "Latest heartbeat of each frame, one card per frame."
+      "description": "Heartbeats per 5 minutes. An empty bucket is a frame that went quiet."
     },
     {
       "type": "row",
       "title": "Resources",
-      "id": 15,
+      "id": 13,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 20
       },
       "panels": []
     },
     {
       "type": "bargauge",
       "title": "CPU temperature by frame",
-      "id": 16,
+      "id": 14,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1051,7 +922,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 27
+        "y": 21
       },
       "fieldConfig": {
         "defaults": {
@@ -1120,7 +991,7 @@
     {
       "type": "bargauge",
       "title": "RAM used by frame",
-      "id": 17,
+      "id": 15,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1129,7 +1000,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 27
+        "y": 21
       },
       "fieldConfig": {
         "defaults": {
@@ -1194,7 +1065,7 @@
     {
       "type": "volkovlabs-echarts-panel",
       "title": "Fleet radar",
-      "id": 18,
+      "id": 16,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1203,7 +1074,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 27
+        "y": 21
       },
       "fieldConfig": {
         "defaults": {
@@ -1225,7 +1096,7 @@
         "overrides": []
       },
       "options": {
-        "getOption": "const ctx = typeof context !== 'undefined' && context ? context : {};\nconst d =\n  (typeof data !== 'undefined' && data) || (ctx.panel && ctx.panel.data) || {};\nconst th =\n  (typeof theme !== 'undefined' && theme) || (ctx.grafana && ctx.grafana.theme) || {};\nconst text = (th.colors && th.colors.text) || {};\nconst textPrimary = text.primary || '#ccccdc';\nconst textSecondary = text.secondary || '#9a9aa5';\n\nconst axes = [\n  { refId: 'A', name: 'CPU %', max: 100 },\n  { refId: 'B', name: 'RAM %', max: 100 },\n  { refId: 'C', name: 'Disk %', max: 100 },\n  { refId: 'D', name: 'Temp \\u00b0C', max: 85 },\n  { refId: 'E', name: 'Load', max: 4 },\n];\n\nconst read = (field, row) =>\n  field.values && typeof field.values.get === 'function'\n    ? field.values.get(row)\n    : field.values[row];\n\nconst byFrame = {};\naxes.forEach((axis, i) => {\n  (d.series || [])\n    .filter((s) => s.refId === axis.refId)\n    .forEach((s) => {\n      const serialField = s.fields.find((f) => f.name === 'serial_number');\n      const valueField = s.fields.find((f) => f.type === 'number' && f.name !== 'Time');\n      if (!valueField) return;\n      const rows = valueField.values.length || 0;\n      for (let r = 0; r < rows; r++) {\n        const serial = serialField ? String(read(serialField, r)) : s.name || 'frame';\n        byFrame[serial] = byFrame[serial] || new Array(axes.length).fill(0);\n        byFrame[serial][i] = Number(read(valueField, r)) || 0;\n      }\n    });\n});\n\nreturn {\n  tooltip: { trigger: 'item' },\n  legend: {\n    bottom: 0,\n    type: 'scroll',\n    textStyle: { color: textPrimary },\n  },\n  radar: {\n    indicator: axes.map((a) => ({ name: a.name, max: a.max })),\n    axisName: { color: textSecondary },\n    splitArea: { show: false },\n  },\n  series: [\n    {\n      type: 'radar',\n      symbolSize: 4,\n      areaStyle: { opacity: 0.1 },\n      data: Object.keys(byFrame).map((k) => ({ name: k, value: byFrame[k] })),\n    },\n  ],\n};",
+        "getOption": "const ctx = typeof context !== 'undefined' && context ? context : {};\nconst d =\n  (typeof data !== 'undefined' && data) || (ctx.panel && ctx.panel.data) || {};\nconst th =\n  (typeof theme !== 'undefined' && theme) || (ctx.grafana && ctx.grafana.theme) || {};\nconst text = (th.colors && th.colors.text) || {};\nconst textPrimary = text.primary || '#ccccdc';\nconst textSecondary = text.secondary || '#9a9aa5';\n\nconst axes = [\n  { refId: 'A', name: 'CPU %', max: 100 },\n  { refId: 'B', name: 'RAM %', max: 100 },\n  { refId: 'C', name: 'Disk %', max: 100 },\n  { refId: 'D', name: 'Temp \\u00b0C', max: 85 },\n  { refId: 'E', name: 'Load', max: 4 },\n];\n\nconst read = (field, row) =>\n  field.values && typeof field.values.get === 'function'\n    ? field.values.get(row)\n    : field.values[row];\n\nconst byFrame = {};\naxes.forEach((axis, i) => {\n  (d.series || [])\n    .filter((s) => s.refId === axis.refId)\n    .forEach((s) => {\n      const valueField = s.fields.find((f) => f.type === 'number' && f.name !== 'Time');\n      if (!valueField) return;\n      const serialField = s.fields.find((f) => f.name === 'serial_number');\n      const labelSerial =\n        (valueField.labels && valueField.labels.serial_number) || null;\n      const rows = valueField.values.length || 0;\n      for (let r = 0; r < rows; r++) {\n        const serial = serialField\n          ? String(read(serialField, r))\n          : labelSerial || s.name || 'frame';\n        byFrame[serial] = byFrame[serial] || new Array(axes.length).fill(0);\n        byFrame[serial][i] = Number(read(valueField, r)) || 0;\n      }\n    });\n});\n\nreturn {\n  tooltip: { trigger: 'item' },\n  legend: {\n    bottom: 0,\n    type: 'scroll',\n    textStyle: { color: textPrimary },\n  },\n  radar: {\n    indicator: axes.map((a) => ({ name: a.name, max: a.max })),\n    axisName: { color: textSecondary },\n    splitArea: { show: false },\n  },\n  series: [\n    {\n      type: 'radar',\n      symbolSize: 4,\n      areaStyle: { opacity: 0.1 },\n      data: Object.keys(byFrame).map((k) => ({ name: k, value: byFrame[k] })),\n    },\n  ],\n};",
         "renderer": "canvas",
         "theme": "default",
         "themeEditor": {
@@ -1264,8 +1135,7 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "queryType": "instant"
         },
         {
           "refId": "B",
@@ -1274,8 +1144,7 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "queryType": "instant"
         },
         {
           "refId": "C",
@@ -1284,8 +1153,7 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "queryType": "instant"
         },
         {
           "refId": "D",
@@ -1294,8 +1162,7 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "queryType": "instant"
         },
         {
           "refId": "E",
@@ -1304,8 +1171,7 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "queryType": "instant"
         }
       ],
       "description": "Each polygon is one frame across CPU, RAM, disk, temperature and load."
@@ -1313,7 +1179,7 @@
     {
       "type": "timeseries",
       "title": "CPU temperature",
-      "id": 19,
+      "id": 17,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1322,7 +1188,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 34
+        "y": 28
       },
       "fieldConfig": {
         "defaults": {
@@ -1396,7 +1262,7 @@
     {
       "type": "timeseries",
       "title": "CPU usage",
-      "id": 20,
+      "id": 18,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1405,7 +1271,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 34
+        "y": 28
       },
       "fieldConfig": {
         "defaults": {
@@ -1471,7 +1337,7 @@
     {
       "type": "timeseries",
       "title": "RAM used",
-      "id": 21,
+      "id": 19,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1480,7 +1346,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 42
+        "y": 36
       },
       "fieldConfig": {
         "defaults": {
@@ -1546,7 +1412,7 @@
     {
       "type": "timeseries",
       "title": "Load average",
-      "id": 22,
+      "id": 20,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1555,7 +1421,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 42
+        "y": 36
       },
       "fieldConfig": {
         "defaults": {
@@ -1639,7 +1505,7 @@
     {
       "type": "heatmap",
       "title": "Temperature distribution",
-      "id": 23,
+      "id": 21,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1648,7 +1514,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 50
+        "y": 44
       },
       "fieldConfig": {
         "defaults": {
@@ -1737,7 +1603,7 @@
     {
       "type": "xychart",
       "title": "Temperature vs CPU usage",
-      "id": 24,
+      "id": 22,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1746,7 +1612,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 50
+        "y": 44
       },
       "fieldConfig": {
         "defaults": {
@@ -1790,13 +1656,13 @@
             "x": {
               "matcher": {
                 "id": "byName",
-                "options": "cpu usage"
+                "options": "CPU %"
               }
             },
             "y": {
               "matcher": {
                 "id": "byName",
-                "options": "cpu temp"
+                "options": "CPU temp"
               }
             },
             "name": {
@@ -1825,9 +1691,8 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
         },
         {
           "refId": "B",
@@ -1835,53 +1700,40 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
-          "queryType": "instant",
-          "format": "table"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
         }
       ],
       "description": "One point per frame: hot frames that are not busy point at a cooling or placement problem.",
       "transformations": [
         {
-          "id": "joinByField",
+          "id": "joinByLabels",
           "options": {
-            "byField": "serial_number",
-            "mode": "outer"
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true,
-              "Time 1": true,
-              "Time 2": true
-            },
-            "renameByName": {
-              "Value #A": "cpu usage",
-              "Value #B": "cpu temp"
-            }
+            "value": "metric",
+            "join": [
+              "serial_number"
+            ]
           }
         }
       ]
     },
     {
       "type": "row",
-      "title": "Storage & uptime",
-      "id": 25,
+      "title": "Storage",
+      "id": 23,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 52
       },
       "panels": []
     },
     {
       "type": "bargauge",
       "title": "Data partition used",
-      "id": 26,
+      "id": 24,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1890,7 +1742,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 59
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -1953,89 +1805,18 @@
       ]
     },
     {
-      "type": "piechart",
-      "title": "Firmware versions",
-      "id": 27,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 59
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "pieType": "donut",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "right",
-          "values": [
-            "value"
-          ]
-        },
-        "displayLabels": [
-          "percent"
-        ]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "count by (fw_version) (count by (fw_version, serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))",
-          "legendFormat": "{{fw_version}}"
-        }
-      ],
-      "description": "Frames per firmware version in the range."
-    },
-    {
       "type": "timeseries",
       "title": "Data partition free",
-      "id": 28,
+      "id": 25,
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 59
+        "w": 16,
+        "x": 8,
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2099,18 +1880,102 @@
       ]
     },
     {
-      "type": "timeseries",
-      "title": "Uptime",
-      "id": 29,
+      "type": "row",
+      "title": "Firmware & boot",
+      "id": 26,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 60
+      },
+      "panels": []
+    },
+    {
+      "type": "piechart",
+      "title": "Firmware versions",
+      "id": 27,
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
+        "h": 7,
+        "w": 8,
         "x": 0,
-        "y": 66
+        "y": 61
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "displayLabels": [
+          "percent"
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "count by (fw_version) (count by (fw_version, serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))",
+          "legendFormat": "{{fw_version}}"
+        }
+      ],
+      "description": "Frames per firmware version in the range."
+    },
+    {
+      "type": "timeseries",
+      "title": "Uptime",
+      "id": 28,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -2177,16 +2042,16 @@
     {
       "type": "timeseries",
       "title": "Boot count",
-      "id": 30,
+      "id": 29,
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 66
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -2254,29 +2119,29 @@
     {
       "type": "row",
       "title": "Latest state",
-      "id": 31,
+      "id": 30,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 68
       },
       "panels": []
     },
     {
       "type": "table",
       "title": "Latest state per frame",
-      "id": 32,
+      "id": 31,
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
-        "h": 10,
+        "h": 8,
         "w": 24,
         "x": 0,
-        "y": 75
+        "y": 69
       },
       "fieldConfig": {
         "defaults": {
@@ -2307,7 +2172,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "cpu_usage_percent"
+              "options": "CPU %"
             },
             "properties": [
               {
@@ -2358,7 +2223,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "ram_used_percent"
+              "options": "RAM %"
             },
             "properties": [
               {
@@ -2409,7 +2274,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "storage_used_percent"
+              "options": "Disk %"
             },
             "properties": [
               {
@@ -2460,7 +2325,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "cpu_temp_celsius"
+              "options": "CPU temp"
             },
             "properties": [
               {
@@ -2523,7 +2388,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "storage_data_free_bytes"
+              "options": "Free space"
             },
             "properties": [
               {
@@ -2535,69 +2400,31 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "health_state"
+              "options": "Load 1m"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "ok": {
-                        "color": "green",
-                        "index": 0
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "decimals",
+                "value": 2
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "dashboard_running"
+              "options": "Boots"
             },
             "properties": [
               {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "false": {
-                        "text": "down",
-                        "color": "red",
-                        "index": 0
-                      },
-                      "true": {
-                        "text": "up",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
+                "id": "decimals",
+                "value": 0
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "display_running"
+              "options": "Healthy"
             },
             "properties": [
               {
@@ -2606,81 +2433,13 @@
                   {
                     "type": "value",
                     "options": {
-                      "false": {
-                        "text": "down",
+                      "0": {
+                        "text": "unhealthy",
                         "color": "red",
                         "index": 0
                       },
-                      "true": {
-                        "text": "up",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "update_running"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "false": {
-                        "text": "down",
-                        "color": "red",
-                        "index": 0
-                      },
-                      "true": {
-                        "text": "up",
-                        "color": "green",
-                        "index": 1
-                      }
-                    }
-                  }
-                ]
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-text"
-                }
-              }
-            ]
-          },
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "websocket_running"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "type": "value",
-                    "options": {
-                      "false": {
-                        "text": "down",
-                        "color": "red",
-                        "index": 0
-                      },
-                      "true": {
-                        "text": "up",
+                      "1": {
+                        "text": "ok",
                         "color": "green",
                         "index": 1
                       }
@@ -2723,313 +2482,112 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap uptime_seconds [$__range]) by (serial_number, health_state, fw_version, version, kernel, boot_slot, boot_count, local_ip_address, time_iso, cpu_temp_celsius, cpu_usage_percent, load_1, load_5, load_15, ram_used_percent, storage_used_percent, storage_data_free_bytes, dashboard_running, display_running, update_running, websocket_running)",
-          "queryType": "instant",
-          "format": "table"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Free space\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
+        },
+        {
+          "refId": "I",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Healthy\" | unwrap healthy [$__range]) by (serial_number, metric)",
+          "queryType": "instant"
         }
       ],
       "description": "One row per frame, from its most recent heartbeat in the range.",
       "transformations": [
         {
-          "id": "convertFieldType",
+          "id": "joinByLabels",
           "options": {
-            "conversions": [
-              {
-                "targetField": "cpu_temp_celsius",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "cpu_usage_percent",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "load_1",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "load_5",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "load_15",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "ram_used_percent",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "storage_used_percent",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "storage_data_free_bytes",
-                "destinationType": "number"
-              },
-              {
-                "targetField": "boot_count",
-                "destinationType": "number"
-              }
+            "value": "metric",
+            "join": [
+              "serial_number"
             ]
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "Value": "Uptime"
-            }
           }
         }
       ]
-    },
-    {
-      "type": "row",
-      "title": "Legacy frames",
-      "id": 33,
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 85
-      },
-      "panels": []
-    },
-    {
-      "type": "stat",
-      "title": "Legacy frames",
-      "id": 34,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 4,
-        "x": 0,
-        "y": 86
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "auto",
-        "textMode": "auto",
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "wideLayout": true,
-        "showPercentChange": false,
-        "percentChangeColorMode": "standard"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "count(count by (frame_ip) (count_over_time({job=\"backend\", frame_ip=~\".+\", serial_number=\"\"} [$__range]))) or vector(0)"
-        }
-      ],
-      "description": "Frames on firmware that posts only its IP and version. They cannot appear in any panel above."
-    },
-    {
-      "type": "table",
-      "title": "Legacy frames seen",
-      "id": 35,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 10,
-        "x": 4,
-        "y": 86
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "countRows": false,
-          "fields": ""
-        },
-        "sortBy": [
-          {
-            "displayName": "frame_ip",
-            "desc": false
-          }
-        ]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (frame_ip, frame_version) (count_over_time({job=\"backend\", frame_ip=~\".+\", serial_number=\"\"} [$__range]))",
-          "queryType": "instant",
-          "format": "table"
-        }
-      ],
-      "description": "Keyed by IP, the only identifier legacy firmware sends. A DHCP change reads as a new row.",
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "renameByName": {
-              "Value": "Heartbeats",
-              "frame_ip": "IP",
-              "frame_version": "Version"
-            }
-          }
-        }
-      ]
-    },
-    {
-      "type": "status-history",
-      "title": "Legacy heartbeats",
-      "id": 36,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 10,
-        "x": 14,
-        "y": 86
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "auto",
-        "rowHeight": 0.9,
-        "colWidth": 0.9,
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (frame_ip) (count_over_time({job=\"backend\", frame_ip=~\".+\", serial_number=\"\"} [$__auto]))",
-          "legendFormat": "{{frame_ip}}"
-        }
-      ],
-      "description": "Legacy firmware heartbeats every 15 minutes, so expect sparse columns."
     },
     {
       "type": "row",
       "title": "Raw heartbeats",
-      "id": 37,
+      "id": 32,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 93
+        "y": 77
       },
       "panels": []
     },
     {
       "type": "logs",
       "title": "Heartbeat payloads",
-      "id": 38,
+      "id": 33,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -3038,7 +2596,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 94
+        "y": 78
       },
       "options": {
         "showTime": true,
