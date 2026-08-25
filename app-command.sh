@@ -65,6 +65,12 @@ fi
 
 RESULT=$?
 
+# Editing a bind-mounted config never recreates its container, so reload them here.
+if [ $RESULT -eq 0 ] && [ "$CONTAINER_NAME" == "all" ] && [[ "$DOCKER_COMPOSE_COMMAND" == up* ]]; then
+  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" \
+    restart prometheus promtail loki telegraf grafana
+fi
+
 # Restore the original env file
 mv "${ENV_FILE}.backup" "$ENV_FILE"
 echo "Restored original env file"
