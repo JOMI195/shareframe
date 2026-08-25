@@ -1,6 +1,6 @@
 {
   "uid": "shareframe-logs-nginx",
-  "title": "Logs \u00b7 nginx",
+  "title": "Logs · nginx",
   "description": "nginx access and error logs from Loki. Only populated where nginx runs (prod, prod.local).",
   "tags": [
     "shareframe"
@@ -905,7 +905,7 @@
       },
       "gridPos": {
         "h": 8,
-        "w": 12,
+        "w": 24,
         "x": 0,
         "y": 12
       },
@@ -970,7 +970,7 @@
     },
     {
       "type": "table",
-      "title": "Top client IPs",
+      "title": "Top cities",
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -978,8 +978,8 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
-        "y": 12
+        "x": 0,
+        "y": 20
       },
       "fieldConfig": {
         "defaults": {
@@ -1018,7 +1018,84 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (ip, country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` [$__range])))",
+          "expr": "topk(10, sum by (country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "city": "City",
+              "country": "Country",
+              "Value": "Requests"
+            },
+            "indexByName": {
+              "city": 0,
+              "country": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "description": "GeoIP city of the client, drilling down on 'Requests by country'. Captured at query time rather than as a Loki label, since city is high-cardinality. 'unknown' is expected for a large share of traffic - GeoLite2 city coverage is much thinner than country coverage, especially for IPv6 and mobile ranges.",
+      "id": 109
+    },
+    {
+      "type": "table",
+      "title": "Top client IPs",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": false
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        },
+        "sortBy": [
+          {
+            "displayName": "Requests",
+            "desc": true
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "topk(10, sum by (ip, country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range])))",
           "queryType": "instant"
         }
       ],
@@ -1032,17 +1109,19 @@
             "renameByName": {
               "ip": "Client IP",
               "country": "Country",
+              "city": "City",
               "Value": "Requests"
             },
             "indexByName": {
               "ip": 0,
               "country": 1,
-              "Value": 2
+              "city": 2,
+              "Value": 3
             }
           }
         }
       ],
-      "description": "Busiest source addresses with their GeoIP country. nginx faces the internet directly on Hetzner, so remote_addr is the visitor's own IP.",
+      "description": "Busiest source addresses with their GeoIP country and city. nginx faces the internet directly on Hetzner, so remote_addr is the visitor's own IP.",
       "id": 108
     },
     {
@@ -1056,7 +1135,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 20
+        "y": 28
       },
       "options": {
         "showTime": true,
@@ -1092,7 +1171,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 40
       },
       "options": {
         "showTime": true,

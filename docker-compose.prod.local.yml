@@ -149,7 +149,8 @@ services:
       websockets:
         condition: service_started
     ports:
-      - 80:80
+      - "0.0.0.0:80:80"
+      - "[::]:80:80"
     env_file:
       - ./.env.prod.local
     networks:
@@ -305,6 +306,10 @@ volumes:
 networks:
   frontend_network:
     driver: bridge
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: fd4e:9a2c:71b3:2::/64
   backend_network:
     driver: bridge
   backend_db_network:
