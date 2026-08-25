@@ -243,6 +243,22 @@ services:
     networks:
       - monitoring_network
 
+  telegraf:
+    logging: *default-logging
+    container_name: telegraf
+    image: telegraf:1.35-alpine
+    restart: unless-stopped
+    # the image entrypoint drops to the telegraf user, which cannot read the socket
+    user: "0:0"
+    entrypoint: ["telegraf"]
+    volumes:
+      - ./monitoring/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    expose:
+      - 9273
+    networks:
+      - monitoring_network
+
   loki:
     logging: *default-logging
     container_name: loki
@@ -264,6 +280,7 @@ services:
     volumes:
       - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
       - promtail_positions:/positions
+      - /var/run/docker.sock:/var/run/docker.sock:ro
       - logs_volume:/logs:ro
       - grafana_logs:/grafana-logs:ro
     depends_on:

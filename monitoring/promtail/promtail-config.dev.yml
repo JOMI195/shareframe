@@ -8,7 +8,7 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # Dev has no logs_volume and no nginx: scrape container stdout instead,
+  # Dev has no logs_volume and no nginx: every container ships from stdout,
   # relabelled to the same job/level/logger the prod config produces.
   - job_name: docker
     docker_sd_configs:
@@ -20,6 +20,10 @@ scrape_configs:
         target_label: container
       - source_labels: ["__meta_docker_container_log_stream"]
         target_label: stream
+      - source_labels: ["container"]
+        regex: ".*"
+        target_label: job
+        replacement: docker
       - source_labels: ["__meta_docker_container_name"]
         regex: "/(backend|websockets|celery|celery-beat)-dev"
         target_label: job
@@ -28,9 +32,6 @@ scrape_configs:
         regex: "/grafana-dev"
         target_label: job
         replacement: grafana
-      - source_labels: ["__meta_docker_container_name"]
-        regex: "/(backend|websockets|celery|celery-beat|grafana)-dev"
-        action: keep
     pipeline_stages:
       - match:
           selector: '{job="backend"}'

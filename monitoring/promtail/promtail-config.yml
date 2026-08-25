@@ -8,18 +8,47 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  - job_name: backend
+  # App containers log to stdout and to logs_volume; stdout is the ingested copy.
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+    relabel_configs:
+      - source_labels: ["__meta_docker_container_name"]
+        regex: "/(.*)"
+        target_label: container
+      - source_labels: ["__meta_docker_container_log_stream"]
+        target_label: stream
+      # grafana stdout repeats the file stream, unredacted session token included
+      - source_labels: ["container"]
+        regex: "grafana"
+        action: drop
+      - source_labels: ["container"]
+        regex: ".*"
+        target_label: job
+        replacement: docker
+      - source_labels: ["container"]
+        regex: "(backend|websockets|celery|celery-beat)"
+        target_label: job
+        replacement: backend
+    pipeline_stages:
+      - match:
+          selector: '{job="backend"}'
+          stages:
+            - regex:
+                expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+) \[(?P<level>\w+)\] (?P<logger>\S+) - (?P<func>\S+) - (?P<message>.*)$'
+            - labels:
+                level:
+                logger:
+
+  # Written by daphne itself, never to stdout.
+  - job_name: backend-daphne-access
     static_configs:
       - targets: [localhost]
         labels:
           job: backend
-          __path__: /logs/backend-*.log
-    pipeline_stages:
-      - regex:
-          expression: '^(?P<time>\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2},\d+) \[(?P<level>\w+)\] (?P<logger>\S+) - (?P<func>\S+) - (?P<message>.*)$'
-      - labels:
-          level:
-          logger:
+          logtype: access
+          __path__: /logs/backend-daphne-access.log
 
   - job_name: nginx
     static_configs:

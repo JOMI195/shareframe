@@ -44,3 +44,19 @@ groups:
           severity: warning
         annotations:
           summary: "Backend serving >1 HTTP 5xx/s over 5m"
+
+      - alert: ContainerRestartLoop
+        expr: resets(docker_container_status_uptime_ns[15m]) > 3
+        for: 0m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container_name }} restarted >3x in 15m"
+
+      - alert: ContainerUnhealthy
+        expr: docker_container_health_failing_streak{health_status!="healthy"} > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.container_name }} healthcheck is {{ $labels.health_status }}"
