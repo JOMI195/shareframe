@@ -7,7 +7,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 12,
+  "version": 13,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",
@@ -775,7 +775,857 @@
             "filterable": false
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "AC": {
+                        "text": "🇦🇨 Ascension Island (AC)"
+                      },
+                      "AD": {
+                        "text": "🇦🇩 Andorra (AD)"
+                      },
+                      "AE": {
+                        "text": "🇦🇪 United Arab Emirates (AE)"
+                      },
+                      "AF": {
+                        "text": "🇦🇫 Afghanistan (AF)"
+                      },
+                      "AG": {
+                        "text": "🇦🇬 Antigua & Barbuda (AG)"
+                      },
+                      "AI": {
+                        "text": "🇦🇮 Anguilla (AI)"
+                      },
+                      "AL": {
+                        "text": "🇦🇱 Albania (AL)"
+                      },
+                      "AM": {
+                        "text": "🇦🇲 Armenia (AM)"
+                      },
+                      "AN": {
+                        "text": "🇦🇳 Curaçao (AN)"
+                      },
+                      "AO": {
+                        "text": "🇦🇴 Angola (AO)"
+                      },
+                      "AQ": {
+                        "text": "🇦🇶 Antarctica (AQ)"
+                      },
+                      "AR": {
+                        "text": "🇦🇷 Argentina (AR)"
+                      },
+                      "AS": {
+                        "text": "🇦🇸 American Samoa (AS)"
+                      },
+                      "AT": {
+                        "text": "🇦🇹 Austria (AT)"
+                      },
+                      "AU": {
+                        "text": "🇦🇺 Australia (AU)"
+                      },
+                      "AW": {
+                        "text": "🇦🇼 Aruba (AW)"
+                      },
+                      "AX": {
+                        "text": "🇦🇽 Åland Islands (AX)"
+                      },
+                      "AZ": {
+                        "text": "🇦🇿 Azerbaijan (AZ)"
+                      },
+                      "BA": {
+                        "text": "🇧🇦 Bosnia & Herzegovina (BA)"
+                      },
+                      "BB": {
+                        "text": "🇧🇧 Barbados (BB)"
+                      },
+                      "BD": {
+                        "text": "🇧🇩 Bangladesh (BD)"
+                      },
+                      "BE": {
+                        "text": "🇧🇪 Belgium (BE)"
+                      },
+                      "BF": {
+                        "text": "🇧🇫 Burkina Faso (BF)"
+                      },
+                      "BG": {
+                        "text": "🇧🇬 Bulgaria (BG)"
+                      },
+                      "BH": {
+                        "text": "🇧🇭 Bahrain (BH)"
+                      },
+                      "BI": {
+                        "text": "🇧🇮 Burundi (BI)"
+                      },
+                      "BJ": {
+                        "text": "🇧🇯 Benin (BJ)"
+                      },
+                      "BL": {
+                        "text": "🇧🇱 St. Barthélemy (BL)"
+                      },
+                      "BM": {
+                        "text": "🇧🇲 Bermuda (BM)"
+                      },
+                      "BN": {
+                        "text": "🇧🇳 Brunei (BN)"
+                      },
+                      "BO": {
+                        "text": "🇧🇴 Bolivia (BO)"
+                      },
+                      "BQ": {
+                        "text": "🇧🇶 Caribbean Netherlands (BQ)"
+                      },
+                      "BR": {
+                        "text": "🇧🇷 Brazil (BR)"
+                      },
+                      "BS": {
+                        "text": "🇧🇸 Bahamas (BS)"
+                      },
+                      "BT": {
+                        "text": "🇧🇹 Bhutan (BT)"
+                      },
+                      "BU": {
+                        "text": "🇧🇺 Myanmar (Burma) (BU)"
+                      },
+                      "BV": {
+                        "text": "🇧🇻 Bouvet Island (BV)"
+                      },
+                      "BW": {
+                        "text": "🇧🇼 Botswana (BW)"
+                      },
+                      "BY": {
+                        "text": "🇧🇾 Belarus (BY)"
+                      },
+                      "BZ": {
+                        "text": "🇧🇿 Belize (BZ)"
+                      },
+                      "CA": {
+                        "text": "🇨🇦 Canada (CA)"
+                      },
+                      "CC": {
+                        "text": "🇨🇨 Cocos (Keeling) Islands (CC)"
+                      },
+                      "CD": {
+                        "text": "🇨🇩 Congo - Kinshasa (CD)"
+                      },
+                      "CF": {
+                        "text": "🇨🇫 Central African Republic (CF)"
+                      },
+                      "CG": {
+                        "text": "🇨🇬 Congo - Brazzaville (CG)"
+                      },
+                      "CH": {
+                        "text": "🇨🇭 Switzerland (CH)"
+                      },
+                      "CI": {
+                        "text": "🇨🇮 Côte d’Ivoire (CI)"
+                      },
+                      "CK": {
+                        "text": "🇨🇰 Cook Islands (CK)"
+                      },
+                      "CL": {
+                        "text": "🇨🇱 Chile (CL)"
+                      },
+                      "CM": {
+                        "text": "🇨🇲 Cameroon (CM)"
+                      },
+                      "CN": {
+                        "text": "🇨🇳 China (CN)"
+                      },
+                      "CO": {
+                        "text": "🇨🇴 Colombia (CO)"
+                      },
+                      "CP": {
+                        "text": "🇨🇵 Clipperton Island (CP)"
+                      },
+                      "CQ": {
+                        "text": "🇨🇶 Sark (CQ)"
+                      },
+                      "CR": {
+                        "text": "🇨🇷 Costa Rica (CR)"
+                      },
+                      "CS": {
+                        "text": "🇨🇸 Serbia (CS)"
+                      },
+                      "CU": {
+                        "text": "🇨🇺 Cuba (CU)"
+                      },
+                      "CV": {
+                        "text": "🇨🇻 Cape Verde (CV)"
+                      },
+                      "CW": {
+                        "text": "🇨🇼 Curaçao (CW)"
+                      },
+                      "CX": {
+                        "text": "🇨🇽 Christmas Island (CX)"
+                      },
+                      "CY": {
+                        "text": "🇨🇾 Cyprus (CY)"
+                      },
+                      "CZ": {
+                        "text": "🇨🇿 Czechia (CZ)"
+                      },
+                      "DD": {
+                        "text": "🇩🇩 Germany (DD)"
+                      },
+                      "DE": {
+                        "text": "🇩🇪 Germany (DE)"
+                      },
+                      "DG": {
+                        "text": "🇩🇬 Diego Garcia (DG)"
+                      },
+                      "DJ": {
+                        "text": "🇩🇯 Djibouti (DJ)"
+                      },
+                      "DK": {
+                        "text": "🇩🇰 Denmark (DK)"
+                      },
+                      "DM": {
+                        "text": "🇩🇲 Dominica (DM)"
+                      },
+                      "DO": {
+                        "text": "🇩🇴 Dominican Republic (DO)"
+                      },
+                      "DY": {
+                        "text": "🇩🇾 Benin (DY)"
+                      },
+                      "DZ": {
+                        "text": "🇩🇿 Algeria (DZ)"
+                      },
+                      "EA": {
+                        "text": "🇪🇦 Ceuta & Melilla (EA)"
+                      },
+                      "EC": {
+                        "text": "🇪🇨 Ecuador (EC)"
+                      },
+                      "EE": {
+                        "text": "🇪🇪 Estonia (EE)"
+                      },
+                      "EG": {
+                        "text": "🇪🇬 Egypt (EG)"
+                      },
+                      "EH": {
+                        "text": "🇪🇭 Western Sahara (EH)"
+                      },
+                      "ER": {
+                        "text": "🇪🇷 Eritrea (ER)"
+                      },
+                      "ES": {
+                        "text": "🇪🇸 Spain (ES)"
+                      },
+                      "ET": {
+                        "text": "🇪🇹 Ethiopia (ET)"
+                      },
+                      "EU": {
+                        "text": "🇪🇺 European Union (EU)"
+                      },
+                      "EZ": {
+                        "text": "🇪🇿 Eurozone (EZ)"
+                      },
+                      "FI": {
+                        "text": "🇫🇮 Finland (FI)"
+                      },
+                      "FJ": {
+                        "text": "🇫🇯 Fiji (FJ)"
+                      },
+                      "FK": {
+                        "text": "🇫🇰 Falkland Islands (FK)"
+                      },
+                      "FM": {
+                        "text": "🇫🇲 Micronesia (FM)"
+                      },
+                      "FO": {
+                        "text": "🇫🇴 Faroe Islands (FO)"
+                      },
+                      "FR": {
+                        "text": "🇫🇷 France (FR)"
+                      },
+                      "FX": {
+                        "text": "🇫🇽 France (FX)"
+                      },
+                      "GA": {
+                        "text": "🇬🇦 Gabon (GA)"
+                      },
+                      "GB": {
+                        "text": "🇬🇧 United Kingdom (GB)"
+                      },
+                      "GD": {
+                        "text": "🇬🇩 Grenada (GD)"
+                      },
+                      "GE": {
+                        "text": "🇬🇪 Georgia (GE)"
+                      },
+                      "GF": {
+                        "text": "🇬🇫 French Guiana (GF)"
+                      },
+                      "GG": {
+                        "text": "🇬🇬 Guernsey (GG)"
+                      },
+                      "GH": {
+                        "text": "🇬🇭 Ghana (GH)"
+                      },
+                      "GI": {
+                        "text": "🇬🇮 Gibraltar (GI)"
+                      },
+                      "GL": {
+                        "text": "🇬🇱 Greenland (GL)"
+                      },
+                      "GM": {
+                        "text": "🇬🇲 Gambia (GM)"
+                      },
+                      "GN": {
+                        "text": "🇬🇳 Guinea (GN)"
+                      },
+                      "GP": {
+                        "text": "🇬🇵 Guadeloupe (GP)"
+                      },
+                      "GQ": {
+                        "text": "🇬🇶 Equatorial Guinea (GQ)"
+                      },
+                      "GR": {
+                        "text": "🇬🇷 Greece (GR)"
+                      },
+                      "GS": {
+                        "text": "🇬🇸 South Georgia & South Sandwich Islands (GS)"
+                      },
+                      "GT": {
+                        "text": "🇬🇹 Guatemala (GT)"
+                      },
+                      "GU": {
+                        "text": "🇬🇺 Guam (GU)"
+                      },
+                      "GW": {
+                        "text": "🇬🇼 Guinea-Bissau (GW)"
+                      },
+                      "GY": {
+                        "text": "🇬🇾 Guyana (GY)"
+                      },
+                      "HK": {
+                        "text": "🇭🇰 Hong Kong SAR China (HK)"
+                      },
+                      "HM": {
+                        "text": "🇭🇲 Heard & McDonald Islands (HM)"
+                      },
+                      "HN": {
+                        "text": "🇭🇳 Honduras (HN)"
+                      },
+                      "HR": {
+                        "text": "🇭🇷 Croatia (HR)"
+                      },
+                      "HT": {
+                        "text": "🇭🇹 Haiti (HT)"
+                      },
+                      "HU": {
+                        "text": "🇭🇺 Hungary (HU)"
+                      },
+                      "HV": {
+                        "text": "🇭🇻 Burkina Faso (HV)"
+                      },
+                      "IC": {
+                        "text": "🇮🇨 Canary Islands (IC)"
+                      },
+                      "ID": {
+                        "text": "🇮🇩 Indonesia (ID)"
+                      },
+                      "IE": {
+                        "text": "🇮🇪 Ireland (IE)"
+                      },
+                      "IL": {
+                        "text": "🇮🇱 Israel (IL)"
+                      },
+                      "IM": {
+                        "text": "🇮🇲 Isle of Man (IM)"
+                      },
+                      "IN": {
+                        "text": "🇮🇳 India (IN)"
+                      },
+                      "IO": {
+                        "text": "🇮🇴 British Indian Ocean Territory (IO)"
+                      },
+                      "IQ": {
+                        "text": "🇮🇶 Iraq (IQ)"
+                      },
+                      "IR": {
+                        "text": "🇮🇷 Iran (IR)"
+                      },
+                      "IS": {
+                        "text": "🇮🇸 Iceland (IS)"
+                      },
+                      "IT": {
+                        "text": "🇮🇹 Italy (IT)"
+                      },
+                      "JE": {
+                        "text": "🇯🇪 Jersey (JE)"
+                      },
+                      "JM": {
+                        "text": "🇯🇲 Jamaica (JM)"
+                      },
+                      "JO": {
+                        "text": "🇯🇴 Jordan (JO)"
+                      },
+                      "JP": {
+                        "text": "🇯🇵 Japan (JP)"
+                      },
+                      "KE": {
+                        "text": "🇰🇪 Kenya (KE)"
+                      },
+                      "KG": {
+                        "text": "🇰🇬 Kyrgyzstan (KG)"
+                      },
+                      "KH": {
+                        "text": "🇰🇭 Cambodia (KH)"
+                      },
+                      "KI": {
+                        "text": "🇰🇮 Kiribati (KI)"
+                      },
+                      "KM": {
+                        "text": "🇰🇲 Comoros (KM)"
+                      },
+                      "KN": {
+                        "text": "🇰🇳 St. Kitts & Nevis (KN)"
+                      },
+                      "KP": {
+                        "text": "🇰🇵 North Korea (KP)"
+                      },
+                      "KR": {
+                        "text": "🇰🇷 South Korea (KR)"
+                      },
+                      "KW": {
+                        "text": "🇰🇼 Kuwait (KW)"
+                      },
+                      "KY": {
+                        "text": "🇰🇾 Cayman Islands (KY)"
+                      },
+                      "KZ": {
+                        "text": "🇰🇿 Kazakhstan (KZ)"
+                      },
+                      "LA": {
+                        "text": "🇱🇦 Laos (LA)"
+                      },
+                      "LB": {
+                        "text": "🇱🇧 Lebanon (LB)"
+                      },
+                      "LC": {
+                        "text": "🇱🇨 St. Lucia (LC)"
+                      },
+                      "LI": {
+                        "text": "🇱🇮 Liechtenstein (LI)"
+                      },
+                      "LK": {
+                        "text": "🇱🇰 Sri Lanka (LK)"
+                      },
+                      "LR": {
+                        "text": "🇱🇷 Liberia (LR)"
+                      },
+                      "LS": {
+                        "text": "🇱🇸 Lesotho (LS)"
+                      },
+                      "LT": {
+                        "text": "🇱🇹 Lithuania (LT)"
+                      },
+                      "LU": {
+                        "text": "🇱🇺 Luxembourg (LU)"
+                      },
+                      "LV": {
+                        "text": "🇱🇻 Latvia (LV)"
+                      },
+                      "LY": {
+                        "text": "🇱🇾 Libya (LY)"
+                      },
+                      "MA": {
+                        "text": "🇲🇦 Morocco (MA)"
+                      },
+                      "MC": {
+                        "text": "🇲🇨 Monaco (MC)"
+                      },
+                      "MD": {
+                        "text": "🇲🇩 Moldova (MD)"
+                      },
+                      "ME": {
+                        "text": "🇲🇪 Montenegro (ME)"
+                      },
+                      "MF": {
+                        "text": "🇲🇫 St. Martin (MF)"
+                      },
+                      "MG": {
+                        "text": "🇲🇬 Madagascar (MG)"
+                      },
+                      "MH": {
+                        "text": "🇲🇭 Marshall Islands (MH)"
+                      },
+                      "MK": {
+                        "text": "🇲🇰 North Macedonia (MK)"
+                      },
+                      "ML": {
+                        "text": "🇲🇱 Mali (ML)"
+                      },
+                      "MM": {
+                        "text": "🇲🇲 Myanmar (Burma) (MM)"
+                      },
+                      "MN": {
+                        "text": "🇲🇳 Mongolia (MN)"
+                      },
+                      "MO": {
+                        "text": "🇲🇴 Macao SAR China (MO)"
+                      },
+                      "MP": {
+                        "text": "🇲🇵 Northern Mariana Islands (MP)"
+                      },
+                      "MQ": {
+                        "text": "🇲🇶 Martinique (MQ)"
+                      },
+                      "MR": {
+                        "text": "🇲🇷 Mauritania (MR)"
+                      },
+                      "MS": {
+                        "text": "🇲🇸 Montserrat (MS)"
+                      },
+                      "MT": {
+                        "text": "🇲🇹 Malta (MT)"
+                      },
+                      "MU": {
+                        "text": "🇲🇺 Mauritius (MU)"
+                      },
+                      "MV": {
+                        "text": "🇲🇻 Maldives (MV)"
+                      },
+                      "MW": {
+                        "text": "🇲🇼 Malawi (MW)"
+                      },
+                      "MX": {
+                        "text": "🇲🇽 Mexico (MX)"
+                      },
+                      "MY": {
+                        "text": "🇲🇾 Malaysia (MY)"
+                      },
+                      "MZ": {
+                        "text": "🇲🇿 Mozambique (MZ)"
+                      },
+                      "NA": {
+                        "text": "🇳🇦 Namibia (NA)"
+                      },
+                      "NC": {
+                        "text": "🇳🇨 New Caledonia (NC)"
+                      },
+                      "NE": {
+                        "text": "🇳🇪 Niger (NE)"
+                      },
+                      "NF": {
+                        "text": "🇳🇫 Norfolk Island (NF)"
+                      },
+                      "NG": {
+                        "text": "🇳🇬 Nigeria (NG)"
+                      },
+                      "NH": {
+                        "text": "🇳🇭 Vanuatu (NH)"
+                      },
+                      "NI": {
+                        "text": "🇳🇮 Nicaragua (NI)"
+                      },
+                      "NL": {
+                        "text": "🇳🇱 Netherlands (NL)"
+                      },
+                      "NO": {
+                        "text": "🇳🇴 Norway (NO)"
+                      },
+                      "NP": {
+                        "text": "🇳🇵 Nepal (NP)"
+                      },
+                      "NR": {
+                        "text": "🇳🇷 Nauru (NR)"
+                      },
+                      "NU": {
+                        "text": "🇳🇺 Niue (NU)"
+                      },
+                      "NZ": {
+                        "text": "🇳🇿 New Zealand (NZ)"
+                      },
+                      "OM": {
+                        "text": "🇴🇲 Oman (OM)"
+                      },
+                      "PA": {
+                        "text": "🇵🇦 Panama (PA)"
+                      },
+                      "PE": {
+                        "text": "🇵🇪 Peru (PE)"
+                      },
+                      "PF": {
+                        "text": "🇵🇫 French Polynesia (PF)"
+                      },
+                      "PG": {
+                        "text": "🇵🇬 Papua New Guinea (PG)"
+                      },
+                      "PH": {
+                        "text": "🇵🇭 Philippines (PH)"
+                      },
+                      "PK": {
+                        "text": "🇵🇰 Pakistan (PK)"
+                      },
+                      "PL": {
+                        "text": "🇵🇱 Poland (PL)"
+                      },
+                      "PM": {
+                        "text": "🇵🇲 St. Pierre & Miquelon (PM)"
+                      },
+                      "PN": {
+                        "text": "🇵🇳 Pitcairn Islands (PN)"
+                      },
+                      "PR": {
+                        "text": "🇵🇷 Puerto Rico (PR)"
+                      },
+                      "PS": {
+                        "text": "🇵🇸 Palestinian Territories (PS)"
+                      },
+                      "PT": {
+                        "text": "🇵🇹 Portugal (PT)"
+                      },
+                      "PW": {
+                        "text": "🇵🇼 Palau (PW)"
+                      },
+                      "PY": {
+                        "text": "🇵🇾 Paraguay (PY)"
+                      },
+                      "QA": {
+                        "text": "🇶🇦 Qatar (QA)"
+                      },
+                      "RE": {
+                        "text": "🇷🇪 Réunion (RE)"
+                      },
+                      "RH": {
+                        "text": "🇷🇭 Zimbabwe (RH)"
+                      },
+                      "RO": {
+                        "text": "🇷🇴 Romania (RO)"
+                      },
+                      "RS": {
+                        "text": "🇷🇸 Serbia (RS)"
+                      },
+                      "RU": {
+                        "text": "🇷🇺 Russia (RU)"
+                      },
+                      "RW": {
+                        "text": "🇷🇼 Rwanda (RW)"
+                      },
+                      "SA": {
+                        "text": "🇸🇦 Saudi Arabia (SA)"
+                      },
+                      "SB": {
+                        "text": "🇸🇧 Solomon Islands (SB)"
+                      },
+                      "SC": {
+                        "text": "🇸🇨 Seychelles (SC)"
+                      },
+                      "SD": {
+                        "text": "🇸🇩 Sudan (SD)"
+                      },
+                      "SE": {
+                        "text": "🇸🇪 Sweden (SE)"
+                      },
+                      "SG": {
+                        "text": "🇸🇬 Singapore (SG)"
+                      },
+                      "SH": {
+                        "text": "🇸🇭 St. Helena (SH)"
+                      },
+                      "SI": {
+                        "text": "🇸🇮 Slovenia (SI)"
+                      },
+                      "SJ": {
+                        "text": "🇸🇯 Svalbard & Jan Mayen (SJ)"
+                      },
+                      "SK": {
+                        "text": "🇸🇰 Slovakia (SK)"
+                      },
+                      "SL": {
+                        "text": "🇸🇱 Sierra Leone (SL)"
+                      },
+                      "SM": {
+                        "text": "🇸🇲 San Marino (SM)"
+                      },
+                      "SN": {
+                        "text": "🇸🇳 Senegal (SN)"
+                      },
+                      "SO": {
+                        "text": "🇸🇴 Somalia (SO)"
+                      },
+                      "SR": {
+                        "text": "🇸🇷 Suriname (SR)"
+                      },
+                      "SS": {
+                        "text": "🇸🇸 South Sudan (SS)"
+                      },
+                      "ST": {
+                        "text": "🇸🇹 São Tomé & Príncipe (ST)"
+                      },
+                      "SU": {
+                        "text": "🇸🇺 Russia (SU)"
+                      },
+                      "SV": {
+                        "text": "🇸🇻 El Salvador (SV)"
+                      },
+                      "SX": {
+                        "text": "🇸🇽 Sint Maarten (SX)"
+                      },
+                      "SY": {
+                        "text": "🇸🇾 Syria (SY)"
+                      },
+                      "SZ": {
+                        "text": "🇸🇿 Eswatini (SZ)"
+                      },
+                      "TA": {
+                        "text": "🇹🇦 Tristan da Cunha (TA)"
+                      },
+                      "TC": {
+                        "text": "🇹🇨 Turks & Caicos Islands (TC)"
+                      },
+                      "TD": {
+                        "text": "🇹🇩 Chad (TD)"
+                      },
+                      "TF": {
+                        "text": "🇹🇫 French Southern Territories (TF)"
+                      },
+                      "TG": {
+                        "text": "🇹🇬 Togo (TG)"
+                      },
+                      "TH": {
+                        "text": "🇹🇭 Thailand (TH)"
+                      },
+                      "TJ": {
+                        "text": "🇹🇯 Tajikistan (TJ)"
+                      },
+                      "TK": {
+                        "text": "🇹🇰 Tokelau (TK)"
+                      },
+                      "TL": {
+                        "text": "🇹🇱 Timor-Leste (TL)"
+                      },
+                      "TM": {
+                        "text": "🇹🇲 Turkmenistan (TM)"
+                      },
+                      "TN": {
+                        "text": "🇹🇳 Tunisia (TN)"
+                      },
+                      "TO": {
+                        "text": "🇹🇴 Tonga (TO)"
+                      },
+                      "TP": {
+                        "text": "🇹🇵 Timor-Leste (TP)"
+                      },
+                      "TR": {
+                        "text": "🇹🇷 Türkiye (TR)"
+                      },
+                      "TT": {
+                        "text": "🇹🇹 Trinidad & Tobago (TT)"
+                      },
+                      "TV": {
+                        "text": "🇹🇻 Tuvalu (TV)"
+                      },
+                      "TW": {
+                        "text": "🇹🇼 Taiwan (TW)"
+                      },
+                      "TZ": {
+                        "text": "🇹🇿 Tanzania (TZ)"
+                      },
+                      "UA": {
+                        "text": "🇺🇦 Ukraine (UA)"
+                      },
+                      "UG": {
+                        "text": "🇺🇬 Uganda (UG)"
+                      },
+                      "UK": {
+                        "text": "🇺🇰 United Kingdom (UK)"
+                      },
+                      "UM": {
+                        "text": "🇺🇲 U.S. Outlying Islands (UM)"
+                      },
+                      "UN": {
+                        "text": "🇺🇳 United Nations (UN)"
+                      },
+                      "US": {
+                        "text": "🇺🇸 United States (US)"
+                      },
+                      "UY": {
+                        "text": "🇺🇾 Uruguay (UY)"
+                      },
+                      "UZ": {
+                        "text": "🇺🇿 Uzbekistan (UZ)"
+                      },
+                      "VA": {
+                        "text": "🇻🇦 Vatican City (VA)"
+                      },
+                      "VC": {
+                        "text": "🇻🇨 St. Vincent & Grenadines (VC)"
+                      },
+                      "VD": {
+                        "text": "🇻🇩 Vietnam (VD)"
+                      },
+                      "VE": {
+                        "text": "🇻🇪 Venezuela (VE)"
+                      },
+                      "VG": {
+                        "text": "🇻🇬 British Virgin Islands (VG)"
+                      },
+                      "VI": {
+                        "text": "🇻🇮 U.S. Virgin Islands (VI)"
+                      },
+                      "VN": {
+                        "text": "🇻🇳 Vietnam (VN)"
+                      },
+                      "VU": {
+                        "text": "🇻🇺 Vanuatu (VU)"
+                      },
+                      "WF": {
+                        "text": "🇼🇫 Wallis & Futuna (WF)"
+                      },
+                      "WS": {
+                        "text": "🇼🇸 Samoa (WS)"
+                      },
+                      "XK": {
+                        "text": "🇽🇰 Kosovo (XK)"
+                      },
+                      "YD": {
+                        "text": "🇾🇩 Yemen (YD)"
+                      },
+                      "YE": {
+                        "text": "🇾🇪 Yemen (YE)"
+                      },
+                      "YT": {
+                        "text": "🇾🇹 Mayotte (YT)"
+                      },
+                      "YU": {
+                        "text": "🇾🇺 Serbia (YU)"
+                      },
+                      "ZA": {
+                        "text": "🇿🇦 South Africa (ZA)"
+                      },
+                      "ZM": {
+                        "text": "🇿🇲 Zambia (ZM)"
+                      },
+                      "ZR": {
+                        "text": "🇿🇷 Congo - Kinshasa (ZR)"
+                      },
+                      "ZW": {
+                        "text": "🇿🇼 Zimbabwe (ZW)"
+                      },
+                      "unknown": {
+                        "text": "🏳️ Unknown"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "showHeader": true,
@@ -924,7 +1774,845 @@
               "type": "auto"
             },
             "filterable": false
-          }
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "AC": {
+                  "text": "🇦🇨 Ascension Island (AC)"
+                },
+                "AD": {
+                  "text": "🇦🇩 Andorra (AD)"
+                },
+                "AE": {
+                  "text": "🇦🇪 United Arab Emirates (AE)"
+                },
+                "AF": {
+                  "text": "🇦🇫 Afghanistan (AF)"
+                },
+                "AG": {
+                  "text": "🇦🇬 Antigua & Barbuda (AG)"
+                },
+                "AI": {
+                  "text": "🇦🇮 Anguilla (AI)"
+                },
+                "AL": {
+                  "text": "🇦🇱 Albania (AL)"
+                },
+                "AM": {
+                  "text": "🇦🇲 Armenia (AM)"
+                },
+                "AN": {
+                  "text": "🇦🇳 Curaçao (AN)"
+                },
+                "AO": {
+                  "text": "🇦🇴 Angola (AO)"
+                },
+                "AQ": {
+                  "text": "🇦🇶 Antarctica (AQ)"
+                },
+                "AR": {
+                  "text": "🇦🇷 Argentina (AR)"
+                },
+                "AS": {
+                  "text": "🇦🇸 American Samoa (AS)"
+                },
+                "AT": {
+                  "text": "🇦🇹 Austria (AT)"
+                },
+                "AU": {
+                  "text": "🇦🇺 Australia (AU)"
+                },
+                "AW": {
+                  "text": "🇦🇼 Aruba (AW)"
+                },
+                "AX": {
+                  "text": "🇦🇽 Åland Islands (AX)"
+                },
+                "AZ": {
+                  "text": "🇦🇿 Azerbaijan (AZ)"
+                },
+                "BA": {
+                  "text": "🇧🇦 Bosnia & Herzegovina (BA)"
+                },
+                "BB": {
+                  "text": "🇧🇧 Barbados (BB)"
+                },
+                "BD": {
+                  "text": "🇧🇩 Bangladesh (BD)"
+                },
+                "BE": {
+                  "text": "🇧🇪 Belgium (BE)"
+                },
+                "BF": {
+                  "text": "🇧🇫 Burkina Faso (BF)"
+                },
+                "BG": {
+                  "text": "🇧🇬 Bulgaria (BG)"
+                },
+                "BH": {
+                  "text": "🇧🇭 Bahrain (BH)"
+                },
+                "BI": {
+                  "text": "🇧🇮 Burundi (BI)"
+                },
+                "BJ": {
+                  "text": "🇧🇯 Benin (BJ)"
+                },
+                "BL": {
+                  "text": "🇧🇱 St. Barthélemy (BL)"
+                },
+                "BM": {
+                  "text": "🇧🇲 Bermuda (BM)"
+                },
+                "BN": {
+                  "text": "🇧🇳 Brunei (BN)"
+                },
+                "BO": {
+                  "text": "🇧🇴 Bolivia (BO)"
+                },
+                "BQ": {
+                  "text": "🇧🇶 Caribbean Netherlands (BQ)"
+                },
+                "BR": {
+                  "text": "🇧🇷 Brazil (BR)"
+                },
+                "BS": {
+                  "text": "🇧🇸 Bahamas (BS)"
+                },
+                "BT": {
+                  "text": "🇧🇹 Bhutan (BT)"
+                },
+                "BU": {
+                  "text": "🇧🇺 Myanmar (Burma) (BU)"
+                },
+                "BV": {
+                  "text": "🇧🇻 Bouvet Island (BV)"
+                },
+                "BW": {
+                  "text": "🇧🇼 Botswana (BW)"
+                },
+                "BY": {
+                  "text": "🇧🇾 Belarus (BY)"
+                },
+                "BZ": {
+                  "text": "🇧🇿 Belize (BZ)"
+                },
+                "CA": {
+                  "text": "🇨🇦 Canada (CA)"
+                },
+                "CC": {
+                  "text": "🇨🇨 Cocos (Keeling) Islands (CC)"
+                },
+                "CD": {
+                  "text": "🇨🇩 Congo - Kinshasa (CD)"
+                },
+                "CF": {
+                  "text": "🇨🇫 Central African Republic (CF)"
+                },
+                "CG": {
+                  "text": "🇨🇬 Congo - Brazzaville (CG)"
+                },
+                "CH": {
+                  "text": "🇨🇭 Switzerland (CH)"
+                },
+                "CI": {
+                  "text": "🇨🇮 Côte d’Ivoire (CI)"
+                },
+                "CK": {
+                  "text": "🇨🇰 Cook Islands (CK)"
+                },
+                "CL": {
+                  "text": "🇨🇱 Chile (CL)"
+                },
+                "CM": {
+                  "text": "🇨🇲 Cameroon (CM)"
+                },
+                "CN": {
+                  "text": "🇨🇳 China (CN)"
+                },
+                "CO": {
+                  "text": "🇨🇴 Colombia (CO)"
+                },
+                "CP": {
+                  "text": "🇨🇵 Clipperton Island (CP)"
+                },
+                "CQ": {
+                  "text": "🇨🇶 Sark (CQ)"
+                },
+                "CR": {
+                  "text": "🇨🇷 Costa Rica (CR)"
+                },
+                "CS": {
+                  "text": "🇨🇸 Serbia (CS)"
+                },
+                "CU": {
+                  "text": "🇨🇺 Cuba (CU)"
+                },
+                "CV": {
+                  "text": "🇨🇻 Cape Verde (CV)"
+                },
+                "CW": {
+                  "text": "🇨🇼 Curaçao (CW)"
+                },
+                "CX": {
+                  "text": "🇨🇽 Christmas Island (CX)"
+                },
+                "CY": {
+                  "text": "🇨🇾 Cyprus (CY)"
+                },
+                "CZ": {
+                  "text": "🇨🇿 Czechia (CZ)"
+                },
+                "DD": {
+                  "text": "🇩🇩 Germany (DD)"
+                },
+                "DE": {
+                  "text": "🇩🇪 Germany (DE)"
+                },
+                "DG": {
+                  "text": "🇩🇬 Diego Garcia (DG)"
+                },
+                "DJ": {
+                  "text": "🇩🇯 Djibouti (DJ)"
+                },
+                "DK": {
+                  "text": "🇩🇰 Denmark (DK)"
+                },
+                "DM": {
+                  "text": "🇩🇲 Dominica (DM)"
+                },
+                "DO": {
+                  "text": "🇩🇴 Dominican Republic (DO)"
+                },
+                "DY": {
+                  "text": "🇩🇾 Benin (DY)"
+                },
+                "DZ": {
+                  "text": "🇩🇿 Algeria (DZ)"
+                },
+                "EA": {
+                  "text": "🇪🇦 Ceuta & Melilla (EA)"
+                },
+                "EC": {
+                  "text": "🇪🇨 Ecuador (EC)"
+                },
+                "EE": {
+                  "text": "🇪🇪 Estonia (EE)"
+                },
+                "EG": {
+                  "text": "🇪🇬 Egypt (EG)"
+                },
+                "EH": {
+                  "text": "🇪🇭 Western Sahara (EH)"
+                },
+                "ER": {
+                  "text": "🇪🇷 Eritrea (ER)"
+                },
+                "ES": {
+                  "text": "🇪🇸 Spain (ES)"
+                },
+                "ET": {
+                  "text": "🇪🇹 Ethiopia (ET)"
+                },
+                "EU": {
+                  "text": "🇪🇺 European Union (EU)"
+                },
+                "EZ": {
+                  "text": "🇪🇿 Eurozone (EZ)"
+                },
+                "FI": {
+                  "text": "🇫🇮 Finland (FI)"
+                },
+                "FJ": {
+                  "text": "🇫🇯 Fiji (FJ)"
+                },
+                "FK": {
+                  "text": "🇫🇰 Falkland Islands (FK)"
+                },
+                "FM": {
+                  "text": "🇫🇲 Micronesia (FM)"
+                },
+                "FO": {
+                  "text": "🇫🇴 Faroe Islands (FO)"
+                },
+                "FR": {
+                  "text": "🇫🇷 France (FR)"
+                },
+                "FX": {
+                  "text": "🇫🇽 France (FX)"
+                },
+                "GA": {
+                  "text": "🇬🇦 Gabon (GA)"
+                },
+                "GB": {
+                  "text": "🇬🇧 United Kingdom (GB)"
+                },
+                "GD": {
+                  "text": "🇬🇩 Grenada (GD)"
+                },
+                "GE": {
+                  "text": "🇬🇪 Georgia (GE)"
+                },
+                "GF": {
+                  "text": "🇬🇫 French Guiana (GF)"
+                },
+                "GG": {
+                  "text": "🇬🇬 Guernsey (GG)"
+                },
+                "GH": {
+                  "text": "🇬🇭 Ghana (GH)"
+                },
+                "GI": {
+                  "text": "🇬🇮 Gibraltar (GI)"
+                },
+                "GL": {
+                  "text": "🇬🇱 Greenland (GL)"
+                },
+                "GM": {
+                  "text": "🇬🇲 Gambia (GM)"
+                },
+                "GN": {
+                  "text": "🇬🇳 Guinea (GN)"
+                },
+                "GP": {
+                  "text": "🇬🇵 Guadeloupe (GP)"
+                },
+                "GQ": {
+                  "text": "🇬🇶 Equatorial Guinea (GQ)"
+                },
+                "GR": {
+                  "text": "🇬🇷 Greece (GR)"
+                },
+                "GS": {
+                  "text": "🇬🇸 South Georgia & South Sandwich Islands (GS)"
+                },
+                "GT": {
+                  "text": "🇬🇹 Guatemala (GT)"
+                },
+                "GU": {
+                  "text": "🇬🇺 Guam (GU)"
+                },
+                "GW": {
+                  "text": "🇬🇼 Guinea-Bissau (GW)"
+                },
+                "GY": {
+                  "text": "🇬🇾 Guyana (GY)"
+                },
+                "HK": {
+                  "text": "🇭🇰 Hong Kong SAR China (HK)"
+                },
+                "HM": {
+                  "text": "🇭🇲 Heard & McDonald Islands (HM)"
+                },
+                "HN": {
+                  "text": "🇭🇳 Honduras (HN)"
+                },
+                "HR": {
+                  "text": "🇭🇷 Croatia (HR)"
+                },
+                "HT": {
+                  "text": "🇭🇹 Haiti (HT)"
+                },
+                "HU": {
+                  "text": "🇭🇺 Hungary (HU)"
+                },
+                "HV": {
+                  "text": "🇭🇻 Burkina Faso (HV)"
+                },
+                "IC": {
+                  "text": "🇮🇨 Canary Islands (IC)"
+                },
+                "ID": {
+                  "text": "🇮🇩 Indonesia (ID)"
+                },
+                "IE": {
+                  "text": "🇮🇪 Ireland (IE)"
+                },
+                "IL": {
+                  "text": "🇮🇱 Israel (IL)"
+                },
+                "IM": {
+                  "text": "🇮🇲 Isle of Man (IM)"
+                },
+                "IN": {
+                  "text": "🇮🇳 India (IN)"
+                },
+                "IO": {
+                  "text": "🇮🇴 British Indian Ocean Territory (IO)"
+                },
+                "IQ": {
+                  "text": "🇮🇶 Iraq (IQ)"
+                },
+                "IR": {
+                  "text": "🇮🇷 Iran (IR)"
+                },
+                "IS": {
+                  "text": "🇮🇸 Iceland (IS)"
+                },
+                "IT": {
+                  "text": "🇮🇹 Italy (IT)"
+                },
+                "JE": {
+                  "text": "🇯🇪 Jersey (JE)"
+                },
+                "JM": {
+                  "text": "🇯🇲 Jamaica (JM)"
+                },
+                "JO": {
+                  "text": "🇯🇴 Jordan (JO)"
+                },
+                "JP": {
+                  "text": "🇯🇵 Japan (JP)"
+                },
+                "KE": {
+                  "text": "🇰🇪 Kenya (KE)"
+                },
+                "KG": {
+                  "text": "🇰🇬 Kyrgyzstan (KG)"
+                },
+                "KH": {
+                  "text": "🇰🇭 Cambodia (KH)"
+                },
+                "KI": {
+                  "text": "🇰🇮 Kiribati (KI)"
+                },
+                "KM": {
+                  "text": "🇰🇲 Comoros (KM)"
+                },
+                "KN": {
+                  "text": "🇰🇳 St. Kitts & Nevis (KN)"
+                },
+                "KP": {
+                  "text": "🇰🇵 North Korea (KP)"
+                },
+                "KR": {
+                  "text": "🇰🇷 South Korea (KR)"
+                },
+                "KW": {
+                  "text": "🇰🇼 Kuwait (KW)"
+                },
+                "KY": {
+                  "text": "🇰🇾 Cayman Islands (KY)"
+                },
+                "KZ": {
+                  "text": "🇰🇿 Kazakhstan (KZ)"
+                },
+                "LA": {
+                  "text": "🇱🇦 Laos (LA)"
+                },
+                "LB": {
+                  "text": "🇱🇧 Lebanon (LB)"
+                },
+                "LC": {
+                  "text": "🇱🇨 St. Lucia (LC)"
+                },
+                "LI": {
+                  "text": "🇱🇮 Liechtenstein (LI)"
+                },
+                "LK": {
+                  "text": "🇱🇰 Sri Lanka (LK)"
+                },
+                "LR": {
+                  "text": "🇱🇷 Liberia (LR)"
+                },
+                "LS": {
+                  "text": "🇱🇸 Lesotho (LS)"
+                },
+                "LT": {
+                  "text": "🇱🇹 Lithuania (LT)"
+                },
+                "LU": {
+                  "text": "🇱🇺 Luxembourg (LU)"
+                },
+                "LV": {
+                  "text": "🇱🇻 Latvia (LV)"
+                },
+                "LY": {
+                  "text": "🇱🇾 Libya (LY)"
+                },
+                "MA": {
+                  "text": "🇲🇦 Morocco (MA)"
+                },
+                "MC": {
+                  "text": "🇲🇨 Monaco (MC)"
+                },
+                "MD": {
+                  "text": "🇲🇩 Moldova (MD)"
+                },
+                "ME": {
+                  "text": "🇲🇪 Montenegro (ME)"
+                },
+                "MF": {
+                  "text": "🇲🇫 St. Martin (MF)"
+                },
+                "MG": {
+                  "text": "🇲🇬 Madagascar (MG)"
+                },
+                "MH": {
+                  "text": "🇲🇭 Marshall Islands (MH)"
+                },
+                "MK": {
+                  "text": "🇲🇰 North Macedonia (MK)"
+                },
+                "ML": {
+                  "text": "🇲🇱 Mali (ML)"
+                },
+                "MM": {
+                  "text": "🇲🇲 Myanmar (Burma) (MM)"
+                },
+                "MN": {
+                  "text": "🇲🇳 Mongolia (MN)"
+                },
+                "MO": {
+                  "text": "🇲🇴 Macao SAR China (MO)"
+                },
+                "MP": {
+                  "text": "🇲🇵 Northern Mariana Islands (MP)"
+                },
+                "MQ": {
+                  "text": "🇲🇶 Martinique (MQ)"
+                },
+                "MR": {
+                  "text": "🇲🇷 Mauritania (MR)"
+                },
+                "MS": {
+                  "text": "🇲🇸 Montserrat (MS)"
+                },
+                "MT": {
+                  "text": "🇲🇹 Malta (MT)"
+                },
+                "MU": {
+                  "text": "🇲🇺 Mauritius (MU)"
+                },
+                "MV": {
+                  "text": "🇲🇻 Maldives (MV)"
+                },
+                "MW": {
+                  "text": "🇲🇼 Malawi (MW)"
+                },
+                "MX": {
+                  "text": "🇲🇽 Mexico (MX)"
+                },
+                "MY": {
+                  "text": "🇲🇾 Malaysia (MY)"
+                },
+                "MZ": {
+                  "text": "🇲🇿 Mozambique (MZ)"
+                },
+                "NA": {
+                  "text": "🇳🇦 Namibia (NA)"
+                },
+                "NC": {
+                  "text": "🇳🇨 New Caledonia (NC)"
+                },
+                "NE": {
+                  "text": "🇳🇪 Niger (NE)"
+                },
+                "NF": {
+                  "text": "🇳🇫 Norfolk Island (NF)"
+                },
+                "NG": {
+                  "text": "🇳🇬 Nigeria (NG)"
+                },
+                "NH": {
+                  "text": "🇳🇭 Vanuatu (NH)"
+                },
+                "NI": {
+                  "text": "🇳🇮 Nicaragua (NI)"
+                },
+                "NL": {
+                  "text": "🇳🇱 Netherlands (NL)"
+                },
+                "NO": {
+                  "text": "🇳🇴 Norway (NO)"
+                },
+                "NP": {
+                  "text": "🇳🇵 Nepal (NP)"
+                },
+                "NR": {
+                  "text": "🇳🇷 Nauru (NR)"
+                },
+                "NU": {
+                  "text": "🇳🇺 Niue (NU)"
+                },
+                "NZ": {
+                  "text": "🇳🇿 New Zealand (NZ)"
+                },
+                "OM": {
+                  "text": "🇴🇲 Oman (OM)"
+                },
+                "PA": {
+                  "text": "🇵🇦 Panama (PA)"
+                },
+                "PE": {
+                  "text": "🇵🇪 Peru (PE)"
+                },
+                "PF": {
+                  "text": "🇵🇫 French Polynesia (PF)"
+                },
+                "PG": {
+                  "text": "🇵🇬 Papua New Guinea (PG)"
+                },
+                "PH": {
+                  "text": "🇵🇭 Philippines (PH)"
+                },
+                "PK": {
+                  "text": "🇵🇰 Pakistan (PK)"
+                },
+                "PL": {
+                  "text": "🇵🇱 Poland (PL)"
+                },
+                "PM": {
+                  "text": "🇵🇲 St. Pierre & Miquelon (PM)"
+                },
+                "PN": {
+                  "text": "🇵🇳 Pitcairn Islands (PN)"
+                },
+                "PR": {
+                  "text": "🇵🇷 Puerto Rico (PR)"
+                },
+                "PS": {
+                  "text": "🇵🇸 Palestinian Territories (PS)"
+                },
+                "PT": {
+                  "text": "🇵🇹 Portugal (PT)"
+                },
+                "PW": {
+                  "text": "🇵🇼 Palau (PW)"
+                },
+                "PY": {
+                  "text": "🇵🇾 Paraguay (PY)"
+                },
+                "QA": {
+                  "text": "🇶🇦 Qatar (QA)"
+                },
+                "RE": {
+                  "text": "🇷🇪 Réunion (RE)"
+                },
+                "RH": {
+                  "text": "🇷🇭 Zimbabwe (RH)"
+                },
+                "RO": {
+                  "text": "🇷🇴 Romania (RO)"
+                },
+                "RS": {
+                  "text": "🇷🇸 Serbia (RS)"
+                },
+                "RU": {
+                  "text": "🇷🇺 Russia (RU)"
+                },
+                "RW": {
+                  "text": "🇷🇼 Rwanda (RW)"
+                },
+                "SA": {
+                  "text": "🇸🇦 Saudi Arabia (SA)"
+                },
+                "SB": {
+                  "text": "🇸🇧 Solomon Islands (SB)"
+                },
+                "SC": {
+                  "text": "🇸🇨 Seychelles (SC)"
+                },
+                "SD": {
+                  "text": "🇸🇩 Sudan (SD)"
+                },
+                "SE": {
+                  "text": "🇸🇪 Sweden (SE)"
+                },
+                "SG": {
+                  "text": "🇸🇬 Singapore (SG)"
+                },
+                "SH": {
+                  "text": "🇸🇭 St. Helena (SH)"
+                },
+                "SI": {
+                  "text": "🇸🇮 Slovenia (SI)"
+                },
+                "SJ": {
+                  "text": "🇸🇯 Svalbard & Jan Mayen (SJ)"
+                },
+                "SK": {
+                  "text": "🇸🇰 Slovakia (SK)"
+                },
+                "SL": {
+                  "text": "🇸🇱 Sierra Leone (SL)"
+                },
+                "SM": {
+                  "text": "🇸🇲 San Marino (SM)"
+                },
+                "SN": {
+                  "text": "🇸🇳 Senegal (SN)"
+                },
+                "SO": {
+                  "text": "🇸🇴 Somalia (SO)"
+                },
+                "SR": {
+                  "text": "🇸🇷 Suriname (SR)"
+                },
+                "SS": {
+                  "text": "🇸🇸 South Sudan (SS)"
+                },
+                "ST": {
+                  "text": "🇸🇹 São Tomé & Príncipe (ST)"
+                },
+                "SU": {
+                  "text": "🇸🇺 Russia (SU)"
+                },
+                "SV": {
+                  "text": "🇸🇻 El Salvador (SV)"
+                },
+                "SX": {
+                  "text": "🇸🇽 Sint Maarten (SX)"
+                },
+                "SY": {
+                  "text": "🇸🇾 Syria (SY)"
+                },
+                "SZ": {
+                  "text": "🇸🇿 Eswatini (SZ)"
+                },
+                "TA": {
+                  "text": "🇹🇦 Tristan da Cunha (TA)"
+                },
+                "TC": {
+                  "text": "🇹🇨 Turks & Caicos Islands (TC)"
+                },
+                "TD": {
+                  "text": "🇹🇩 Chad (TD)"
+                },
+                "TF": {
+                  "text": "🇹🇫 French Southern Territories (TF)"
+                },
+                "TG": {
+                  "text": "🇹🇬 Togo (TG)"
+                },
+                "TH": {
+                  "text": "🇹🇭 Thailand (TH)"
+                },
+                "TJ": {
+                  "text": "🇹🇯 Tajikistan (TJ)"
+                },
+                "TK": {
+                  "text": "🇹🇰 Tokelau (TK)"
+                },
+                "TL": {
+                  "text": "🇹🇱 Timor-Leste (TL)"
+                },
+                "TM": {
+                  "text": "🇹🇲 Turkmenistan (TM)"
+                },
+                "TN": {
+                  "text": "🇹🇳 Tunisia (TN)"
+                },
+                "TO": {
+                  "text": "🇹🇴 Tonga (TO)"
+                },
+                "TP": {
+                  "text": "🇹🇵 Timor-Leste (TP)"
+                },
+                "TR": {
+                  "text": "🇹🇷 Türkiye (TR)"
+                },
+                "TT": {
+                  "text": "🇹🇹 Trinidad & Tobago (TT)"
+                },
+                "TV": {
+                  "text": "🇹🇻 Tuvalu (TV)"
+                },
+                "TW": {
+                  "text": "🇹🇼 Taiwan (TW)"
+                },
+                "TZ": {
+                  "text": "🇹🇿 Tanzania (TZ)"
+                },
+                "UA": {
+                  "text": "🇺🇦 Ukraine (UA)"
+                },
+                "UG": {
+                  "text": "🇺🇬 Uganda (UG)"
+                },
+                "UK": {
+                  "text": "🇺🇰 United Kingdom (UK)"
+                },
+                "UM": {
+                  "text": "🇺🇲 U.S. Outlying Islands (UM)"
+                },
+                "UN": {
+                  "text": "🇺🇳 United Nations (UN)"
+                },
+                "US": {
+                  "text": "🇺🇸 United States (US)"
+                },
+                "UY": {
+                  "text": "🇺🇾 Uruguay (UY)"
+                },
+                "UZ": {
+                  "text": "🇺🇿 Uzbekistan (UZ)"
+                },
+                "VA": {
+                  "text": "🇻🇦 Vatican City (VA)"
+                },
+                "VC": {
+                  "text": "🇻🇨 St. Vincent & Grenadines (VC)"
+                },
+                "VD": {
+                  "text": "🇻🇩 Vietnam (VD)"
+                },
+                "VE": {
+                  "text": "🇻🇪 Venezuela (VE)"
+                },
+                "VG": {
+                  "text": "🇻🇬 British Virgin Islands (VG)"
+                },
+                "VI": {
+                  "text": "🇻🇮 U.S. Virgin Islands (VI)"
+                },
+                "VN": {
+                  "text": "🇻🇳 Vietnam (VN)"
+                },
+                "VU": {
+                  "text": "🇻🇺 Vanuatu (VU)"
+                },
+                "WF": {
+                  "text": "🇼🇫 Wallis & Futuna (WF)"
+                },
+                "WS": {
+                  "text": "🇼🇸 Samoa (WS)"
+                },
+                "XK": {
+                  "text": "🇽🇰 Kosovo (XK)"
+                },
+                "YD": {
+                  "text": "🇾🇩 Yemen (YD)"
+                },
+                "YE": {
+                  "text": "🇾🇪 Yemen (YE)"
+                },
+                "YT": {
+                  "text": "🇾🇹 Mayotte (YT)"
+                },
+                "YU": {
+                  "text": "🇾🇺 Serbia (YU)"
+                },
+                "ZA": {
+                  "text": "🇿🇦 South Africa (ZA)"
+                },
+                "ZM": {
+                  "text": "🇿🇲 Zambia (ZM)"
+                },
+                "ZR": {
+                  "text": "🇿🇷 Congo - Kinshasa (ZR)"
+                },
+                "ZW": {
+                  "text": "🇿🇼 Zimbabwe (ZW)"
+                },
+                "unknown": {
+                  "text": "🏳️ Unknown"
+                }
+              }
+            }
+          ]
         },
         "overrides": []
       },
@@ -1070,7 +2758,857 @@
             "filterable": false
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Country"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "AC": {
+                        "text": "🇦🇨 Ascension Island (AC)"
+                      },
+                      "AD": {
+                        "text": "🇦🇩 Andorra (AD)"
+                      },
+                      "AE": {
+                        "text": "🇦🇪 United Arab Emirates (AE)"
+                      },
+                      "AF": {
+                        "text": "🇦🇫 Afghanistan (AF)"
+                      },
+                      "AG": {
+                        "text": "🇦🇬 Antigua & Barbuda (AG)"
+                      },
+                      "AI": {
+                        "text": "🇦🇮 Anguilla (AI)"
+                      },
+                      "AL": {
+                        "text": "🇦🇱 Albania (AL)"
+                      },
+                      "AM": {
+                        "text": "🇦🇲 Armenia (AM)"
+                      },
+                      "AN": {
+                        "text": "🇦🇳 Curaçao (AN)"
+                      },
+                      "AO": {
+                        "text": "🇦🇴 Angola (AO)"
+                      },
+                      "AQ": {
+                        "text": "🇦🇶 Antarctica (AQ)"
+                      },
+                      "AR": {
+                        "text": "🇦🇷 Argentina (AR)"
+                      },
+                      "AS": {
+                        "text": "🇦🇸 American Samoa (AS)"
+                      },
+                      "AT": {
+                        "text": "🇦🇹 Austria (AT)"
+                      },
+                      "AU": {
+                        "text": "🇦🇺 Australia (AU)"
+                      },
+                      "AW": {
+                        "text": "🇦🇼 Aruba (AW)"
+                      },
+                      "AX": {
+                        "text": "🇦🇽 Åland Islands (AX)"
+                      },
+                      "AZ": {
+                        "text": "🇦🇿 Azerbaijan (AZ)"
+                      },
+                      "BA": {
+                        "text": "🇧🇦 Bosnia & Herzegovina (BA)"
+                      },
+                      "BB": {
+                        "text": "🇧🇧 Barbados (BB)"
+                      },
+                      "BD": {
+                        "text": "🇧🇩 Bangladesh (BD)"
+                      },
+                      "BE": {
+                        "text": "🇧🇪 Belgium (BE)"
+                      },
+                      "BF": {
+                        "text": "🇧🇫 Burkina Faso (BF)"
+                      },
+                      "BG": {
+                        "text": "🇧🇬 Bulgaria (BG)"
+                      },
+                      "BH": {
+                        "text": "🇧🇭 Bahrain (BH)"
+                      },
+                      "BI": {
+                        "text": "🇧🇮 Burundi (BI)"
+                      },
+                      "BJ": {
+                        "text": "🇧🇯 Benin (BJ)"
+                      },
+                      "BL": {
+                        "text": "🇧🇱 St. Barthélemy (BL)"
+                      },
+                      "BM": {
+                        "text": "🇧🇲 Bermuda (BM)"
+                      },
+                      "BN": {
+                        "text": "🇧🇳 Brunei (BN)"
+                      },
+                      "BO": {
+                        "text": "🇧🇴 Bolivia (BO)"
+                      },
+                      "BQ": {
+                        "text": "🇧🇶 Caribbean Netherlands (BQ)"
+                      },
+                      "BR": {
+                        "text": "🇧🇷 Brazil (BR)"
+                      },
+                      "BS": {
+                        "text": "🇧🇸 Bahamas (BS)"
+                      },
+                      "BT": {
+                        "text": "🇧🇹 Bhutan (BT)"
+                      },
+                      "BU": {
+                        "text": "🇧🇺 Myanmar (Burma) (BU)"
+                      },
+                      "BV": {
+                        "text": "🇧🇻 Bouvet Island (BV)"
+                      },
+                      "BW": {
+                        "text": "🇧🇼 Botswana (BW)"
+                      },
+                      "BY": {
+                        "text": "🇧🇾 Belarus (BY)"
+                      },
+                      "BZ": {
+                        "text": "🇧🇿 Belize (BZ)"
+                      },
+                      "CA": {
+                        "text": "🇨🇦 Canada (CA)"
+                      },
+                      "CC": {
+                        "text": "🇨🇨 Cocos (Keeling) Islands (CC)"
+                      },
+                      "CD": {
+                        "text": "🇨🇩 Congo - Kinshasa (CD)"
+                      },
+                      "CF": {
+                        "text": "🇨🇫 Central African Republic (CF)"
+                      },
+                      "CG": {
+                        "text": "🇨🇬 Congo - Brazzaville (CG)"
+                      },
+                      "CH": {
+                        "text": "🇨🇭 Switzerland (CH)"
+                      },
+                      "CI": {
+                        "text": "🇨🇮 Côte d’Ivoire (CI)"
+                      },
+                      "CK": {
+                        "text": "🇨🇰 Cook Islands (CK)"
+                      },
+                      "CL": {
+                        "text": "🇨🇱 Chile (CL)"
+                      },
+                      "CM": {
+                        "text": "🇨🇲 Cameroon (CM)"
+                      },
+                      "CN": {
+                        "text": "🇨🇳 China (CN)"
+                      },
+                      "CO": {
+                        "text": "🇨🇴 Colombia (CO)"
+                      },
+                      "CP": {
+                        "text": "🇨🇵 Clipperton Island (CP)"
+                      },
+                      "CQ": {
+                        "text": "🇨🇶 Sark (CQ)"
+                      },
+                      "CR": {
+                        "text": "🇨🇷 Costa Rica (CR)"
+                      },
+                      "CS": {
+                        "text": "🇨🇸 Serbia (CS)"
+                      },
+                      "CU": {
+                        "text": "🇨🇺 Cuba (CU)"
+                      },
+                      "CV": {
+                        "text": "🇨🇻 Cape Verde (CV)"
+                      },
+                      "CW": {
+                        "text": "🇨🇼 Curaçao (CW)"
+                      },
+                      "CX": {
+                        "text": "🇨🇽 Christmas Island (CX)"
+                      },
+                      "CY": {
+                        "text": "🇨🇾 Cyprus (CY)"
+                      },
+                      "CZ": {
+                        "text": "🇨🇿 Czechia (CZ)"
+                      },
+                      "DD": {
+                        "text": "🇩🇩 Germany (DD)"
+                      },
+                      "DE": {
+                        "text": "🇩🇪 Germany (DE)"
+                      },
+                      "DG": {
+                        "text": "🇩🇬 Diego Garcia (DG)"
+                      },
+                      "DJ": {
+                        "text": "🇩🇯 Djibouti (DJ)"
+                      },
+                      "DK": {
+                        "text": "🇩🇰 Denmark (DK)"
+                      },
+                      "DM": {
+                        "text": "🇩🇲 Dominica (DM)"
+                      },
+                      "DO": {
+                        "text": "🇩🇴 Dominican Republic (DO)"
+                      },
+                      "DY": {
+                        "text": "🇩🇾 Benin (DY)"
+                      },
+                      "DZ": {
+                        "text": "🇩🇿 Algeria (DZ)"
+                      },
+                      "EA": {
+                        "text": "🇪🇦 Ceuta & Melilla (EA)"
+                      },
+                      "EC": {
+                        "text": "🇪🇨 Ecuador (EC)"
+                      },
+                      "EE": {
+                        "text": "🇪🇪 Estonia (EE)"
+                      },
+                      "EG": {
+                        "text": "🇪🇬 Egypt (EG)"
+                      },
+                      "EH": {
+                        "text": "🇪🇭 Western Sahara (EH)"
+                      },
+                      "ER": {
+                        "text": "🇪🇷 Eritrea (ER)"
+                      },
+                      "ES": {
+                        "text": "🇪🇸 Spain (ES)"
+                      },
+                      "ET": {
+                        "text": "🇪🇹 Ethiopia (ET)"
+                      },
+                      "EU": {
+                        "text": "🇪🇺 European Union (EU)"
+                      },
+                      "EZ": {
+                        "text": "🇪🇿 Eurozone (EZ)"
+                      },
+                      "FI": {
+                        "text": "🇫🇮 Finland (FI)"
+                      },
+                      "FJ": {
+                        "text": "🇫🇯 Fiji (FJ)"
+                      },
+                      "FK": {
+                        "text": "🇫🇰 Falkland Islands (FK)"
+                      },
+                      "FM": {
+                        "text": "🇫🇲 Micronesia (FM)"
+                      },
+                      "FO": {
+                        "text": "🇫🇴 Faroe Islands (FO)"
+                      },
+                      "FR": {
+                        "text": "🇫🇷 France (FR)"
+                      },
+                      "FX": {
+                        "text": "🇫🇽 France (FX)"
+                      },
+                      "GA": {
+                        "text": "🇬🇦 Gabon (GA)"
+                      },
+                      "GB": {
+                        "text": "🇬🇧 United Kingdom (GB)"
+                      },
+                      "GD": {
+                        "text": "🇬🇩 Grenada (GD)"
+                      },
+                      "GE": {
+                        "text": "🇬🇪 Georgia (GE)"
+                      },
+                      "GF": {
+                        "text": "🇬🇫 French Guiana (GF)"
+                      },
+                      "GG": {
+                        "text": "🇬🇬 Guernsey (GG)"
+                      },
+                      "GH": {
+                        "text": "🇬🇭 Ghana (GH)"
+                      },
+                      "GI": {
+                        "text": "🇬🇮 Gibraltar (GI)"
+                      },
+                      "GL": {
+                        "text": "🇬🇱 Greenland (GL)"
+                      },
+                      "GM": {
+                        "text": "🇬🇲 Gambia (GM)"
+                      },
+                      "GN": {
+                        "text": "🇬🇳 Guinea (GN)"
+                      },
+                      "GP": {
+                        "text": "🇬🇵 Guadeloupe (GP)"
+                      },
+                      "GQ": {
+                        "text": "🇬🇶 Equatorial Guinea (GQ)"
+                      },
+                      "GR": {
+                        "text": "🇬🇷 Greece (GR)"
+                      },
+                      "GS": {
+                        "text": "🇬🇸 South Georgia & South Sandwich Islands (GS)"
+                      },
+                      "GT": {
+                        "text": "🇬🇹 Guatemala (GT)"
+                      },
+                      "GU": {
+                        "text": "🇬🇺 Guam (GU)"
+                      },
+                      "GW": {
+                        "text": "🇬🇼 Guinea-Bissau (GW)"
+                      },
+                      "GY": {
+                        "text": "🇬🇾 Guyana (GY)"
+                      },
+                      "HK": {
+                        "text": "🇭🇰 Hong Kong SAR China (HK)"
+                      },
+                      "HM": {
+                        "text": "🇭🇲 Heard & McDonald Islands (HM)"
+                      },
+                      "HN": {
+                        "text": "🇭🇳 Honduras (HN)"
+                      },
+                      "HR": {
+                        "text": "🇭🇷 Croatia (HR)"
+                      },
+                      "HT": {
+                        "text": "🇭🇹 Haiti (HT)"
+                      },
+                      "HU": {
+                        "text": "🇭🇺 Hungary (HU)"
+                      },
+                      "HV": {
+                        "text": "🇭🇻 Burkina Faso (HV)"
+                      },
+                      "IC": {
+                        "text": "🇮🇨 Canary Islands (IC)"
+                      },
+                      "ID": {
+                        "text": "🇮🇩 Indonesia (ID)"
+                      },
+                      "IE": {
+                        "text": "🇮🇪 Ireland (IE)"
+                      },
+                      "IL": {
+                        "text": "🇮🇱 Israel (IL)"
+                      },
+                      "IM": {
+                        "text": "🇮🇲 Isle of Man (IM)"
+                      },
+                      "IN": {
+                        "text": "🇮🇳 India (IN)"
+                      },
+                      "IO": {
+                        "text": "🇮🇴 British Indian Ocean Territory (IO)"
+                      },
+                      "IQ": {
+                        "text": "🇮🇶 Iraq (IQ)"
+                      },
+                      "IR": {
+                        "text": "🇮🇷 Iran (IR)"
+                      },
+                      "IS": {
+                        "text": "🇮🇸 Iceland (IS)"
+                      },
+                      "IT": {
+                        "text": "🇮🇹 Italy (IT)"
+                      },
+                      "JE": {
+                        "text": "🇯🇪 Jersey (JE)"
+                      },
+                      "JM": {
+                        "text": "🇯🇲 Jamaica (JM)"
+                      },
+                      "JO": {
+                        "text": "🇯🇴 Jordan (JO)"
+                      },
+                      "JP": {
+                        "text": "🇯🇵 Japan (JP)"
+                      },
+                      "KE": {
+                        "text": "🇰🇪 Kenya (KE)"
+                      },
+                      "KG": {
+                        "text": "🇰🇬 Kyrgyzstan (KG)"
+                      },
+                      "KH": {
+                        "text": "🇰🇭 Cambodia (KH)"
+                      },
+                      "KI": {
+                        "text": "🇰🇮 Kiribati (KI)"
+                      },
+                      "KM": {
+                        "text": "🇰🇲 Comoros (KM)"
+                      },
+                      "KN": {
+                        "text": "🇰🇳 St. Kitts & Nevis (KN)"
+                      },
+                      "KP": {
+                        "text": "🇰🇵 North Korea (KP)"
+                      },
+                      "KR": {
+                        "text": "🇰🇷 South Korea (KR)"
+                      },
+                      "KW": {
+                        "text": "🇰🇼 Kuwait (KW)"
+                      },
+                      "KY": {
+                        "text": "🇰🇾 Cayman Islands (KY)"
+                      },
+                      "KZ": {
+                        "text": "🇰🇿 Kazakhstan (KZ)"
+                      },
+                      "LA": {
+                        "text": "🇱🇦 Laos (LA)"
+                      },
+                      "LB": {
+                        "text": "🇱🇧 Lebanon (LB)"
+                      },
+                      "LC": {
+                        "text": "🇱🇨 St. Lucia (LC)"
+                      },
+                      "LI": {
+                        "text": "🇱🇮 Liechtenstein (LI)"
+                      },
+                      "LK": {
+                        "text": "🇱🇰 Sri Lanka (LK)"
+                      },
+                      "LR": {
+                        "text": "🇱🇷 Liberia (LR)"
+                      },
+                      "LS": {
+                        "text": "🇱🇸 Lesotho (LS)"
+                      },
+                      "LT": {
+                        "text": "🇱🇹 Lithuania (LT)"
+                      },
+                      "LU": {
+                        "text": "🇱🇺 Luxembourg (LU)"
+                      },
+                      "LV": {
+                        "text": "🇱🇻 Latvia (LV)"
+                      },
+                      "LY": {
+                        "text": "🇱🇾 Libya (LY)"
+                      },
+                      "MA": {
+                        "text": "🇲🇦 Morocco (MA)"
+                      },
+                      "MC": {
+                        "text": "🇲🇨 Monaco (MC)"
+                      },
+                      "MD": {
+                        "text": "🇲🇩 Moldova (MD)"
+                      },
+                      "ME": {
+                        "text": "🇲🇪 Montenegro (ME)"
+                      },
+                      "MF": {
+                        "text": "🇲🇫 St. Martin (MF)"
+                      },
+                      "MG": {
+                        "text": "🇲🇬 Madagascar (MG)"
+                      },
+                      "MH": {
+                        "text": "🇲🇭 Marshall Islands (MH)"
+                      },
+                      "MK": {
+                        "text": "🇲🇰 North Macedonia (MK)"
+                      },
+                      "ML": {
+                        "text": "🇲🇱 Mali (ML)"
+                      },
+                      "MM": {
+                        "text": "🇲🇲 Myanmar (Burma) (MM)"
+                      },
+                      "MN": {
+                        "text": "🇲🇳 Mongolia (MN)"
+                      },
+                      "MO": {
+                        "text": "🇲🇴 Macao SAR China (MO)"
+                      },
+                      "MP": {
+                        "text": "🇲🇵 Northern Mariana Islands (MP)"
+                      },
+                      "MQ": {
+                        "text": "🇲🇶 Martinique (MQ)"
+                      },
+                      "MR": {
+                        "text": "🇲🇷 Mauritania (MR)"
+                      },
+                      "MS": {
+                        "text": "🇲🇸 Montserrat (MS)"
+                      },
+                      "MT": {
+                        "text": "🇲🇹 Malta (MT)"
+                      },
+                      "MU": {
+                        "text": "🇲🇺 Mauritius (MU)"
+                      },
+                      "MV": {
+                        "text": "🇲🇻 Maldives (MV)"
+                      },
+                      "MW": {
+                        "text": "🇲🇼 Malawi (MW)"
+                      },
+                      "MX": {
+                        "text": "🇲🇽 Mexico (MX)"
+                      },
+                      "MY": {
+                        "text": "🇲🇾 Malaysia (MY)"
+                      },
+                      "MZ": {
+                        "text": "🇲🇿 Mozambique (MZ)"
+                      },
+                      "NA": {
+                        "text": "🇳🇦 Namibia (NA)"
+                      },
+                      "NC": {
+                        "text": "🇳🇨 New Caledonia (NC)"
+                      },
+                      "NE": {
+                        "text": "🇳🇪 Niger (NE)"
+                      },
+                      "NF": {
+                        "text": "🇳🇫 Norfolk Island (NF)"
+                      },
+                      "NG": {
+                        "text": "🇳🇬 Nigeria (NG)"
+                      },
+                      "NH": {
+                        "text": "🇳🇭 Vanuatu (NH)"
+                      },
+                      "NI": {
+                        "text": "🇳🇮 Nicaragua (NI)"
+                      },
+                      "NL": {
+                        "text": "🇳🇱 Netherlands (NL)"
+                      },
+                      "NO": {
+                        "text": "🇳🇴 Norway (NO)"
+                      },
+                      "NP": {
+                        "text": "🇳🇵 Nepal (NP)"
+                      },
+                      "NR": {
+                        "text": "🇳🇷 Nauru (NR)"
+                      },
+                      "NU": {
+                        "text": "🇳🇺 Niue (NU)"
+                      },
+                      "NZ": {
+                        "text": "🇳🇿 New Zealand (NZ)"
+                      },
+                      "OM": {
+                        "text": "🇴🇲 Oman (OM)"
+                      },
+                      "PA": {
+                        "text": "🇵🇦 Panama (PA)"
+                      },
+                      "PE": {
+                        "text": "🇵🇪 Peru (PE)"
+                      },
+                      "PF": {
+                        "text": "🇵🇫 French Polynesia (PF)"
+                      },
+                      "PG": {
+                        "text": "🇵🇬 Papua New Guinea (PG)"
+                      },
+                      "PH": {
+                        "text": "🇵🇭 Philippines (PH)"
+                      },
+                      "PK": {
+                        "text": "🇵🇰 Pakistan (PK)"
+                      },
+                      "PL": {
+                        "text": "🇵🇱 Poland (PL)"
+                      },
+                      "PM": {
+                        "text": "🇵🇲 St. Pierre & Miquelon (PM)"
+                      },
+                      "PN": {
+                        "text": "🇵🇳 Pitcairn Islands (PN)"
+                      },
+                      "PR": {
+                        "text": "🇵🇷 Puerto Rico (PR)"
+                      },
+                      "PS": {
+                        "text": "🇵🇸 Palestinian Territories (PS)"
+                      },
+                      "PT": {
+                        "text": "🇵🇹 Portugal (PT)"
+                      },
+                      "PW": {
+                        "text": "🇵🇼 Palau (PW)"
+                      },
+                      "PY": {
+                        "text": "🇵🇾 Paraguay (PY)"
+                      },
+                      "QA": {
+                        "text": "🇶🇦 Qatar (QA)"
+                      },
+                      "RE": {
+                        "text": "🇷🇪 Réunion (RE)"
+                      },
+                      "RH": {
+                        "text": "🇷🇭 Zimbabwe (RH)"
+                      },
+                      "RO": {
+                        "text": "🇷🇴 Romania (RO)"
+                      },
+                      "RS": {
+                        "text": "🇷🇸 Serbia (RS)"
+                      },
+                      "RU": {
+                        "text": "🇷🇺 Russia (RU)"
+                      },
+                      "RW": {
+                        "text": "🇷🇼 Rwanda (RW)"
+                      },
+                      "SA": {
+                        "text": "🇸🇦 Saudi Arabia (SA)"
+                      },
+                      "SB": {
+                        "text": "🇸🇧 Solomon Islands (SB)"
+                      },
+                      "SC": {
+                        "text": "🇸🇨 Seychelles (SC)"
+                      },
+                      "SD": {
+                        "text": "🇸🇩 Sudan (SD)"
+                      },
+                      "SE": {
+                        "text": "🇸🇪 Sweden (SE)"
+                      },
+                      "SG": {
+                        "text": "🇸🇬 Singapore (SG)"
+                      },
+                      "SH": {
+                        "text": "🇸🇭 St. Helena (SH)"
+                      },
+                      "SI": {
+                        "text": "🇸🇮 Slovenia (SI)"
+                      },
+                      "SJ": {
+                        "text": "🇸🇯 Svalbard & Jan Mayen (SJ)"
+                      },
+                      "SK": {
+                        "text": "🇸🇰 Slovakia (SK)"
+                      },
+                      "SL": {
+                        "text": "🇸🇱 Sierra Leone (SL)"
+                      },
+                      "SM": {
+                        "text": "🇸🇲 San Marino (SM)"
+                      },
+                      "SN": {
+                        "text": "🇸🇳 Senegal (SN)"
+                      },
+                      "SO": {
+                        "text": "🇸🇴 Somalia (SO)"
+                      },
+                      "SR": {
+                        "text": "🇸🇷 Suriname (SR)"
+                      },
+                      "SS": {
+                        "text": "🇸🇸 South Sudan (SS)"
+                      },
+                      "ST": {
+                        "text": "🇸🇹 São Tomé & Príncipe (ST)"
+                      },
+                      "SU": {
+                        "text": "🇸🇺 Russia (SU)"
+                      },
+                      "SV": {
+                        "text": "🇸🇻 El Salvador (SV)"
+                      },
+                      "SX": {
+                        "text": "🇸🇽 Sint Maarten (SX)"
+                      },
+                      "SY": {
+                        "text": "🇸🇾 Syria (SY)"
+                      },
+                      "SZ": {
+                        "text": "🇸🇿 Eswatini (SZ)"
+                      },
+                      "TA": {
+                        "text": "🇹🇦 Tristan da Cunha (TA)"
+                      },
+                      "TC": {
+                        "text": "🇹🇨 Turks & Caicos Islands (TC)"
+                      },
+                      "TD": {
+                        "text": "🇹🇩 Chad (TD)"
+                      },
+                      "TF": {
+                        "text": "🇹🇫 French Southern Territories (TF)"
+                      },
+                      "TG": {
+                        "text": "🇹🇬 Togo (TG)"
+                      },
+                      "TH": {
+                        "text": "🇹🇭 Thailand (TH)"
+                      },
+                      "TJ": {
+                        "text": "🇹🇯 Tajikistan (TJ)"
+                      },
+                      "TK": {
+                        "text": "🇹🇰 Tokelau (TK)"
+                      },
+                      "TL": {
+                        "text": "🇹🇱 Timor-Leste (TL)"
+                      },
+                      "TM": {
+                        "text": "🇹🇲 Turkmenistan (TM)"
+                      },
+                      "TN": {
+                        "text": "🇹🇳 Tunisia (TN)"
+                      },
+                      "TO": {
+                        "text": "🇹🇴 Tonga (TO)"
+                      },
+                      "TP": {
+                        "text": "🇹🇵 Timor-Leste (TP)"
+                      },
+                      "TR": {
+                        "text": "🇹🇷 Türkiye (TR)"
+                      },
+                      "TT": {
+                        "text": "🇹🇹 Trinidad & Tobago (TT)"
+                      },
+                      "TV": {
+                        "text": "🇹🇻 Tuvalu (TV)"
+                      },
+                      "TW": {
+                        "text": "🇹🇼 Taiwan (TW)"
+                      },
+                      "TZ": {
+                        "text": "🇹🇿 Tanzania (TZ)"
+                      },
+                      "UA": {
+                        "text": "🇺🇦 Ukraine (UA)"
+                      },
+                      "UG": {
+                        "text": "🇺🇬 Uganda (UG)"
+                      },
+                      "UK": {
+                        "text": "🇺🇰 United Kingdom (UK)"
+                      },
+                      "UM": {
+                        "text": "🇺🇲 U.S. Outlying Islands (UM)"
+                      },
+                      "UN": {
+                        "text": "🇺🇳 United Nations (UN)"
+                      },
+                      "US": {
+                        "text": "🇺🇸 United States (US)"
+                      },
+                      "UY": {
+                        "text": "🇺🇾 Uruguay (UY)"
+                      },
+                      "UZ": {
+                        "text": "🇺🇿 Uzbekistan (UZ)"
+                      },
+                      "VA": {
+                        "text": "🇻🇦 Vatican City (VA)"
+                      },
+                      "VC": {
+                        "text": "🇻🇨 St. Vincent & Grenadines (VC)"
+                      },
+                      "VD": {
+                        "text": "🇻🇩 Vietnam (VD)"
+                      },
+                      "VE": {
+                        "text": "🇻🇪 Venezuela (VE)"
+                      },
+                      "VG": {
+                        "text": "🇻🇬 British Virgin Islands (VG)"
+                      },
+                      "VI": {
+                        "text": "🇻🇮 U.S. Virgin Islands (VI)"
+                      },
+                      "VN": {
+                        "text": "🇻🇳 Vietnam (VN)"
+                      },
+                      "VU": {
+                        "text": "🇻🇺 Vanuatu (VU)"
+                      },
+                      "WF": {
+                        "text": "🇼🇫 Wallis & Futuna (WF)"
+                      },
+                      "WS": {
+                        "text": "🇼🇸 Samoa (WS)"
+                      },
+                      "XK": {
+                        "text": "🇽🇰 Kosovo (XK)"
+                      },
+                      "YD": {
+                        "text": "🇾🇩 Yemen (YD)"
+                      },
+                      "YE": {
+                        "text": "🇾🇪 Yemen (YE)"
+                      },
+                      "YT": {
+                        "text": "🇾🇹 Mayotte (YT)"
+                      },
+                      "YU": {
+                        "text": "🇾🇺 Serbia (YU)"
+                      },
+                      "ZA": {
+                        "text": "🇿🇦 South Africa (ZA)"
+                      },
+                      "ZM": {
+                        "text": "🇿🇲 Zambia (ZM)"
+                      },
+                      "ZR": {
+                        "text": "🇿🇷 Congo - Kinshasa (ZR)"
+                      },
+                      "ZW": {
+                        "text": "🇿🇼 Zimbabwe (ZW)"
+                      },
+                      "unknown": {
+                        "text": "🏳️ Unknown"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
       },
       "options": {
         "showHeader": true,
@@ -1125,6 +3663,1098 @@
       "id": 109
     },
     {
+      "type": "geomap",
+      "title": "Request origins",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 11,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "continuous-GrYlRd"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "ip"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Client IP"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "city"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "City"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "country"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Country"
+              },
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "AC": {
+                        "text": "🇦🇨 Ascension Island (AC)"
+                      },
+                      "AD": {
+                        "text": "🇦🇩 Andorra (AD)"
+                      },
+                      "AE": {
+                        "text": "🇦🇪 United Arab Emirates (AE)"
+                      },
+                      "AF": {
+                        "text": "🇦🇫 Afghanistan (AF)"
+                      },
+                      "AG": {
+                        "text": "🇦🇬 Antigua & Barbuda (AG)"
+                      },
+                      "AI": {
+                        "text": "🇦🇮 Anguilla (AI)"
+                      },
+                      "AL": {
+                        "text": "🇦🇱 Albania (AL)"
+                      },
+                      "AM": {
+                        "text": "🇦🇲 Armenia (AM)"
+                      },
+                      "AN": {
+                        "text": "🇦🇳 Curaçao (AN)"
+                      },
+                      "AO": {
+                        "text": "🇦🇴 Angola (AO)"
+                      },
+                      "AQ": {
+                        "text": "🇦🇶 Antarctica (AQ)"
+                      },
+                      "AR": {
+                        "text": "🇦🇷 Argentina (AR)"
+                      },
+                      "AS": {
+                        "text": "🇦🇸 American Samoa (AS)"
+                      },
+                      "AT": {
+                        "text": "🇦🇹 Austria (AT)"
+                      },
+                      "AU": {
+                        "text": "🇦🇺 Australia (AU)"
+                      },
+                      "AW": {
+                        "text": "🇦🇼 Aruba (AW)"
+                      },
+                      "AX": {
+                        "text": "🇦🇽 Åland Islands (AX)"
+                      },
+                      "AZ": {
+                        "text": "🇦🇿 Azerbaijan (AZ)"
+                      },
+                      "BA": {
+                        "text": "🇧🇦 Bosnia & Herzegovina (BA)"
+                      },
+                      "BB": {
+                        "text": "🇧🇧 Barbados (BB)"
+                      },
+                      "BD": {
+                        "text": "🇧🇩 Bangladesh (BD)"
+                      },
+                      "BE": {
+                        "text": "🇧🇪 Belgium (BE)"
+                      },
+                      "BF": {
+                        "text": "🇧🇫 Burkina Faso (BF)"
+                      },
+                      "BG": {
+                        "text": "🇧🇬 Bulgaria (BG)"
+                      },
+                      "BH": {
+                        "text": "🇧🇭 Bahrain (BH)"
+                      },
+                      "BI": {
+                        "text": "🇧🇮 Burundi (BI)"
+                      },
+                      "BJ": {
+                        "text": "🇧🇯 Benin (BJ)"
+                      },
+                      "BL": {
+                        "text": "🇧🇱 St. Barthélemy (BL)"
+                      },
+                      "BM": {
+                        "text": "🇧🇲 Bermuda (BM)"
+                      },
+                      "BN": {
+                        "text": "🇧🇳 Brunei (BN)"
+                      },
+                      "BO": {
+                        "text": "🇧🇴 Bolivia (BO)"
+                      },
+                      "BQ": {
+                        "text": "🇧🇶 Caribbean Netherlands (BQ)"
+                      },
+                      "BR": {
+                        "text": "🇧🇷 Brazil (BR)"
+                      },
+                      "BS": {
+                        "text": "🇧🇸 Bahamas (BS)"
+                      },
+                      "BT": {
+                        "text": "🇧🇹 Bhutan (BT)"
+                      },
+                      "BU": {
+                        "text": "🇧🇺 Myanmar (Burma) (BU)"
+                      },
+                      "BV": {
+                        "text": "🇧🇻 Bouvet Island (BV)"
+                      },
+                      "BW": {
+                        "text": "🇧🇼 Botswana (BW)"
+                      },
+                      "BY": {
+                        "text": "🇧🇾 Belarus (BY)"
+                      },
+                      "BZ": {
+                        "text": "🇧🇿 Belize (BZ)"
+                      },
+                      "CA": {
+                        "text": "🇨🇦 Canada (CA)"
+                      },
+                      "CC": {
+                        "text": "🇨🇨 Cocos (Keeling) Islands (CC)"
+                      },
+                      "CD": {
+                        "text": "🇨🇩 Congo - Kinshasa (CD)"
+                      },
+                      "CF": {
+                        "text": "🇨🇫 Central African Republic (CF)"
+                      },
+                      "CG": {
+                        "text": "🇨🇬 Congo - Brazzaville (CG)"
+                      },
+                      "CH": {
+                        "text": "🇨🇭 Switzerland (CH)"
+                      },
+                      "CI": {
+                        "text": "🇨🇮 Côte d’Ivoire (CI)"
+                      },
+                      "CK": {
+                        "text": "🇨🇰 Cook Islands (CK)"
+                      },
+                      "CL": {
+                        "text": "🇨🇱 Chile (CL)"
+                      },
+                      "CM": {
+                        "text": "🇨🇲 Cameroon (CM)"
+                      },
+                      "CN": {
+                        "text": "🇨🇳 China (CN)"
+                      },
+                      "CO": {
+                        "text": "🇨🇴 Colombia (CO)"
+                      },
+                      "CP": {
+                        "text": "🇨🇵 Clipperton Island (CP)"
+                      },
+                      "CQ": {
+                        "text": "🇨🇶 Sark (CQ)"
+                      },
+                      "CR": {
+                        "text": "🇨🇷 Costa Rica (CR)"
+                      },
+                      "CS": {
+                        "text": "🇨🇸 Serbia (CS)"
+                      },
+                      "CU": {
+                        "text": "🇨🇺 Cuba (CU)"
+                      },
+                      "CV": {
+                        "text": "🇨🇻 Cape Verde (CV)"
+                      },
+                      "CW": {
+                        "text": "🇨🇼 Curaçao (CW)"
+                      },
+                      "CX": {
+                        "text": "🇨🇽 Christmas Island (CX)"
+                      },
+                      "CY": {
+                        "text": "🇨🇾 Cyprus (CY)"
+                      },
+                      "CZ": {
+                        "text": "🇨🇿 Czechia (CZ)"
+                      },
+                      "DD": {
+                        "text": "🇩🇩 Germany (DD)"
+                      },
+                      "DE": {
+                        "text": "🇩🇪 Germany (DE)"
+                      },
+                      "DG": {
+                        "text": "🇩🇬 Diego Garcia (DG)"
+                      },
+                      "DJ": {
+                        "text": "🇩🇯 Djibouti (DJ)"
+                      },
+                      "DK": {
+                        "text": "🇩🇰 Denmark (DK)"
+                      },
+                      "DM": {
+                        "text": "🇩🇲 Dominica (DM)"
+                      },
+                      "DO": {
+                        "text": "🇩🇴 Dominican Republic (DO)"
+                      },
+                      "DY": {
+                        "text": "🇩🇾 Benin (DY)"
+                      },
+                      "DZ": {
+                        "text": "🇩🇿 Algeria (DZ)"
+                      },
+                      "EA": {
+                        "text": "🇪🇦 Ceuta & Melilla (EA)"
+                      },
+                      "EC": {
+                        "text": "🇪🇨 Ecuador (EC)"
+                      },
+                      "EE": {
+                        "text": "🇪🇪 Estonia (EE)"
+                      },
+                      "EG": {
+                        "text": "🇪🇬 Egypt (EG)"
+                      },
+                      "EH": {
+                        "text": "🇪🇭 Western Sahara (EH)"
+                      },
+                      "ER": {
+                        "text": "🇪🇷 Eritrea (ER)"
+                      },
+                      "ES": {
+                        "text": "🇪🇸 Spain (ES)"
+                      },
+                      "ET": {
+                        "text": "🇪🇹 Ethiopia (ET)"
+                      },
+                      "EU": {
+                        "text": "🇪🇺 European Union (EU)"
+                      },
+                      "EZ": {
+                        "text": "🇪🇿 Eurozone (EZ)"
+                      },
+                      "FI": {
+                        "text": "🇫🇮 Finland (FI)"
+                      },
+                      "FJ": {
+                        "text": "🇫🇯 Fiji (FJ)"
+                      },
+                      "FK": {
+                        "text": "🇫🇰 Falkland Islands (FK)"
+                      },
+                      "FM": {
+                        "text": "🇫🇲 Micronesia (FM)"
+                      },
+                      "FO": {
+                        "text": "🇫🇴 Faroe Islands (FO)"
+                      },
+                      "FR": {
+                        "text": "🇫🇷 France (FR)"
+                      },
+                      "FX": {
+                        "text": "🇫🇽 France (FX)"
+                      },
+                      "GA": {
+                        "text": "🇬🇦 Gabon (GA)"
+                      },
+                      "GB": {
+                        "text": "🇬🇧 United Kingdom (GB)"
+                      },
+                      "GD": {
+                        "text": "🇬🇩 Grenada (GD)"
+                      },
+                      "GE": {
+                        "text": "🇬🇪 Georgia (GE)"
+                      },
+                      "GF": {
+                        "text": "🇬🇫 French Guiana (GF)"
+                      },
+                      "GG": {
+                        "text": "🇬🇬 Guernsey (GG)"
+                      },
+                      "GH": {
+                        "text": "🇬🇭 Ghana (GH)"
+                      },
+                      "GI": {
+                        "text": "🇬🇮 Gibraltar (GI)"
+                      },
+                      "GL": {
+                        "text": "🇬🇱 Greenland (GL)"
+                      },
+                      "GM": {
+                        "text": "🇬🇲 Gambia (GM)"
+                      },
+                      "GN": {
+                        "text": "🇬🇳 Guinea (GN)"
+                      },
+                      "GP": {
+                        "text": "🇬🇵 Guadeloupe (GP)"
+                      },
+                      "GQ": {
+                        "text": "🇬🇶 Equatorial Guinea (GQ)"
+                      },
+                      "GR": {
+                        "text": "🇬🇷 Greece (GR)"
+                      },
+                      "GS": {
+                        "text": "🇬🇸 South Georgia & South Sandwich Islands (GS)"
+                      },
+                      "GT": {
+                        "text": "🇬🇹 Guatemala (GT)"
+                      },
+                      "GU": {
+                        "text": "🇬🇺 Guam (GU)"
+                      },
+                      "GW": {
+                        "text": "🇬🇼 Guinea-Bissau (GW)"
+                      },
+                      "GY": {
+                        "text": "🇬🇾 Guyana (GY)"
+                      },
+                      "HK": {
+                        "text": "🇭🇰 Hong Kong SAR China (HK)"
+                      },
+                      "HM": {
+                        "text": "🇭🇲 Heard & McDonald Islands (HM)"
+                      },
+                      "HN": {
+                        "text": "🇭🇳 Honduras (HN)"
+                      },
+                      "HR": {
+                        "text": "🇭🇷 Croatia (HR)"
+                      },
+                      "HT": {
+                        "text": "🇭🇹 Haiti (HT)"
+                      },
+                      "HU": {
+                        "text": "🇭🇺 Hungary (HU)"
+                      },
+                      "HV": {
+                        "text": "🇭🇻 Burkina Faso (HV)"
+                      },
+                      "IC": {
+                        "text": "🇮🇨 Canary Islands (IC)"
+                      },
+                      "ID": {
+                        "text": "🇮🇩 Indonesia (ID)"
+                      },
+                      "IE": {
+                        "text": "🇮🇪 Ireland (IE)"
+                      },
+                      "IL": {
+                        "text": "🇮🇱 Israel (IL)"
+                      },
+                      "IM": {
+                        "text": "🇮🇲 Isle of Man (IM)"
+                      },
+                      "IN": {
+                        "text": "🇮🇳 India (IN)"
+                      },
+                      "IO": {
+                        "text": "🇮🇴 British Indian Ocean Territory (IO)"
+                      },
+                      "IQ": {
+                        "text": "🇮🇶 Iraq (IQ)"
+                      },
+                      "IR": {
+                        "text": "🇮🇷 Iran (IR)"
+                      },
+                      "IS": {
+                        "text": "🇮🇸 Iceland (IS)"
+                      },
+                      "IT": {
+                        "text": "🇮🇹 Italy (IT)"
+                      },
+                      "JE": {
+                        "text": "🇯🇪 Jersey (JE)"
+                      },
+                      "JM": {
+                        "text": "🇯🇲 Jamaica (JM)"
+                      },
+                      "JO": {
+                        "text": "🇯🇴 Jordan (JO)"
+                      },
+                      "JP": {
+                        "text": "🇯🇵 Japan (JP)"
+                      },
+                      "KE": {
+                        "text": "🇰🇪 Kenya (KE)"
+                      },
+                      "KG": {
+                        "text": "🇰🇬 Kyrgyzstan (KG)"
+                      },
+                      "KH": {
+                        "text": "🇰🇭 Cambodia (KH)"
+                      },
+                      "KI": {
+                        "text": "🇰🇮 Kiribati (KI)"
+                      },
+                      "KM": {
+                        "text": "🇰🇲 Comoros (KM)"
+                      },
+                      "KN": {
+                        "text": "🇰🇳 St. Kitts & Nevis (KN)"
+                      },
+                      "KP": {
+                        "text": "🇰🇵 North Korea (KP)"
+                      },
+                      "KR": {
+                        "text": "🇰🇷 South Korea (KR)"
+                      },
+                      "KW": {
+                        "text": "🇰🇼 Kuwait (KW)"
+                      },
+                      "KY": {
+                        "text": "🇰🇾 Cayman Islands (KY)"
+                      },
+                      "KZ": {
+                        "text": "🇰🇿 Kazakhstan (KZ)"
+                      },
+                      "LA": {
+                        "text": "🇱🇦 Laos (LA)"
+                      },
+                      "LB": {
+                        "text": "🇱🇧 Lebanon (LB)"
+                      },
+                      "LC": {
+                        "text": "🇱🇨 St. Lucia (LC)"
+                      },
+                      "LI": {
+                        "text": "🇱🇮 Liechtenstein (LI)"
+                      },
+                      "LK": {
+                        "text": "🇱🇰 Sri Lanka (LK)"
+                      },
+                      "LR": {
+                        "text": "🇱🇷 Liberia (LR)"
+                      },
+                      "LS": {
+                        "text": "🇱🇸 Lesotho (LS)"
+                      },
+                      "LT": {
+                        "text": "🇱🇹 Lithuania (LT)"
+                      },
+                      "LU": {
+                        "text": "🇱🇺 Luxembourg (LU)"
+                      },
+                      "LV": {
+                        "text": "🇱🇻 Latvia (LV)"
+                      },
+                      "LY": {
+                        "text": "🇱🇾 Libya (LY)"
+                      },
+                      "MA": {
+                        "text": "🇲🇦 Morocco (MA)"
+                      },
+                      "MC": {
+                        "text": "🇲🇨 Monaco (MC)"
+                      },
+                      "MD": {
+                        "text": "🇲🇩 Moldova (MD)"
+                      },
+                      "ME": {
+                        "text": "🇲🇪 Montenegro (ME)"
+                      },
+                      "MF": {
+                        "text": "🇲🇫 St. Martin (MF)"
+                      },
+                      "MG": {
+                        "text": "🇲🇬 Madagascar (MG)"
+                      },
+                      "MH": {
+                        "text": "🇲🇭 Marshall Islands (MH)"
+                      },
+                      "MK": {
+                        "text": "🇲🇰 North Macedonia (MK)"
+                      },
+                      "ML": {
+                        "text": "🇲🇱 Mali (ML)"
+                      },
+                      "MM": {
+                        "text": "🇲🇲 Myanmar (Burma) (MM)"
+                      },
+                      "MN": {
+                        "text": "🇲🇳 Mongolia (MN)"
+                      },
+                      "MO": {
+                        "text": "🇲🇴 Macao SAR China (MO)"
+                      },
+                      "MP": {
+                        "text": "🇲🇵 Northern Mariana Islands (MP)"
+                      },
+                      "MQ": {
+                        "text": "🇲🇶 Martinique (MQ)"
+                      },
+                      "MR": {
+                        "text": "🇲🇷 Mauritania (MR)"
+                      },
+                      "MS": {
+                        "text": "🇲🇸 Montserrat (MS)"
+                      },
+                      "MT": {
+                        "text": "🇲🇹 Malta (MT)"
+                      },
+                      "MU": {
+                        "text": "🇲🇺 Mauritius (MU)"
+                      },
+                      "MV": {
+                        "text": "🇲🇻 Maldives (MV)"
+                      },
+                      "MW": {
+                        "text": "🇲🇼 Malawi (MW)"
+                      },
+                      "MX": {
+                        "text": "🇲🇽 Mexico (MX)"
+                      },
+                      "MY": {
+                        "text": "🇲🇾 Malaysia (MY)"
+                      },
+                      "MZ": {
+                        "text": "🇲🇿 Mozambique (MZ)"
+                      },
+                      "NA": {
+                        "text": "🇳🇦 Namibia (NA)"
+                      },
+                      "NC": {
+                        "text": "🇳🇨 New Caledonia (NC)"
+                      },
+                      "NE": {
+                        "text": "🇳🇪 Niger (NE)"
+                      },
+                      "NF": {
+                        "text": "🇳🇫 Norfolk Island (NF)"
+                      },
+                      "NG": {
+                        "text": "🇳🇬 Nigeria (NG)"
+                      },
+                      "NH": {
+                        "text": "🇳🇭 Vanuatu (NH)"
+                      },
+                      "NI": {
+                        "text": "🇳🇮 Nicaragua (NI)"
+                      },
+                      "NL": {
+                        "text": "🇳🇱 Netherlands (NL)"
+                      },
+                      "NO": {
+                        "text": "🇳🇴 Norway (NO)"
+                      },
+                      "NP": {
+                        "text": "🇳🇵 Nepal (NP)"
+                      },
+                      "NR": {
+                        "text": "🇳🇷 Nauru (NR)"
+                      },
+                      "NU": {
+                        "text": "🇳🇺 Niue (NU)"
+                      },
+                      "NZ": {
+                        "text": "🇳🇿 New Zealand (NZ)"
+                      },
+                      "OM": {
+                        "text": "🇴🇲 Oman (OM)"
+                      },
+                      "PA": {
+                        "text": "🇵🇦 Panama (PA)"
+                      },
+                      "PE": {
+                        "text": "🇵🇪 Peru (PE)"
+                      },
+                      "PF": {
+                        "text": "🇵🇫 French Polynesia (PF)"
+                      },
+                      "PG": {
+                        "text": "🇵🇬 Papua New Guinea (PG)"
+                      },
+                      "PH": {
+                        "text": "🇵🇭 Philippines (PH)"
+                      },
+                      "PK": {
+                        "text": "🇵🇰 Pakistan (PK)"
+                      },
+                      "PL": {
+                        "text": "🇵🇱 Poland (PL)"
+                      },
+                      "PM": {
+                        "text": "🇵🇲 St. Pierre & Miquelon (PM)"
+                      },
+                      "PN": {
+                        "text": "🇵🇳 Pitcairn Islands (PN)"
+                      },
+                      "PR": {
+                        "text": "🇵🇷 Puerto Rico (PR)"
+                      },
+                      "PS": {
+                        "text": "🇵🇸 Palestinian Territories (PS)"
+                      },
+                      "PT": {
+                        "text": "🇵🇹 Portugal (PT)"
+                      },
+                      "PW": {
+                        "text": "🇵🇼 Palau (PW)"
+                      },
+                      "PY": {
+                        "text": "🇵🇾 Paraguay (PY)"
+                      },
+                      "QA": {
+                        "text": "🇶🇦 Qatar (QA)"
+                      },
+                      "RE": {
+                        "text": "🇷🇪 Réunion (RE)"
+                      },
+                      "RH": {
+                        "text": "🇷🇭 Zimbabwe (RH)"
+                      },
+                      "RO": {
+                        "text": "🇷🇴 Romania (RO)"
+                      },
+                      "RS": {
+                        "text": "🇷🇸 Serbia (RS)"
+                      },
+                      "RU": {
+                        "text": "🇷🇺 Russia (RU)"
+                      },
+                      "RW": {
+                        "text": "🇷🇼 Rwanda (RW)"
+                      },
+                      "SA": {
+                        "text": "🇸🇦 Saudi Arabia (SA)"
+                      },
+                      "SB": {
+                        "text": "🇸🇧 Solomon Islands (SB)"
+                      },
+                      "SC": {
+                        "text": "🇸🇨 Seychelles (SC)"
+                      },
+                      "SD": {
+                        "text": "🇸🇩 Sudan (SD)"
+                      },
+                      "SE": {
+                        "text": "🇸🇪 Sweden (SE)"
+                      },
+                      "SG": {
+                        "text": "🇸🇬 Singapore (SG)"
+                      },
+                      "SH": {
+                        "text": "🇸🇭 St. Helena (SH)"
+                      },
+                      "SI": {
+                        "text": "🇸🇮 Slovenia (SI)"
+                      },
+                      "SJ": {
+                        "text": "🇸🇯 Svalbard & Jan Mayen (SJ)"
+                      },
+                      "SK": {
+                        "text": "🇸🇰 Slovakia (SK)"
+                      },
+                      "SL": {
+                        "text": "🇸🇱 Sierra Leone (SL)"
+                      },
+                      "SM": {
+                        "text": "🇸🇲 San Marino (SM)"
+                      },
+                      "SN": {
+                        "text": "🇸🇳 Senegal (SN)"
+                      },
+                      "SO": {
+                        "text": "🇸🇴 Somalia (SO)"
+                      },
+                      "SR": {
+                        "text": "🇸🇷 Suriname (SR)"
+                      },
+                      "SS": {
+                        "text": "🇸🇸 South Sudan (SS)"
+                      },
+                      "ST": {
+                        "text": "🇸🇹 São Tomé & Príncipe (ST)"
+                      },
+                      "SU": {
+                        "text": "🇸🇺 Russia (SU)"
+                      },
+                      "SV": {
+                        "text": "🇸🇻 El Salvador (SV)"
+                      },
+                      "SX": {
+                        "text": "🇸🇽 Sint Maarten (SX)"
+                      },
+                      "SY": {
+                        "text": "🇸🇾 Syria (SY)"
+                      },
+                      "SZ": {
+                        "text": "🇸🇿 Eswatini (SZ)"
+                      },
+                      "TA": {
+                        "text": "🇹🇦 Tristan da Cunha (TA)"
+                      },
+                      "TC": {
+                        "text": "🇹🇨 Turks & Caicos Islands (TC)"
+                      },
+                      "TD": {
+                        "text": "🇹🇩 Chad (TD)"
+                      },
+                      "TF": {
+                        "text": "🇹🇫 French Southern Territories (TF)"
+                      },
+                      "TG": {
+                        "text": "🇹🇬 Togo (TG)"
+                      },
+                      "TH": {
+                        "text": "🇹🇭 Thailand (TH)"
+                      },
+                      "TJ": {
+                        "text": "🇹🇯 Tajikistan (TJ)"
+                      },
+                      "TK": {
+                        "text": "🇹🇰 Tokelau (TK)"
+                      },
+                      "TL": {
+                        "text": "🇹🇱 Timor-Leste (TL)"
+                      },
+                      "TM": {
+                        "text": "🇹🇲 Turkmenistan (TM)"
+                      },
+                      "TN": {
+                        "text": "🇹🇳 Tunisia (TN)"
+                      },
+                      "TO": {
+                        "text": "🇹🇴 Tonga (TO)"
+                      },
+                      "TP": {
+                        "text": "🇹🇵 Timor-Leste (TP)"
+                      },
+                      "TR": {
+                        "text": "🇹🇷 Türkiye (TR)"
+                      },
+                      "TT": {
+                        "text": "🇹🇹 Trinidad & Tobago (TT)"
+                      },
+                      "TV": {
+                        "text": "🇹🇻 Tuvalu (TV)"
+                      },
+                      "TW": {
+                        "text": "🇹🇼 Taiwan (TW)"
+                      },
+                      "TZ": {
+                        "text": "🇹🇿 Tanzania (TZ)"
+                      },
+                      "UA": {
+                        "text": "🇺🇦 Ukraine (UA)"
+                      },
+                      "UG": {
+                        "text": "🇺🇬 Uganda (UG)"
+                      },
+                      "UK": {
+                        "text": "🇺🇰 United Kingdom (UK)"
+                      },
+                      "UM": {
+                        "text": "🇺🇲 U.S. Outlying Islands (UM)"
+                      },
+                      "UN": {
+                        "text": "🇺🇳 United Nations (UN)"
+                      },
+                      "US": {
+                        "text": "🇺🇸 United States (US)"
+                      },
+                      "UY": {
+                        "text": "🇺🇾 Uruguay (UY)"
+                      },
+                      "UZ": {
+                        "text": "🇺🇿 Uzbekistan (UZ)"
+                      },
+                      "VA": {
+                        "text": "🇻🇦 Vatican City (VA)"
+                      },
+                      "VC": {
+                        "text": "🇻🇨 St. Vincent & Grenadines (VC)"
+                      },
+                      "VD": {
+                        "text": "🇻🇩 Vietnam (VD)"
+                      },
+                      "VE": {
+                        "text": "🇻🇪 Venezuela (VE)"
+                      },
+                      "VG": {
+                        "text": "🇻🇬 British Virgin Islands (VG)"
+                      },
+                      "VI": {
+                        "text": "🇻🇮 U.S. Virgin Islands (VI)"
+                      },
+                      "VN": {
+                        "text": "🇻🇳 Vietnam (VN)"
+                      },
+                      "VU": {
+                        "text": "🇻🇺 Vanuatu (VU)"
+                      },
+                      "WF": {
+                        "text": "🇼🇫 Wallis & Futuna (WF)"
+                      },
+                      "WS": {
+                        "text": "🇼🇸 Samoa (WS)"
+                      },
+                      "XK": {
+                        "text": "🇽🇰 Kosovo (XK)"
+                      },
+                      "YD": {
+                        "text": "🇾🇩 Yemen (YD)"
+                      },
+                      "YE": {
+                        "text": "🇾🇪 Yemen (YE)"
+                      },
+                      "YT": {
+                        "text": "🇾🇹 Mayotte (YT)"
+                      },
+                      "YU": {
+                        "text": "🇾🇺 Serbia (YU)"
+                      },
+                      "ZA": {
+                        "text": "🇿🇦 South Africa (ZA)"
+                      },
+                      "ZM": {
+                        "text": "🇿🇲 Zambia (ZM)"
+                      },
+                      "ZR": {
+                        "text": "🇿🇷 Congo - Kinshasa (ZR)"
+                      },
+                      "ZW": {
+                        "text": "🇿🇼 Zimbabwe (ZW)"
+                      },
+                      "unknown": {
+                        "text": "🏳️ Unknown"
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Value"
+            },
+            "properties": [
+              {
+                "id": "displayName",
+                "value": "Requests"
+              }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "view": {
+          "id": "zero",
+          "lat": 25,
+          "lon": 0,
+          "zoom": 1.5,
+          "allLayers": true
+        },
+        "controls": {
+          "showZoom": true,
+          "mouseWheelZoom": false,
+          "showAttribution": true,
+          "showScale": false,
+          "showMeasure": false,
+          "showDebug": false
+        },
+        "basemap": {
+          "type": "default",
+          "name": "Basemap",
+          "config": {}
+        },
+        "tooltip": {
+          "mode": "details"
+        },
+        "layers": [
+          {
+            "type": "markers",
+            "name": "By country",
+            "filterData": {
+              "id": "byRefId",
+              "options": "B"
+            },
+            "location": {
+              "mode": "lookup",
+              "lookup": "country",
+              "gazetteer": "public/gazetteer/countries.json"
+            },
+            "config": {
+              "style": {
+                "size": {
+                  "field": "Value",
+                  "fixed": 12,
+                  "min": 10,
+                  "max": 30
+                },
+                "color": {
+                  "fixed": "semi-dark-blue"
+                },
+                "opacity": 0.25,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "rotation": {
+                  "mode": "mod",
+                  "fixed": 0,
+                  "min": -360,
+                  "max": 360
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              },
+              "showLegend": false
+            },
+            "tooltip": true,
+            "opacity": 0.4
+          },
+          {
+            "type": "markers",
+            "name": "By city",
+            "filterData": {
+              "id": "byRefId",
+              "options": "A"
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "lat",
+              "longitude": "lon"
+            },
+            "config": {
+              "style": {
+                "size": {
+                  "field": "Value",
+                  "fixed": 5,
+                  "min": 4,
+                  "max": 16
+                },
+                "color": {
+                  "field": "Value",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.8,
+                "symbol": {
+                  "mode": "fixed",
+                  "fixed": "img/icons/marker/circle.svg"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "rotation": {
+                  "mode": "mod",
+                  "fixed": 0,
+                  "min": -360,
+                  "max": 360
+                },
+                "textConfig": {
+                  "fontSize": 12,
+                  "offsetX": 0,
+                  "offsetY": 0,
+                  "textAlign": "center",
+                  "textBaseline": "middle"
+                }
+              },
+              "showLegend": true
+            },
+            "tooltip": true,
+            "opacity": 0.9
+          }
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "topk(50, sum by (ip, country, city, lat, lon) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | json ip=\"remote_addr\", city=\"geoip_city\", lat=\"geoip_lat\", lon=\"geoip_lon\" | lat != \"\" [$__range])))",
+          "queryType": "instant"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "topk(20, sum by (country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} [$__range])))",
+          "queryType": "instant"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "exclude": {
+              "names": [
+                "Time"
+              ]
+            }
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "lat",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "lon",
+                "destinationType": "number"
+              }
+            ]
+          }
+        }
+      ],
+      "description": "Where the traffic comes from. Green dots are GeoIP city coordinates, one per client IP; the blue halos are country centroids covering every request, including the IPs GeoLite2 resolves to a country but no city. 'unknown' has no location and never appears here, so the map stays empty outside real prod. Basemap tiles are fetched by the browser.",
+      "id": 110
+    },
+    {
       "type": "logs",
       "title": "nginx access log",
       "datasource": {
@@ -1135,7 +4765,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 28
+        "y": 39
       },
       "options": {
         "showTime": true,
@@ -1171,7 +4801,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 40
+        "y": 51
       },
       "options": {
         "showTime": true,

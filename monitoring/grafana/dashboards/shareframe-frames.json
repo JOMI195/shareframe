@@ -1406,7 +1406,7 @@
           "interval": "$__range"
         }
       ],
-      "description": "Every field the frame reports, from its most recent heartbeat. Last seen is the log timestamp of that heartbeat. time_iso is omitted: it changes each heartbeat, so it cannot be a column without minting a series per heartbeat.",
+      "description": "Every field the frame reports, from its most recent heartbeat. Rows are sorted by Last seen before grouping, so a frame that changed firmware, IP or kernel inside the range collapses to its newest values instead of an arbitrary older row. time_iso is omitted: it changes each heartbeat, so it cannot be a column without minting a series per heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -1421,6 +1421,18 @@
               "kernel",
               "boot_slot",
               "local_ip_address"
+            ]
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Last seen",
+                "desc": false
+              }
             ]
           }
         },
