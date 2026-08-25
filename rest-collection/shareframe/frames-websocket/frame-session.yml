@@ -1,0 +1,89 @@
+info:
+  name: frame-session
+  type: websocket
+  seq: 1
+
+websocket:
+  url: "{{ws_domain}}/ws/frames/"
+  headers:
+    - name: Authorization
+      value: Frame-Access-Token {{frame_access_token}}
+    - name: Origin
+      value: "{{ws_domain}}"
+  message:
+    - title: check_missing_images
+      selected: true
+      message:
+        type: json
+        data: |-
+          {
+            "type": "check_missing_images",
+            "sent_image_ids": []
+          }
+    - title: check_sent_images_expiry
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "check_sent_images_expiry",
+            "user_frame_images": [
+              { "sent_image_id": 1, "expires_at": 0 }
+            ]
+          }
+    - title: ping
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "ping",
+            "timestamp": 0
+          }
+    - title: config
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "config",
+            "local_ip_address": "{{sim_local_ip}}",
+            "version": "{{sim_frame_version}}"
+          }
+    - title: heartbeat
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "heartbeat"
+          }
+    - title: close_connection
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "close_connection"
+          }
+    - title: unknown-type
+      selected: false
+      message:
+        type: json
+        data: |-
+          {
+            "type": "not_a_real_type"
+          }
+  auth: inherit
+
+settings:
+  timeout: 0
+  keepAliveInterval: 30000
+
+docs: |-
+  Frame -> server messages, one variant per message type.
+
+  Requires a fresh {{frame_access_token}}: run frames-http/frame-auth-token/obtain first.
+  keepAliveInterval mirrors the board's 30s protocol ping (WebsocketClient::_setupWebsocket).
+  config/heartbeat are legacy Python-board messages; the C++ board sends that data
+  over the HTTP heartbeat instead.

@@ -1,0 +1,53 @@
+info:
+  name: send-heartbeat-generated
+  type: http
+  seq: 7
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/frame-hearbeat/"
+  headers:
+    - name: Authorization
+      value: Frame-Access-Token {{frame_access_token}}
+  body:
+    type: json
+    data: |-
+      {}
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const { buildHeartbeat } = require(`${bru.cwd()}/scripts/heartbeat.js`);
+        const { serial } = require(`${bru.cwd()}/scripts/ed25519.js`);
+
+        const rawOverrides = bru.getEnvVar('sim_heartbeat_overrides');
+        const overrides = rawOverrides ? JSON.parse(rawOverrides) : {};
+
+        const seed = bru.getEnvVar('frame_ed25519_private_key');
+        const frameId = bru.getEnvVar('frame_public_serial_number') || (seed && serial(seed));
+
+        req.setBody(buildHeartbeat({
+          frameId,
+          localIp: bru.getEnvVar('sim_local_ip'),
+          version: bru.getEnvVar('sim_frame_version'),
+          overrides
+        }));
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Same payload as send-heartbeat, but built by scripts/heartbeat.js on every send:
+  current time_iso, uptime, and jittered cpu load / temperature / ram / storage.
+
+  Pin single fields with the env var sim_heartbeat_overrides, e.g.
+
+      {"boot_count": 42, "health_state": "degraded", "load_1": 3.9, "boot_slot": "B"}
+
+  Needs Developer Mode and a token from frames-http/frame-auth-token/obtain.
+  This is the same builder the simulator uses, so manual and automatic heartbeats
+  stay identical in shape.

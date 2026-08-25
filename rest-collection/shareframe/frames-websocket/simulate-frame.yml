@@ -1,0 +1,80 @@
+info:
+  name: simulate-frame
+  type: http
+  seq: 2
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/frames/verify-frame-auth-token/"
+  body:
+    type: json
+    data: |-
+      {
+          "access_token": "{{frame_access_token}}"
+      }
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const runFrameSim = require(`${bru.cwd()}/scripts/frame-sim.js`);
+
+        const num = (name, fallback) => {
+          const raw = bru.getEnvVar(name);
+          return raw === undefined || raw === null || raw === '' ? fallback : Number(raw);
+        };
+
+        const stats = await runFrameSim({
+          httpDomain: bru.getEnvVar('http_domain'),
+          wsDomain: bru.getEnvVar('ws_domain'),
+          seedB64: bru.getEnvVar('frame_ed25519_private_key'),
+          frameId: bru.getEnvVar('frame_public_serial_number') || undefined,
+          version: bru.getEnvVar('sim_frame_version'),
+          localIp: bru.getEnvVar('sim_local_ip'),
+          durationSecs: num('sim_duration_secs', 120),
+          pingSecs: num('sim_ping_secs', 30),
+          heartbeatSecs: num('sim_heartbeat_secs', 300),
+          expiryCheckSecs: num('sim_expiry_secs', 900),
+          heartbeatOverrides: bru.getEnvVar('sim_heartbeat_overrides')
+            ? JSON.parse(bru.getEnvVar('sim_heartbeat_overrides'))
+            : undefined
+        });
+
+        bru.setEnvVar('frame_access_token', stats.token);
+        bru.setVar('sim_stats', stats);
+    - type: tests
+      code: |-
+        const stats = bru.getVar('sim_stats');
+
+        test('frame session stayed connected', function () {
+          expect(stats.reconnects).to.equal(0);
+        });
+
+        test('frame session had no errors', function () {
+          expect(stats.errors).to.eql([]);
+        });
+
+        test('heartbeats were accepted', function () {
+          expect(stats.heartbeats.failed).to.equal(0);
+        });
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Runs a full frame session in the pre-request script, then verifies the token the
+  session used — so the request itself has a meaningful response and frame_access_token
+  is left fresh for the frame-session palette.
+
+  Needs Bruno Developer Mode (require) and `npm i` in the collection root (ws).
+
+  Tunables are env vars: sim_duration_secs, sim_ping_secs, sim_heartbeat_secs,
+  sim_expiry_secs, sim_frame_version, sim_local_ip, and sim_heartbeat_overrides
+  (JSON pinning single heartbeat fields, e.g. {"boot_count": 42}). Defaults mirror the real board
+  (30s ping, 300s heartbeat, 900s expiry check) — compress them for short runs.
+
+  Bruno blocks until the sim finishes, so keep sim_duration_secs small here.
+  For soak runs use: node scripts/run-sim.js --duration 3600 --seed <b64>

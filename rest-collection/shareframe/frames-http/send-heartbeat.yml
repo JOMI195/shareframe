@@ -13,8 +13,35 @@ http:
     type: json
     data: |-
       {
-          "local_ip_address": "192.168.0.10",
-          "version": "1.0.1"
+          "serial_number": "{{frame_public_serial_number}}",
+          "local_ip_address": "{{sim_local_ip}}",
+          "version": "{{sim_frame_version}}",
+
+          "websocket_running": true,
+          "display_running": true,
+          "dashboard_running": true,
+          "update_running": true,
+
+          "health_state": "ok",
+          "uptime_seconds": 86400,
+          "boot_count": 7,
+          "boot_slot": "A",
+          "time_iso": "2026-01-01T12:00:00Z",
+          "kernel": "6.6.51-shareframe",
+          "fw_version": "{{sim_frame_version}}",
+
+          "cpu_temp_celsius": 46.2,
+          "cpu_usage_percent": 12.5,
+          "cpu_freq_mhz": 1000,
+          "load_1": 0.35,
+          "load_5": 0.28,
+          "load_15": 0.22,
+
+          "ram_total_bytes": 442368000,
+          "ram_available_bytes": 230000000,
+
+          "storage_data_total_bytes": 3900000000,
+          "storage_data_free_bytes": 2600000000
       }
 
 settings:
@@ -22,3 +49,15 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Manual heartbeat with the full board payload (Heartbeat::execute) — edit any value
+  by hand: boot_count, boot_slot, health_state, load averages, temperatures, storage.
+
+  Needs a token: run frames-http/frame-auth-token/obtain first.
+
+  The backend currently reads only local_ip_address and version (frames/views.py
+  frame_hearbeat); the sysinfo block is accepted and ignored, so this request is the
+  way to drive the server side while it is being built.
+
+  For fresh timestamps and jittered values on every send, use send-heartbeat-generated.

@@ -9,7 +9,7 @@ variables:
   - secret: true
     name: frame_auth_hash
   - secret: true
-    name: frame_ed25519_signature
+    name: frame_ed25519_private_key
   - name: frame_public_serial_number
     value: ""
   - name: frame_private_serial_number
@@ -22,3 +22,17 @@ variables:
     value: admin@shareframe.de
   - secret: true
     name: backend_admin_password
+  - name: sim_frame_version
+    value: "7.0.0"
+  - name: sim_local_ip
+    value: "192.168.0.10"
+  - name: sim_duration_secs
+    value: "120"
+  - name: sim_ping_secs
+    value: "30"
+  - name: sim_heartbeat_secs
+    value: "300"
+  - name: sim_expiry_secs
+    value: "900"
+  - name: sim_heartbeat_overrides
+    value: ""

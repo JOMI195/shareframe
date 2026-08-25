@@ -8,3 +8,11 @@ extensions:
     ignore:
       - node_modules
       - .git
+
+docs: |-
+  # shareframe API collection
+
+  Frame traffic simulation lives in `frames-websocket` (palette + autonomous session)
+  and needs one-time setup: `npm install` in the collection root, **Developer Mode**
+  enabled, and the env var `frame_ed25519_private_key` set to the frame's base64
+  ed25519 seed. See that folder's docs, or README.md in the collection root.

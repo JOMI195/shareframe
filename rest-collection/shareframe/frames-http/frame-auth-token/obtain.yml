@@ -6,16 +6,43 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/frames/obtain-frame-token/"
-  headers:
-    - name: X-Timestamp
-      value: "<unix-timestamp>"
-    - name: X-Frame-ID
-      value: "<frame-id>"
-    - name: Authorization
-      value: Ed25519-Sig {{frame_ed25519_signature}}
+  body:
+    type: json
+    data: |-
+      {}
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const { authHeaders, serial } = require(`${bru.cwd()}/scripts/ed25519.js`);
+
+        const seed = bru.getEnvVar('frame_ed25519_private_key');
+        if (!seed) throw new Error('env var frame_ed25519_private_key is empty');
+
+        const frameId = bru.getEnvVar('frame_public_serial_number') || serial(seed);
+        bru.setEnvVar('frame_public_serial_number', frameId);
+
+        Object.entries(authHeaders(seed, frameId)).forEach(([name, value]) => req.setHeader(name, value));
+    - type: after-response
+      code: |-
+        if (res.getStatus() === 200) {
+          bru.setEnvVar('frame_access_token', res.getBody().access_token);
+        }
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Signs "<serial>:<unix_ts>" with the frame's ed25519 seed (env var
+  frame_ed25519_private_key, same value as ed25519_private_key in the board's
+  .env.secrets.toml) and stores the returned access token in frame_access_token.
+
+  The serial is derived from the seed the same way the board and backend do
+  (FrameIdentity::fingerprint / frames.keys.public_key_fingerprint), so
+  frame_public_serial_number may stay empty.
+
+  Needs Bruno Developer Mode for require().

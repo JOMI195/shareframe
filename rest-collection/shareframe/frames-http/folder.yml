@@ -5,3 +5,22 @@ info:
 
 request:
   auth: inherit
+
+docs: |-
+  Frame-side HTTP endpoints. All of them need a token from
+  `frame-auth-token/obtain`, which signs itself with the env var
+  `frame_ed25519_private_key`.
+
+  Heartbeats:
+
+  - `send-heartbeat` — full board payload as literal JSON; edit boot_count,
+    boot_slot, health_state, load averages, temperatures, storage by hand
+  - `send-heartbeat-generated` — same payload rebuilt on every send with current
+    time_iso, uptime and jittered values; pin fields via the env var
+    `sim_heartbeat_overrides`, e.g. {"boot_count": 42, "health_state": "degraded"}
+
+  The backend stores only local_ip_address and version today; the sysinfo block is
+  accepted and ignored, but shows up in the request log.
+
+  For heartbeats on a timer, use frames-websocket/simulate-frame — it posts the same
+  payload every sim_heartbeat_secs.

@@ -1,0 +1,11 @@
+{
+  "name": "shareframe-rest-collection",
+  "private": true,
+  "description": "Helper scripts for the shareframe Bruno collection (frame traffic simulation)",
+  "scripts": {
+    "sim": "node scripts/run-sim.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}
