@@ -1,13 +1,13 @@
 {
   "uid": "shareframe-logs-nginx",
-  "title": "Logs · nginx",
+  "title": "Nginx",
   "description": "nginx access and error logs from Loki. Only populated where nginx runs (prod, prod.local).",
   "tags": [
     "shareframe"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 13,
+  "version": 15,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",
@@ -1761,7 +1761,7 @@
         "uid": "loki"
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
         "x": 12,
         "y": 20
@@ -2743,10 +2743,10 @@
         "uid": "loki"
       },
       "gridPos": {
-        "h": 8,
+        "h": 9,
         "w": 12,
-        "x": 0,
-        "y": 20
+        "x": 12,
+        "y": 29
       },
       "fieldConfig": {
         "defaults": {
@@ -3670,10 +3670,10 @@
         "uid": "loki"
       },
       "gridPos": {
-        "h": 11,
-        "w": 24,
+        "h": 18,
+        "w": 12,
         "x": 0,
-        "y": 28
+        "y": 20
       },
       "fieldConfig": {
         "defaults": {
@@ -4576,9 +4576,9 @@
       "options": {
         "view": {
           "id": "zero",
-          "lat": 25,
+          "lat": 20,
           "lon": 0,
-          "zoom": 1.5,
+          "zoom": 1,
           "allLayers": true
         },
         "controls": {
@@ -4765,7 +4765,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 39
+        "y": 38
       },
       "options": {
         "showTime": true,
@@ -4801,7 +4801,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 51
+        "y": 50
       },
       "options": {
         "showTime": true,
