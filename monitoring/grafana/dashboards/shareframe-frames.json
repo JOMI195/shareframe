@@ -1935,6 +1935,7 @@
       ],
       "description": "One point per frame: hot frames that are not busy point at a cooling or placement problem.",
       "maxDataPoints": 1,
+      "pluginVersion": "13.2.0",
       "transformations": [
         {
           "id": "joinByLabels",
