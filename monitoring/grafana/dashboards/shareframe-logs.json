@@ -1,13 +1,13 @@
 {
   "uid": "shareframe-logs",
-  "title": "Logs \u00b7 Application",
+  "title": "Backend",
   "description": "Django, Celery and websocket logs from Loki, filterable by logger and level.",
   "tags": [
     "shareframe"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 8,
+  "version": 9,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",

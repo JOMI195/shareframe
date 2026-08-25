@@ -213,7 +213,12 @@ services:
       - --path.procfs=/host/proc
       - --path.sysfs=/host/sys
       - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
-      - --no-collector.diskstats
+      # netdev/netclass only ever see this container's namespace; nothing reads
+      # them or the nfs ones, and netclass churns a series set per veth
+      - --no-collector.netdev
+      - --no-collector.netclass
+      - --no-collector.nfs
+      - --no-collector.nfsd
     pid: host
     volumes:
       - /:/host:ro

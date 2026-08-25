@@ -54,9 +54,9 @@ groups:
           summary: "Container {{ $labels.container_name }} restarted >3x in 15m"
 
       - alert: ContainerUnhealthy
-        expr: docker_container_health_failing_streak{health_status!="healthy"} > 0
+        expr: docker_container_health_state == 3
         for: 5m
         labels:
           severity: warning
         annotations:
-          summary: "Container {{ $labels.container_name }} healthcheck is {{ $labels.health_status }}"
+          summary: "Container {{ $labels.container_name }} healthcheck is unhealthy"
