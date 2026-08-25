@@ -1622,178 +1622,6 @@
     },
     {
       "type": "row",
-      "title": "Health & services",
-      "id": 10,
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 23
-      },
-      "panels": []
-    },
-    {
-      "type": "state-timeline",
-      "title": "Health over time",
-      "id": 11,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 24
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "unhealthy",
-                  "color": "red",
-                  "index": 0
-                },
-                "1": {
-                  "text": "ok",
-                  "color": "green",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "red",
-                "value": null
-              },
-              {
-                "color": "green",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "rowHeight": 0.9,
-        "mergeValues": true,
-        "alignValue": "center",
-        "perPage": 20,
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "Green while the frame reported health_state ok. A service being down does not change this; see the Latest state table."
-    },
-    {
-      "type": "timeseries",
-      "title": "Heartbeats in range",
-      "id": 12,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 24
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval]))",
-          "legendFormat": "{{serial_number}}",
-          "interval": "5m"
-        }
-      ],
-      "description": "Heartbeats per 5 minutes. An empty bucket is a frame that went quiet."
-    },
-    {
-      "type": "row",
       "title": "Connectivity",
       "id": 35,
       "collapsed": false,
@@ -1801,7 +1629,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 23
       },
       "panels": []
     },
@@ -1815,9 +1643,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 12,
+        "w": 24,
         "x": 0,
-        "y": 32
+        "y": 24
       },
       "fieldConfig": {
         "defaults": {
@@ -1869,125 +1697,8 @@
           "interval": "5m"
         }
       ],
-      "description": "One cell per 5-minute bucket. A gap is a frame that sent nothing in that bucket."
-    },
-    {
-      "type": "table",
-      "title": "Recent heartbeats per frame",
-      "id": 37,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Heartbeats (15m)"
-            },
-            "properties": [
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "red",
-                      "value": null
-                    },
-                    {
-                      "color": "green",
-                      "value": 1
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background",
-                  "mode": "basic"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "countRows": false,
-          "fields": ""
-        },
-        "sortBy": [
-          {
-            "displayName": "Heartbeats (15m)",
-            "desc": false
-          }
-        ]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [15m])) or (sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])) * 0)",
-          "queryType": "instant"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Heartbeats (15m)"
-            }
-          }
-        }
-      ],
-      "description": "Heartbeats in the last 15 minutes. A frame at 0 is present in the range but has gone quiet."
+      "description": "One cell per 5-minute bucket. A gap is a frame that sent nothing in that bucket.",
+      "maxDataPoints": 100
     },
     {
       "type": "timeseries",
@@ -2001,7 +1712,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 39
+        "y": 31
       },
       "fieldConfig": {
         "defaults": {
@@ -2098,7 +1809,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 39
+        "y": 31
       },
       "fieldConfig": {
         "defaults": {
@@ -2175,7 +1886,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 39
+        "y": 31
       },
       "fieldConfig": {
         "defaults": {
@@ -2249,7 +1960,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 38
       },
       "panels": []
     },
@@ -2265,7 +1976,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 47
+        "y": 39
       },
       "fieldConfig": {
         "defaults": {
@@ -2336,7 +2047,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 47
+        "y": 39
       },
       "fieldConfig": {
         "defaults": {
@@ -2412,7 +2123,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 47
+        "y": 39
       },
       "fieldConfig": {
         "defaults": {
@@ -2478,242 +2189,6 @@
       "description": "Every step up is a boot."
     },
     {
-      "type": "timeseries",
-      "title": "Firmware rollout",
-      "id": 41,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 54
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 1,
-            "fillOpacity": 40,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "count by (fw_version) (count by (fw_version, serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval])))",
-          "legendFormat": "{{fw_version}}",
-          "interval": "5m"
-        }
-      ],
-      "description": "Frames per firmware version over time. The piechart is the same count collapsed to the whole range."
-    },
-    {
-      "type": "state-timeline",
-      "title": "Boot slot",
-      "id": 42,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 54
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "A",
-                  "color": "blue",
-                  "index": 0
-                },
-                "1": {
-                  "text": "B",
-                  "color": "purple",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              },
-              {
-                "color": "purple",
-                "value": 1
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "showValue": "never",
-        "rowHeight": 0.9,
-        "mergeValues": true,
-        "alignValue": "center",
-        "perPage": 20,
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"B\" }}1{{ else }}0{{ end }}` | unwrap slot [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "Active A/B tryboot slot. A flip means an update was applied."
-    },
-    {
-      "type": "timeseries",
-      "title": "Update checks",
-      "id": 43,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 54
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum (count_over_time({job=\"backend\", logger=\"django.request\"} |= \"/api/frame-updates/latest/\" [$__interval]))",
-          "legendFormat": "checks",
-          "interval": "5m"
-        }
-      ],
-      "description": "Requests to the OTA latest-release endpoint. Fleet-wide, these lines carry no serial label."
-    },
-    {
       "type": "row",
       "title": "Resources",
       "id": 17,
@@ -2722,7 +2197,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 61
+        "y": 46
       },
       "panels": []
     },
@@ -2736,9 +2211,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
+        "w": 12,
         "x": 0,
-        "y": 62
+        "y": 47
       },
       "fieldConfig": {
         "defaults": {
@@ -2814,9 +2289,9 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 62
+        "w": 12,
+        "x": 12,
+        "y": 47
       },
       "fieldConfig": {
         "defaults": {
@@ -2879,120 +2354,6 @@
       ]
     },
     {
-      "type": "volkovlabs-echarts-panel",
-      "title": "Fleet radar",
-      "id": 20,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 62
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "getOption": "const ctx = typeof context !== 'undefined' && context ? context : {};\nconst d =\n  (typeof data !== 'undefined' && data) || (ctx.panel && ctx.panel.data) || {};\nconst th =\n  (typeof theme !== 'undefined' && theme) || (ctx.grafana && ctx.grafana.theme) || {};\nconst text = (th.colors && th.colors.text) || {};\nconst textPrimary = text.primary || '#ccccdc';\nconst textSecondary = text.secondary || '#9a9aa5';\n\nconst axes = [\n  { refId: 'A', name: 'CPU %', max: 100 },\n  { refId: 'B', name: 'RAM %', max: 100 },\n  { refId: 'C', name: 'Disk %', max: 100 },\n  { refId: 'D', name: 'Temp \\u00b0C', max: 85 },\n  { refId: 'E', name: 'Load', max: 4 },\n];\n\nconst read = (field, row) =>\n  field.values && typeof field.values.get === 'function'\n    ? field.values.get(row)\n    : field.values[row];\n\nconst byFrame = {};\naxes.forEach((axis, i) => {\n  (d.series || [])\n    .filter((s) => s.refId === axis.refId)\n    .forEach((s) => {\n      const valueField = s.fields.find((f) => f.type === 'number' && f.name !== 'Time');\n      if (!valueField) return;\n      const serialField = s.fields.find((f) => f.name === 'serial_number');\n      const labelSerial =\n        (valueField.labels && valueField.labels.serial_number) || null;\n      const rows = valueField.values.length || 0;\n      for (let r = 0; r < rows; r++) {\n        const serial = serialField\n          ? String(read(serialField, r))\n          : labelSerial || s.name || 'frame';\n        byFrame[serial] = byFrame[serial] || new Array(axes.length).fill(0);\n        byFrame[serial][i] = Number(read(valueField, r)) || 0;\n      }\n    });\n});\n\nreturn {\n  tooltip: { trigger: 'item' },\n  legend: {\n    bottom: 0,\n    type: 'scroll',\n    textStyle: { color: textPrimary },\n  },\n  radar: {\n    indicator: axes.map((a) => ({ name: a.name, max: a.max })),\n    axisName: { color: textSecondary },\n    splitArea: { show: false },\n  },\n  series: [\n    {\n      type: 'radar',\n      symbolSize: 4,\n      areaStyle: { opacity: 0.1 },\n      data: Object.keys(byFrame).map((k) => ({ name: k, value: byFrame[k] })),\n    },\n  ],\n};",
-        "renderer": "canvas",
-        "theme": "default",
-        "themeEditor": {
-          "config": "{}",
-          "name": "default",
-          "height": 400
-        },
-        "editor": {
-          "format": "auto",
-          "height": 600
-        },
-        "baidu": {
-          "callback": "bmapCallback",
-          "key": ""
-        },
-        "gaode": {
-          "key": "",
-          "plugin": "AMap.Scale,AMap.ToolBar"
-        },
-        "google": {
-          "callback": "gmapCallback",
-          "key": ""
-        },
-        "map": "none",
-        "visualEditor": {
-          "code": "",
-          "dataset": [],
-          "series": []
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number)",
-          "queryType": "instant"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
-          "queryType": "instant"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
-          "queryType": "instant"
-        },
-        {
-          "refId": "D",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
-          "queryType": "instant"
-        },
-        {
-          "refId": "E",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__range]) by (serial_number)",
-          "queryType": "instant"
-        }
-      ],
-      "description": "Each polygon is one frame across CPU, RAM, disk, temperature and load."
-    },
-    {
       "type": "timeseries",
       "title": "CPU temperature",
       "id": 21,
@@ -3004,7 +2365,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 69
+        "y": 54
       },
       "fieldConfig": {
         "defaults": {
@@ -3087,7 +2448,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 69
+        "y": 54
       },
       "fieldConfig": {
         "defaults": {
@@ -3162,7 +2523,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 77
+        "y": 62
       },
       "fieldConfig": {
         "defaults": {
@@ -3237,7 +2598,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 77
+        "y": 62
       },
       "fieldConfig": {
         "defaults": {
@@ -3330,7 +2691,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 85
+        "y": 70
       },
       "fieldConfig": {
         "defaults": {
@@ -3428,7 +2789,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 85
+        "y": 70
       },
       "fieldConfig": {
         "defaults": {
@@ -3563,7 +2924,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 93
+        "y": 78
       },
       "panels": []
     },
@@ -3579,7 +2940,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 94
+        "y": 79
       },
       "fieldConfig": {
         "defaults": {
@@ -3653,7 +3014,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 94
+        "y": 79
       },
       "fieldConfig": {
         "defaults": {
@@ -3725,7 +3086,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 101
+        "y": 86
       },
       "panels": []
     },
@@ -3741,7 +3102,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 87
       },
       "fieldConfig": {
         "defaults": {
@@ -3818,7 +3179,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 102
+        "y": 87
       },
       "fieldConfig": {
         "defaults": {
@@ -3937,7 +3298,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 110
+        "y": 95
       },
       "panels": []
     },
@@ -3953,7 +3314,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 111
+        "y": 96
       },
       "options": {
         "showTime": true,
