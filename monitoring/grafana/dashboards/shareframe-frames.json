@@ -899,7 +899,7 @@
     },
     {
       "type": "row",
-      "title": "Resources",
+      "title": "Firmware & boot",
       "id": 13,
       "collapsed": false,
       "gridPos": {
@@ -911,8 +911,8 @@
       "panels": []
     },
     {
-      "type": "bargauge",
-      "title": "CPU temperature by frame",
+      "type": "piechart",
+      "title": "Firmware versions",
       "id": 14,
       "datasource": {
         "type": "loki",
@@ -923,6 +923,243 @@
         "w": 8,
         "x": 0,
         "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "pieType": "donut",
+        "tooltip": {
+          "mode": "single",
+          "sort": "none"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "list",
+          "placement": "right",
+          "values": [
+            "value"
+          ]
+        },
+        "displayLabels": [
+          "percent"
+        ]
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "count by (fw_version) (count by (fw_version, serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))",
+          "legendFormat": "{{fw_version}}"
+        }
+      ],
+      "description": "Frames per firmware version in the range."
+    },
+    {
+      "type": "timeseries",
+      "title": "Uptime",
+      "id": 15,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
+          "legendFormat": "{{serial_number}}"
+        }
+      ],
+      "description": "A drop back to zero is a reboot."
+    },
+    {
+      "type": "timeseries",
+      "title": "Boot count",
+      "id": 16,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 21
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
+          "legendFormat": "{{serial_number}}"
+        }
+      ],
+      "description": "Every step up is a boot."
+    },
+    {
+      "type": "row",
+      "title": "Resources",
+      "id": 17,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 28
+      },
+      "panels": []
+    },
+    {
+      "type": "bargauge",
+      "title": "CPU temperature by frame",
+      "id": 18,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 29
       },
       "fieldConfig": {
         "defaults": {
@@ -991,7 +1228,7 @@
     {
       "type": "bargauge",
       "title": "RAM used by frame",
-      "id": 15,
+      "id": 19,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1000,7 +1237,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 21
+        "y": 29
       },
       "fieldConfig": {
         "defaults": {
@@ -1065,7 +1302,7 @@
     {
       "type": "volkovlabs-echarts-panel",
       "title": "Fleet radar",
-      "id": 16,
+      "id": 20,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1074,7 +1311,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 21
+        "y": 29
       },
       "fieldConfig": {
         "defaults": {
@@ -1179,7 +1416,7 @@
     {
       "type": "timeseries",
       "title": "CPU temperature",
-      "id": 17,
+      "id": 21,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1188,7 +1425,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 28
+        "y": 36
       },
       "fieldConfig": {
         "defaults": {
@@ -1262,7 +1499,7 @@
     {
       "type": "timeseries",
       "title": "CPU usage",
-      "id": 18,
+      "id": 22,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1271,7 +1508,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 28
+        "y": 36
       },
       "fieldConfig": {
         "defaults": {
@@ -1337,7 +1574,7 @@
     {
       "type": "timeseries",
       "title": "RAM used",
-      "id": 19,
+      "id": 23,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1346,7 +1583,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 36
+        "y": 44
       },
       "fieldConfig": {
         "defaults": {
@@ -1412,7 +1649,7 @@
     {
       "type": "timeseries",
       "title": "Load average",
-      "id": 20,
+      "id": 24,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1421,7 +1658,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 36
+        "y": 44
       },
       "fieldConfig": {
         "defaults": {
@@ -1505,7 +1742,7 @@
     {
       "type": "heatmap",
       "title": "Temperature distribution",
-      "id": 21,
+      "id": 25,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1514,7 +1751,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 44
+        "y": 52
       },
       "fieldConfig": {
         "defaults": {
@@ -1603,7 +1840,7 @@
     {
       "type": "xychart",
       "title": "Temperature vs CPU usage",
-      "id": 22,
+      "id": 26,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1612,7 +1849,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 44
+        "y": 52
       },
       "fieldConfig": {
         "defaults": {
@@ -1720,20 +1957,20 @@
     {
       "type": "row",
       "title": "Storage",
-      "id": 23,
+      "id": 27,
       "collapsed": false,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 52
+        "y": 60
       },
       "panels": []
     },
     {
       "type": "bargauge",
       "title": "Data partition used",
-      "id": 24,
+      "id": 28,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1742,7 +1979,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 53
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -1807,7 +2044,7 @@
     {
       "type": "timeseries",
       "title": "Data partition free",
-      "id": 25,
+      "id": 29,
       "datasource": {
         "type": "loki",
         "uid": "loki"
@@ -1816,7 +2053,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 53
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -1878,243 +2115,6 @@
           "legendFormat": "{{serial_number}}"
         }
       ]
-    },
-    {
-      "type": "row",
-      "title": "Firmware & boot",
-      "id": 26,
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 60
-      },
-      "panels": []
-    },
-    {
-      "type": "piechart",
-      "title": "Firmware versions",
-      "id": 27,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 0,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "pieType": "donut",
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "right",
-          "values": [
-            "value"
-          ]
-        },
-        "displayLabels": [
-          "percent"
-        ]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "count by (fw_version) (count by (fw_version, serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))",
-          "legendFormat": "{{fw_version}}"
-        }
-      ],
-      "description": "Frames per firmware version in the range."
-    },
-    {
-      "type": "timeseries",
-      "title": "Uptime",
-      "id": 28,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 8,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "A drop back to zero is a reboot."
-    },
-    {
-      "type": "timeseries",
-      "title": "Boot count",
-      "id": 29,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 61
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "line",
-            "lineWidth": 2,
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "none",
-              "group": "A"
-            },
-            "lineInterpolation": "stepAfter"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "Every step up is a boot."
     },
     {
       "type": "row",
