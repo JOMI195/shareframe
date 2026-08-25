@@ -475,7 +475,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             frame = self.scope.get("frame")
             frame_id = frame.id if frame else "unknown"
 
-            logger.debug(
+            logger.info(
                 f"Received message type '{message_type}' from frame {frame_id}"
             )
 
