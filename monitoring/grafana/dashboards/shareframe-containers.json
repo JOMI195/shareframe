@@ -8,7 +8,7 @@
   "timezone": "browser",
   "editable": true,
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "1m",
   "time": {
     "from": "now-6h",
@@ -1046,7 +1046,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 24
       },
@@ -1121,8 +1121,8 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 24
       },
       "fieldConfig": {
@@ -1179,418 +1179,6 @@
       "id": 304
     },
     {
-      "type": "bargauge",
-      "title": "Top log volume (range)",
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 24
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "min": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "valueMode": "color",
-        "namePlacement": "auto",
-        "showUnfilled": true,
-        "sizing": "auto",
-        "minVizWidth": 8,
-        "minVizHeight": 16
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "topk(8, sum by (container) (count_over_time({job=~\"backend|docker|grafana\"} | container=~\"$container\" |= \"$search\" [$__range])))",
-          "legendFormat": "{{container}}",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "description": "Loudest containers over the selected range. A container climbing here is usually retrying something.",
-      "id": 305
-    },
-    {
-      "type": "row",
-      "title": "Health & restarts",
-      "collapsed": false,
-      "panels": [],
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 31
-      },
-      "id": 306
-    },
-    {
-      "type": "state-timeline",
-      "title": "Container up/down",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 32
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "1": {
-                  "text": "running",
-                  "color": "green",
-                  "index": 0
-                }
-              }
-            },
-            {
-              "type": "special",
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "down",
-                  "color": "red",
-                  "index": 1
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80,
-            "spanNulls": false
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "mergeValues": true,
-        "showValue": "never",
-        "alignValue": "left",
-        "rowHeight": 0.9,
-        "perPage": 20,
-        "legend": {
-          "showLegend": false,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "count by (container_name) (docker_container_status_uptime_ns{container_name=~\"$container\"})",
-          "legendFormat": "{{container_name}}"
-        }
-      ],
-      "description": "A bar means the Docker API reported the container that scrape. Gaps are downtime.",
-      "id": 307
-    },
-    {
-      "type": "state-timeline",
-      "title": "Health over time",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 32
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [
-            {
-              "type": "value",
-              "options": {
-                "0": {
-                  "text": "no check",
-                  "color": "text",
-                  "index": 0
-                },
-                "1": {
-                  "text": "healthy",
-                  "color": "green",
-                  "index": 1
-                },
-                "2": {
-                  "text": "starting",
-                  "color": "orange",
-                  "index": 2
-                },
-                "3": {
-                  "text": "unhealthy",
-                  "color": "red",
-                  "index": 3
-                }
-              }
-            },
-            {
-              "type": "special",
-              "options": {
-                "match": "null",
-                "result": {
-                  "text": "no check",
-                  "color": "text",
-                  "index": 4
-                }
-              }
-            }
-          ],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "lineWidth": 0,
-            "fillOpacity": 80,
-            "spanNulls": false
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "mergeValues": true,
-        "showValue": "never",
-        "alignValue": "left",
-        "rowHeight": 0.9,
-        "perPage": 20,
-        "legend": {
-          "showLegend": false,
-          "displayMode": "list",
-          "placement": "bottom"
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max by (container_name) (docker_container_health_state{container_name=~\"$container\"})",
-          "legendFormat": "{{container_name}}"
-        }
-      ],
-      "description": "Docker healthcheck state. Only containers that define a healthcheck appear.",
-      "id": 308
-    },
-    {
-      "type": "bargauge",
-      "title": "Restarts in range",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 0,
-        "y": 39
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "orange",
-                "value": 1
-              },
-              {
-                "color": "red",
-                "value": 5
-              }
-            ]
-          },
-          "min": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "valueMode": "color",
-        "namePlacement": "auto",
-        "showUnfilled": true,
-        "sizing": "auto",
-        "minVizWidth": 8,
-        "minVizHeight": 16
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "sum by (container_name) (resets(docker_container_status_uptime_ns{container_name=~\"$container\"}[$__range]))",
-          "legendFormat": "{{container_name}}",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "description": "Uptime counter resets over the selected range, so manual restarts count too.",
-      "id": 309
-    },
-    {
-      "type": "bargauge",
-      "title": "Uptime by container",
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus"
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 12,
-        "x": 12,
-        "y": 39
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "s",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "blue",
-                "value": null
-              }
-            ]
-          },
-          "min": 0
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "horizontal",
-        "displayMode": "gradient",
-        "valueMode": "color",
-        "namePlacement": "auto",
-        "showUnfilled": true,
-        "sizing": "auto",
-        "minVizWidth": 8,
-        "minVizHeight": 16
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "prometheus",
-            "uid": "prometheus"
-          },
-          "expr": "max by (container_name) (docker_container_status_uptime_ns{container_name=~\"$container\"}) / 1e9",
-          "legendFormat": "{{container_name}}",
-          "instant": true,
-          "range": false
-        }
-      ],
-      "description": "Time since each container last started.",
-      "id": 310
-    },
-    {
       "type": "row",
       "title": "Resources",
       "collapsed": false,
@@ -1599,7 +1187,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 45
+        "y": 31
       },
       "id": 311
     },
@@ -1614,7 +1202,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 46
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {
@@ -1680,7 +1268,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 46
+        "y": 32
       },
       "fieldConfig": {
         "defaults": {
@@ -1746,7 +1334,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 54
+        "y": 40
       },
       "fieldConfig": {
         "defaults": {
@@ -1814,7 +1402,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 54
+        "y": 40
       },
       "fieldConfig": {
         "defaults": {
@@ -1903,7 +1491,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 62
+        "y": 48
       },
       "fieldConfig": {
         "defaults": {
@@ -1990,7 +1578,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 70
+        "y": 56
       },
       "id": 314
     },
@@ -2005,7 +1593,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 71
+        "y": 57
       },
       "fieldConfig": {
         "defaults": {
@@ -2071,7 +1659,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 71
+        "y": 57
       },
       "fieldConfig": {
         "defaults": {
@@ -2137,7 +1725,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 78
+        "y": 64
       },
       "options": {
         "showTime": true,
