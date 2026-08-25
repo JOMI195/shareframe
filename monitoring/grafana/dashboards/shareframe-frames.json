@@ -258,6 +258,87 @@
               "local_ip_address"
             ]
           }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "serial_number": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "fw_version": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "kernel": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "local_ip_address": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "health": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "dashboard": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "display": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "update": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "websocket": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "boots": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "slot": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "health (lastNotNull)": "health",
+              "dashboard (lastNotNull)": "dashboard",
+              "display (lastNotNull)": "display",
+              "update (lastNotNull)": "update",
+              "websocket (lastNotNull)": "websocket",
+              "boots (lastNotNull)": "boots",
+              "slot (lastNotNull)": "slot"
+            }
+          }
         }
       ]
     },
@@ -1954,6 +2035,40 @@
               "serial_number"
             ]
           }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "serial_number": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "CPU %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "CPU temp": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "CPU % (lastNotNull)": "CPU %",
+              "CPU temp (lastNotNull)": "CPU temp"
+            }
+          }
         }
       ]
     },
@@ -2571,6 +2686,89 @@
             "join": [
               "serial_number"
             ]
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "serial_number": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "CPU temp": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "CPU %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "RAM %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Disk %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Load 1m": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Uptime": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Boots": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Free space": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Healthy": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "indexByName": {},
+            "renameByName": {
+              "CPU temp (lastNotNull)": "CPU temp",
+              "CPU % (lastNotNull)": "CPU %",
+              "RAM % (lastNotNull)": "RAM %",
+              "Disk % (lastNotNull)": "Disk %",
+              "Load 1m (lastNotNull)": "Load 1m",
+              "Uptime (lastNotNull)": "Uptime",
+              "Boots (lastNotNull)": "Boots",
+              "Free space (lastNotNull)": "Free space",
+              "Healthy (lastNotNull)": "Healthy"
+            }
           }
         }
       ]
