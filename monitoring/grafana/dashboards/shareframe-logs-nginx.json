@@ -1652,7 +1652,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (ip, country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range])))",
+          "expr": "sort_desc(topk(10, sum by (ip, country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"remote_addr\": \"(?P<ip>[^\"]*)\"` | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range]))))",
           "queryType": "instant"
         }
       ],
@@ -1743,7 +1743,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (path) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"request_uri\": \"(?P<path>[^?\"]*)` [$__range])))",
+          "expr": "sort_desc(topk(10, sum by (path) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"request_uri\": \"(?P<path>[^?\"]*)` [$__range]))))",
           "queryType": "instant"
         }
       ],
@@ -2665,7 +2665,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} [$__range])))",
+          "expr": "sort_desc(topk(10, sum by (country) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} [$__range]))))",
           "queryType": "instant"
         }
       ],
@@ -2749,7 +2749,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (ua) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"http_user_agent\": \"(?P<ua>[^\"]*)\"` [$__range])))",
+          "expr": "sort_desc(topk(10, sum by (ua) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"http_user_agent\": \"(?P<ua>[^\"]*)\"` [$__range]))))",
           "queryType": "instant"
         }
       ],
@@ -3683,7 +3683,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "topk(10, sum by (country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range])))",
+          "expr": "sort_desc(topk(10, sum by (country, city) (count_over_time({job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\"} | regexp `\"geoip_city\": \"(?P<city>[^\"]*)\"` [$__range]))))",
           "queryType": "instant"
         }
       ],
