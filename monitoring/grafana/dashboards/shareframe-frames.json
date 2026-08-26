@@ -34,7 +34,6 @@
         "refresh": 1,
         "multi": true,
         "includeAll": true,
-        "allValue": ".+",
         "current": {
           "text": [
             "All"
@@ -67,7 +66,7 @@
         "refresh": 1,
         "multi": true,
         "includeAll": true,
-        "allValue": ".+",
+        "allValue": ".*",
         "current": {
           "text": [
             "All"
@@ -80,7 +79,7 @@
         "options": [],
         "hide": 0,
         "sort": 1,
-        "description": "Firmware version the frame reported."
+        "description": "OS image version the frame reports, built in shareframe-hardware."
       },
       {
         "type": "textbox",
@@ -192,7 +191,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number))"
         }
       ]
     },
@@ -259,7 +258,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number))"
         }
       ]
     },
@@ -330,7 +329,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number))"
         }
       ]
     },
@@ -456,10 +455,10 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))"
+          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))"
         }
       ],
-      "description": "Distinct frames that sent a telemetry heartbeat in the range. Compare with Registered frames to spot a fleet that is not reporting."
+      "description": "Distinct frames that sent a telemetry heartbeat in the range."
     },
     {
       "type": "stat",
@@ -660,7 +659,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
+          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
         }
       ],
       "description": "Frames whose most recent heartbeat reported health_state other than ok. health_state is not stored in the database, so this only covers frames that reported inside the range."
@@ -726,7 +725,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}1{{ else }}0{{ end }}` | unwrap service_down [$__range]) by (serial_number)) or vector(0)"
+          "expr": "sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}1{{ else }}0{{ end }}` | unwrap service_down [$__range]) by (serial_number)) or vector(0)"
         }
       ],
       "description": "Frames whose last heartbeat reported dashboard, display, update or websocket not running."
@@ -792,7 +791,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(max_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number))"
+          "expr": "sum(max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number))"
         }
       ],
       "description": "Fleet-wide boot_count increase over the range."
@@ -1768,8 +1767,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last heartbeat\" | unwrap seen [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last heartbeat\" | unwrap seen [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "T",
@@ -1777,8 +1775,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Health\" | unwrap healthy [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Health\" | unwrap healthy [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "U",
@@ -1786,8 +1783,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"A\" }}0{{ else }}1{{ end }}` | label_format metric=\"Boot slot\" | unwrap slot [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"A\" }}0{{ else }}1{{ end }}` | label_format metric=\"Boot slot\" | unwrap slot [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "A",
@@ -1795,8 +1791,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "B",
@@ -1804,8 +1799,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "C",
@@ -1813,8 +1807,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU MHz\" | unwrap cpu_freq_mhz [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU MHz\" | unwrap cpu_freq_mhz [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "D",
@@ -1822,8 +1815,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "E",
@@ -1831,8 +1823,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM free\" | unwrap ram_available_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM free\" | unwrap ram_available_bytes [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "F",
@@ -1840,8 +1831,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM total\" | unwrap ram_total_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM total\" | unwrap ram_total_bytes [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "G",
@@ -1849,8 +1839,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "H",
@@ -1858,8 +1847,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk free\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk free\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "I",
@@ -1867,8 +1855,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk total\" | unwrap storage_data_total_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk total\" | unwrap storage_data_total_bytes [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "J",
@@ -1876,8 +1863,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "K",
@@ -1885,8 +1871,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 5m\" | unwrap load_5 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 5m\" | unwrap load_5 [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "L",
@@ -1894,8 +1879,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 15m\" | unwrap load_15 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 15m\" | unwrap load_15 [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "M",
@@ -1903,8 +1887,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "N",
@@ -1912,8 +1895,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "O",
@@ -1921,8 +1903,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Dashboard\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Dashboard\" | unwrap flag [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "P",
@@ -1930,8 +1911,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Display\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Display\" | unwrap flag [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "Q",
@@ -1939,8 +1919,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Update\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Update\" | unwrap flag [$__range]) by (serial_number, metric)"
         },
         {
           "refId": "R",
@@ -1948,8 +1927,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "queryType": "instant",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric)"
         }
       ],
       "description": "One row per registered frame. Identity and Last seen come from the database, so a frame appears here even when it reported nothing in the range; the telemetry columns come from its newest heartbeat. Grouping is by serial_number alone, so a frame cannot occupy more than one row no matter what changed inside the range. health_state and boot_slot are folded into numbers to keep them out of the grouping key; kernel and time_iso are omitted for the same reason and stay visible in Heartbeat payloads. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
@@ -2071,12 +2049,12 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval]))",
+          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval]))",
           "legendFormat": "{{serial_number}}",
           "interval": "5m"
         }
       ],
-      "description": "One cell per 5-minute bucket. A gap is a frame that sent nothing in that bucket.",
+      "description": "Heartbeat arrival per frame over time, one row per frame.",
       "maxDataPoints": 100
     },
     {
@@ -2486,7 +2464,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
@@ -2563,7 +2541,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
@@ -2655,7 +2633,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2729,7 +2707,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2812,7 +2790,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2887,7 +2865,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2962,7 +2940,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3037,7 +3015,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 1m"
         },
         {
@@ -3046,7 +3024,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_5 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_5 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 5m"
         },
         {
@@ -3055,7 +3033,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_15 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_15 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 15m"
         }
       ]
@@ -3152,7 +3130,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
@@ -3222,7 +3200,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)",
           "interval": "$__range"
         },
         {
@@ -3231,7 +3209,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)",
           "interval": "$__range"
         }
       ],
@@ -3378,7 +3356,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3453,7 +3431,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap storage_data_free_bytes [$__auto]) by (serial_number)",
+          "expr": "min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap storage_data_free_bytes [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3714,7 +3692,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} |= \"$search\" | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}`"
+          "expr": "{job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} |= \"$search\" | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json"
         }
       ],
       "description": "The raw telemetry JSON each frame posted. Use Search to grep it."
