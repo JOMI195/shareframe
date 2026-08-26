@@ -1930,7 +1930,7 @@
           "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric)"
         }
       ],
-      "description": "One row per registered frame. Identity and Last seen come from the database, so a frame appears here even when it reported nothing in the range; the telemetry columns come from its newest heartbeat. Grouping is by serial_number alone, so a frame cannot occupy more than one row no matter what changed inside the range. health_state and boot_slot are folded into numbers to keep them out of the grouping key; kernel and time_iso are omitted for the same reason and stay visible in Heartbeat payloads. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
+      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it reported no telemetry in the range - legacy firmware sends only ip and version, so those rows are identity-only. Grouping is by serial_number alone, and the range queries are collapsed to their newest bucket, so a frame cannot occupy more than one row. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -1943,10 +1943,195 @@
           }
         },
         {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Last heartbeat",
+                "desc": false
+              }
+            ]
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "serial_number": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "Active": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Last seen": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "Last heartbeat": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "Health": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Boot slot": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "CPU temp": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "CPU %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "CPU MHz": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "RAM %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "RAM free": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "RAM total": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Disk %": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Disk free": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Disk total": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Load 1m": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Load 5m": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Load 15m": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Uptime": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Boots": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Dashboard": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Display": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Update": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "Websocket": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {},
-            "renameByName": {},
+            "renameByName": {
+              "Active (lastNotNull)": "Active",
+              "Last seen (max)": "Last seen",
+              "Last heartbeat (max)": "Last heartbeat",
+              "Health (lastNotNull)": "Health",
+              "Boot slot (lastNotNull)": "Boot slot",
+              "CPU temp (lastNotNull)": "CPU temp",
+              "CPU % (lastNotNull)": "CPU %",
+              "CPU MHz (lastNotNull)": "CPU MHz",
+              "RAM % (lastNotNull)": "RAM %",
+              "RAM free (lastNotNull)": "RAM free",
+              "RAM total (lastNotNull)": "RAM total",
+              "Disk % (lastNotNull)": "Disk %",
+              "Disk free (lastNotNull)": "Disk free",
+              "Disk total (lastNotNull)": "Disk total",
+              "Load 1m (lastNotNull)": "Load 1m",
+              "Load 5m (lastNotNull)": "Load 5m",
+              "Load 15m (lastNotNull)": "Load 15m",
+              "Uptime (lastNotNull)": "Uptime",
+              "Boots (lastNotNull)": "Boots",
+              "Dashboard (lastNotNull)": "Dashboard",
+              "Display (lastNotNull)": "Display",
+              "Update (lastNotNull)": "Update",
+              "Websocket (lastNotNull)": "Websocket"
+            },
             "indexByName": {
               "serial_number": 0,
               "Active": 1,
