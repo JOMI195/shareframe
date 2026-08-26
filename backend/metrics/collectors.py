@@ -83,3 +83,90 @@ class ShareframeBusinessCollector:
             "Sent images past their expiry",
             sent["expired"],
         )
+
+
+_FRAME_TIMESTAMPS = (
+    (
+        "shareframe_frame_last_seen_timestamp_seconds",
+        "last_seen",
+        "Last heartbeat or websocket traffic from the frame",
+    ),
+    (
+        "shareframe_frame_last_connected_timestamp_seconds",
+        "last_connected",
+        "Last websocket connect",
+    ),
+    (
+        "shareframe_frame_registered_timestamp_seconds",
+        "registered_at",
+        "Registration time",
+    ),
+    (
+        "shareframe_frame_websocket_last_active_timestamp_seconds",
+        "frame_websocket_connections__last_active",
+        "Last activity on the frame's open websocket connection",
+    ),
+)
+
+
+class ShareframeFrameCollector:
+    """Fleet roster, queried from the DB at scrape time. One series per frame."""
+
+    def collect(self):
+        try:
+            yield from self._collect()
+        except Exception:
+            logger.exception("Failed to collect ShareFrame frame metrics")
+
+    def _collect(self):
+        from frames.models import Frame
+
+        rows = list(
+            Frame.objects.values(
+                "public_serial_number",
+                "version",
+                "local_ip_address",
+                "is_active",
+                *[field for _, field, _ in _FRAME_TIMESTAMPS],
+            )
+        )
+
+        info = GaugeMetricFamily(
+            "shareframe_frame_info",
+            "Registered frames, labelled with their current version and address",
+            labels=["serial_number", "version", "local_ip_address"],
+        )
+        active = GaugeMetricFamily(
+            "shareframe_frame_active",
+            "Frame is flagged active",
+            labels=["serial_number"],
+        )
+        connected = GaugeMetricFamily(
+            "shareframe_frame_websocket_connected",
+            "Frame holds an open websocket connection",
+            labels=["serial_number"],
+        )
+        timestamps = {
+            field: GaugeMetricFamily(name, documentation, labels=["serial_number"])
+            for name, field, documentation in _FRAME_TIMESTAMPS
+        }
+
+        for row in rows:
+            serial = [row["public_serial_number"]]
+            info.add_metric(
+                serial + [row["version"] or "", row["local_ip_address"] or ""], 1
+            )
+            active.add_metric(serial, int(row["is_active"]))
+            connected.add_metric(
+                serial,
+                int(row["frame_websocket_connections__last_active"] is not None),
+            )
+            for field, gauge in timestamps.items():
+                # A null column stays absent, so it reads as blank instead of 1970.
+                if row[field] is not None:
+                    gauge.add_metric(serial, row[field].timestamp())
+
+        yield info
+        yield active
+        yield connected
+        yield from timestamps.values()

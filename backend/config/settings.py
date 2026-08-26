@@ -45,7 +45,7 @@ else:
     SECURE_SSL_REDIRECT = False
 
 # Prometheus scrapes /metrics over plain HTTP on the container network.
-SECURE_REDIRECT_EXEMPT = [r"^metrics$"]
+SECURE_REDIRECT_EXEMPT = [r"^metrics(/business)?$"]
 
 # Application definition
 

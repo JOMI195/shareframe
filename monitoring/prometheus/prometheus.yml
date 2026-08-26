@@ -14,10 +14,17 @@ scrape_configs:
     static_configs:
       - targets: ["node-exporter:9100"]
 
-  # Each scrape runs a DB pass, so keep it infrequent.
   - job_name: django
     metrics_path: /metrics
     scrape_interval: 60s
+    static_configs:
+      - targets: ["backend:8000"]
+
+  # Each scrape walks every image variant on disk, so keep it infrequent.
+  # Stay under Prometheus' 5m lookback delta or the host dashboard gaps.
+  - job_name: django-business
+    metrics_path: /metrics/business
+    scrape_interval: 240s
     static_configs:
       - targets: ["backend:8000"]
 
