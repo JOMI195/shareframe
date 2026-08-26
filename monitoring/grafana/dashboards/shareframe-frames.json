@@ -47,7 +47,7 @@
         "options": [],
         "hide": 0,
         "sort": 1,
-        "description": "Frame serial number, labelled onto the heartbeat line by Promtail."
+        "description": "Frame serial number, from the registered frames in the database."
       },
       {
         "type": "query",
@@ -1096,8 +1096,8 @@
       "title": "Latest telemetry per frame",
       "id": 31,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "datasource",
+        "uid": "-- Mixed --"
       },
       "gridPos": {
         "h": 10,
@@ -1670,6 +1670,52 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last seen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Active"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "inactive",
+                        "color": "red",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "active",
+                        "color": "green",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
           }
         ]
       },
@@ -1692,6 +1738,30 @@
         ]
       },
       "targets": [
+        {
+          "refId": "V",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_last_seen_timestamp_seconds{serial_number=~\"$frame\"}) * 1000, \"metric\", \"Last seen\", \"\", \"\")"
+        },
+        {
+          "refId": "W",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "format": "time_series",
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_active{serial_number=~\"$frame\"}), \"metric\", \"Active\", \"\", \"\")"
+        },
         {
           "refId": "S",
           "datasource": {
@@ -1882,7 +1952,7 @@
           "expr": "last_over_time({job=\"backend\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric)"
         }
       ],
-      "description": "Newest value of every numeric field the frame reports. Grouping is by serial_number alone, so a frame cannot occupy more than one row no matter what changed inside the range. health_state and boot_slot are folded into numbers to keep them out of the grouping key; kernel and time_iso are omitted for the same reason and stay visible in Heartbeat payloads. Identity and DB-owned fields live in Fleet roster above.",
+      "description": "One row per registered frame. Identity and Last seen come from the database, so a frame appears here even when it reported nothing in the range; the telemetry columns come from its newest heartbeat. Grouping is by serial_number alone, so a frame cannot occupy more than one row no matter what changed inside the range. health_state and boot_slot are folded into numbers to keep them out of the grouping key; kernel and time_iso are omitted for the same reason and stay visible in Heartbeat payloads. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -1901,27 +1971,29 @@
             "renameByName": {},
             "indexByName": {
               "serial_number": 0,
-              "Last heartbeat": 1,
-              "Health": 2,
-              "Boot slot": 3,
-              "CPU temp": 4,
-              "CPU %": 5,
-              "CPU MHz": 6,
-              "RAM %": 7,
-              "RAM free": 8,
-              "RAM total": 9,
-              "Disk %": 10,
-              "Disk free": 11,
-              "Disk total": 12,
-              "Load 1m": 13,
-              "Load 5m": 14,
-              "Load 15m": 15,
-              "Uptime": 16,
-              "Boots": 17,
-              "Dashboard": 18,
-              "Display": 19,
-              "Update": 20,
-              "Websocket": 21
+              "Active": 1,
+              "Last seen": 2,
+              "Last heartbeat": 3,
+              "Health": 4,
+              "Boot slot": 5,
+              "CPU temp": 6,
+              "CPU %": 7,
+              "CPU MHz": 8,
+              "RAM %": 9,
+              "RAM free": 10,
+              "RAM total": 11,
+              "Disk %": 12,
+              "Disk free": 13,
+              "Disk total": 14,
+              "Load 1m": 15,
+              "Load 5m": 16,
+              "Load 15m": 17,
+              "Uptime": 18,
+              "Boots": 19,
+              "Dashboard": 20,
+              "Display": 21,
+              "Update": 22,
+              "Websocket": 23
             }
           }
         }
