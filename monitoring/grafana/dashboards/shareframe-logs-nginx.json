@@ -1676,6 +1676,18 @@
               "Value": 3
             }
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Requests",
+                "desc": true
+              }
+            ]
+          }
         }
       ],
       "description": "Busiest source addresses with their GeoIP country and city. nginx faces the internet directly on Hetzner, so remote_addr is the visitor's own IP.",
@@ -1747,6 +1759,18 @@
               "Value": "Requests"
             },
             "indexByName": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Requests",
+                "desc": true
+              }
+            ]
           }
         }
       ],
@@ -2658,6 +2682,18 @@
             },
             "indexByName": {}
           }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Requests",
+                "desc": true
+              }
+            ]
+          }
         }
       ],
       "description": "GeoIP country of the client, paired with 'Top cities'. 'unknown' covers private/LAN addresses, which is everything outside real prod.",
@@ -2729,6 +2765,18 @@
               "Value": "Requests"
             },
             "indexByName": {}
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Requests",
+                "desc": true
+              }
+            ]
           }
         }
       ],
@@ -3656,6 +3704,18 @@
               "country": 1,
               "Value": 2
             }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "fields": {},
+            "sort": [
+              {
+                "field": "Requests",
+                "desc": true
+              }
+            ]
           }
         }
       ],
