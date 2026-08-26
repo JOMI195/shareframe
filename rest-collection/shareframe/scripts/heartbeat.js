@@ -11,11 +11,12 @@ const BASE = {
 };
 
 /** Payload shape of Heartbeat::execute (board): identity, service health, sysinfo. */
-function buildHeartbeat({ frameId, localIp, version, uptimeSecs, overrides } = {}) {
+function buildHeartbeat({ frameId, localIp, version, osSha, appSha, uptimeSecs, overrides } = {}) {
   return {
     serial_number: frameId,
     local_ip_address: localIp,
     version,
+    app_sha: appSha,
     websocket_running: true,
     display_running: true,
     dashboard_running: true,
@@ -26,7 +27,7 @@ function buildHeartbeat({ frameId, localIp, version, uptimeSecs, overrides } = {
     boot_slot: BASE.boot_slot,
     time_iso: new Date().toISOString(),
     kernel: BASE.kernel,
-    fw_version: version,
+    os_sha: osSha,
     cpu_temp_celsius: jitter(46.2),
     cpu_usage_percent: jitter(12.5, 0.6),
     cpu_freq_mhz: BASE.cpu_freq_mhz,

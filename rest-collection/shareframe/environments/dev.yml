@@ -47,6 +47,10 @@ variables:
     name: backend_admin_password
   - name: sim_frame_version
     value: "7.0.0"
+  - name: sim_os_sha
+    value: "1731730"
+  - name: sim_app_sha
+    value: "5ece601"
   - name: sim_local_ip
     value: "192.168.0.10"
   - name: sim_duration_secs

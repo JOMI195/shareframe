@@ -47,6 +47,8 @@ runtime:
           seedB64: bru.getEnvVar('frame_ed25519_private_key'),
           frameId: bru.getEnvVar('frame_public_serial_number') || undefined,
           version: bru.getEnvVar('sim_frame_version'),
+          osSha: bru.getEnvVar('sim_os_sha'),
+          appSha: bru.getEnvVar('sim_app_sha'),
           localIp: bru.getEnvVar('sim_local_ip'),
           durationSecs: num('sim_duration_secs', 120),
           pingSecs: num('sim_ping_secs', 30),
@@ -95,7 +97,8 @@ docs: |-
   Needs Bruno Developer Mode (require) and `npm i` in the collection root (ws).
 
   Tunables are env vars: sim_duration_secs, sim_ping_secs, sim_heartbeat_secs,
-  sim_heartbeat_at_start, sim_expiry_secs, sim_frame_version, sim_local_ip, sim_initial_sent_image_ids
+  sim_heartbeat_at_start, sim_expiry_secs, sim_frame_version, sim_os_sha, sim_app_sha,
+  sim_local_ip, sim_initial_sent_image_ids
   (JSON array, e.g. [1,2]), and sim_heartbeat_overrides (JSON pinning single heartbeat
   fields, e.g. {"boot_count": 42}). Defaults mirror the real board (30s ping, 300s
   heartbeat, 900s expiry check) — compress them for short runs.

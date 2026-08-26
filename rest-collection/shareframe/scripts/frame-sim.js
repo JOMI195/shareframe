@@ -20,6 +20,8 @@ const DEFAULTS = {
   expiryCheckSecs: 900,
   heartbeatAtStart: false,
   version: '7.0.0',
+  osSha: '1731730',
+  appSha: '5ece601',
   localIp: '192.168.0.10',
   log: true
 };
@@ -169,6 +171,8 @@ module.exports = async function runFrameSim(options) {
           frameId,
           localIp: cfg.localIp,
           version: cfg.version,
+          osSha: cfg.osSha,
+          appSha: cfg.appSha,
           overrides: cfg.heartbeatOverrides
         }))
       });

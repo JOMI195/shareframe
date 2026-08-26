@@ -1,7 +1,7 @@
 {
   "uid": "shareframe-frames",
   "title": "Frames",
-  "description": "Fleet telemetry from the frame heartbeat payloads in Loki, filterable per frame and firmware.",
+  "description": "Fleet telemetry from the frame heartbeat payloads in Loki, filterable per frame, release version and build sha.",
   "tags": [
     "shareframe"
   ],
@@ -50,15 +50,15 @@
       },
       {
         "type": "query",
-        "name": "fw",
-        "label": "Firmware",
+        "name": "version",
+        "label": "Version",
         "datasource": {
           "type": "loki",
           "uid": "loki"
         },
-        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, fw_version)",
+        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, version)",
         "query": {
-          "label": "fw_version",
+          "label": "version",
           "type": 1,
           "stream": "{job=\"backend\", serial_number=~\".+\"}",
           "refId": "LokiVariableQueryEditor-VariableQuery"
@@ -79,7 +79,73 @@
         "options": [],
         "hide": 0,
         "sort": 1,
-        "description": "OS image version the frame reports, built in shareframe-hardware."
+        "description": "Release version (X.Y.Z) the frame reports. The only semver of the three, and the one the OTA compare uses."
+      },
+      {
+        "type": "query",
+        "name": "os_sha",
+        "label": "OS SHA",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, os_sha)",
+        "query": {
+          "label": "os_sha",
+          "type": 1,
+          "stream": "{job=\"backend\", serial_number=~\".+\"}",
+          "refId": "LokiVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ],
+          "selected": true
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1,
+        "description": "shareframe-hardware commit the OS image was built from. A -dirty suffix means the build tree had uncommitted changes."
+      },
+      {
+        "type": "query",
+        "name": "app_sha",
+        "label": "App SHA",
+        "datasource": {
+          "type": "loki",
+          "uid": "loki"
+        },
+        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, app_sha)",
+        "query": {
+          "label": "app_sha",
+          "type": 1,
+          "stream": "{job=\"backend\", serial_number=~\".+\"}",
+          "refId": "LokiVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "multi": true,
+        "includeAll": true,
+        "allValue": ".*",
+        "current": {
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ],
+          "selected": true
+        },
+        "options": [],
+        "hide": 0,
+        "sort": 1,
+        "description": "shareframe-board commit the application binaries were built from, compiled into them at build time."
       },
       {
         "type": "textbox",
@@ -191,7 +257,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number))"
         }
       ]
     },
@@ -258,7 +324,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number))"
         }
       ]
     },
@@ -329,7 +395,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number))"
+          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number))"
         }
       ]
     },
@@ -455,7 +521,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__range])))"
+          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} [$__range])))"
         }
       ],
       "description": "Distinct frames that sent a telemetry heartbeat in the range."
@@ -659,7 +725,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
+          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
         }
       ],
       "description": "Frames whose most recent heartbeat reported health_state other than ok. health_state is not stored in the database, so this only covers frames that reported inside the range."
@@ -725,7 +791,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}1{{ else }}0{{ end }}` | unwrap service_down [$__range]) by (serial_number)) or vector(0)"
+          "expr": "sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}1{{ else }}0{{ end }}` | unwrap service_down [$__range]) by (serial_number)) or vector(0)"
         }
       ],
       "description": "Frames whose last heartbeat reported dashboard, display, update or websocket not running."
@@ -791,7 +857,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum(max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number))"
+          "expr": "sum(max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number))"
         }
       ],
       "description": "Fleet-wide boot_count increase over the range."
@@ -1715,6 +1781,70 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OS SHA"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "App SHA"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Kernel"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
           }
         ]
       },
@@ -1767,7 +1897,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last heartbeat\" | unwrap seen [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last heartbeat\" | unwrap seen [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "T",
@@ -1775,7 +1905,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Health\" | unwrap healthy [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Health\" | unwrap healthy [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "U",
@@ -1783,7 +1913,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"A\" }}0{{ else }}1{{ end }}` | label_format metric=\"Boot slot\" | unwrap slot [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"A\" }}0{{ else }}1{{ end }}` | label_format metric=\"Boot slot\" | unwrap slot [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "A",
@@ -1791,7 +1921,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "B",
@@ -1799,7 +1929,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "C",
@@ -1807,7 +1937,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU MHz\" | unwrap cpu_freq_mhz [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU MHz\" | unwrap cpu_freq_mhz [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "D",
@@ -1815,7 +1945,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "E",
@@ -1823,7 +1953,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM free\" | unwrap ram_available_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM free\" | unwrap ram_available_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "F",
@@ -1831,7 +1961,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM total\" | unwrap ram_total_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM total\" | unwrap ram_total_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "G",
@@ -1839,7 +1969,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "H",
@@ -1847,7 +1977,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk free\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk free\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "I",
@@ -1855,7 +1985,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk total\" | unwrap storage_data_total_bytes [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk total\" | unwrap storage_data_total_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "J",
@@ -1863,7 +1993,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "K",
@@ -1871,7 +2001,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 5m\" | unwrap load_5 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 5m\" | unwrap load_5 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "L",
@@ -1879,7 +2009,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 15m\" | unwrap load_15 [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 15m\" | unwrap load_15 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "M",
@@ -1887,7 +2017,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "N",
@@ -1895,7 +2025,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "O",
@@ -1903,7 +2033,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Dashboard\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Dashboard\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "P",
@@ -1911,7 +2041,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Display\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Display\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "Q",
@@ -1919,7 +2049,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Update\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Update\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         },
         {
           "refId": "R",
@@ -1927,10 +2057,10 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric)"
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         }
       ],
-      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it reported no telemetry in the range - legacy firmware sends only ip and version, so those rows are identity-only. Grouping is by serial_number alone, and the range queries are collapsed to their newest bucket, so a frame cannot occupy more than one row. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
+      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it reported no telemetry in the range - legacy firmware sends only ip and version, so those rows are identity-only. Version, OS SHA, App SHA and Kernel are heartbeat stream labels carried through the join, reduced with lastNotNull: a frame that updated inside the range shows what it runs now. Grouping is by serial_number alone, and the range queries are collapsed to their newest bucket, so a frame cannot occupy more than one row. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -1938,7 +2068,11 @@
           "options": {
             "value": "metric",
             "join": [
-              "serial_number"
+              "serial_number",
+              "version",
+              "os_sha",
+              "app_sha",
+              "kernel"
             ]
           }
         },
@@ -1961,6 +2095,30 @@
               "serial_number": {
                 "aggregations": [],
                 "operation": "groupby"
+              },
+              "version": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "os_sha": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "app_sha": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "kernel": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
               },
               "Active": {
                 "aggregations": [
@@ -2130,33 +2288,41 @@
               "Dashboard (lastNotNull)": "Dashboard",
               "Display (lastNotNull)": "Display",
               "Update (lastNotNull)": "Update",
-              "Websocket (lastNotNull)": "Websocket"
+              "Websocket (lastNotNull)": "Websocket",
+              "version (lastNotNull)": "Version",
+              "os_sha (lastNotNull)": "OS SHA",
+              "app_sha (lastNotNull)": "App SHA",
+              "kernel (lastNotNull)": "Kernel"
             },
             "indexByName": {
               "serial_number": 0,
-              "Active": 1,
-              "Last seen": 2,
-              "Last heartbeat": 3,
-              "Health": 4,
-              "Boot slot": 5,
-              "CPU temp": 6,
-              "CPU %": 7,
-              "CPU MHz": 8,
-              "RAM %": 9,
-              "RAM free": 10,
-              "RAM total": 11,
-              "Disk %": 12,
-              "Disk free": 13,
-              "Disk total": 14,
-              "Load 1m": 15,
-              "Load 5m": 16,
-              "Load 15m": 17,
-              "Uptime": 18,
-              "Boots": 19,
-              "Dashboard": 20,
-              "Display": 21,
-              "Update": 22,
-              "Websocket": 23
+              "Active (lastNotNull)": 1,
+              "Last seen (max)": 2,
+              "Last heartbeat (max)": 3,
+              "Health (lastNotNull)": 4,
+              "Boot slot (lastNotNull)": 5,
+              "CPU temp (lastNotNull)": 6,
+              "CPU % (lastNotNull)": 7,
+              "CPU MHz (lastNotNull)": 8,
+              "RAM % (lastNotNull)": 9,
+              "RAM free (lastNotNull)": 10,
+              "RAM total (lastNotNull)": 11,
+              "Disk % (lastNotNull)": 12,
+              "Disk free (lastNotNull)": 13,
+              "Disk total (lastNotNull)": 14,
+              "Load 1m (lastNotNull)": 15,
+              "Load 5m (lastNotNull)": 16,
+              "Load 15m (lastNotNull)": 17,
+              "Uptime (lastNotNull)": 18,
+              "Boots (lastNotNull)": 19,
+              "Dashboard (lastNotNull)": 20,
+              "Display (lastNotNull)": 21,
+              "Update (lastNotNull)": 22,
+              "Websocket (lastNotNull)": 23,
+              "version (lastNotNull)": 24,
+              "os_sha (lastNotNull)": 25,
+              "app_sha (lastNotNull)": 26,
+              "kernel (lastNotNull)": 27
             }
           }
         }
@@ -2234,7 +2400,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} [$__interval]))",
+          "expr": "sum by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} [$__interval]))",
           "legendFormat": "{{serial_number}}",
           "interval": "5m"
         }
@@ -2495,7 +2661,7 @@
     },
     {
       "type": "row",
-      "title": "Firmware & boot",
+      "title": "Version & boot",
       "id": 13,
       "collapsed": false,
       "gridPos": {
@@ -2508,7 +2674,7 @@
     },
     {
       "type": "piechart",
-      "title": "Firmware versions",
+      "title": "Release versions",
       "id": 14,
       "datasource": {
         "type": "prometheus",
@@ -2649,7 +2815,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
@@ -2726,11 +2892,200 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
       "description": "Every step up is a boot."
+    },
+    {
+      "id": 50,
+      "type": "table",
+      "title": "Build provenance per frame",
+      "description": "Every build seen in the range, straight off the heartbeat stream labels: the release semver plus the commits it was built from - os_sha from shareframe-hardware, app_sha from shareframe-board. A frame that updated mid-range shows one row per build, newest last, with the heartbeat count behind each. A -dirty suffix means that checkout had uncommitted changes at build time. For current-only values see Latest telemetry per frame.",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 54
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "queryType": "instant",
+          "instant": true,
+          "legendFormat": "",
+          "expr": "count by (serial_number, version, os_sha, app_sha, kernel) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} [$__range]))"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "version",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "os_sha",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "app_sha",
+                "destinationType": "string"
+              },
+              {
+                "targetField": "kernel",
+                "destinationType": "string"
+              }
+            ]
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "serial_number": "Frame",
+              "version": "Version",
+              "os_sha": "OS SHA",
+              "app_sha": "App SHA",
+              "kernel": "Kernel",
+              "Value": "Heartbeats"
+            },
+            "indexByName": {
+              "serial_number": 0,
+              "version": 1,
+              "os_sha": 2,
+              "app_sha": 3,
+              "kernel": 4,
+              "Value": 5
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        },
+        "sortBy": [
+          {
+            "displayName": "Frame",
+            "desc": false
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Version"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OS SHA"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "App SHA"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Kernel"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      }
     },
     {
       "type": "row",
@@ -2741,7 +3096,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 62
       },
       "panels": []
     },
@@ -2757,7 +3112,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 55
+        "y": 63
       },
       "fieldConfig": {
         "defaults": {
@@ -2818,7 +3173,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2835,7 +3190,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 55
+        "y": 63
       },
       "fieldConfig": {
         "defaults": {
@@ -2892,7 +3247,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2909,7 +3264,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 62
+        "y": 70
       },
       "fieldConfig": {
         "defaults": {
@@ -2975,7 +3330,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -2992,7 +3347,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 62
+        "y": 70
       },
       "fieldConfig": {
         "defaults": {
@@ -3050,7 +3405,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3067,7 +3422,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 70
+        "y": 78
       },
       "fieldConfig": {
         "defaults": {
@@ -3125,7 +3480,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3142,7 +3497,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 70
+        "y": 78
       },
       "fieldConfig": {
         "defaults": {
@@ -3200,7 +3555,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 1m"
         },
         {
@@ -3209,7 +3564,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_5 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_5 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 5m"
         },
         {
@@ -3218,7 +3573,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_15 [$__auto]) by (serial_number)",
+          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_15 [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} \u00b7 15m"
         }
       ]
@@ -3232,7 +3587,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 78
+        "y": 86
       },
       "panels": []
     },
@@ -3248,7 +3603,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 79
+        "y": 87
       },
       "fieldConfig": {
         "defaults": {
@@ -3305,7 +3660,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3322,7 +3677,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 79
+        "y": 87
       },
       "fieldConfig": {
         "defaults": {
@@ -3380,7 +3735,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap storage_data_free_bytes [$__auto]) by (serial_number)",
+          "expr": "min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap storage_data_free_bytes [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ]
@@ -3394,7 +3749,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 94
       },
       "panels": []
     },
@@ -3410,7 +3765,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 87
+        "y": 95
       },
       "options": {
         "showTime": true,
@@ -3429,7 +3784,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} |= \"$search\" | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json"
+          "expr": "{job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} |= \"$search\" | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json"
         }
       ],
       "description": "The raw telemetry JSON each frame posted. Use Search to grep it."

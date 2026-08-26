@@ -36,7 +36,7 @@ docs: |-
   picture + clear tracking, reconnect with backoff and token refresh.
 
   Cadence env vars (`0` = off): `sim_duration_secs` (120), `sim_ping_secs` (30),
-  `sim_heartbeat_secs` (300), `sim_heartbeat_at_start` (true), `sim_expiry_secs` (900), plus `sim_frame_version`,
+  `sim_heartbeat_secs` (300), `sim_heartbeat_at_start` (true), `sim_expiry_secs` (900), plus `sim_frame_version`, `sim_os_sha`, `sim_app_sha`,
   `sim_local_ip`, and `sim_initial_sent_image_ids` (JSON array). Defaults are the
   board's real intervals — compress them for short runs.
 

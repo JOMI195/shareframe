@@ -16,6 +16,7 @@ http:
           "serial_number": "{{frame_public_serial_number}}",
           "local_ip_address": "{{sim_local_ip}}",
           "version": "{{sim_frame_version}}",
+          "app_sha": "{{sim_app_sha}}",
 
           "websocket_running": true,
           "display_running": true,
@@ -28,7 +29,7 @@ http:
           "boot_slot": "A",
           "time_iso": "2026-01-01T12:00:00Z",
           "kernel": "6.6.51-shareframe",
-          "fw_version": "{{sim_frame_version}}",
+          "os_sha": "{{sim_os_sha}}",
 
           "cpu_temp_celsius": 46.2,
           "cpu_usage_percent": 12.5,
@@ -58,6 +59,7 @@ docs: |-
 
   The backend currently reads only local_ip_address and version (frames/views.py
   frame_hearbeat); the sysinfo block is accepted and ignored, so this request is the
-  way to drive the server side while it is being built.
+  way to drive the server side while it is being built. os_sha and app_sha are not
+  stored either, but promtail labels them, so they drive the Grafana Frames filters.
 
   For fresh timestamps and jittered values on every send, use send-heartbeat-generated.

@@ -94,7 +94,9 @@ Cadence comes from environment variables (`0` disables a timer):
 | `sim_heartbeat_secs` | 300 | `config.toml [heartbeat] interval_secs` |
 | `sim_heartbeat_at_start` | true | send one heartbeat immediately at simulator startup |
 | `sim_expiry_secs` | 900 | `config.toml [expiry_cleanup] interval_secs` |
-| `sim_frame_version` | 7.0.0 | reported version |
+| `sim_frame_version` | 7.0.0 | reported release version (the semver the OTA compare uses) |
+| `sim_os_sha` | 1731730 | reported `shareframe-hardware` commit |
+| `sim_app_sha` | 5ece601 | reported `shareframe-board` commit |
 | `sim_local_ip` | 192.168.0.10 | reported LAN address |
 | `sim_initial_sent_image_ids` | `[]` | initial frame-side image id cache (`JSON` array) |
 

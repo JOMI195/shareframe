@@ -52,10 +52,16 @@ scrape_configs:
                 source: payload
                 expressions:
                   serial_number:
-                  fw_version:
+                  version:
+                  os_sha:
+                  app_sha:
+            # app_sha = shareframe-board commit. All low-cardinality per release.
             - labels:
                 serial_number:
-                fw_version:
+                version:
+                os_sha:
+                app_sha:
+                kernel:
       - match:
           selector: '{job="grafana"}'
           stages:

@@ -31,6 +31,8 @@ runtime:
           frameId,
           localIp: bru.getEnvVar('sim_local_ip'),
           version: bru.getEnvVar('sim_frame_version'),
+          osSha: bru.getEnvVar('sim_os_sha'),
+          appSha: bru.getEnvVar('sim_app_sha'),
           overrides
         }));
 

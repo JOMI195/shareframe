@@ -27,6 +27,8 @@ runFrameSim({
   wsDomain: args.ws || process.env.SIM_WS_DOMAIN || 'ws://localhost:8000',
   seedB64: args.seed || process.env.SIM_ED25519_PRIVATE_KEY,
   version: args.version || process.env.SIM_FRAME_VERSION || '7.0.0',
+  osSha: args.osSha || process.env.SIM_OS_SHA || '1731730',
+  appSha: args.appSha || process.env.SIM_APP_SHA || '5ece601',
   localIp: args.ip || process.env.SIM_LOCAL_IP || '192.168.0.10',
   durationSecs: num(args.duration, 300),
   pingSecs: num(args.ping, 30),
