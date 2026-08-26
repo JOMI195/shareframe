@@ -3224,242 +3224,6 @@
       ]
     },
     {
-      "type": "heatmap",
-      "title": "Temperature distribution",
-      "id": 25,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 78
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "celsius",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "hideFrom": {
-              "tooltip": false,
-              "viz": false,
-              "legend": false
-            },
-            "scaleDistribution": {
-              "type": "linear"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "calculate": true,
-        "calculation": {
-          "yBuckets": {
-            "mode": "size",
-            "value": "2"
-          }
-        },
-        "color": {
-          "mode": "scheme",
-          "scheme": "Turbo",
-          "steps": 32,
-          "reverse": false,
-          "exponent": 0.5,
-          "fill": "dark-orange"
-        },
-        "cellGap": 1,
-        "cellValues": {},
-        "exemplars": {
-          "color": "rgba(255,0,255,0.7)"
-        },
-        "filterValues": {
-          "le": 1e-09
-        },
-        "legend": {
-          "show": true
-        },
-        "rowsFrame": {
-          "layout": "auto"
-        },
-        "showValue": "never",
-        "tooltip": {
-          "mode": "single",
-          "showColorScale": false,
-          "yHistogram": false
-        },
-        "yAxis": {
-          "axisPlacement": "left",
-          "unit": "celsius",
-          "reverse": false
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "How the fleet's temperatures are spread over time, not just the per-frame lines."
-    },
-    {
-      "type": "xychart",
-      "title": "Temperature vs CPU usage",
-      "id": 26,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 78
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "show": "points",
-            "pointSize": {
-              "fixed": 10
-            },
-            "pointShape": "circle",
-            "pointStrokeWidth": 2,
-            "fillOpacity": 80,
-            "axisPlacement": "auto"
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "mapping": "auto",
-        "series": [],
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "list",
-          "placement": "bottom",
-          "calcs": []
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric)",
-          "interval": "$__range"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", fw_version=~\"$fw\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric)",
-          "interval": "$__range"
-        }
-      ],
-      "description": "One point per frame: hot frames that are not busy point at a cooling or placement problem.",
-      "maxDataPoints": 1,
-      "pluginVersion": "13.2.0",
-      "transformations": [
-        {
-          "id": "joinByLabels",
-          "options": {
-            "value": "metric",
-            "join": [
-              "serial_number"
-            ]
-          }
-        },
-        {
-          "id": "groupBy",
-          "options": {
-            "fields": {
-              "serial_number": {
-                "aggregations": [],
-                "operation": "groupby"
-              },
-              "CPU %": {
-                "aggregations": [
-                  "lastNotNull"
-                ],
-                "operation": "aggregate"
-              },
-              "CPU temp": {
-                "aggregations": [
-                  "lastNotNull"
-                ],
-                "operation": "aggregate"
-              }
-            }
-          }
-        },
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {},
-            "indexByName": {},
-            "renameByName": {
-              "CPU % (lastNotNull)": "CPU %",
-              "CPU temp (lastNotNull)": "CPU temp"
-            }
-          }
-        },
-        {
-          "id": "partitionByValues",
-          "options": {
-            "fields": [
-              "serial_number"
-            ],
-            "keepFields": false,
-            "naming": {
-              "asLabels": false
-            }
-          }
-        }
-      ]
-    },
-    {
       "type": "row",
       "title": "Storage",
       "id": 27,
@@ -3468,7 +3232,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 78
       },
       "panels": []
     },
@@ -3484,7 +3248,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 87
+        "y": 79
       },
       "fieldConfig": {
         "defaults": {
@@ -3558,7 +3322,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 87
+        "y": 79
       },
       "fieldConfig": {
         "defaults": {
@@ -3623,218 +3387,6 @@
     },
     {
       "type": "row",
-      "title": "Frame API & auth",
-      "id": 44,
-      "collapsed": false,
-      "gridPos": {
-        "h": 1,
-        "w": 24,
-        "x": 0,
-        "y": 94
-      },
-      "panels": []
-    },
-    {
-      "type": "timeseries",
-      "title": "Frame API requests",
-      "id": 45,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 95
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "palette-classic"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "drawStyle": "bars",
-            "lineWidth": 0,
-            "fillOpacity": 70,
-            "gradientMode": "none",
-            "showPoints": "never",
-            "pointSize": 5,
-            "spanNulls": true,
-            "axisPlacement": "auto",
-            "stacking": {
-              "mode": "normal",
-              "group": "A"
-            }
-          }
-        },
-        "overrides": []
-      },
-      "options": {
-        "tooltip": {
-          "mode": "multi",
-          "sort": "desc"
-        },
-        "legend": {
-          "showLegend": true,
-          "displayMode": "table",
-          "placement": "bottom",
-          "calcs": [
-            "mean",
-            "max",
-            "lastNotNull"
-          ]
-        }
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (endpoint) (count_over_time({job=\"backend\", logger=\"django.request\"} | regexp `(?:GET|POST) /api/(?P<endpoint>frames/[a-z-]+|frame-updates/[a-z-]+)/` | endpoint != \"\" [$__interval]))",
-          "legendFormat": "{{endpoint}}",
-          "interval": "5m"
-        }
-      ],
-      "description": "Token, OTP, registration, send-image and OTA calls. Fleet-wide, these lines carry no serial label."
-    },
-    {
-      "type": "table",
-      "title": "Signature auth failures",
-      "id": 46,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 12,
-        "y": 95
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "short",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "text",
-                "value": null
-              }
-            ]
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "filterable": true,
-            "inspect": false
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "Failures"
-            },
-            "properties": [
-              {
-                "id": "thresholds",
-                "value": {
-                  "mode": "absolute",
-                  "steps": [
-                    {
-                      "color": "text",
-                      "value": null
-                    },
-                    {
-                      "color": "orange",
-                      "value": 1
-                    },
-                    {
-                      "color": "red",
-                      "value": 5
-                    }
-                  ]
-                }
-              },
-              {
-                "id": "custom.cellOptions",
-                "value": {
-                  "type": "color-background",
-                  "mode": "basic"
-                }
-              }
-            ]
-          }
-        ]
-      },
-      "options": {
-        "showHeader": true,
-        "cellHeight": "sm",
-        "footer": {
-          "show": false,
-          "reducer": [
-            "sum"
-          ],
-          "countRows": false,
-          "fields": ""
-        },
-        "sortBy": [
-          {
-            "displayName": "Failures",
-            "desc": true
-          }
-        ]
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "sum by (serial) (count_over_time({job=\"backend\", logger=\"frames.auth\"} |= \"Signature auth failed\" | regexp `for frame (?P<serial>\\S+):` | serial != \"\" [$__range]))",
-          "queryType": "instant"
-        }
-      ],
-      "transformations": [
-        {
-          "id": "organize",
-          "options": {
-            "excludeByName": {
-              "Time": true
-            },
-            "indexByName": {},
-            "renameByName": {
-              "Value": "Failures"
-            }
-          }
-        }
-      ],
-      "description": "Ed25519 signature rejections per frame serial over the range. The only non-heartbeat stream that carries the serial."
-    },
-    {
-      "type": "row",
       "title": "Raw heartbeats",
       "id": 32,
       "collapsed": false,
@@ -3842,7 +3394,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 103
+        "y": 86
       },
       "panels": []
     },
@@ -3858,7 +3410,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 104
+        "y": 87
       },
       "options": {
         "showTime": true,
