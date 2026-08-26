@@ -18,6 +18,7 @@ const DEFAULTS = {
   pingSecs: 30,
   heartbeatSecs: 300,
   expiryCheckSecs: 900,
+  heartbeatAtStart: false,
   version: '7.0.0',
   localIp: '192.168.0.10',
   log: true
@@ -196,6 +197,7 @@ module.exports = async function runFrameSim(options) {
   };
 
   token = await fetchToken();
+  if (cfg.heartbeatAtStart) await sendHeartbeat();
   connect();
 
   every(cfg.pingSecs, () => send({ type: 'ping', timestamp: Math.floor(Date.now() / 1000) }));

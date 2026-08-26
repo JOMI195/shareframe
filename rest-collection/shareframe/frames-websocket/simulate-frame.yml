@@ -24,6 +24,23 @@ runtime:
           return raw === undefined || raw === null || raw === '' ? fallback : Number(raw);
         };
 
+        const bool = (name, fallback) => {
+          const raw = bru.getEnvVar(name);
+          if (raw === undefined || raw === null || raw === '') return fallback;
+          const normalized = String(raw).trim().toLowerCase();
+          if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+          if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+          throw new Error(`${name} must be a boolean-like value`);
+        };
+
+        const numberArray = (name) => {
+          const raw = bru.getEnvVar(name);
+          if (raw === undefined || raw === null || raw === '') return undefined;
+          const parsed = JSON.parse(raw);
+          if (!Array.isArray(parsed)) throw new Error(`${name} must be a JSON array`);
+          return parsed.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+        };
+
         const stats = await runFrameSim({
           httpDomain: bru.getEnvVar('http_domain'),
           wsDomain: bru.getEnvVar('ws_domain'),
@@ -34,7 +51,9 @@ runtime:
           durationSecs: num('sim_duration_secs', 120),
           pingSecs: num('sim_ping_secs', 30),
           heartbeatSecs: num('sim_heartbeat_secs', 300),
+          heartbeatAtStart: bool('sim_heartbeat_at_start', false),
           expiryCheckSecs: num('sim_expiry_secs', 900),
+          initialImageIds: numberArray('sim_initial_sent_image_ids'),
           heartbeatOverrides: bru.getEnvVar('sim_heartbeat_overrides')
             ? JSON.parse(bru.getEnvVar('sim_heartbeat_overrides'))
             : undefined
@@ -48,6 +67,10 @@ runtime:
 
         test('frame session stayed connected', function () {
           expect(stats.reconnects).to.equal(0);
+        });
+
+        test('frame session used seeded frame identity', function () {
+          expect(stats.frameId).to.equal(bru.getEnvVar('frame_public_serial_number'));
         });
 
         test('frame session had no errors', function () {
@@ -72,9 +95,10 @@ docs: |-
   Needs Bruno Developer Mode (require) and `npm i` in the collection root (ws).
 
   Tunables are env vars: sim_duration_secs, sim_ping_secs, sim_heartbeat_secs,
-  sim_expiry_secs, sim_frame_version, sim_local_ip, and sim_heartbeat_overrides
-  (JSON pinning single heartbeat fields, e.g. {"boot_count": 42}). Defaults mirror the real board
-  (30s ping, 300s heartbeat, 900s expiry check) — compress them for short runs.
+  sim_heartbeat_at_start, sim_expiry_secs, sim_frame_version, sim_local_ip, sim_initial_sent_image_ids
+  (JSON array, e.g. [1,2]), and sim_heartbeat_overrides (JSON pinning single heartbeat
+  fields, e.g. {"boot_count": 42}). Defaults mirror the real board (30s ping, 300s
+  heartbeat, 900s expiry check) — compress them for short runs.
 
   Bruno blocks until the sim finishes, so keep sim_duration_secs small here.
   For soak runs use: node scripts/run-sim.js --duration 3600 --seed <b64>

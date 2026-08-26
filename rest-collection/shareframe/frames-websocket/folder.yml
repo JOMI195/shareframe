@@ -15,10 +15,10 @@ docs: |-
 
   - `npm install` in the collection root (pulls `ws`)
   - collection setting **Developer Mode** enabled (needed for `require()`)
-  - env var `frame_ed25519_private_key` = the frame's base64 ed25519 seed
-    (`ed25519_private_key` from the board's `.env.secrets.toml`)
-  - the frame provisioned in the backend (Frame row with matching `public_key`,
-    a user, `is_active=True`) — otherwise the WS handshake is closed with 4001
+  - use seeded env defaults (`frame_ed25519_private_key`, `frame_public_serial_number`)
+    or override with your own frame identity
+  - target backend must have a matching provisioned frame with user + `is_active=True`
+    (seeded automatically in dev/local by `seed_dev_data`) or the WS handshake closes with 4001
 
   ## frame-session — send messages by hand
 
@@ -36,8 +36,9 @@ docs: |-
   picture + clear tracking, reconnect with backoff and token refresh.
 
   Cadence env vars (`0` = off): `sim_duration_secs` (120), `sim_ping_secs` (30),
-  `sim_heartbeat_secs` (300), `sim_expiry_secs` (900), plus `sim_frame_version`,
-  `sim_local_ip`. Defaults are the board's real intervals — compress them for short runs.
+  `sim_heartbeat_secs` (300), `sim_heartbeat_at_start` (true), `sim_expiry_secs` (900), plus `sim_frame_version`,
+  `sim_local_ip`, and `sim_initial_sent_image_ids` (JSON array). Defaults are the
+  board's real intervals — compress them for short runs.
 
   Bruno blocks until the session ends, so keep `sim_duration_secs` short here.
   Long runs: `node scripts/run-sim.js --seed <b64> --duration 3600`.

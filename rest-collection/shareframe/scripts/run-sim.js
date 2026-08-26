@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Standalone driver for long runs: node scripts/run-sim.js --duration 3600
+// Standalone driver for long runs: node scripts/run-sim.js --duration 3600 --heartbeat-at-start true --initial-image-ids '[1,2]'
 const runFrameSim = require('./frame-sim.js');
 
 const args = process.argv.slice(2).reduce((acc, arg, i, all) => {
@@ -8,6 +8,19 @@ const args = process.argv.slice(2).reduce((acc, arg, i, all) => {
 }, {});
 
 const num = (v, fallback) => (v == null ? fallback : Number(v));
+const bool = (v, fallback) => {
+  if (v == null || v === '') return fallback;
+  const normalized = String(v).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  throw new Error(`invalid boolean value: ${v}`);
+};
+const parseIds = (raw) => {
+  if (raw == null || raw === '') return undefined;
+  const parsed = JSON.parse(raw);
+  if (!Array.isArray(parsed)) throw new Error('initial image ids must be a JSON array');
+  return parsed.map((value) => Number(value)).filter((value) => Number.isFinite(value));
+};
 
 runFrameSim({
   httpDomain: args.http || process.env.SIM_HTTP_DOMAIN || 'http://localhost:8000',
@@ -18,7 +31,9 @@ runFrameSim({
   durationSecs: num(args.duration, 300),
   pingSecs: num(args.ping, 30),
   heartbeatSecs: num(args.heartbeat, 300),
-  expiryCheckSecs: num(args.expiry, 900)
+  heartbeatAtStart: bool(args['heartbeat-at-start'] ?? process.env.SIM_HEARTBEAT_AT_START, false),
+  expiryCheckSecs: num(args.expiry, 900),
+  initialImageIds: parseIds(args['initial-image-ids'] || process.env.SIM_INITIAL_SENT_IMAGE_IDS)
 })
   .then((stats) => {
     console.log(JSON.stringify(stats, null, 2));

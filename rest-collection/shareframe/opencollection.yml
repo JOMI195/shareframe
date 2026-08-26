@@ -14,5 +14,6 @@ docs: |-
 
   Frame traffic simulation lives in `frames-websocket` (palette + autonomous session)
   and needs one-time setup: `npm install` in the collection root, **Developer Mode**
-  enabled, and the env var `frame_ed25519_private_key` set to the frame's base64
-  ed25519 seed. See that folder's docs, or README.md in the collection root.
+  enabled. dev/local environments are prefilled for seeded simulation out of the box;
+  override frame env vars only when testing non-seeded frame identities. See
+  `frames-websocket` docs, or README.md in the collection root.

@@ -10,9 +10,9 @@ http:
     type: json
     data: |-
       {
-          "reciever_username": "<receiver-username>",
-          "image_id": 1,
-          "expiry_unix_timestamp": "<unix-timestamp>"
+          "reciever_username": "{{seed_user_bob_username}}",
+          "image_id": {{seed_image_id_for_send}},
+          "expiry_unix_timestamp": {{seed_expiry_unix_timestamp}}
       }
   auth:
     type: bearer
@@ -23,3 +23,9 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Defaults target the seeded dev/local users (`seed_alice` -> `seed_bob`).
+  Run auth/jwt-create with `seed_user_alice_email` / `seed_user_alice_password`
+  first, then use the sender's own image id. `seed_image_id_for_send` defaults
+  to 1 for fresh databases.

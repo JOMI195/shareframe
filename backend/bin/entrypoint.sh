@@ -25,6 +25,8 @@ if [ -n "$PRODUCTION" ]; then
   else
     echo "Adding fixtures..."
     python manage.py create_image_sizes
+    echo "Seeding deterministic dev/local test data..."
+    python manage.py seed_dev_data
   fi
 else
   echo "PRODUCTION is not set, skipping adding fixtures."

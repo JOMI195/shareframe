@@ -1,0 +1,105 @@
+{
+  "users": [
+    {
+      "username": "seed_alice",
+      "email": "seed.alice@shareframe.local",
+      "password": "seed-alice-dev-pass",
+      "friendship_code": "SEEDA001"
+    },
+    {
+      "username": "seed_bob",
+      "email": "seed.bob@shareframe.local",
+      "password": "seed-bob-dev-pass",
+      "friendship_code": "SEEDB001"
+    },
+    {
+      "username": "seed_carol",
+      "email": "seed.carol@shareframe.local",
+      "password": "seed-carol-dev-pass",
+      "friendship_code": "SEEDC001"
+    }
+  ],
+  "groups": [
+    {
+      "name": "Seed Living Room",
+      "description": "Deterministic frame group for local seeded traffic tests."
+    },
+    {
+      "name": "Seed Office",
+      "description": "Second deterministic frame group for local seeded traffic tests."
+    }
+  ],
+  "frames": [
+    {
+      "name": "seed-frame-main",
+      "seed_b64": "GsmLsUiA7A8V5FM8dCj30jxqSZyh29kaUFheJDTFqtQ=",
+      "private_serial_number": "SEED-PRIVATE-0001",
+      "owner_username": "seed_bob",
+      "groups": [
+        "Seed Living Room"
+      ],
+      "version": "7.0.0",
+      "local_ip_address": "192.168.0.10"
+    },
+    {
+      "name": "seed-frame-office",
+      "seed_b64": "eENYNI2gTamRkXmvtQDm0pGDoQcmqXCAso3JxH5o1SQ=",
+      "private_serial_number": "SEED-PRIVATE-0002",
+      "owner_username": "seed_carol",
+      "groups": [
+        "Seed Office"
+      ],
+      "version": "7.0.0",
+      "local_ip_address": "192.168.0.11"
+    }
+  ],
+  "images": [
+    {
+      "display_name": "seed_alice_sunrise",
+      "owner_username": "seed_alice",
+      "file_name": "seed-sunrise.png"
+    },
+    {
+      "display_name": "seed_alice_forest",
+      "owner_username": "seed_alice",
+      "file_name": "seed-forest.png"
+    },
+    {
+      "display_name": "seed_carol_ocean",
+      "owner_username": "seed_carol",
+      "file_name": "seed-ocean.png"
+    }
+  ],
+  "friendships": [
+    {
+      "sender": "seed_alice",
+      "reciever": "seed_bob",
+      "status": "accepted"
+    },
+    {
+      "sender": "seed_bob",
+      "reciever": "seed_carol",
+      "status": "accepted"
+    }
+  ],
+  "sent_images": [
+    {
+      "sender": "seed_alice",
+      "reciever": "seed_bob",
+      "image_display_name": "seed_alice_sunrise",
+      "expires_at": "2100-01-01T00:00:00+00:00"
+    },
+    {
+      "sender": "seed_carol",
+      "reciever": "seed_bob",
+      "image_display_name": "seed_carol_ocean",
+      "expires_at": "2100-06-01T00:00:00+00:00"
+    },
+    {
+      "sender": "seed_bob",
+      "reciever": "seed_carol",
+      "image_display_name": "seed_alice_forest",
+      "expires_at": "2000-01-01T00:00:00+00:00"
+    }
+  ]
+}

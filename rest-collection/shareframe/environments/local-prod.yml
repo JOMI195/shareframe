@@ -10,10 +10,33 @@ variables:
     name: frame_auth_hash
   - secret: true
     name: frame_ed25519_private_key
+    value: GsmLsUiA7A8V5FM8dCj30jxqSZyh29kaUFheJDTFqtQ=
   - name: frame_public_serial_number
-    value: PS5P-Q6RW-WAZN-VZPE
+    value: JHTT-XDS6-MM7D-UMOM
   - name: frame_private_serial_number
-    value: ""
+    value: SEED-PRIVATE-0001
+  - name: seed_user_alice_username
+    value: seed_alice
+  - name: seed_user_alice_email
+    value: seed.alice@shareframe.local
+  - name: seed_user_alice_password
+    value: seed-alice-dev-pass
+  - name: seed_user_bob_username
+    value: seed_bob
+  - name: seed_user_bob_email
+    value: seed.bob@shareframe.local
+  - name: seed_user_bob_password
+    value: seed-bob-dev-pass
+  - name: seed_user_carol_username
+    value: seed_carol
+  - name: seed_user_carol_email
+    value: seed.carol@shareframe.local
+  - name: seed_user_carol_password
+    value: seed-carol-dev-pass
+  - name: seed_image_id_for_send
+    value: "1"
+  - name: seed_expiry_unix_timestamp
+    value: "4102444800"
   - name: http_domain
     value: http://127.0.0.1
   - name: ws_domain
@@ -32,7 +55,11 @@ variables:
     value: "30"
   - name: sim_heartbeat_secs
     value: "300"
+  - name: sim_heartbeat_at_start
+    value: "true"
   - name: sim_expiry_secs
     value: "900"
+  - name: sim_initial_sent_image_ids
+    value: "[]"
   - name: sim_heartbeat_overrides
     value: ""
