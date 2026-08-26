@@ -55,6 +55,8 @@ scrape_configs:
                   version:
                   os_sha:
                   app_sha:
+                  kernel:
+            # version = release semver; os_sha = shareframe-hardware commit;
             # app_sha = shareframe-board commit. All low-cardinality per release.
             - labels:
                 serial_number:
