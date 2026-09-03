@@ -22,6 +22,29 @@ const isApiRequestAction = (action: any): action is ApiRequestAction => {
   return action.type === actions.apiRequest.type && action.payload !== undefined;
 };
 
+// Pulls the backend's own message out of a DRF error body; 413 has an html body.
+const getErrorMessage = (error: any): string => {
+  if (error?.response?.status === 413) {
+    return "Die Datei ist zu groß.";
+  }
+
+  const data = error?.response?.data;
+
+  if (typeof data === "string" && data.trim() && !data.trimStart().startsWith("<")) {
+    return data;
+  }
+
+  if (data && typeof data === "object") {
+    if (typeof data.detail === "string") return data.detail;
+
+    const firstValue = Object.values(data)[0];
+    if (Array.isArray(firstValue) && typeof firstValue[0] === "string") return firstValue[0];
+    if (typeof firstValue === "string") return firstValue;
+  }
+
+  return error?.message ?? "Unbekannter Fehler";
+};
+
 const apiMiddleware: Middleware =
   ({ dispatch }) =>
     (next) =>
@@ -66,14 +89,15 @@ const apiMiddleware: Middleware =
           }
           return onSuccessPayload ?? response.data;
         } catch (error: any) {
-          dispatch(actions.apiFailed(error.message));
+          const message = getErrorMessage(error);
+          dispatch(actions.apiFailed(message));
           if (onError) {
             dispatch({
               type: onError,
-              payload: onErrorPayload ?? error.message,
+              payload: onErrorPayload ?? message,
             });
           }
-          return onErrorPayload ?? error.message;
+          return onErrorPayload ?? message;
         }
       };
 

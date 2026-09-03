@@ -18,6 +18,7 @@ import {
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CropIcon from '@mui/icons-material/Crop';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { Area } from 'react-easy-crop';
 import Cropper from './cropper/cropper';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
@@ -30,7 +31,9 @@ interface ImageCroppingProps {
     imageStatuses: ImageStatus[];
     currentImageIndex: number | null;
     selectImageForCropping: (index: number) => void;
+    removeImage: (index: number) => void;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
+    croppedAreaPixels: Area;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
     handleCropAndUpload: (index: number) => Promise<void>;
@@ -47,7 +50,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     imageStatuses,
     currentImageIndex,
     selectImageForCropping,
+    removeImage,
     setCroppedAreaPixels,
+    croppedAreaPixels,
     rotation,
     setRotation,
     handleCropAndUpload,
@@ -119,8 +124,21 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                                         </IconButton>
                                     )}
                                     {imageStatus.status === 'cropping' && (
-                                        <IconButton edge="end" aria-label="cropping" size="small" color="primary">
+                                        <IconButton aria-label="cropping" size="small" color="primary">
                                             <CropIcon />
+                                        </IconButton>
+                                    )}
+                                    {imageStatus.status !== 'uploaded' && (
+                                        <IconButton
+                                            edge="end"
+                                            aria-label="delete"
+                                            size="small"
+                                            onClick={(event) => {
+                                                event.stopPropagation();
+                                                removeImage(index);
+                                            }}
+                                        >
+                                            <DeleteIcon fontSize="small" />
                                         </IconButton>
                                     )}
                                 </ListItemButton>
@@ -131,9 +149,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
 
                 <Grid item xs={12} md={7}>
                     <Box sx={{ maxHeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {currentImage && (
+                        {currentImage && imagePreviews[currentImage.id] && (
                             <Cropper
-                                image={currentImage.file}
+                                src={imagePreviews[currentImage.id]}
                                 setCroppedAreaPixels={setCroppedAreaPixels}
                                 rotation={rotation}
                                 setRotation={setRotation}
@@ -177,7 +195,7 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         <Button
                             variant="contained"
                             fullWidth
-                            disabled={sending}
+                            disabled={sending || croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1}
                             onClick={() => handleCropAndUpload(currentImageIndex!)}
                         >
                             Zuschneiden & Hochladen

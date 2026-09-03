@@ -5,18 +5,20 @@ import { ImageStatus } from '../uploadDialog';
 
 interface ImageUploadProps {
     imageStatuses: ImageStatus[];
-    setImages: (images: File[]) => void;
+    addImages: (images: File[]) => void;
+    removeImage: (index: number) => void;
     handleNext: () => void;
     handleBack: () => void;
     imagePreviews: { [id: string]: string };
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, setImages, handleNext, handleBack, imagePreviews }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, removeImage, handleNext, handleBack, imagePreviews }) => {
     return (
         <Box sx={{ mt: 2 }}>
             <ImageUploadForm
                 imageStatuses={imageStatuses}
-                setImages={setImages}
+                addImages={addImages}
+                removeImage={removeImage}
                 imagePreviews={imagePreviews}
             />
             <Grid container spacing={2} sx={{ mt: 1, alignItems: "center" }}>

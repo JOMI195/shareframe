@@ -8,7 +8,7 @@ from django.conf import settings
 from django.db import models
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from PIL import Image as PILImage
+from PIL import Image as PILImage, ImageOps
 
 logger = logging.getLogger("images")
 
@@ -129,10 +129,14 @@ class Image(models.Model):
         # Open the original image
         img = PILImage.open(self.image)
 
+        # exif_transpose drops .format, so keep it before rotating.
+        source_format = img.format
+        img = ImageOps.exif_transpose(img)
+
         # Store original image dimensions and format
         self.width = img.width
         self.height = img.height
-        self.format = img.format
+        self.format = source_format
 
         # Get all available image sizes from the database
         image_sizes = ImageSize.objects.all()
@@ -140,14 +144,14 @@ class Image(models.Model):
         # Generate each size
         for size in image_sizes:
             self._create_resized_image(
-                img, size.name, size.width, size.height, size.quality, size
+                img, size.name, size.width, size.height, size.quality, size, source_format
             )
         logger.info(
             f"Successfully generated {image_sizes.count()} image variants for image ID {self.id}"
         )
 
     def _create_resized_image(
-        self, img, size_name, width, height, quality=85, size_model=None
+        self, img, size_name, width, height, quality=85, size_model=None, source_format=None
     ):
         """Create a resized version of the image"""
         if not width:
@@ -156,8 +160,13 @@ class Image(models.Model):
         # Make a copy to avoid modifying the original
         img_copy = img.copy()
 
-        # Convert to RGB if necessary (for proper JPEG saving)
-        if img_copy.mode not in ("RGB", "RGBA"):
+        # PNG only for actual PNG sources; anything else (incl. MPO from phone HDR) is JPEG.
+        img_format = "PNG" if source_format == "PNG" else "JPEG"
+
+        if img_format == "JPEG":
+            if img_copy.mode != "RGB":
+                img_copy = img_copy.convert("RGB")
+        elif img_copy.mode not in ("RGB", "RGBA"):
             img_copy = img_copy.convert("RGB")
 
         # Calculate new dimensions maintaining aspect ratio if height is None
@@ -170,7 +179,6 @@ class Image(models.Model):
 
         # Save to memory buffer
         output = BytesIO()
-        img_format = "JPEG" if img.format == "JPEG" else "PNG"
         if img_format == "JPEG":
             img_copy.save(output, format=img_format, quality=quality, optimize=True)
         else:

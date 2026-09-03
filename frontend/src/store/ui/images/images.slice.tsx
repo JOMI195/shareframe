@@ -85,10 +85,12 @@ const imagesSlice = createSlice({
           message: "",
         };
       })
-      .addCase(createImageFailed, (sliceState) => {
+      .addCase(createImageFailed, (sliceState, action: PayloadAction<string | undefined>) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bild hochladen fehlgeschlagen",
+          message: action.payload
+            ? `Bild hochladen fehlgeschlagen: ${action.payload}`
+            : "Bild hochladen fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {

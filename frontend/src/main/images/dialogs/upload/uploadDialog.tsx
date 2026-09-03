@@ -114,13 +114,54 @@ const UploadDialog: React.FC = () => {
     }
   }
 
-  const setImages = (files: File[]) => {
-    const newImageStatuses: ImageStatus[] = files.map(file => ({
-      id: `${file.name}-${file.size}-${Date.now()}-${Math.random()}`,
-      file,
-      status: 'pending'
-    }))
-    setImageStatuses(newImageStatuses)
+  const maxFilesOnce = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
+    ? +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
+    : 5;
+
+  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`
+
+  const addImages = (files: File[]) => {
+    const knownKeys = new Set(imageStatuses.map(status => getFileKey(status.file)))
+    const additions: ImageStatus[] = []
+    let skipped = 0
+
+    files.forEach(file => {
+      const key = getFileKey(file)
+      if (knownKeys.has(key) || imageStatuses.length + additions.length >= maxFilesOnce) {
+        skipped++
+        return
+      }
+      knownKeys.add(key)
+      additions.push({
+        id: `${key}-${Date.now()}-${Math.random()}`,
+        file,
+        status: 'pending'
+      })
+    })
+
+    if (skipped > 0) {
+      dispatch(openImagesAlertSnackbar({
+        message: `${skipped} Foto(s) wurden nicht hinzugefügt (bereits ausgewählt oder Maximum von ${maxFilesOnce} erreicht).`,
+        severity: "warning"
+      }))
+    }
+
+    if (additions.length > 0) {
+      setImageStatuses(prev => [...prev, ...additions])
+    }
+  }
+
+  const removeImage = (indexToRemove: number) => {
+    setImageStatuses(prev => prev.filter((_, index) => index !== indexToRemove))
+    setCurrentImageIndex(prev => {
+      if (prev === null || indexToRemove === prev) {
+        return null
+      }
+      return indexToRemove < prev ? prev - 1 : prev
+    })
+    if (imageStatuses.length <= 1) {
+      setActiveStep(0)
+    }
   }
 
   const activeUrlRefs = useRef<{ [id: string]: string }>({});
@@ -184,7 +225,15 @@ const UploadDialog: React.FC = () => {
   }
 
   const handleCropAndUpload = async (index: number) => {
-    if (!croppedAreaPixels || !imageStatuses[index]) {
+    if (!imageStatuses[index]) {
+      return
+    }
+
+    if (croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1) {
+      dispatch(openImagesAlertSnackbar({
+        message: "Der Zuschnitt wird noch vorbereitet. Bitte kurz warten.",
+        severity: "warning"
+      }))
       return
     }
 
@@ -193,7 +242,8 @@ const UploadDialog: React.FC = () => {
     try {
       const croppedBlob = await getCroppedImg(imageStatus.file, croppedAreaPixels, rotation)
 
-      const croppedFile = new File([croppedBlob], imageStatus.file.name || 'cropped-image.jpg', {
+      const baseName = (imageStatus.file.name || 'cropped-image').replace(/\.[^.]+$/, '')
+      const croppedFile = new File([croppedBlob], `${baseName}.jpg`, {
         type: 'image/jpeg',
         lastModified: Date.now()
       })
@@ -316,7 +366,8 @@ const UploadDialog: React.FC = () => {
                     {index === 0 && (
                       <ImageUpload
                         imageStatuses={imageStatuses}
-                        setImages={setImages}
+                        addImages={addImages}
+                        removeImage={removeImage}
                         handleNext={handleNext}
                         handleBack={handleBack}
                         imagePreviews={imagePreviews}
@@ -327,9 +378,11 @@ const UploadDialog: React.FC = () => {
                         imageStatuses={imageStatuses}
                         currentImageIndex={currentImageIndex}
                         selectImageForCropping={selectImageForCropping}
+                        removeImage={removeImage}
                         setCroppedAreaPixels={setCroppedAreaPixels}
                         rotation={rotation}
                         setRotation={setRotation}
+                        croppedAreaPixels={croppedAreaPixels}
                         handleCropAndUpload={handleCropAndUpload}
                         handleDialogClose={handleDialogClose}
                         handleBack={handleBack}

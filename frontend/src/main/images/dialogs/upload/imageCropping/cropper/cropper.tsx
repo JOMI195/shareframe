@@ -12,14 +12,14 @@ const MIN_ROTATION = 0;
 const MAX_ROTATION = 360;
 
 interface CropperProps {
-    image: File;
+    src: string;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
 }
 
 const Cropper: React.FC<CropperProps> = ({
-    image,
+    src,
     setCroppedAreaPixels,
     rotation,
     setRotation
@@ -29,7 +29,6 @@ const Cropper: React.FC<CropperProps> = ({
     const cropperContainerRef = useRef<HTMLDivElement>(null);
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
-    const [imageSrc, setImageSrc] = useState<string>('');
     const [isTouching, setIsTouching] = useState(false);
 
     const getCropperStyles = () => {
@@ -69,25 +68,19 @@ const Cropper: React.FC<CropperProps> = ({
     }, []);
 
     useEffect(() => {
-        if (image) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImageSrc(reader.result as string);
-                onCropperReset();
-            };
-            reader.readAsDataURL(image);
-        } else {
-            setImageSrc('');
-        }
-    }, [image]);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setRotation(0);
+    }, [src, setRotation]);
 
     useEffect(() => {
         if (cropperContainerRef.current) {
-            setTimeout(() => {
+            const timeout = setTimeout(() => {
                 cropperContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 300);
+            return () => clearTimeout(timeout);
         }
-    }, [image]);
+    }, [src]);
 
     const onCropChange = (newCrop: { x: number; y: number }) => setCrop(newCrop);
 
@@ -109,7 +102,7 @@ const Cropper: React.FC<CropperProps> = ({
         <div ref={cropperContainerRef} style={{
             width: '100%', height: '500px', display: "flex", flexDirection: "column"
         }}>
-            {imageSrc && (
+            {src && (
                 <>
                     <style>{getCropperStyles()}</style>
                     <div style={{
@@ -121,7 +114,7 @@ const Cropper: React.FC<CropperProps> = ({
                     }}>
                         <EasyCropper
                             ref={cropperRef}
-                            image={imageSrc}
+                            image={src}
                             crop={crop}
                             zoom={zoom}
                             rotation={rotation}

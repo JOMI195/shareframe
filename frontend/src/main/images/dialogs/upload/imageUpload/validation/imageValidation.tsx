@@ -1,18 +1,45 @@
 import { IImageValidationResponse } from "@/types";
 
-const hasValidExtension = (file: File): boolean => {
-    if (import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS !== undefined) {
-        const validFileExtensions = import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS.split(" ");
-        let valid = false
-        for (let i = 0; i < validFileExtensions.length; i++) {
-            if (file.name.toLowerCase().endsWith(`.${validFileExtensions[i]}`)) {
-                valid = true
-            }
-        }
-        return valid
-    } else {
-        return false
+const EXTENSION_MIME_TYPES: { [extension: string]: string } = {
+    jpg: "image/jpeg",
+    jpeg: "image/jpeg",
+    png: "image/png",
+    gif: "image/gif",
+    webp: "image/webp",
+    heic: "image/heic",
+    heif: "image/heif",
+};
+
+const getAllowedExtensions = (): string[] => {
+    const formats = import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS;
+    return formats !== undefined ? formats.split(" ").filter(Boolean) : [];
+}
+
+const getAllowedMimeTypes = (): string[] => {
+    const mimeTypes = getAllowedExtensions()
+        .map(extension => EXTENSION_MIME_TYPES[extension.toLowerCase()])
+        .filter(Boolean);
+    return Array.from(new Set(mimeTypes));
+}
+
+// Keeps the file input in sync with what the validation actually accepts.
+export const getAcceptedFileTypes = (): string => getAllowedMimeTypes().join(",");
+
+export const getAllowedExtensionLabels = (): string[] => getAllowedExtensions();
+
+// Some mobile pickers hand over files without a usable name, so the MIME type counts too.
+const hasValidFormat = (file: File): boolean => {
+    const allowedExtensions = getAllowedExtensions();
+    if (allowedExtensions.length === 0) {
+        return false;
     }
+
+    const name = file.name.toLowerCase();
+    if (allowedExtensions.some(extension => name.endsWith(`.${extension.toLowerCase()}`))) {
+        return true;
+    }
+
+    return getAllowedMimeTypes().includes(file.type);
 }
 
 const doesntExceedFileLimit = (fileIndex: number, totalFiles: number = 1): boolean => {
@@ -41,7 +68,6 @@ const doesntExceedTotalFileLimit = (newFilesCount: number, existingFilesCount: n
 }
 
 const hasValidFileSize = (file: File): boolean => {
-    // Add file size validation if needed
     const maxSizeInMB = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_SIZE_MB;
     if (maxSizeInMB !== undefined) {
         const maxSizeInBytes = +maxSizeInMB * 1024 * 1024;
@@ -51,10 +77,10 @@ const hasValidFileSize = (file: File): boolean => {
 }
 
 export const validateImage = (file: File, fileIndex: number, totalFiles: number = 1, existingFilesCount: number = 0): IImageValidationResponse => {
-    let errors: string[] = [];
+    const errors: string[] = [];
     let valid: boolean = true;
 
-    if (!hasValidExtension(file)) {
+    if (!hasValidFormat(file)) {
         errors.push("Falsches Dateiformat");
         valid = false;
     }
@@ -81,12 +107,13 @@ export const validateImage = (file: File, fileIndex: number, totalFiles: number 
 }
 
 // Helper function to validate multiple files at once
-export const validateImages = (files: File[], existingFilesCount: number = 0): { validFiles: File[], invalidFiles: { file: File, errors: string[] }[] } => {
+export const validateImages = (files: File[], existingFilesCount: number = 0, alreadySelectedCount: number = 0): { validFiles: File[], invalidFiles: { file: File, errors: string[] }[] } => {
     const validFiles: File[] = [];
     const invalidFiles: { file: File, errors: string[] }[] = [];
+    const totalSelected = alreadySelectedCount + files.length;
 
     // First check if the total would exceed the limit
-    if (!doesntExceedTotalFileLimit(files.length, existingFilesCount)) {
+    if (!doesntExceedTotalFileLimit(totalSelected, existingFilesCount)) {
         const maxTotalFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL || 100;
         // If total limit would be exceeded, mark all files as invalid
         files.forEach((file) => {
@@ -99,7 +126,7 @@ export const validateImages = (files: File[], existingFilesCount: number = 0): {
     }
 
     files.forEach((file, index) => {
-        const validation = validateImage(file, index, files.length, existingFilesCount);
+        const validation = validateImage(file, alreadySelectedCount + index, totalSelected, existingFilesCount);
         if (validation.valid) {
             validFiles.push(file);
         } else {

@@ -1,3 +1,7 @@
+// Mobile Safari refuses to allocate canvases beyond these bounds and silently yields a blank one.
+const MAX_OUTPUT_SIDE = 1600;
+const MAX_OUTPUT_AREA = 16 * 1024 * 1024;
+
 export function getRadianAngle(degreeValue: number) {
     return (degreeValue * Math.PI) / 180
 }
@@ -16,6 +20,12 @@ export function rotateSize(width: number, height: number, rotation: number) {
     }
 }
 
+const getOutputScale = (width: number, height: number): number => {
+    const sideScale = MAX_OUTPUT_SIDE / Math.max(width, height);
+    const areaScale = Math.sqrt(MAX_OUTPUT_AREA / (width * height));
+    return Math.min(1, sideScale, areaScale);
+}
+
 export const getCroppedImg = (
     image: File,
     croppedAreaPixels: { width: number; height: number; x: number; y: number },
@@ -23,90 +33,62 @@ export const getCroppedImg = (
     flip = { horizontal: false, vertical: false }
 ): Promise<Blob> => {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => {
-            const img = new Image();
-            img.src = reader.result as string;
+        if (croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1) {
+            reject(new Error('Der Zuschnitt ist noch nicht bereit. Bitte erneut versuchen.'));
+            return;
+        }
 
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const ctx = canvas.getContext('2d');
+        const objectUrl = URL.createObjectURL(image);
+        const img = new Image();
 
-                if (!ctx) {
-                    reject(new Error('Canvas context not available'));
-                    return;
-                }
+        img.onload = () => {
+            URL.revokeObjectURL(objectUrl);
 
-                const rotRad = getRadianAngle(rotation)
+            const scale = getOutputScale(croppedAreaPixels.width, croppedAreaPixels.height);
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(croppedAreaPixels.width * scale));
+            canvas.height = Math.max(1, Math.round(croppedAreaPixels.height * scale));
 
-                // calculate bounding box of the rotated image
-                const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
-                    img.width,
-                    img.height,
-                    rotation
-                )
+            const ctx = canvas.getContext('2d');
+            if (!ctx) {
+                reject(new Error('Das Foto ist zu groß zum Zuschneiden.'));
+                return;
+            }
 
-                // set canvas size to match the bounding box
-                canvas.width = bBoxWidth
-                canvas.height = bBoxHeight
+            const rotRad = getRadianAngle(rotation)
+            const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
+                img.width,
+                img.height,
+                rotation
+            )
 
-                // translate canvas context to a central location to allow rotating and flipping around the center
-                ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
-                ctx.rotate(rotRad)
-                ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
-                ctx.translate(-img.width / 2, -img.height / 2)
+            // Crop rect is expressed in the rotated bounding box, so undo its offset first.
+            ctx.scale(scale, scale)
+            ctx.translate(-croppedAreaPixels.x, -croppedAreaPixels.y)
+            ctx.translate(bBoxWidth / 2, bBoxHeight / 2)
+            ctx.rotate(rotRad)
+            ctx.scale(flip.horizontal ? -1 : 1, flip.vertical ? -1 : 1)
+            ctx.translate(-img.width / 2, -img.height / 2)
+            ctx.drawImage(img, 0, 0)
 
-                // draw rotated image
-                ctx.drawImage(img, 0, 0)
-
-                const croppedCanvas = document.createElement('canvas')
-
-                const croppedCtx = croppedCanvas.getContext('2d')
-
-                if (!croppedCtx) {
-                    return null
-                }
-
-                // Set the size of the cropped canvas
-                croppedCanvas.width = croppedAreaPixels.width
-                croppedCanvas.height = croppedAreaPixels.height
-
-                // Draw the cropped image onto the new canvas
-                croppedCtx.drawImage(
-                    canvas,
-                    croppedAreaPixels.x,
-                    croppedAreaPixels.y,
-                    croppedAreaPixels.width,
-                    croppedAreaPixels.height,
-                    0,
-                    0,
-                    croppedAreaPixels.width,
-                    croppedAreaPixels.height
-                )
-
-                // Convert to blob and resolve
-                croppedCanvas.toBlob(
-                    (blob) => {
-                        if (blob) {
-                            resolve(blob);
-                        } else {
-                            reject(new Error('Failed to create blob from canvas'));
-                        }
-                    },
-                    'image/jpeg',
-                    0.95 // quality parameter
-                );
-            };
-
-            img.onerror = () => {
-                reject(new Error('Failed to load image'));
-            };
+            canvas.toBlob(
+                (blob) => {
+                    if (blob) {
+                        resolve(blob);
+                    } else {
+                        reject(new Error('Failed to create blob from canvas'));
+                    }
+                },
+                'image/jpeg',
+                0.95
+            );
         };
 
-        reader.onerror = () => {
-            reject(new Error('Failed to read file'));
+        img.onerror = () => {
+            URL.revokeObjectURL(objectUrl);
+            reject(new Error('Failed to load image'));
         };
 
-        reader.readAsDataURL(image);
+        img.src = objectUrl;
     });
 };

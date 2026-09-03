@@ -19,7 +19,12 @@ import {
 import DeleteIcon from '@mui/icons-material/Delete';
 import CameraAltIcon from '@mui/icons-material/CameraAlt';
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
-import { validateImage, validateImages } from '../validation/imageValidation';
+import {
+    validateImage,
+    validateImages,
+    getAcceptedFileTypes,
+    getAllowedExtensionLabels
+} from '../validation/imageValidation';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../../uploadDialog';
 import { useAppDispatch, useAppSelector } from '@/store';
@@ -27,12 +32,13 @@ import { getImagesPaginated } from '@/store/entities/images/images.slice';
 import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
 
 interface IImageUploadFormProps {
-    setImages: (images: File[]) => void;
+    addImages: (images: File[]) => void;
+    removeImage: (index: number) => void;
     imageStatuses: ImageStatus[];
     imagePreviews: { [id: string]: string };
 }
 
-const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStatuses, imagePreviews }) => {
+const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeImage, imageStatuses, imagePreviews }) => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
@@ -44,14 +50,18 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
     // Get existing files count for total validation
     const imagesPaginatedCount = useAppSelector(getImagesPaginated).count;
 
-    const validFileExtensions = import.meta.env.VITE_APP_UPLOADED_FILES_FILE_FORMATS.split(" ");
-    const maxFiles = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES
-        ? +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES
+    const validFileExtensions = getAllowedExtensionLabels();
+    const maxFiles = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
+        ? +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
         : 5;
 
     // Updated file selection handler with total validation
     const handleFileSelection = (selectedFiles: File[]) => {
-        const { validFiles, invalidFiles } = validateImages(selectedFiles, imagesPaginatedCount);
+        const { validFiles, invalidFiles } = validateImages(
+            selectedFiles,
+            imagesPaginatedCount,
+            imageStatuses.length
+        );
 
         // Show errors for invalid files
         if (invalidFiles.length > 0) {
@@ -64,9 +74,9 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
             }));
         }
 
-        // Only set the valid files
+        // Only add the valid files
         if (validFiles.length > 0) {
-            setImages(validFiles);
+            addImages(validFiles);
         }
     };
 
@@ -114,13 +124,6 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
         }
     };
 
-    const removeImage = (indexToRemove: number) => {
-        const updatedFiles = imageStatuses
-            .filter((_, index) => index !== indexToRemove)
-            .map(status => status.file);
-        setImages(updatedFiles);
-    };
-
     const handleButtonClick = () => {
         if (inputRef.current) {
             // Remove any existing capture attribute
@@ -132,10 +135,8 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
             }
             // For gallery mode (default or when useCamera is false), don't set capture attribute
 
-            // Small delay can help with Android compatibility
-            setTimeout(() => {
-                inputRef.current?.click();
-            }, 10);
+            // Must stay inside the user gesture or iOS Safari drops the picker.
+            inputRef.current.click();
         }
     };
 
@@ -151,7 +152,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                 hidden
                 ref={inputRef}
                 onChange={handleFileChange}
-                accept="image/jpeg,image/jpg,image/png,image/gif,image/webp,image/heic,image/heif"
+                accept={getAcceptedFileTypes()}
             />
             <Grid container spacing={2}>
                 <Grid item xs={12}>
@@ -188,7 +189,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ setImages, imageStat
                             }
                         </Typography>
                         <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-                            {`Nur Bilder mit Dateiendung ${validFileExtensions.map((ext: any) => ext)} werden akzeptiert`}
+                            {`Nur Bilder mit Dateiendung ${validFileExtensions.join(", ")} werden akzeptiert`}
                         </Typography>
                         <Typography variant="caption" display="block" sx={{ mt: 1 }}>
                             {`Maximal ${maxFiles} Fotos können gleichzeitig hochgeladen werden`}
