@@ -6,6 +6,9 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/frames/verify-frame-token/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-

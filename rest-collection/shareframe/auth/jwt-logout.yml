@@ -1,0 +1,24 @@
+info:
+  name: jwt-logout
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{http_domain}}/api/auth/jwt/logout/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Blacklists the refresh token from the sf_refresh cookie and expires both auth
+  cookies. Returns 204 even when the token is already expired or blacklisted.
+
+  Bruno keeps the expired cookies in its jar, so clear it (or re-run jwt-create)
+  before using the collection again.

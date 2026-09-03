@@ -1,9 +1,9 @@
 name: local-prod
 variables:
   - secret: true
-    name: env_auth_token
+    name: csrf_token
   - secret: true
-    name: refresh_token
+    name: access_token
   - secret: true
     name: frame_access_token
   - secret: true

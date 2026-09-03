@@ -6,6 +6,9 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/frames/send-image/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
@@ -14,9 +17,6 @@ http:
           "image_id": {{seed_image_id_for_send}},
           "expiry_unix_timestamp": {{seed_expiry_unix_timestamp}}
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

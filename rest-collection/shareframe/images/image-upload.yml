@@ -6,6 +6,9 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/images/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: multipart-form
     data:
@@ -15,9 +18,6 @@ http:
       - name: upload_image_sha256_hex_hash
         type: text
         value: "<sha256-of-upload>"
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

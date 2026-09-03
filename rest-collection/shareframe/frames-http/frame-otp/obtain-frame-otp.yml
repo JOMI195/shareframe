@@ -6,9 +6,9 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/frames/1/obtain-frame-otp/"
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
 
 settings:
   encodeUrl: true

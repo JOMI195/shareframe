@@ -1,7 +1,7 @@
 info:
   name: jwt-verify
   type: http
-  seq: 3
+  seq: 5
 
 http:
   method: POST
@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-          "token": "{{env_auth_token}}"
+          "token": "{{access_token}}"
       }
 
 settings:
@@ -18,3 +18,8 @@ settings:
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Checks the access token captured into access_token by jwt-create / jwt-refresh.
+  The API itself reads the token from the sf_access cookie, so this endpoint is only
+  a debugging aid.

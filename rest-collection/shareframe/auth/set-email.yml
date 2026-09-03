@@ -1,11 +1,14 @@
 info:
   name: set-email
   type: http
-  seq: 9
+  seq: 11
 
 http:
   method: POST
   url: "{{http_domain}}/api/auth/users/set_username/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
@@ -13,9 +16,6 @@ http:
           "new_email": "<new-email>",
           "current_password": "{{backend_admin_password}}"
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

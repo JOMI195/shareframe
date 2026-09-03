@@ -1,11 +1,14 @@
 info:
   name: activate
   type: http
-  seq: 4
+  seq: 6
 
 http:
   method: POST
   url: "{{http_domain}}/api/auth/users/activation/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-

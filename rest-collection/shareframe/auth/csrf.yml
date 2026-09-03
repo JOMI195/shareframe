@@ -1,0 +1,30 @@
+info:
+  name: csrf
+  type: http
+  seq: 1
+
+http:
+  method: GET
+  url: "{{http_domain}}/api/auth/csrf/"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const { readCookies } = require(`${bru.cwd()}/scripts/cookies.js`);
+
+        const cookies = readCookies(res);
+        if (cookies.csrftoken) bru.setEnvVar('csrf_token', cookies.csrftoken);
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+
+docs: |-
+  Seeds the csrftoken cookie and stores it in csrf_token. jwt-create does the same,
+  so this is only needed to refresh the token without logging in again — e.g. after
+  clearing the cookie jar.
+
+  Requires Developer Mode for require().

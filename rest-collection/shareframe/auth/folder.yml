@@ -5,3 +5,24 @@ info:
 
 request:
   auth: inherit
+
+docs: |-
+  User auth is cookie-based. `jwt-create` returns the access and refresh JWTs as
+  HttpOnly cookies (`sf_access`, `sf_refresh`) instead of in the body, and the API
+  no longer accepts `Authorization: Bearer`.
+
+  Two things make the collection work:
+
+  1. **Bruno's cookie jar** sends `sf_access` / `sf_refresh` back automatically.
+     It must be enabled (Preferences → "Automatically send cookies").
+  2. **CSRF**: every unsafe request (POST/PUT/PATCH/DELETE) sends
+     `X-CSRFToken: {{csrf_token}}`. `csrf_token` is captured from the `csrftoken`
+     cookie by `csrf`, `jwt-create` and `jwt-refresh`.
+
+  So the flow is: run `jwt-create` once, then any request works. A 403
+  `CSRF Failed: CSRF token missing` means `csrf_token` is empty — run `csrf`.
+  A 401 means the access cookie expired — run `jwt-refresh`.
+
+  Cookie paths are scoped: `sf_access` to `/api/`, `sf_refresh` to
+  `/api/auth/jwt/`. That is why only the token endpoints ever see the refresh
+  token.

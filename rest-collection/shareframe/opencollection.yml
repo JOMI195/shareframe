@@ -12,6 +12,11 @@ extensions:
 docs: |-
   # shareframe API collection
 
+  User auth is cookie-based (HttpOnly `sf_access` / `sf_refresh`) with a CSRF
+  double-submit header — Bearer tokens are not accepted. Enable Bruno's
+  **"Automatically send cookies"**, then run `auth/jwt-create`. See the `auth`
+  folder docs or README.md.
+
   Frame traffic simulation lives in `frames-websocket` (palette + autonomous session)
   and needs one-time setup: `npm install` in the collection root, **Developer Mode**
   enabled. dev/local environments are prefilled for seeded simulation out of the box;

@@ -6,15 +6,15 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/friendships/send-request/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
       {
           "reciever_friendship_user_search_code": "<friend-search-code>"
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

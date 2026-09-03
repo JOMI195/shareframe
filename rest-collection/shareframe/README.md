@@ -3,6 +3,30 @@
 Requests for the shareframe backend, plus a frame traffic simulator that makes the
 backend see what a real Pi frame sends.
 
+## User auth: cookies + CSRF
+
+The API no longer accepts `Authorization: Bearer`. `auth/jwt-create` returns the
+access and refresh JWTs as HttpOnly cookies (`sf_access`, `sf_refresh`), so:
+
+1. Enable **"Automatically send cookies"** in Bruno's preferences — the cookie jar is
+   what authenticates every request.
+2. Run `auth/csrf` or `auth/jwt-create` once. Both store the `csrftoken` cookie in the
+   `csrf_token` variable.
+3. Every unsafe request (POST/PUT/PATCH/DELETE) sends `X-CSRFToken: {{csrf_token}}`.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| 403 `CSRF Failed: CSRF token missing` | `csrf_token` empty | run `auth/csrf` |
+| 401 on a normal request | access cookie expired (12 h) | run `auth/jwt-refresh` |
+| 401 on `jwt-refresh` | refresh cookie gone or already rotated | run `auth/jwt-create` |
+
+Refresh rotation is on and rotated tokens are blacklisted, so a given `sf_refresh`
+works exactly once. `auth/jwt-logout` blacklists it and expires both cookies.
+
+**Frame/device auth is unchanged** — `Frame-Access-Token`, `Ed25519-Sig` and
+`Auth-Hash` requests set their own `Authorization` header and are not affected by
+cookies or CSRF.
+
 ## Auto-seeded dev/local test data
 
 When backend containers start with `PRODUCTION=False` (dev + local-prod compose), the
@@ -207,17 +231,24 @@ node scripts/run-sim.js \
 Inject image traffic (seed user Alice -> Bob):
 (`jq` is used below to extract JSON values)
 
+Auth is cookie-based, so `curl` needs a cookie jar (`-c` to store, `-b` to send) and
+an `X-CSRFToken` header on every unsafe request.
+
 ```bash
-TOKEN="$(curl -sS -X POST http://localhost/api/auth/jwt/create/ \
-  -H 'Content-Type: application/json' \
-  -d '{"email":"seed.alice@shareframe.local","password":"seed-alice-dev-pass"}' | jq -r '.access')"
+JAR=$(mktemp)
 
-IMAGE_ID="$(curl -sS http://localhost/api/images/ \
-  -H "Authorization: Bearer $TOKEN" | jq -r '.results[0].id')"
+curl -sS -c "$JAR" http://localhost/api/auth/csrf/ -o /dev/null
+CSRF="$(awk '$6=="csrftoken" {print $7}' "$JAR")"
 
-curl -sS -X POST http://localhost/api/frames/send-image/ \
-  -H "Authorization: Bearer $TOKEN" \
-  -H 'Content-Type: application/json' \
+curl -sS -b "$JAR" -c "$JAR" -X POST http://localhost/api/auth/jwt/create/ \
+  -H 'Content-Type: application/json' -H "X-CSRFToken: $CSRF" \
+  -d '{"email":"seed.alice@shareframe.local","password":"seed-alice-dev-pass"}' -o /dev/null
+CSRF="$(awk '$6=="csrftoken" {print $7}' "$JAR")"
+
+IMAGE_ID="$(curl -sS -b "$JAR" http://localhost/api/images/ | jq -r '.results[0].id')"
+
+curl -sS -b "$JAR" -X POST http://localhost/api/frames/send-image/ \
+  -H 'Content-Type: application/json' -H "X-CSRFToken: $CSRF" \
   -d "{\"reciever_username\":\"seed_bob\",\"image_id\":${IMAGE_ID},\"expiry_unix_timestamp\":4102444800}"
 ```
 

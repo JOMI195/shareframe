@@ -6,15 +6,15 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/frames/unregister-user/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
       {
           "public_serial_number": "{{frame_public_serial_number}}"
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

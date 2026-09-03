@@ -6,15 +6,15 @@ info:
 http:
   method: POST
   url: "{{http_domain}}/api/changelogs/by-ids/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
       {
           "ids": [1, 2]
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

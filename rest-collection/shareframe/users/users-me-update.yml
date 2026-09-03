@@ -6,15 +6,15 @@ info:
 http:
   method: PATCH
   url: "{{http_domain}}/api/auth/users/me/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
       {
           "username": "<new-username>"
       }
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

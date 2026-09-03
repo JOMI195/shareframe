@@ -6,9 +6,6 @@ info:
 http:
   method: GET
   url: "{{http_domain}}/api/auth/users/"
-  auth:
-    type: bearer
-    token: "{{env_auth_token}}"
 
 settings:
   encodeUrl: true

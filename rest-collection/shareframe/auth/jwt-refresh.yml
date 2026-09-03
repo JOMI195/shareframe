@@ -1,20 +1,37 @@
 info:
   name: jwt-refresh
   type: http
-  seq: 2
+  seq: 3
 
 http:
   method: POST
   url: "{{http_domain}}/api/auth/jwt/refresh/"
-  body:
-    type: json
-    data: |-
-      {
-          "refresh": "{{refresh_token}}"
-      }
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const { readCookies } = require(`${bru.cwd()}/scripts/cookies.js`);
+
+        if (res.getStatus() === 200) {
+          const cookies = readCookies(res);
+          if (cookies.csrftoken) bru.setEnvVar('csrf_token', cookies.csrftoken);
+          if (cookies.sf_access) bru.setEnvVar('access_token', cookies.sf_access);
+        }
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Reads the refresh token from the sf_refresh cookie — no body. Rotation is on, so
+  the response replaces both auth cookies and blacklists the old refresh token.
+
+  401 means the cookie is missing, expired, or already rotated; run jwt-create again.
+
+  Requires Developer Mode for require().

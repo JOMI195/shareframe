@@ -1,23 +1,45 @@
 info:
   name: jwt-create
   type: http
-  seq: 1
+  seq: 2
 
 http:
   method: POST
   url: "{{http_domain}}/api/auth/jwt/create/"
   body:
-    type: multipart-form
-    data:
-      - name: email
-        type: text
-        value: "{{backend_admin_email}}"
-      - name: password
-        type: text
-        value: "{{backend_admin_password}}"
+    type: json
+    data: |-
+      {
+          "email": "{{backend_admin_email}}",
+          "password": "{{backend_admin_password}}"
+      }
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        const { readCookies } = require(`${bru.cwd()}/scripts/cookies.js`);
+
+        if (res.getStatus() === 200) {
+          const cookies = readCookies(res);
+          if (cookies.csrftoken) bru.setEnvVar('csrf_token', cookies.csrftoken);
+          if (cookies.sf_access) bru.setEnvVar('access_token', cookies.sf_access);
+        }
 
 settings:
   encodeUrl: true
   timeout: 0
   followRedirects: true
   maxRedirects: 5
+
+docs: |-
+  Login. The access and refresh JWTs come back as HttpOnly cookies (sf_access,
+  sf_refresh), not in the body — Bruno's cookie jar sends them on later requests
+  automatically.
+
+  The after-response script stores the csrftoken cookie in csrf_token, which every
+  unsafe request sends back as X-CSRFToken. It also copies sf_access into
+  access_token purely so jwt-verify has something to inspect.
+
+  Requires Developer Mode for require(), and "Automatically send cookies" enabled in
+  Bruno's settings.

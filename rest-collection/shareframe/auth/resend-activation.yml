@@ -1,11 +1,14 @@
 info:
   name: resend-activation
   type: http
-  seq: 5
+  seq: 7
 
 http:
   method: POST
   url: "{{http_domain}}/api/auth/users/resend_activation/"
+  headers:
+    - name: X-CSRFToken
+      value: "{{csrf_token}}"
   body:
     type: json
     data: |-
