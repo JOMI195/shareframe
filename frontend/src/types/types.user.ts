@@ -13,19 +13,6 @@ export const isICoreUser = (obj: any): obj is ICoreUser => {
     );
 }
 
-export interface ICoreUserCredentials {
-    refresh: string;
-    access: string;
-}
-
-export const isICoreUserCredentials = (obj: any): obj is ICoreUserCredentials => {
-    return (
-        obj &&
-        typeof obj.refresh === 'string' &&
-        typeof obj.access === 'string'
-    );
-}
-
 export interface IUserAccount {
     friendship_user_searchable: boolean;
     friendship_user_search_code: string;

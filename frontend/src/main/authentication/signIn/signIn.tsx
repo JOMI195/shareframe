@@ -32,7 +32,6 @@ import {
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getIn, useFormik } from "formik";
 import { Alert } from "@mui/material";
-import { ICoreUserCredentials, isICoreUserCredentials } from "@/types";
 
 export default function SignIn() {
   const dispatch = useDispatch();
@@ -99,9 +98,8 @@ export default function SignIn() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values: any) => {
-      const response: any = await dispatch(authenticateUser(values));
-      const newCredentials = response as ICoreUserCredentials;
-      if (!isICoreUserCredentials(newCredentials)) {
+      await dispatch(authenticateUser(values));
+      if (localStorage.getItem("loggedIn") !== "true") {
         setErrorMessage("Bitte überprüfe deine E-Mail-Adresse und dein Passwort auf Tippfehler (Groß-/ Kleinschreibung beachten). Falls dein Konto noch nicht aktiviert wurde, prüfe bitte deine E-Mails auf die Aktivierungsmail. Versuche es anschließend erneut. Bei wiederholten Problemen kontaktiere bitte unseren Support.");
       }
       signInForm.resetForm();

@@ -1,10 +1,14 @@
 import { Store } from "redux";
+import { Persistor } from "redux-persist";
 import axiosInstance from "./api";
-import { tokenRefreshFulfilled } from "@/store/entities/authentication/authentication.slice";
-import { clearApiCache } from "@/common/utils/storage/apiCache";
+import {
+  signedOut,
+  tokenRefreshFulfilled,
+} from "@/store/entities/authentication/authentication.slice";
 import { RootState } from "@/store";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import {
+  getCsrfUrl,
   getTokenCreateUrl,
   getTokenLogoutUrl,
   getTokenRefreshUrl,
@@ -24,16 +28,17 @@ const onTokenRefreshed = () => {
   refreshSubscribers = [];
 };
 
-// Only the server can clear the HttpOnly cookies.
-const handleLogout = () => {
-  axiosInstance.post(getTokenLogoutUrl()).catch(() => undefined);
-  localStorage.removeItem("loggedIn");
-  clearApiCache();
-  window.location.href = getAuthenticationUrl() + getSignInUrl();
-};
-
-const apiSetup = (store: Store<RootState>) => {
+const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
   const { dispatch } = store;
+
+  // Only the server can clear the HttpOnly cookies.
+  const handleLogout = async () => {
+    // Awaited, else the navigation cancels the request.
+    await axiosInstance.post(getTokenLogoutUrl()).catch(() => undefined);
+    dispatch(signedOut());
+    await persistor.flush();
+    window.location.href = getAuthenticationUrl() + getSignInUrl();
+  };
 
   axiosInstance.interceptors.response.use(
     (response) => {
@@ -42,6 +47,21 @@ const apiSetup = (store: Store<RootState>) => {
     },
     async (error) => {
       const originalRequest = error.config;
+
+      const isCsrfFailure =
+        error.response?.status === 403 &&
+        String(error.response?.data?.detail ?? "").startsWith("CSRF Failed");
+
+      // Re-seed a missing csrftoken instead of failing every unsafe request.
+      if (
+        isCsrfFailure &&
+        originalRequest.url !== getCsrfUrl() &&
+        !originalRequest._csrfRetry
+      ) {
+        originalRequest._csrfRetry = true;
+        await axiosInstance.get(getCsrfUrl());
+        return axiosInstance(originalRequest);
+      }
 
       // Don't retry auth endpoints to avoid infinite loops
       const isAuthEndpoint =

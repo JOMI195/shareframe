@@ -67,6 +67,8 @@ const userSlice = createSlice({
       user.api.loading = false;
     },
     authenticationRejected: (user) => {
+      // Never leave a stale flag: signIn reads it to detect success.
+      localStorage.removeItem("loggedIn");
       user.api.loading = false;
     },
     tokenRefreshFulfilled: (user) => {

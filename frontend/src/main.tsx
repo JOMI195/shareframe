@@ -22,7 +22,7 @@ const AppWrapper = () => {
   );
 };
 
-http.apiSetup(store);
+http.apiSetup(store, persistor);
 // Seeds the csrftoken cookie for the first unsafe request.
 http.get(getCsrfUrl()).catch(() => undefined);
 const container = document.getElementById("root");
