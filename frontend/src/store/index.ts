@@ -23,8 +23,9 @@ import migrations from './migrations';
 
 const persistConfig: PersistConfig<any> = {
   key: 'shareframe-data',
-  version: 9,
+  version: 10,
   storage,
+  whitelist: ['ui'],
   stateReconciler: autoMergeLevel2,
   migrate: createMigrate(migrations, { debug: import.meta.env.VITE_APP_PRODUCTION === "False" ? true : false }),
 };

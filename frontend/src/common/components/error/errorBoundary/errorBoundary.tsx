@@ -64,6 +64,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
         if (errorCount < 1) {
             setTimeout(() => {
                 localStorage.removeItem("persist:shareframe-data");
+                localStorage.removeItem("persist:ui");
                 window.location.reload();
             }, 2000);
         } else {

@@ -1,7 +1,6 @@
 import { RootState } from "@/store";
 import { IUser } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
-import { clearApiCache } from "@/common/utils/storage/apiCache";
 
 type SliceState = {
   api: {
@@ -89,7 +88,6 @@ const userSlice = createSlice({
     },
     signedOut: () => {
       localStorage.removeItem("loggedIn");
-      clearApiCache();
       return initialState;
     },
     userFetchFulfilled: (user, action) => {
@@ -175,7 +173,6 @@ const userSlice = createSlice({
         }
       };
       localStorage.removeItem("loggedIn");
-      clearApiCache();
     },
     userDeleteRejected: (user) => {
       user.api.loading = false;

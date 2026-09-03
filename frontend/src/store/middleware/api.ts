@@ -2,11 +2,6 @@ import { Middleware } from "redux";
 import http from "@/services/httpService.ts";
 import * as actions from "@/common/utils/constants/api.constants.tsx";
 
-interface CacheResponse {
-  data: any;
-  timestamp: number;
-}
-
 interface ApiRequestAction {
   type: string;
   payload: {
@@ -20,7 +15,6 @@ interface ApiRequestAction {
     onStartPayload?: any;
     onSuccessPayload?: any;
     onErrorPayload?: any;
-    cacheTime?: number;
   };
 }
 
@@ -45,7 +39,6 @@ const apiMiddleware: Middleware =
           onStartPayload,
           onSuccessPayload,
           onErrorPayload,
-          cacheTime,
         } = action.payload;
 
         if (onStart) {
@@ -57,24 +50,6 @@ const apiMiddleware: Middleware =
 
         next(action);
 
-        const cacheKey = `${url}:${JSON.stringify(data)}`;
-        const cachedResponse = JSON.parse(
-          localStorage.getItem(cacheKey) || "{}"
-        ) as CacheResponse;
-        const cacheExpired =
-          Date.now() - cachedResponse.timestamp > (cacheTime || 0);
-
-        if (cachedResponse.data && !cacheExpired) {
-          dispatch(actions.apiSuccess(cachedResponse.data));
-          if (onSuccess) {
-            dispatch({
-              type: onSuccess,
-              payload: onSuccessPayload ?? cachedResponse.data,
-            });
-          }
-          return onSuccessPayload ?? cachedResponse.data;
-        }
-
         try {
           const response = await http.request({
             url,
@@ -82,10 +57,6 @@ const apiMiddleware: Middleware =
             data,
             headers,
           });
-          localStorage.setItem(
-            cacheKey,
-            JSON.stringify({ data: response.data, timestamp: Date.now() })
-          );
           dispatch(actions.apiSuccess(response.data));
           if (onSuccess) {
             dispatch({
