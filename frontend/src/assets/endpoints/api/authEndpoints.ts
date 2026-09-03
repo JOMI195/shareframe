@@ -4,6 +4,10 @@ export const getTokenRefreshUrl = () => `auth/jwt/refresh/`
 
 export const getTokenVerifyUrl = () => `auth/jwt/verify/`
 
+export const getTokenLogoutUrl = () => `auth/jwt/logout/`
+
+export const getCsrfUrl = () => `auth/csrf/`
+
 export const getUserListUrl = () => `auth/users/`
 
 export const getUserItemUrl = (userId: number) => `auth/users/${userId}/`

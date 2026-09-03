@@ -39,6 +39,10 @@ beat_schedule = {
         "task": "images.tasks.mark_expired_images_to_be_deleted",
         "schedule": timedelta(minutes=15),
     },
+    "flush-expired-tokens-every-24-hours": {
+        "task": "authentication.tasks.flush_expired_tokens",
+        "schedule": crontab(minute=0, hour=3),
+    },
     "close-and-delete-long-inactive-frame-websocket-connections-every-15-minutes": {
         "task": "frames.tasks.close_and_delete_long_inactive_frame_websocket_connections",
         "schedule": timedelta(minutes=15),

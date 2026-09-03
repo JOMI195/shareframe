@@ -33,6 +33,7 @@ DEBUG = os.environ.get("DEBUG", False) == "True"
 ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS").split(" ")
 CSRF_TRUSTED_ORIGINS = os.environ.get("DJANGO_CSRF_TRUSTED_ORIGINS").split(" ")
 CORS_ALLOWED_ORIGINS = os.environ.get("DJANGO_CORS_ALLOWED_ORIGINS").split(" ")
+CORS_ALLOW_CREDENTIALS = True
 
 PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
 APP_BUILD_VERSION = os.environ.get("APP_BUILD_VERSION", "")
@@ -46,6 +47,21 @@ else:
 
 # Prometheus scrapes /metrics over plain HTTP on the container network.
 SECURE_REDIRECT_EXEMPT = [r"^metrics(/business)?$"]
+
+# Refresh path is scoped so the cookie only reaches the token endpoints.
+AUTH_COOKIE_ACCESS_NAME = "sf_access"
+AUTH_COOKIE_REFRESH_NAME = "sf_refresh"
+AUTH_COOKIE_ACCESS_PATH = "/api/"
+AUTH_COOKIE_REFRESH_PATH = "/api/auth/jwt/"
+AUTH_COOKIE_SAMESITE = "Lax"
+AUTH_COOKIE_SECURE = PRODUCTION
+
+# Double-submit CSRF needs the frontend to read this one.
+CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_SAMESITE = "Lax"
+CSRF_COOKIE_SECURE = PRODUCTION
+SESSION_COOKIE_SAMESITE = "Lax"
+SESSION_COOKIE_SECURE = PRODUCTION
 
 # Application definition
 
@@ -62,6 +78,7 @@ INSTALLED_APPS = [
     "corsheaders",
     "rest_framework",
     "rest_framework_simplejwt",
+    "rest_framework_simplejwt.token_blacklist",
     "djoser",
     "drf_spectacular",
     "django_celery_results",
@@ -373,7 +390,7 @@ AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework_simplejwt.authentication.JWTAuthentication",
+        "authentication.auth.CookieJWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
@@ -416,8 +433,6 @@ SIMPLE_JWT = {
     # Token customization
     "AUDIENCE": "shareframe-api",
     "ISSUER": "shareframe-api",
-    "AUTH_HEADER_TYPES": ("Bearer",),
-    "AUTH_HEADER_NAME": "HTTP_AUTHORIZATION",
     # User identification
     "USER_ID_FIELD": "id",
     "USER_ID_CLAIM": "user_id",

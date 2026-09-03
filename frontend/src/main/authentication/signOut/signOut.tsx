@@ -13,8 +13,9 @@ export default function SignOut() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSignOut = () => {
-    dispatch(signOutUser());
+  const handleSignOut = async () => {
+    // Awaited, else the route change cancels the request.
+    await dispatch(signOutUser());
     navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
   };
 

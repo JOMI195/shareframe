@@ -4,9 +4,14 @@ from django.urls import include, path, re_path
 from django.conf.urls.static import static
 from django_otp.admin import OTPAdminSite
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
-from rest_framework_simplejwt.views import TokenRefreshView, TokenVerifyView
+from rest_framework_simplejwt.views import TokenVerifyView
 
-from authentication.jwt import SignalTokenObtainPairView
+from authentication.jwt import (
+    CSRFView,
+    CookieTokenObtainPairView,
+    CookieTokenRefreshView,
+    LogoutView,
+)
 from metrics.views import business_metrics_view, metrics_view
 
 from .views import (
@@ -31,8 +36,10 @@ urlpatterns = [
     path("api/admin/", admin.site.urls),
     # path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("authentication.urls")),
-    path("api/auth/jwt/create/", SignalTokenObtainPairView.as_view(), name="jwt-create"),
-    path("api/auth/jwt/refresh/", TokenRefreshView.as_view(), name="jwt-refresh"),
+    path("api/auth/csrf/", CSRFView.as_view(), name="csrf"),
+    path("api/auth/jwt/create/", CookieTokenObtainPairView.as_view(), name="jwt-create"),
+    path("api/auth/jwt/refresh/", CookieTokenRefreshView.as_view(), name="jwt-refresh"),
+    path("api/auth/jwt/logout/", LogoutView.as_view(), name="jwt-logout"),
     path("api/auth/jwt/verify/", TokenVerifyView.as_view(), name="jwt-verify"),
     # apps
     path("api/version/", VersionView.as_view(), name="app-version"),

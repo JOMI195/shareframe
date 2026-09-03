@@ -29,9 +29,14 @@ export const resendActivationEmail = (email: string) =>
     data: { email: email },
   });
 
-export const signOutUser = () => ({
-  type: userSlice.signedOut.type,
-});
+// Both outcomes reset, else a failed call strands a signed-in UI.
+export const signOutUser = () =>
+  apiRequest({
+    url: authEndpoints.getTokenLogoutUrl(),
+    method: "post",
+    onSuccess: userSlice.signedOut.type,
+    onError: userSlice.signedOut.type,
+  });
 
 export const authenticateUser = (userData: {
   email: string;
@@ -54,14 +59,6 @@ export const activateUser = (activationData: { uid: string; token: string }) =>
     onStart: userSlice.userActivationPending.type,
     onSuccess: userSlice.userActivationFulfilled.type,
     onError: userSlice.userActivationRejected.type,
-  });
-
-export const refreshToken = (token: string) =>
-  apiRequest({
-    url: authEndpoints.getTokenRefreshUrl(),
-    method: "post",
-    data: { refresh: token },
-    onSuccess: userSlice.tokenRefreshFulfilled.type,
   });
 
 export const setPassword = (passwords: {

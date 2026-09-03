@@ -1,6 +1,7 @@
 import { RootState } from "@/store";
 import { IUser } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
+import { clearApiCache } from "@/common/utils/storage/apiCache";
 
 type SliceState = {
   api: {
@@ -60,20 +61,16 @@ const userSlice = createSlice({
     authenticationPending: (user) => {
       user.api.loading = true;
     },
-    authenticationFulfilled: (user, action) => {
+    authenticationFulfilled: (user) => {
       localStorage.setItem("loggedIn", "true");
-      localStorage.setItem("refreshToken", action.payload.refresh);
-      localStorage.setItem("accessToken", action.payload.access);
       user.api.lastFetch = Date.now();
       user.api.loading = false;
     },
     authenticationRejected: (user) => {
       user.api.loading = false;
     },
-    tokenRefreshFulfilled: (user, action) => {
+    tokenRefreshFulfilled: (user) => {
       localStorage.setItem("loggedIn", "true");
-      localStorage.setItem("refreshToken", action.payload.refresh);
-      localStorage.setItem("accessToken", action.payload.access);
       user.api.lastFetch = Date.now();
       user.api.loading = false;
     },
@@ -90,8 +87,7 @@ const userSlice = createSlice({
     },
     signedOut: () => {
       localStorage.removeItem("loggedIn");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessToken");
+      clearApiCache();
       return initialState;
     },
     userFetchFulfilled: (user, action) => {
@@ -177,8 +173,7 @@ const userSlice = createSlice({
         }
       };
       localStorage.removeItem("loggedIn");
-      localStorage.removeItem("refreshToken");
-      localStorage.removeItem("accessToken");
+      clearApiCache();
     },
     userDeleteRejected: (user) => {
       user.api.loading = false;

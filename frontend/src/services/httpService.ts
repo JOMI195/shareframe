@@ -1,109 +1,81 @@
 import { Store } from "redux";
 import axiosInstance from "./api";
-import { refreshToken } from "@/store/entities/authentication/authentication.actions";
+import { tokenRefreshFulfilled } from "@/store/entities/authentication/authentication.slice";
+import { clearApiCache } from "@/common/utils/storage/apiCache";
 import { RootState } from "@/store";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
-import { getTokenCreateUrl, getTokenRefreshUrl } from "@/assets/endpoints/api/authEndpoints";
+import {
+  getTokenCreateUrl,
+  getTokenLogoutUrl,
+  getTokenRefreshUrl,
+} from "@/assets/endpoints/api/authEndpoints";
 
 const MAX_AUTH_FAILURES = 2;
 let authFailureCount = 0;
 let isRefreshing = false;
-let refreshSubscribers: Array<(token: string) => void> = [];
+let refreshSubscribers: Array<() => void> = [];
 
-// Function to add callbacks to the queue
-const subscribeTokenRefresh = (cb: (token: string) => void) => {
+const subscribeTokenRefresh = (cb: () => void) => {
   refreshSubscribers.push(cb);
 };
 
-// Function to notify all the subscribers about new token
-const onTokenRefreshed = (newToken: string) => {
-  refreshSubscribers.forEach(cb => cb(newToken));
+const onTokenRefreshed = () => {
+  refreshSubscribers.forEach(cb => cb());
   refreshSubscribers = [];
 };
 
-// Function to handle logout
+// Only the server can clear the HttpOnly cookies.
 const handleLogout = () => {
+  axiosInstance.post(getTokenLogoutUrl()).catch(() => undefined);
   localStorage.removeItem("loggedIn");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("accessToken");
+  clearApiCache();
   window.location.href = getAuthenticationUrl() + getSignInUrl();
 };
 
 const apiSetup = (store: Store<RootState>) => {
   const { dispatch } = store;
 
-  axiosInstance.interceptors.request.use(
-    (config) => {
-      const accessToken = localStorage.getItem("accessToken");
-      if (accessToken) {
-        config.headers.Authorization = `Bearer ${accessToken}`;
-      }
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
-
   axiosInstance.interceptors.response.use(
     (response) => {
-      authFailureCount = 0; // Reset counter on successful response
+      authFailureCount = 0;
       return response;
     },
     async (error) => {
       const originalRequest = error.config;
-      const refreshTokenValue = localStorage.getItem("refreshToken");
 
       // Don't retry auth endpoints to avoid infinite loops
       const isAuthEndpoint =
         originalRequest.url === getTokenCreateUrl() ||
-        originalRequest.url === getTokenRefreshUrl();
+        originalRequest.url === getTokenRefreshUrl() ||
+        originalRequest.url === getTokenLogoutUrl();
 
       if (!isAuthEndpoint && error.response?.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
 
-        if (!refreshTokenValue) {
-          handleLogout();
-          return Promise.reject(error);
-        }
-
-        // If already refreshing, wait for the new token
         if (isRefreshing) {
-          try {
-            return new Promise((resolve) => {
-              subscribeTokenRefresh((token) => {
-                originalRequest.headers.Authorization = `Bearer ${token}`;
-                resolve(axiosInstance(originalRequest));
-              });
+          return new Promise((resolve) => {
+            subscribeTokenRefresh(() => {
+              resolve(axiosInstance(originalRequest));
             });
-          } catch (error) {
-            return Promise.reject(error);
-          }
+          });
         }
 
-        // Start refreshing process
         isRefreshing = true;
 
         try {
-          // Dispatch action to refresh token
-          await dispatch(refreshToken(refreshTokenValue));
+          // Direct call: apiMiddleware swallows failures, this must reject.
+          await axiosInstance.post(getTokenRefreshUrl());
+          dispatch(tokenRefreshFulfilled());
 
-          // Get the new token from the result
-          // This assumes refreshToken action returns the token data
-          const newToken = localStorage.getItem("accessToken");
-
-          if (!newToken) {
-            throw new Error("Failed to refresh token");
-          }
-
-          // Notify all subscribers about the new token
-          onTokenRefreshed(newToken);
+          onTokenRefreshed();
 
           isRefreshing = false;
           authFailureCount = 0;
 
-          // Return the original request with the new token
           return axiosInstance(originalRequest);
         } catch (refreshError) {
           isRefreshing = false;
+          refreshSubscribers = [];
           authFailureCount++;
 
           if (authFailureCount >= MAX_AUTH_FAILURES) {
@@ -114,7 +86,6 @@ const apiSetup = (store: Store<RootState>) => {
         }
       }
 
-      // For non-401 errors or auth endpoints, just increment counter
       if (error.response?.status === 401) {
         authFailureCount++;
 
