@@ -6,9 +6,7 @@ import {
     Link,
 } from '@mui/material';
 
-const FinalError: React.FC = ({
-
-}) => {
+const FinalError: React.FC = () => {
 
     return (
         <Container

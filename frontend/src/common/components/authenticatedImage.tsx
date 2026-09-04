@@ -39,13 +39,15 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             }
         );
 
-        if (imgRef.current) {
-            observer.observe(imgRef.current);
+        const element = imgRef.current;
+
+        if (element) {
+            observer.observe(element);
         }
 
         return () => {
-            if (imgRef.current) {
-                observer.unobserve(imgRef.current);
+            if (element) {
+                observer.unobserve(element);
             }
         };
     }, []);
@@ -54,6 +56,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         if (!isVisible) return;
 
         let isMounted = true;
+        let objectUrl = '';
 
         const loadImage = async (): Promise<void> => {
             try {
@@ -63,11 +66,13 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                     responseType: 'blob'
                 });
 
-                const objectUrl = URL.createObjectURL(response.data);
+                objectUrl = URL.createObjectURL(response.data);
 
                 if (isMounted) {
                     setImageSrc(objectUrl);
                     setIsLoading(false);
+                } else {
+                    URL.revokeObjectURL(objectUrl);
                 }
             } catch (error) {
                 setIsLoading(false);
@@ -83,8 +88,8 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
 
         return () => {
             isMounted = false;
-            if (imageSrc) {
-                URL.revokeObjectURL(imageSrc);
+            if (objectUrl) {
+                URL.revokeObjectURL(objectUrl);
             }
         };
     }, [url, isVisible, onError]);

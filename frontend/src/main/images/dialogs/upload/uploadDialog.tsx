@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import {
   AppBar,
   Box,
@@ -34,7 +34,7 @@ import ImageCropping from './imageCropping/imageCropping'
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
-    children: React.ReactElement<any, any>
+    children: React.ReactElement<unknown>
   },
   ref: React.Ref<unknown>
 ) {
@@ -43,7 +43,7 @@ const ZoomTransition = React.forwardRef(function Transition(
 
 const SlideTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
-    children: React.ReactElement<any, any>
+    children: React.ReactElement<unknown>
   },
   ref: React.Ref<unknown>
 ) {
@@ -58,6 +58,11 @@ export interface ImageStatus {
 }
 
 const steps = ['Fotos auswählen', 'Fotos zuschneiden und hochladen']
+
+const CROPPER_PROPS_INITIAL_STATE = {
+  rotation: 0,
+  croppedAreaPixels: { x: 0, y: 0, width: 0, height: 0 }
+}
 
 const UploadDialog: React.FC = () => {
   const theme = useTheme();
@@ -74,11 +79,6 @@ const UploadDialog: React.FC = () => {
 
   const [imagePreviews, setImagePreviews] = useState<{ [id: string]: string }>({});
 
-  const CROPPER_PROPS_INITIAL_STATE = {
-    rotation: 0,
-    croppedAreaPixels: { x: 0, y: 0, width: 0, height: 0 }
-  }
-
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
 
@@ -94,10 +94,10 @@ const UploadDialog: React.FC = () => {
     setImagePreviews({});
   }
 
-  const resetCropperState = () => {
+  const resetCropperState = useCallback(() => {
     setCroppedAreaPixels(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
     setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
-  }
+  }, [])
 
   const handleNext = () => {
     if (activeStep === 0 && imageStatuses.length === 0) {
@@ -211,7 +211,7 @@ const UploadDialog: React.FC = () => {
     };
   }, []);
 
-  const selectImageForCropping = (index: number) => {
+  const selectImageForCropping = useCallback((index: number) => {
     if (imageStatuses[index].status === 'uploaded') return
 
     resetCropperState()
@@ -222,7 +222,7 @@ const UploadDialog: React.FC = () => {
         status: i === index ? 'cropping' : (status.status === 'cropping' ? 'pending' : status.status)
       }))
     )
-  }
+  }, [imageStatuses, resetCropperState])
 
   const handleCropAndUpload = async (index: number) => {
     if (!imageStatuses[index]) {

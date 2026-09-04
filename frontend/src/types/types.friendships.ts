@@ -11,14 +11,16 @@ export interface IFriendshipCreateForm {
     reciever_friendship_user_search_code: string
 }
 
-export const isIFriendship = (obj: any): obj is IFriendship => {
+export const isIFriendship = (obj: unknown): obj is IFriendship => {
+    const candidate = obj as IFriendship;
+
     return (
-        obj &&
-        typeof obj.id === 'number' &&
-        typeof obj.sender === 'string' &&
-        typeof obj.reciever === 'string' &&
-        typeof obj.status === 'string' &&
-        typeof obj.created_at === 'string' &&
-        typeof obj.updated_at === 'string'
+        candidate &&
+        typeof candidate.id === 'number' &&
+        typeof candidate.sender === 'string' &&
+        typeof candidate.reciever === 'string' &&
+        typeof candidate.status === 'string' &&
+        typeof candidate.created_at === 'string' &&
+        typeof candidate.updated_at === 'string'
     );
 }

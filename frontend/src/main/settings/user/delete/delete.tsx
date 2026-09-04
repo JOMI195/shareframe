@@ -32,7 +32,8 @@ const Delete = () => {
         try {
             const anonymize = !keepUserName;
             await dispatch(deleteMyUserProfile(password, anonymize));
-        } catch (error) {
+        } catch {
+            // cleanup happens in finally
         } finally {
             setLoading(false);
             handleDialogClose();

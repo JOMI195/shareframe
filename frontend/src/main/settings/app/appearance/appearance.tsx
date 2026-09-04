@@ -1,4 +1,4 @@
-import { useColorThemeContext } from "@/context/colorTheme/colorThemeContext";
+import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
 import { Box, Tooltip, Typography, FormControlLabel } from "@mui/material";
 import { styled } from '@mui/material/styles';
 import Switch from '@mui/material/Switch';

@@ -31,7 +31,9 @@ const uiSubsetTransform = createTransform<PersistedUi, PersistedUi>(
   { whitelist: ['ui'] },
 );
 
-const persistConfig: PersistConfig<any> = {
+type RootReducerState = ReturnType<typeof rootReducer>;
+
+const persistConfig: PersistConfig<RootReducerState> = {
   key: 'shareframe-data',
   version: 10,
   storage,
@@ -41,7 +43,7 @@ const persistConfig: PersistConfig<any> = {
   migrate: createMigrate(migrations, { debug: import.meta.env.VITE_APP_PRODUCTION === "False" ? true : false }),
 };
 
-const persistedReducer = persistReducer(persistConfig, rootReducer as any);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,

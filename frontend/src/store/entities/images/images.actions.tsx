@@ -172,7 +172,7 @@ export const downloadImage = (url: string, fileName: string) => {
           type: ImagesSlice.downloadImageReceived.type,
         });
       })
-    } catch (error) {
+    } catch {
       dispatch({ type: ImagesSlice.downloadImageFailed.type });
     }
   }

@@ -24,7 +24,7 @@ import {
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
-import { ICoreUser, isICoreUser } from "@/types";
+import { isICoreUser } from "@/types";
 import { Alert } from "@mui/material";
 
 export default function SignUp() {
@@ -112,10 +112,10 @@ export default function SignUp() {
     initialValues: initialValues,
     validationSchema: validationSchema,
     enableReinitialize: true,
-    onSubmit: async (values: any) => {
-      const response: any = await dispatch(signUpUser(values));
-      const newUser = response as ICoreUser
-      if (isICoreUser(newUser)) {
+    onSubmit: async (values) => {
+      // the api middleware resolves with the response body, not the dispatched action
+      const response: unknown = await dispatch(signUpUser(values));
+      if (isICoreUser(response)) {
         setErrorMessage("");
         navigate(
           getAuthenticationUrl() + getUsersUrl() + getSignUpConfirmationUrl(),

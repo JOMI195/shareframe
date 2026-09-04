@@ -106,7 +106,8 @@ const SendImageToUserFrameDialog = () => {
 
                 await Promise.all(sendPromises);
             });
-        } catch (error) {
+        } catch {
+            // cleanup happens in finally
         } finally {
             setIsSendingInProgress(false);
             handleDialogClose();

@@ -15,7 +15,7 @@ const Activation = () => {
   useEffect(() => {
     navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
     dispatch(activateUser({ uid: uid as string, token: token as string }));
-  }, []);
+  }, [dispatch, navigate, uid, token]);
 
   return null;
 };

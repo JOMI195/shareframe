@@ -25,6 +25,7 @@ import { Link as RouterLink, useLocation } from 'react-router';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
+import { IAppBarMenuItem } from '@/types';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
 import { getChangelogsUrl, getContactUrl, getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
@@ -47,7 +48,7 @@ const Sidebar: React.FC = () => {
         if (isDesktop) {
             dispatch(openSidedbar());
         }
-    }, []);
+    }, [dispatch, isDesktop]);
 
     const handleSidebarClose = (event: MouseEvent | TouchEvent | React.MouseEvent) => {
         // Don't close sidebar on desktop when in icon-only mode
@@ -124,7 +125,7 @@ const Sidebar: React.FC = () => {
     }
 
 
-    const renderListItem = (item: any, isBottomItem = false) => {
+    const renderListItem = (item: IAppBarMenuItem, isBottomItem = false) => {
         const itemUrl = item.url.startsWith("/") ? item.url : `/${item.url}`;
         const isActive = !isBottomItem && location.pathname === itemUrl;
 

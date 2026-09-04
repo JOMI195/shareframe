@@ -1,8 +1,9 @@
 import Slide from "@mui/material/Slide";
 import Snackbar from "@mui/material/Snackbar";
-import { useAppDispatch, useAppSelector } from "@/store";
+import { RootState, useAppDispatch, useAppSelector } from "@/store";
+import { UnknownAction } from "redux";
 import { CircularProgress, Paper, Typography } from "@mui/material";
-import { useColorThemeContext } from "@/context/colorTheme/colorThemeContext";
+import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
 
 
 interface LoadingSnackbar {
@@ -11,8 +12,8 @@ interface LoadingSnackbar {
 }
 
 interface ILoadingSnackbarProps {
-    getSnackbar: (state: any) => any;
-    closeSnackbar: () => any;
+    getSnackbar: (state: RootState) => { loading: LoadingSnackbar };
+    closeSnackbar: () => UnknownAction;
 }
 
 const LoadingSnackbar = (

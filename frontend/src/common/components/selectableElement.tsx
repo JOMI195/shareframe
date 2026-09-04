@@ -7,7 +7,6 @@ import CircleIcon from "@mui/icons-material/Circle";
 
 interface SelectableItem {
     id: number;
-    [key: string]: any; // Allow any other properties
 }
 
 interface SelectableElementProps<T extends SelectableItem> {

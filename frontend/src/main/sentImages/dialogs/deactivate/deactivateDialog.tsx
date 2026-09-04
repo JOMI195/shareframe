@@ -31,7 +31,8 @@ const SentImageDeactivateDialog = () => {
                 await dispatch(deactivateSentImage(sentImageToDeactivate.id));
                 dispatch(closePreviewSentImageDialog());
             }
-        } catch (error) {
+        } catch {
+            // cleanup happens in finally
         } finally {
             handleDialogClose();
         }

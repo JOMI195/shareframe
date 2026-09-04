@@ -21,12 +21,12 @@ const MainLayout: React.FC = () => {
 
     useEffect(() => {
         loadChangelogIds();
-    }, [location]);
+    }, [loadChangelogIds, location]);
 
     useEffect(() => {
         loadChangelogs();
         cleanUpdDeactivatedIds();
-    }, [changelogIds]);
+    }, [loadChangelogs, cleanUpdDeactivatedIds, changelogIds]);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

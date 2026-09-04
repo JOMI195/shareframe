@@ -8,9 +8,11 @@ import { fetchFriendships } from "@/store/entities/friendships/friendships.actio
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
 import { closeSelectionDialog } from "@/store/ui/images/images.slice";
+import { useLocation } from "react-router";
 
 const Images: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { pathname } = useLocation();
 
     const page = useAppSelector(getImagesPaginated).page;
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
@@ -18,7 +20,7 @@ const Images: React.FC = () => {
     useEffect(() => {
         dispatch(setImagesPaginatedPage(1));
         dispatch(closeSelectionDialog());
-    }, [window.location.pathname]);
+    }, [dispatch, pathname]);
 
     useEffect(() => {
         dispatch(fetchFriendships());

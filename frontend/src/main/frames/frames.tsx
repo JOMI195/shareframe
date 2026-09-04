@@ -11,7 +11,7 @@ const Frames: React.FC = () => {
 
     useEffect(() => {
         dispatch(fetchframes());
-    }, []);
+    }, [dispatch]);
 
     useEffect(() => {
         const getFrames = () => {
@@ -23,7 +23,7 @@ const Frames: React.FC = () => {
         return () => {
             window.removeEventListener('focus', getFrames);
         };
-    }, []);
+    }, [dispatch]);
 
     return (
         <Container maxWidth={"md"} disableGutters>

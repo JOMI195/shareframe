@@ -2,7 +2,8 @@ import React from "react";
 import Slide from "@mui/material/Slide";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
-import { useAppDispatch, useAppSelector } from "@/store";
+import { RootState, useAppDispatch, useAppSelector } from "@/store";
+import { UnknownAction } from "redux";
 
 
 interface AlertSnackbar {
@@ -12,8 +13,8 @@ interface AlertSnackbar {
 }
 
 interface IAlertSnackbarProps {
-  getSnackbar: (state: any) => any;
-  closeSnackbar: () => any;
+  getSnackbar: (state: RootState) => { alert: AlertSnackbar };
+  closeSnackbar: () => UnknownAction;
 }
 
 const Alert = React.forwardRef<HTMLDivElement, AlertProps>(

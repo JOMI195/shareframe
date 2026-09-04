@@ -16,7 +16,7 @@ import { formatGermanDateTime } from '@/common/components/dateUtils';
 
 interface ListItem {
     id: string | number;
-    [key: string]: any;
+    [key: string]: unknown;
 }
 
 interface ColumnDefinition<T extends ListItem> {
@@ -70,11 +70,11 @@ function CustomTable<T extends ListItem>({
 
         // If it's a date column, format the date
         if (column.type === 'date' && value) {
-            return formatGermanDateTime(value);
+            return formatGermanDateTime(value as unknown as Date);
         }
 
         // Default rendering
-        return value;
+        return value as ReactNode;
     };
 
     // Helper function to render action column

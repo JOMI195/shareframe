@@ -33,7 +33,7 @@ const Changelogs: React.FC = () => {
             loadAllChangelogs();
         }
         cleanUpdDeactivatedIds();
-    }, [changelogIds]);
+    }, [loadAllChangelogs, cleanUpdDeactivatedIds, changelogIds]);
 
     return (
         <Container maxWidth="md">

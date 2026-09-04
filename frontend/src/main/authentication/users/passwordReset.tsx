@@ -63,7 +63,7 @@ export default function PasswordReset() {
     initialValues: initialValues,
     validationSchema: validationSchema,
     enableReinitialize: true,
-    onSubmit: (values: any) => {
+    onSubmit: (values) => {
       handleResetClick();
       dispatch(resetPassword(values));
       setInitialValues({

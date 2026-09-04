@@ -1,48 +1,46 @@
 import { Middleware } from "redux";
+import { isAxiosError } from "axios";
 import http from "@/services/httpService.ts";
 import * as actions from "@/common/utils/constants/api.constants.tsx";
+import { ApiRequestPayload } from "@/common/utils/constants/api.constants.tsx";
 
 interface ApiRequestAction {
   type: string;
-  payload: {
-    url: string;
-    method: string;
-    data?: any;
-    headers?: any;
-    onStart?: string;
-    onSuccess?: string;
-    onError?: string;
-    onStartPayload?: any;
-    onSuccessPayload?: any;
-    onErrorPayload?: any;
-  };
+  payload: ApiRequestPayload;
 }
 
-const isApiRequestAction = (action: any): action is ApiRequestAction => {
-  return action.type === actions.apiRequest.type && action.payload !== undefined;
+const isApiRequestAction = (action: unknown): action is ApiRequestAction => {
+  if (typeof action !== "object" || action === null) return false;
+  const candidate = action as Partial<ApiRequestAction>;
+  return candidate.type === actions.apiRequest.type && candidate.payload !== undefined;
 };
 
 // Pulls the backend's own message out of a DRF error body; 413 has an html body.
-const getErrorMessage = (error: any): string => {
-  if (error?.response?.status === 413) {
+const getErrorMessage = (error: unknown): string => {
+  if (!isAxiosError(error)) {
+    return error instanceof Error ? error.message : "Unbekannter Fehler";
+  }
+
+  if (error.response?.status === 413) {
     return "Die Datei ist zu groß.";
   }
 
-  const data = error?.response?.data;
+  const data = error.response?.data;
 
   if (typeof data === "string" && data.trim() && !data.trimStart().startsWith("<")) {
     return data;
   }
 
   if (data && typeof data === "object") {
-    if (typeof data.detail === "string") return data.detail;
+    const fields = data as Record<string, unknown>;
+    if (typeof fields.detail === "string") return fields.detail;
 
-    const firstValue = Object.values(data)[0];
+    const firstValue = Object.values(fields)[0];
     if (Array.isArray(firstValue) && typeof firstValue[0] === "string") return firstValue[0];
     if (typeof firstValue === "string") return firstValue;
   }
 
-  return error?.message ?? "Unbekannter Fehler";
+  return error.message ?? "Unbekannter Fehler";
 };
 
 const apiMiddleware: Middleware =
@@ -88,7 +86,7 @@ const apiMiddleware: Middleware =
             });
           }
           return onSuccessPayload ?? response.data;
-        } catch (error: any) {
+        } catch (error) {
           const message = getErrorMessage(error);
           dispatch(actions.apiFailed(message));
           if (onError) {

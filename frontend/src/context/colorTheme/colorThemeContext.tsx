@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, createContext, useContext, useEffect } from 'react';
+import React, { PropsWithChildren, useEffect } from 'react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
@@ -6,27 +6,7 @@ import dark from '@/common/themes/darkTheme';
 import { ThemeProvider } from '@mui/material';
 import { RootState, useAppDispatch, useAppSelector } from '@/store';
 import { designSelected, getDesign } from '@/store/ui/settings/settings.slice';
-
-type ColorMode = 'light' | 'dark';
-type Theme = typeof light | typeof dark;
-type IconComponent = typeof LightModeIcon | typeof DarkModeIcon;
-
-interface ColorThemeContextType {
-    theme: Theme;
-    toggleColorMode: () => void;
-    colorMode: ColorMode;
-    iconComponent: IconComponent;
-}
-
-const ColorThemeContext = createContext<ColorThemeContextType | undefined>(undefined);
-
-export const useColorThemeContext = () => {
-    const context = useContext(ColorThemeContext);
-    if (!context) {
-        throw new Error('useColorThemeContext must be used within a ColorThemeProvider');
-    }
-    return context;
-};
+import { ColorMode, ColorThemeContext, ColorThemeContextType, IconComponent } from './colorThemeContextValue';
 
 export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const dispatch = useAppDispatch();

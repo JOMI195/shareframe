@@ -11,13 +11,15 @@ export interface IRegisterFrameForm {
     public_serial_number: string
 }
 
-export const isIFrameResponse = (obj: any): obj is IFrame => {
+export const isIFrameResponse = (obj: unknown): obj is IFrame => {
+    const candidate = obj as IFrame;
+
     return (
-        obj &&
-        typeof obj.id === 'number' &&
-        typeof obj.public_serial_number === 'string' &&
-        typeof obj.is_active === 'boolean' &&
-        typeof obj.registered_at === 'string'
+        candidate &&
+        typeof candidate.id === 'number' &&
+        typeof candidate.public_serial_number === 'string' &&
+        typeof candidate.is_active === 'boolean' &&
+        typeof candidate.registered_at === 'string'
     );
 }
 
@@ -26,10 +28,12 @@ export interface IFrameOTP {
     expires_in_minutes: string;
 }
 
-export const isIFrameOTP = (obj: any): obj is IFrameOTP => {
+export const isIFrameOTP = (obj: unknown): obj is IFrameOTP => {
+    const candidate = obj as IFrameOTP;
+
     return (
-        obj &&
-        typeof obj.otp === 'string' &&
-        typeof obj.expires_in_minutes === 'string'
+        candidate &&
+        typeof candidate.otp === 'string' &&
+        typeof candidate.expires_in_minutes === 'string'
     );
 }

@@ -19,7 +19,7 @@ const UserSettings = () => {
 
   useEffect(() => {
     dispatch(loadMyUserProfile());
-  }, []);
+  }, [dispatch]);
 
   const tabs = [
     {

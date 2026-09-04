@@ -7,7 +7,7 @@ import { getAppSettingsUrl, getSettingsUrl } from '@/assets/endpoints/app/settin
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 import Logo from '../../logo';
 
-const StyledLink = styled(Link)(({ }) => ({
+const StyledLink = styled(Link)(() => ({
     color: 'inherit',
     textDecoration: 'none',
     '&:hover': {

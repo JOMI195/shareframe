@@ -4,6 +4,7 @@ import { getApi, getChangelogIds, getChangelogs } from '@/store/entities/changel
 import { clearOutdatedDeactivatedIds, toggleChangelogDeactivation } from '@/store/ui/changelogs/changelogs.actions';
 import { getDeactivatedIds } from '@/store/ui/changelogs/changelogs.slice';
 import { useSelector } from 'react-redux';
+import { useCallback } from 'react';
 
 export const useChangelogs = () => {
     const dispatch = useAppDispatch();
@@ -12,24 +13,24 @@ export const useChangelogs = () => {
     const changelogs = useSelector(getChangelogs);
     const deactivatedIds = useSelector(getDeactivatedIds);
 
-    const loadChangelogIds = () => {
+    const loadChangelogIds = useCallback(() => {
         dispatch(fetchChangelogIds());
-    };
+    }, [dispatch]);
 
-    const loadChangelogs = () => {
+    const loadChangelogs = useCallback(() => {
         dispatch(fetchActiveChangelogs());
-    };
+    }, [dispatch]);
 
-    const cleanUpdDeactivatedIds = () => {
+    const cleanUpdDeactivatedIds = useCallback(() => {
         // Callers fire this on mount, before the ids are fetched; an empty list would drop every dismissal.
         if (changelogIds.length === 0) return;
         dispatch(clearOutdatedDeactivatedIds(changelogIds.map(log => log.id)));
-    };
+    }, [dispatch, changelogIds]);
 
-    const loadAllChangelogs = () => {
+    const loadAllChangelogs = useCallback(() => {
         const allIds = changelogIds.map(item => item.id);
         dispatch(fetchChangelogsByIds(allIds));
-    };
+    }, [dispatch, changelogIds]);
 
     const toggleChangelogActive = (id: number) => {
         dispatch(toggleChangelogDeactivation(id));

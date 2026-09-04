@@ -4,7 +4,7 @@ import Toolbar from '@mui/material/Toolbar';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Tooltip from '@mui/material/Tooltip';
-import { useColorThemeContext } from '@/context/colorTheme/colorThemeContext';
+import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
 import { Divider, useMediaQuery, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';

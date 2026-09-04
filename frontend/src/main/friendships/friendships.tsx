@@ -2,7 +2,8 @@ import React, { useEffect } from "react";
 import { Badge, Box, Container, Divider, Tab, Tabs } from "@mui/material";
 import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
-import CustomTabPanel, { a11yProps } from "./tabs/tabs";
+import CustomTabPanel from "./tabs/tabs";
+import { a11yProps } from "./tabs/a11yProps";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
@@ -47,7 +48,7 @@ const Friendships: React.FC = () => {
 
     useEffect(() => {
         dispatch(fetchFriendships());
-    }, []);
+    }, [dispatch]);
 
     const tabStyle = {
         alignItems: 'center',

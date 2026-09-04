@@ -115,7 +115,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                     }
                 }, 200);
             }
-        } catch (error) {
+        } catch {
             //console.error('Error handling file selection:', error);
             // Reset input on error
             if (inputRef.current) {

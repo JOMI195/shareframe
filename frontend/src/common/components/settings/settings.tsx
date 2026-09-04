@@ -8,7 +8,7 @@ import { useLocation } from "react-router";
 
 interface SettingsTab {
     label: string;
-    icon: React.ReactElement<any>;
+    icon: React.ReactElement;
     content: React.ReactNode;
 }
 

@@ -44,20 +44,22 @@ export interface ISentImagesFilters {
     receiver: string;
 }
 
-export const isIImage = (obj: any): obj is IImage => {
+export const isIImage = (obj: unknown): obj is IImage => {
+    const candidate = obj as IImage;
+
     return (
-        obj &&
-        typeof obj.id === 'number' &&
-        typeof obj.name === 'string' &&
-        typeof obj.size === 'number' &&
-        typeof obj.width === 'number' &&
-        typeof obj.height === 'number' &&
-        typeof obj.format === 'string' &&
-        typeof obj.created_at === 'string' &&
-        typeof obj.url === 'string' &&
-        Array.isArray(obj.variants) &&
-        obj.variants.every(
-            (variant: any) =>
+        candidate &&
+        typeof candidate.id === 'number' &&
+        typeof candidate.name === 'string' &&
+        typeof candidate.size === 'number' &&
+        typeof candidate.width === 'number' &&
+        typeof candidate.height === 'number' &&
+        typeof candidate.format === 'string' &&
+        typeof candidate.created_at === 'string' &&
+        typeof candidate.url === 'string' &&
+        Array.isArray(candidate.variants) &&
+        candidate.variants.every(
+            (variant: IImageVariant) =>
                 typeof variant.url === 'string' &&
                 (variant.size_name === 'thumbnail' || variant.size_name === 'medium' || variant.size_name === 'large') &&
                 typeof variant.width === 'number' &&

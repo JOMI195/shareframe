@@ -60,7 +60,7 @@ export default function SignIn() {
       dispatch(loadMyUserProfile());
       navigate(getDashboardUrl());
     }
-  }, [user]);
+  }, [dispatch, navigate, user]);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -96,7 +96,7 @@ export default function SignIn() {
     initialValues: initialValues,
     validationSchema: validationSchema,
     enableReinitialize: true,
-    onSubmit: async (values: any) => {
+    onSubmit: async (values) => {
       await dispatch(authenticateUser(values));
       if (localStorage.getItem("loggedIn") !== "true") {
         setErrorMessage("Bitte überprüfe deine E-Mail-Adresse und dein Passwort auf Tippfehler (Groß-/ Kleinschreibung beachten). Falls dein Konto noch nicht aktiviert wurde, prüfe bitte deine E-Mails auf die Aktivierungsmail. Versuche es anschließend erneut. Bei wiederholten Problemen kontaktiere bitte unseren Support.");

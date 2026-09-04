@@ -4,12 +4,14 @@ export interface ICoreUser {
     username: string;
 }
 
-export const isICoreUser = (obj: any): obj is ICoreUser => {
+export const isICoreUser = (obj: unknown): obj is ICoreUser => {
+    const candidate = obj as ICoreUser;
+
     return (
-        obj &&
-        typeof obj.id === 'number' &&
-        typeof obj.email === 'string' &&
-        typeof obj.username === 'string'
+        candidate &&
+        typeof candidate.id === 'number' &&
+        typeof candidate.email === 'string' &&
+        typeof candidate.username === 'string'
     );
 }
 

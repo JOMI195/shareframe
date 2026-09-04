@@ -30,7 +30,7 @@ const BuildVersionChecker: React.FC = () => {
     return () => {
       window.removeEventListener('focus', getAppVersion);
     };
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(fetchAppVersion());

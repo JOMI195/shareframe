@@ -1,13 +1,9 @@
 import React from 'react';
-import ReactMarkdown, { Components } from 'react-markdown';
+import ReactMarkdown, { Components, Options } from 'react-markdown';
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 
-interface MarkdownImagesInterceptProps {
+interface MarkdownImagesInterceptProps extends Omit<Options, 'children' | 'components'> {
     children: string;
-    className?: string;
-    remarkPlugins?: any[];
-    rehypePlugins?: any[];
-    [key: string]: any; // For additional props passed to ReactMarkdown
 }
 
 /**

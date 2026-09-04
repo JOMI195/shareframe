@@ -28,7 +28,8 @@ const FriendshipDeleteDialog = () => {
     const handleConfirmDelete = async () => {
         try {
             if (friendshipToDelete !== undefined) dispatch(deleteFriendship(friendshipToDelete.id))
-        } catch (error) {
+        } catch {
+            // cleanup happens in finally
         } finally {
             handleDialogClose();
         }

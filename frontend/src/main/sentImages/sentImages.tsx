@@ -6,9 +6,11 @@ import { fetchSentImagesPaginated, setSentImagesPaginatedPage } from "@/store/en
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import { getSentImagesFilters, getSentImagesPaginated, getSentImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
+import { useLocation } from "react-router";
 
 const SentImages: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { pathname } = useLocation();
 
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
@@ -31,12 +33,12 @@ const SentImages: React.FC = () => {
 
     useEffect(() => {
         dispatch(setSentImagesPaginatedPage(1));
-    }, [window.location.pathname]);
+    }, [dispatch, pathname]);
 
     useEffect(() => {
         fetchSentImagesPaginatedWithFilters();
         dispatch(fetchFriendships());
-    }, [fetchSentImagesPaginatedWithFilters]);
+    }, [dispatch, fetchSentImagesPaginatedWithFilters]);
 
     return (
         <Container maxWidth={"md"} disableGutters>

@@ -77,7 +77,7 @@ export default function PasswordResetConfirmation() {
     initialValues: initialValues,
     validationSchema: validationSchema,
     enableReinitialize: true,
-    onSubmit: (values: any) => {
+    onSubmit: (values) => {
       navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
       dispatch(resetPasswordConfirm(values));
       setInitialValues({
