@@ -99,18 +99,32 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     }, [url, isVisible, onError]);
 
     if (showSkeleton) {
-        const maxHeight = typeof style?.maxHeight === 'number' ? `${style.maxHeight}px` : style?.maxHeight;
+        // A hidden img of the same ratio reserves the box: percentage widths collapse when the parent is shrink-to-fit.
+        if (aspectRatio) {
+            const ratioSrc = `data:image/svg+xml;utf8,${encodeURIComponent(
+                `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="${Math.round(1000 / aspectRatio)}"/>`
+            )}`;
 
-        // Same box the img settles into: container width, capped so a tall image can't widen past its ratio.
-        const skeletonStyle: React.CSSProperties = aspectRatio && maxHeight
-            ? { ...style, width: '100%', maxWidth: `calc(${maxHeight} * ${aspectRatio})`, height: 'auto', aspectRatio }
-            : { width: '100%', height: '100%', ...style };
+            return (
+                <div
+                    ref={imgRef}
+                    style={{ position: 'relative', display: 'inline-block', overflow: 'hidden', ...style }}
+                >
+                    <img src={ratioSrc} alt="" style={{ ...style, display: 'block', visibility: 'hidden' }} />
+                    <Skeleton
+                        variant="rectangular"
+                        animation="wave"
+                        style={{ position: 'absolute', inset: 0, borderRadius: style?.borderRadius }}
+                    />
+                </div>
+            );
+        }
 
         return (
             <Skeleton
                 variant="rectangular"
                 animation="wave"
-                style={skeletonStyle}
+                style={{ width: '100%', height: '100%', ...style }}
                 ref={imgRef}
             />
         );
