@@ -5,6 +5,10 @@ import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import Forward30Icon from '@mui/icons-material/Forward30';
 import Replay30Icon from '@mui/icons-material/Replay30';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 
@@ -13,6 +17,7 @@ interface NavigationProps {
     onZoom: (zoom: number) => void;
     rotation: number;
     onRotation: (rotation: number) => void;
+    onMove: (dx: number, dy: number) => void;
     onCenter: () => void;
     onCropperReset: () => void;
     disabled: boolean;
@@ -30,6 +35,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     zoom,
     rotation,
     onRotation,
+    onMove,
     onCenter,
     onCropperReset,
     ZOOM_FACTOR,
@@ -208,6 +214,93 @@ export const Navigation: React.FC<NavigationProps> = ({
                     sx={{ color: 'text.secondary', ml: 1 }}
                 >
                     <Replay30Icon />
+                </IconButton>
+            </Box>
+            <Box
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                    borderRadius: 1,
+                    bgcolor: (theme) => theme.palette.background.default,
+                    pl: 2,
+                    pr: 2,
+                    py: 0.5,
+                    mt: 1,
+                    gap: 1
+                }}>
+                <Typography variant='body2' sx={{
+                    width: 60
+                }}>
+                    Position
+                </Typography>
+                <IconButton
+                    onClick={() => onMove(-1, 0)}
+                    disabled={disabled}
+                    aria-label="Nach links verschieben"
+                    sx={{
+                        flex: 1,
+                        py: 0.25,
+                        borderRadius: 1,
+                        color: 'text.secondary',
+                        bgcolor: 'background.paper',
+                        border: 1,
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <ArrowBackIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                    onClick={() => onMove(0, -1)}
+                    disabled={disabled}
+                    aria-label="Nach oben verschieben"
+                    sx={{
+                        flex: 1,
+                        py: 0.25,
+                        borderRadius: 1,
+                        color: 'text.secondary',
+                        bgcolor: 'background.paper',
+                        border: 1,
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <ArrowUpwardIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                    onClick={() => onMove(0, 1)}
+                    disabled={disabled}
+                    aria-label="Nach unten verschieben"
+                    sx={{
+                        flex: 1,
+                        py: 0.25,
+                        borderRadius: 1,
+                        color: 'text.secondary',
+                        bgcolor: 'background.paper',
+                        border: 1,
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <ArrowDownwardIcon fontSize="small" />
+                </IconButton>
+                <IconButton
+                    onClick={() => onMove(1, 0)}
+                    disabled={disabled}
+                    aria-label="Nach rechts verschieben"
+                    sx={{
+                        flex: 1,
+                        py: 0.25,
+                        borderRadius: 1,
+                        color: 'text.secondary',
+                        bgcolor: 'background.paper',
+                        border: 1,
+                        borderColor: 'divider',
+                        '&:hover': { bgcolor: 'action.hover' }
+                    }}
+                >
+                    <ArrowForwardIcon fontSize="small" />
                 </IconButton>
             </Box>
             <Grid

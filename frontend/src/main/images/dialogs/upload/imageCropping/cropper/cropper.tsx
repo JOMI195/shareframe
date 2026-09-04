@@ -3,7 +3,8 @@ import EasyCropper, { Area } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
 
-const ZOOM_FACTOR = 0.1;
+const ZOOM_FACTOR = 0.05;
+const MOVE_STEP = 5;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 4;
 
@@ -92,6 +93,9 @@ const Cropper: React.FC<CropperProps> = ({
 
     const onRotation = (newZoom: number) => setRotation(newZoom);
 
+    const onMove = (dx: number, dy: number) =>
+        setCrop((c) => ({ x: c.x + dx * MOVE_STEP, y: c.y + dy * MOVE_STEP }));
+
     const onCenter = () => setCrop({ x: 0, y: 0 });
 
     const onCropperReset = () => {
@@ -123,6 +127,7 @@ const Cropper: React.FC<CropperProps> = ({
                             aspect={800 / 480}
                             onCropChange={onCropChange}
                             onCropComplete={onCropComplete}
+                            onCropAreaChange={onCropComplete}
                             onZoomChange={onZoom}
                             onRotationChange={(newRotation) => {
                                 if (!isTouching) {
@@ -141,6 +146,7 @@ const Cropper: React.FC<CropperProps> = ({
                         onZoom={onZoom}
                         rotation={rotation}
                         onRotation={onRotation}
+                        onMove={onMove}
                         onCenter={onCenter}
                         onCropperReset={onCropperReset}
                         disabled={false}
