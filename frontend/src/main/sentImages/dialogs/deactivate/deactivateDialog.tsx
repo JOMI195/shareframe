@@ -41,11 +41,13 @@ const SentImageDeactivateDialog = () => {
         <Dialog
             fullScreen={matches ? false : true}
             open={deactivateDialog.open}
-            TransitionComponent={matches ? ZoomTransition : SlideTransition}
             onClose={handleDialogClose}
             aria-describedby='deactivate-image-dialog'
             maxWidth="sm"
             fullWidth
+            slots={{
+                transition: matches ? ZoomTransition : SlideTransition
+            }}
         >
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -69,10 +71,18 @@ const SentImageDeactivateDialog = () => {
                 <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von ${sentImageToDeactivate?.reciever === user.me.username ? "deinen" : `${sentImageToDeactivate?.reciever}s`} Bilderrahmen entfernt und dort nicht mehr angezeigt.`}</Typography>
                 <Grid
                     container
-                    display={"flex"} justifyContent={"space-between"} alignItems={"center"}
                     spacing={2}
-                >
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                    }}>
+                    <Grid
+                        sx={{ order: { xs: 4, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleDialogClose}
                             color="primary"
@@ -82,7 +92,12 @@ const SentImageDeactivateDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 3, md: 3 } }}>
+                    <Grid
+                        sx={{ order: { xs: 3, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleConfirmDeactivate}
                             color="error"

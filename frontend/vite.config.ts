@@ -1,10 +1,10 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import compression from 'vite-plugin-compression2';
-import prerenderPlugin from './vite/prerenderPlugin';
+import { compression, defineAlgorithm } from 'vite-plugin-compression2';
+import prerenderPlugin from './vite/prerenderPlugin.ts';
 
-const envDir = path.resolve(__dirname, '../');
+const envDir = path.resolve(import.meta.dirname, '../');
 
 export default defineConfig(({ mode }) => {
   return {
@@ -12,7 +12,7 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       compression({
-        algorithm: 'brotliCompress',
+        algorithms: [defineAlgorithm('brotliCompress')],
         include: /\.(js|css|html|svg|json|txt|ico|xml)$/,
         deleteOriginalAssets: false,
       }),
@@ -32,11 +32,11 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
+        '@': path.resolve(import.meta.dirname, 'src'),
       },
     },
     optimizeDeps: {
-      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react', '@mui/x-data-grid'],
+      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react'],
     },
     define: {
       'process.env': {

@@ -103,7 +103,11 @@ const SentImagesGallery = () => {
                 width: '100%',
                 overflow: 'hidden'
             }}>
-                <Box display={"flex"} alignItems={"center"}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center"
+                    }}>
                     <SendIcon sx={{ fontSize: '1rem' }} />
                     <Typography
                         noWrap
@@ -117,7 +121,11 @@ const SentImagesGallery = () => {
                         {isSender ? 'Du' : sentImage.sender}
                     </Typography>
                 </Box>
-                <Box display={"flex"} alignItems={"center"}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center"
+                    }}>
                     <PanoramaIcon sx={{ fontSize: '1rem' }} />
                     <Typography
                         noWrap
@@ -135,7 +143,7 @@ const SentImagesGallery = () => {
         );
     };
 
-    const LoadingSkeleton = () => (
+    const renderLoadingSkeleton = () => (
         <ImageList cols={cols} gap={8}>
             {[...Array(cols * SKELETON_COLS)].map((_, index) => (
                 <ImageListItem key={index}>
@@ -153,11 +161,7 @@ const SentImagesGallery = () => {
         </ImageList>
     );
 
-    interface PaginationComponentProps {
-        showCount?: boolean;
-    }
-
-    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+    const renderPagination = (showCount = false) => {
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
                 {loading ? (
@@ -178,10 +182,14 @@ const SentImagesGallery = () => {
 
                         {showCount && (
                             <>
-                                <Typography textAlign={"center"} variant="subtitle2" color="textSecondary">
+                                <Typography variant="subtitle2" color="textSecondary" sx={{
+                                    textAlign: "center"
+                                }}>
                                     {sentImagesPaginated.count} geteilte{sentImagesPaginated.count !== 1 ? " Fotos" : "s Foto"}
                                 </Typography>
-                                <Typography textAlign={"center"} variant="caption" color="textSecondary">
+                                <Typography variant="caption" color="textSecondary" sx={{
+                                    textAlign: "center"
+                                }}>
                                     (Abgelaufene Aktivität wird nach 14 Tagen gelöscht)
                                 </Typography>
                             </>
@@ -198,12 +206,8 @@ const SentImagesGallery = () => {
                 onFiltersChange={handleFiltersChange}
                 disabled={loading}
             />
-            {isSmallScreen && currentPage > 1 && (
-                <PaginationComponent />
-            )}
-            {(loading || friendshipsLoading) ? (
-                <LoadingSkeleton />
-            ) : sentImagesPaginated.results.length !== 0 ? (
+            {isSmallScreen && currentPage > 1 && renderPagination()}
+            {(loading || friendshipsLoading) ? renderLoadingSkeleton() : sentImagesPaginated.results.length !== 0 ? (
                 <ImageList cols={cols} gap={8}>
                     {sentImagesPaginated.results.map((sentImage) => {
                         const expiryDate = new Date(sentImage.expires_at);
@@ -254,7 +258,7 @@ const SentImagesGallery = () => {
                 <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden"} />
             )}
 
-            <PaginationComponent showCount={true} />
+            {renderPagination(true)}
         </Stack >
     );
 };

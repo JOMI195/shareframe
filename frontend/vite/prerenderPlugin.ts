@@ -11,8 +11,8 @@ import {
   canonicalUrl,
   prerenderedPages,
   type PageMeta,
-} from "../src/seo/pageMeta";
-import { prerenderMarkup } from "../src/seo/prerenderMarkup";
+} from "../src/seo/pageMeta.ts";
+import { prerenderMarkup } from "../src/seo/prerenderMarkup.ts";
 
 const compress = promisify(brotliCompress);
 

@@ -87,7 +87,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const LoadingSkeletonCard = () => (
+    const renderLoadingSkeletonCard = () => (
         <Card
             sx={{
                 position: "relative",
@@ -111,7 +111,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         </Card>
     );
 
-    const FriendRequestCard = ({ friendship }: { friendship: IFriendship }) => {
+    const renderFriendRequestCard = (friendship: IFriendship) => {
         const isMyRequest = friendship.sender === user.me.username;
 
         const friend =
@@ -148,7 +148,9 @@ const FriendshipRequestsGallery: React.FC = () => {
                         <Stack
                             direction="row"
                             spacing={1}
-                            alignItems="center"
+                            sx={{
+                                alignItems: "center"
+                            }}
                         >
                             {!isMyRequest && friendship.status !== "rejected" && (
                                 <Tooltip title="Freundschaftsanfrage ablehnen">
@@ -180,11 +182,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         );
     };
 
-    interface PaginationComponentProps {
-        showCount?: boolean;
-    }
-
-    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+    const renderPagination = (showCount = false) => {
         return (
             <Box
                 sx={{
@@ -211,7 +209,9 @@ const FriendshipRequestsGallery: React.FC = () => {
                         )}
 
                         {showCount && (
-                            <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                            <Typography variant="subtitle2" color="textSecondary" sx={{
+                                textAlign: "center"
+                            }}>
                                 {filteredRequests.length} Freundschaftsanfrage{filteredRequests.length !== 1 ? "n" : ""}
                             </Typography>
                         )}
@@ -223,15 +223,19 @@ const FriendshipRequestsGallery: React.FC = () => {
 
     return (
         <Stack spacing={2}>
-            {isSmallScreen && currentPage > 1 && (
-                <PaginationComponent />
-            )}
+            {isSmallScreen && currentPage > 1 && renderPagination()}
             <Box sx={{ px: 2 }}>
                 {friendshipsLoading ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                            <Grid item key={index} xs={6} sm={4} md={3}>
-                                <LoadingSkeletonCard />
+                            <Grid
+                                key={index}
+                                size={{
+                                    xs: 6,
+                                    sm: 4,
+                                    md: 3
+                                }}>
+                                {renderLoadingSkeletonCard()}
                             </Grid>
                         ))}
                     </Grid>
@@ -239,8 +243,14 @@ const FriendshipRequestsGallery: React.FC = () => {
                     <Grid container spacing={2}>
                         {filteredRequests
                             .map((friendship) => (
-                                <Grid item key={friendship.id} xs={6} sm={4} md={3}>
-                                    <FriendRequestCard friendship={friendship} />
+                                <Grid
+                                    key={friendship.id}
+                                    size={{
+                                        xs: 6,
+                                        sm: 4,
+                                        md: 3
+                                    }}>
+                                    {renderFriendRequestCard(friendship)}
                                 </Grid>
                             ))}
                     </Grid>
@@ -250,7 +260,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                 )}
             </Box>
 
-            <PaginationComponent showCount={true} />
+            {renderPagination(true)}
         </Stack>
     );
 };

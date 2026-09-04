@@ -51,7 +51,9 @@ const WeeklyActivity: FC<WeeklyActivityProps> = ({ activityData }) => {
                             mr: 1,
                             borderRadius: 1
                         }} />
-                        <Typography variant="caption" color="text.secondary">Gesendet</Typography>
+                        <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                        }}>Gesendet</Typography>
                     </Box>
                     <Box sx={{ display: "flex", alignItems: "center" }}>
                         <Box sx={{
@@ -61,7 +63,9 @@ const WeeklyActivity: FC<WeeklyActivityProps> = ({ activityData }) => {
                             mr: 1,
                             borderRadius: 1
                         }} />
-                        <Typography variant="caption" color="text.secondary">Erhalten</Typography>
+                        <Typography variant="caption" sx={{
+                            color: "text.secondary"
+                        }}>Erhalten</Typography>
                     </Box>
                 </Box>
             </CardContent>

@@ -57,11 +57,13 @@ const RegisterFrameDialog: React.FC = () => {
     <Dialog
       fullScreen={matches ? false : true}
       open={open}
-      TransitionComponent={matches ? ZoomTransition : SlideTransition}
       onClose={handleDialogClose}
       aria-describedby='dialog-slide-upload'
       maxWidth="xs"
       fullWidth
+      slots={{
+        transition: matches ? ZoomTransition : SlideTransition
+      }}
     >
       {!matches ? (
         <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -90,7 +92,9 @@ const RegisterFrameDialog: React.FC = () => {
           p: 2
         }}>
           <Stack spacing={2}>
-            <Typography variant="body2" color="text.secondary">
+            <Typography variant="body2" sx={{
+              color: "text.secondary"
+            }}>
               Bitte gebe hier die Seriennummer des Bilderrahmens ein, welchen du hinzufügen möchtest
             </Typography>
             <Box
@@ -101,7 +105,7 @@ const RegisterFrameDialog: React.FC = () => {
               sx={{ mt: 3 }}
             >
               <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <TextField
                     id='friend_code'
                     name='public_serial_number'
@@ -122,12 +126,14 @@ const RegisterFrameDialog: React.FC = () => {
                     }
                     fullWidth
                     variant='outlined'
-                    inputProps={{
-                      style: { textTransform: 'uppercase' }
+                    slotProps={{
+                      htmlInput: {
+                        style: { textTransform: 'uppercase' }
+                      }
                     }}
                   />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                   <Button
                     type='submit'
                     fullWidth
@@ -137,7 +143,11 @@ const RegisterFrameDialog: React.FC = () => {
                     {'Hinzufügen'}
                   </Button>
                 </Grid>
-                <Grid item xs={12} sm={12}>
+                <Grid
+                  size={{
+                    xs: 12,
+                    sm: 12
+                  }}>
                   <Button
                     type="button"
                     fullWidth

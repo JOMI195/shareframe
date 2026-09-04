@@ -68,23 +68,39 @@ export default function ContactForm() {
                     width: "100%"
                 }}
             >
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <Typography variant="h2">
                         Kontaktiere uns
                     </Typography>
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <Typography variant="h6">
                         Hast du Fragen, Anregungen oder möchtest einen Bug melden? Nutze einfach das folgende Formular, um uns dein Anliegen mitzuteilen. Wir freuen uns auf dein Feedback und werden uns so schnell wie möglich bei dir melden. Bitte gib deinen Namen den Betreff, deine E-Mail-Adresse und deine Nachricht an uns an.
                     </Typography>
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <Typography variant="body1" sx={{ mt: 2, mb: 5 }}>
                         Alternativ kannst du uns auch direkt eine E-Mail an{" "}
                         <a href="mailto:info@shareframe.de">info@shareframe.de</a> senden.
                     </Typography>
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <TextField
                         id="name"
                         name="name"
@@ -103,7 +119,11 @@ export default function ContactForm() {
                         variant="outlined"
                     />
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <TextField
                         id="email"
                         name="email"
@@ -122,7 +142,11 @@ export default function ContactForm() {
                         variant="outlined"
                     />
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <TextField
                         id="subject"
                         name="subject"
@@ -141,7 +165,11 @@ export default function ContactForm() {
                         variant="outlined"
                     />
                 </Grid>
-                <Grid item xs={12} lg={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}>
                     <TextField
                         id="message"
                         name="message"
@@ -162,7 +190,15 @@ export default function ContactForm() {
                         rows={10}
                     />
                 </Grid>
-                <Grid item xs={12} lg={7} display={"flex"} justifyContent={"center"}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        lg: 7
+                    }}
+                    sx={{
+                        display: "flex",
+                        justifyContent: "center"
+                    }}>
                     <Button
                         sx={{ maxWidth: 300 }}
                         type="submit"

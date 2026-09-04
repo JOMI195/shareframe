@@ -60,18 +60,20 @@ const RequestOTPDialog: React.FC = () => {
   };
 
   useEffect(() => {
-    let timer: NodeJS.Timeout;
-    if (expiresIn !== null && expiresIn > 0) {
-      timer = setInterval(() => {
-        setExpiresIn((prev) => (prev !== null ? prev - 60 : null));
-        const minutes = Math.ceil((expiresIn ?? 0) / 60);
-        setExpiresDisplay(`${minutes}`);
-      }, 60000);
-    } else if (expiresIn !== null && expiresIn <= 0) {
-      setOtp('');
-      setExpiresIn(null);
-      setExpiresDisplay('');
-    }
+    if (expiresIn === null || expiresIn <= 0) return;
+
+    const timer = setInterval(() => {
+      const remaining = expiresIn - 60;
+      if (remaining <= 0) {
+        setOtp('');
+        setExpiresIn(null);
+        setExpiresDisplay('');
+        return;
+      }
+      setExpiresIn(remaining);
+      setExpiresDisplay(`${Math.ceil(expiresIn / 60)}`);
+    }, 60000);
+
     return () => clearInterval(timer);
   }, [expiresIn]);
 
@@ -79,11 +81,13 @@ const RequestOTPDialog: React.FC = () => {
     <Dialog
       fullScreen={matches ? false : true}
       open={dialog.open}
-      TransitionComponent={matches ? ZoomTransition : SlideTransition}
       onClose={handleDialogClose}
       aria-describedby='dialog-slide-upload'
       maxWidth="xs"
       fullWidth
+      slots={{
+        transition: matches ? ZoomTransition : SlideTransition
+      }}
     >
       {!matches ? (
         <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -111,24 +115,36 @@ const RequestOTPDialog: React.FC = () => {
           gap: 2,
           p: 1
         }}>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Generiere ein OTP (One-Time-Password), welches du für bestimmte Authentifizierungen mit deinem Bilderrahmen nutzen kannst.
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Beachte, dass das OTP nur eine kurze Zeit gültig und nur während der Öffnung dieses Dialogs sichtbar ist.
           </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography variant="body2" sx={{
+            color: "text.secondary"
+          }}>
             Du kannst jederzeit ein neues OTP generieren.
           </Typography>
-          <Grid container pt={2} spacing={2} alignItems="center">
+          <Grid
+            container
+            spacing={2}
+            sx={{
+              pt: 2,
+              alignItems: "center"
+            }}>
             {otp && expiresDisplay && (
-              <Grid item xs={12}>
+              <Grid size={12}>
                 <Typography variant="body1" color="error">
                   gültig für: {expiresDisplay} Minuten
                 </Typography>
               </Grid>
             )}
-            <Grid item xs={10}>
+            <Grid size={10}>
               <TextField
                 id='otp'
                 name='otp'
@@ -139,7 +155,7 @@ const RequestOTPDialog: React.FC = () => {
                 variant='outlined'
               />
             </Grid>
-            <Grid item xs={2}>
+            <Grid size={2}>
               <Tooltip
                 title='OTP in die Zwischenablage kopieren'
               >
@@ -151,8 +167,14 @@ const RequestOTPDialog: React.FC = () => {
               </Tooltip>
             </Grid>
           </Grid>
-          <Grid container pt={2} spacing={1} alignItems="center">
-            <Grid item xs={12}>
+          <Grid
+            container
+            spacing={1}
+            sx={{
+              pt: 2,
+              alignItems: "center"
+            }}>
+            <Grid size={12}>
               <Button
                 fullWidth
                 variant='contained'
@@ -162,7 +184,7 @@ const RequestOTPDialog: React.FC = () => {
                 {'Generieren'}
               </Button>
             </Grid>
-            <Grid item xs={12}>
+            <Grid size={12}>
               <Button
                 type="button"
                 fullWidth

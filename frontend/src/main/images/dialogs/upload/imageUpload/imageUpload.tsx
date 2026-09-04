@@ -22,7 +22,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, rem
                 imagePreviews={imagePreviews}
             />
             <Grid container spacing={2} sx={{ mt: 1, alignItems: "center" }}>
-                <Grid item xs={12} md={6} sx={{ mt: { xs: 1, md: 0 } }} order={{ xs: 1, md: 2 }}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 6
+                    }}
+                    sx={{
+                        order: { xs: 1, md: 2 },
+                        mt: { xs: 1, md: 0 }
+                    }}>
                     <Button
                         fullWidth
                         variant="contained"
@@ -32,7 +40,14 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, rem
                         Weiter zum Zuschneiden
                     </Button>
                 </Grid>
-                <Grid item xs={12} md={6} order={{ xs: 2, md: 1 }}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 6
+                    }}
+                    sx={{
+                        order: { xs: 2, md: 1 }
+                    }}>
                     <Button
                         fullWidth
                         variant="outlined"

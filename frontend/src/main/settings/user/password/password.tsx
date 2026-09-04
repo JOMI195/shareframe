@@ -90,7 +90,7 @@ const Security = () => {
             onSubmit={setUserPasswordForm.handleSubmit}
         >
             <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         id='current_password'
                         name='current_password'
@@ -110,29 +110,31 @@ const Security = () => {
                         autoComplete='password'
                         variant='outlined'
                         type={showPassword.current_password ? 'text' : 'password'}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position='end'>
-                                    <IconButton
-                                        aria-label='toggle current password visibility'
-                                        onClick={() =>
-                                            handleClickShowPassword('current_password')
-                                        }
-                                        onMouseDown={handleMouseDownPassword}
-                                        edge='end'
-                                    >
-                                        {showPassword.current_password ? (
-                                            <VisibilityOff />
-                                        ) : (
-                                            <Visibility />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position='end'>
+                                        <IconButton
+                                            aria-label='toggle current password visibility'
+                                            onClick={() =>
+                                                handleClickShowPassword('current_password')
+                                            }
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge='end'
+                                        >
+                                            {showPassword.current_password ? (
+                                                <VisibilityOff />
+                                            ) : (
+                                                <Visibility />
+                                            )}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }
                         }}
                     />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         id='new_password'
                         name='new_password'
@@ -152,29 +154,31 @@ const Security = () => {
                         autoComplete='password'
                         variant='outlined'
                         type={showPassword.new_password ? 'text' : 'password'}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position='end'>
-                                    <IconButton
-                                        aria-label='toggle current password visibility'
-                                        onClick={() =>
-                                            handleClickShowPassword('new_password')
-                                        }
-                                        onMouseDown={handleMouseDownPassword}
-                                        edge='end'
-                                    >
-                                        {showPassword.new_password ? (
-                                            <VisibilityOff />
-                                        ) : (
-                                            <Visibility />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position='end'>
+                                        <IconButton
+                                            aria-label='toggle current password visibility'
+                                            onClick={() =>
+                                                handleClickShowPassword('new_password')
+                                            }
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge='end'
+                                        >
+                                            {showPassword.new_password ? (
+                                                <VisibilityOff />
+                                            ) : (
+                                                <Visibility />
+                                            )}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }
                         }}
                     />
                 </Grid>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         id='re_new_password'
                         name='re_new_password'
@@ -194,38 +198,40 @@ const Security = () => {
                         autoComplete='password'
                         variant='outlined'
                         type={showPassword.re_new_password ? 'text' : 'password'}
-                        InputProps={{
-                            endAdornment: (
-                                <InputAdornment position='end'>
-                                    <IconButton
-                                        aria-label='toggle current password visibility'
-                                        onClick={() =>
-                                            handleClickShowPassword('re_new_password')
-                                        }
-                                        onMouseDown={handleMouseDownPassword}
-                                        edge='end'
-                                    >
-                                        {showPassword.re_new_password ? (
-                                            <VisibilityOff />
-                                        ) : (
-                                            <Visibility />
-                                        )}
-                                    </IconButton>
-                                </InputAdornment>
-                            ),
+                        slotProps={{
+                            input: {
+                                endAdornment: (
+                                    <InputAdornment position='end'>
+                                        <IconButton
+                                            aria-label='toggle current password visibility'
+                                            onClick={() =>
+                                                handleClickShowPassword('re_new_password')
+                                            }
+                                            onMouseDown={handleMouseDownPassword}
+                                            edge='end'
+                                        >
+                                            {showPassword.re_new_password ? (
+                                                <VisibilityOff />
+                                            ) : (
+                                                <Visibility />
+                                            )}
+                                        </IconButton>
+                                    </InputAdornment>
+                                ),
+                            }
                         }}
                     />
                 </Grid>
 
-                <Grid
-                    item
-                    xs={12}
-                    container spacing={2}
-                    justifyContent={"space-between"}
-                >
-                    <Grid item xs={12} md={5}
+                <Grid container spacing={2} size={12} sx={{
+                    justifyContent: "space-between"
+                }}>
+                    <Grid
                         sx={{ order: { xs: 1, md: 2 } }}
-                    >
+                        size={{
+                            xs: 12,
+                            md: 5
+                        }}>
                         <Button
                             type='submit'
                             fullWidth
@@ -237,9 +243,12 @@ const Security = () => {
                         </Button>
                     </Grid>
 
-                    <Grid item xs={12} md={5}
+                    <Grid
                         sx={{ order: { xs: 2, md: 1 } }}
-                    >
+                        size={{
+                            xs: 12,
+                            md: 5
+                        }}>
                         <Button
                             type="button"
                             fullWidth

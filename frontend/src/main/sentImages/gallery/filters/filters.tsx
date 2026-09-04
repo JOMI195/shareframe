@@ -99,7 +99,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     return (
         <Box sx={{ width: '100%', mb: 2 }}>
             <Grid container spacing={2}>
-                <Grid item xs={12} md={3}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}>
                     <FormControl fullWidth disabled={disabled}>
                         <InputLabel id="image-status-filter-label">
                             Status Filter
@@ -117,7 +121,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}>
                     <FormControl fullWidth disabled={disabled}>
                         <InputLabel id="image-shipping-filter-label">
                             Versand Filter
@@ -135,7 +143,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}>
                     <FormControl
                         fullWidth
                         disabled={disabled}
@@ -172,7 +184,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         </FormGroup>
                     </FormControl>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}>
                     <Button
                         fullWidth
                         variant="outlined"
@@ -184,7 +200,11 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         Mehr Filter
                     </Button>
                 </Grid>
-                <Grid item xs={12} md={3}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}>
                     <Button
                         fullWidth
                         variant="outlined"

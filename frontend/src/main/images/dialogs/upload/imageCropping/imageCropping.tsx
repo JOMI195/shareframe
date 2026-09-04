@@ -82,7 +82,11 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     return (
         <Box sx={{ my: 2 }}>
             <Grid container spacing={2}>
-                <Grid item xs={12} md={5}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 5
+                    }}>
                     <Box>
                         <Typography variant="h6" sx={{ mb: 1 }}>
                             Fotos: {uploadedImagesCount}/{totalImages} hochgeladen
@@ -147,7 +151,11 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                     </Box>
                 </Grid>
 
-                <Grid item xs={12} md={7}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 7
+                    }}>
                     <Box sx={{ maxHeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {currentImage && imagePreviews[currentImage.id] && (
                             <Cropper
@@ -158,7 +166,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                             />
                         )}
                         {!currentImage && (
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{
+                                color: "text.secondary"
+                            }}>
                                 Keine Fotos zum Zuschneiden ausgewählt.
                             </Typography>
                         )}
@@ -181,7 +191,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                             <Typography variant="body1">
                                 Kurze Verwendungszeit aktivieren
                             </Typography>
-                            <Typography variant="body2" color="text.secondary">
+                            <Typography variant="body2" sx={{
+                                color: "text.secondary"
+                            }}>
                                 Das Bild muss innerhalb von {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Stunden an deine Freunde gesendet werden und wird anschließend automatisch gelöscht. Gesendete Bilder werden trotz der Löschung weiterhin bis zum Ablauf normal angezeigt.
                             </Typography>
                         </Box>
@@ -191,7 +203,14 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
 
             <Grid container spacing={2} sx={{ mt: { xs: 0, md: 2 }, alignItems: "center" }}>
                 {currentImage && (
-                    <Grid item xs={12} md={6} order={{ xs: 1, md: 3 }}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 6
+                        }}
+                        sx={{
+                            order: { xs: 1, md: 3 }
+                        }}>
                         <Button
                             variant="contained"
                             fullWidth
@@ -203,7 +222,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                     </Grid>
                 )}
                 {isMobile && (
-                    <Grid item xs={12} order={{ xs: 2, md: 1 }}>
+                    <Grid size={12} sx={{
+                        order: { xs: 2, md: 1 }
+                    }}>
                         <Button
                             fullWidth
                             variant="outlined"
@@ -213,7 +234,14 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         </Button>
                     </Grid>
                 )}
-                <Grid item xs={12} md={3} order={{ xs: 3, md: 2 }}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 3
+                    }}
+                    sx={{
+                        order: { xs: 3, md: 2 }
+                    }}>
                     <Button
                         fullWidth
                         variant="outlined"
@@ -223,7 +251,14 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                     </Button>
                 </Grid>
                 {allImagesUploaded && (
-                    <Grid item xs={12} md={3} order={{ xs: 4, md: 1 }}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 3
+                        }}
+                        sx={{
+                            order: { xs: 4, md: 1 }
+                        }}>
                         <Button
                             fullWidth
                             variant="contained"
@@ -235,7 +270,14 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                     </Grid>
                 )}
                 {!allImagesUploaded && (
-                    <Grid item xs={12} md={3} order={{ xs: 5, md: 1 }}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 3
+                        }}
+                        sx={{
+                            order: { xs: 5, md: 1 }
+                        }}>
                         <Button
                             fullWidth
                             variant="outlined"

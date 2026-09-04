@@ -4,7 +4,7 @@ import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
 import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter } from "@/store/ui/sentImages/sentImages.slice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
@@ -25,12 +25,16 @@ const FiltersDialog = () => {
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-    useEffect(() => {
+    const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
+    const dialogFilters = `${filterDialog.open}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
+
+    if (dialogFilters !== syncedFilters) {
+        setSyncedFilters(dialogFilters);
         if (filterDialog.open) {
             setSenderFilterLocal(filterDialog.senderFilter || '');
             setReceiverFilterLocal(filterDialog.receiverFilter || '');
         }
-    }, [filterDialog.open, filterDialog.senderFilter, filterDialog.receiverFilter]);
+    }
 
     const handleDialogClose = () => {
         dispatch(closeFilterDialog());
@@ -98,11 +102,13 @@ const FiltersDialog = () => {
         <Dialog
             fullScreen={!matches}
             open={filterDialog.open}
-            TransitionComponent={matches ? ZoomTransition : SlideTransition}
             onClose={handleDialogClose}
             aria-describedby="filter-dialog"
             maxWidth="sm"
             fullWidth
+            slots={{
+                transition: matches ? ZoomTransition : SlideTransition
+            }}
         >
             <AppBar sx={{ position: 'relative' }} color="inherit">
                 <Toolbar>
@@ -121,11 +127,16 @@ const FiltersDialog = () => {
             </AppBar>
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+                    <Typography
+                        variant="body2"
+                        sx={{
+                            color: "text.secondary",
+                            mb: 3
+                        }}>
                         Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
                     <Grid container spacing={2}>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel shrink>Suche nach Sender</InputLabel>
                                 <Select
@@ -150,7 +161,7 @@ const FiltersDialog = () => {
                                 </Select>
                             </FormControl>
                         </Grid>
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel shrink>Suche nach Empfänger</InputLabel>
                                 <Select
@@ -183,7 +194,11 @@ const FiltersDialog = () => {
                     spacing={2}
                     sx={{ mt: 2 }}
                 >
-                    <Grid item xs={12} sm={4}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            sm: 4
+                        }}>
                         <Button
                             onClick={handleDialogClose}
                             color="primary"
@@ -193,7 +208,11 @@ const FiltersDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            sm: 4
+                        }}>
                         <Button
                             onClick={handleClearFilters}
                             color="inherit"
@@ -204,7 +223,11 @@ const FiltersDialog = () => {
                             Filter löschen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={4}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            sm: 4
+                        }}>
                         <Button
                             onClick={handleApplyFilters}
                             color="primary"

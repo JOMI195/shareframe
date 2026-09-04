@@ -35,7 +35,7 @@ const LoadingSkeleton: FC<LoadingSkeletonProps> = ({ count = 1 }) => {
     return (
         <Grid container spacing={1} sx={{ mb: 2 }}>
             {Array.from({ length: count }).map((_, index) => (
-                <Grid item key={index} xs={12}>
+                <Grid key={index} size={12}>
                     <LoadingSkeletonCard />
                 </Grid>
             ))}

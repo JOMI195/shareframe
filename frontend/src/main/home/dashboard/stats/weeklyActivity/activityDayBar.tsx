@@ -12,9 +12,13 @@ const ActivityDayBar: FC<ActivityDayBarProps> = ({ day, sentCount, receivedCount
 
     return (
         <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
-            <Stack direction="column" spacing={0} alignItems="center">
+            <Stack direction="column" spacing={0} sx={{
+                alignItems: "center"
+            }}>
                 {/* Number for sent count */}
-                <Typography variant="caption" fontWeight="medium" color={theme.palette.success.dark}>
+                <Typography variant="caption" color={theme.palette.success.dark} sx={{
+                    fontWeight: "medium"
+                }}>
                     {sentCount > 0 ? sentCount : ''}
                 </Typography>
 
@@ -45,11 +49,18 @@ const ActivityDayBar: FC<ActivityDayBarProps> = ({ day, sentCount, receivedCount
                 />
 
                 {/* Number for received count */}
-                <Typography variant="caption" fontWeight="medium" color={theme.palette.info.dark}>
+                <Typography variant="caption" color={theme.palette.info.dark} sx={{
+                    fontWeight: "medium"
+                }}>
                     {receivedCount > 0 ? receivedCount : ''}
                 </Typography>
             </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+            <Typography
+                variant="caption"
+                sx={{
+                    color: "text.secondary",
+                    mt: 0.5
+                }}>
                 {day}
             </Typography>
         </Box>

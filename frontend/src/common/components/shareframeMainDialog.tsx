@@ -48,20 +48,23 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
 
     return (
         <Dialog
-            TransitionComponent={!isSmallScreen ? ZoomTransition : SlideTransition}
             maxWidth="xl"
             fullWidth
             fullScreen={isSmallScreen}
             {...dialogProps}
             onClose={onDialogClose}
-            PaperProps={{
-                sx: {
-                    maxHeight: isSmallScreen ? '100%' : '85vh',
-                    display: 'flex',
-                    flexDirection: 'column'
-                }
+            slots={{
+                transition: !isSmallScreen ? ZoomTransition : SlideTransition
             }}
-        >
+            slotProps={{
+                paper: {
+                    sx: {
+                        maxHeight: isSmallScreen ? '100%' : '85vh',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }
+                }
+            }}>
             <AppBar sx={{ position: 'relative', py: 1 }} color='inherit'>
                 <Toolbar variant="dense">
                     <Box sx={{ flex: 1, alignSelf: "center" }}>
@@ -97,7 +100,12 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                     ...dialogContentSx
                 }}
             >
-                <Box display="flex" flexDirection="column" alignItems="center">
+                <Box
+                    sx={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center"
+                    }}>
                     {children}
                 </Box>
             </DialogContent>

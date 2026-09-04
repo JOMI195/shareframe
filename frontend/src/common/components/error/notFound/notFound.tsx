@@ -27,7 +27,9 @@ const NotFound = () => {
                 maxWidth={isSmallScreen ? 150 : 300}
             />
             <Typography variant="h2">404</Typography>
-            <Typography variant="h6" color="text.secondary">
+            <Typography variant="h6" sx={{
+                color: "text.secondary"
+            }}>
                 Seite nicht gefunden
             </Typography>
             <Button

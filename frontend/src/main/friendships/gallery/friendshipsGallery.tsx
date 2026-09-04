@@ -54,7 +54,7 @@ const FriendshipsGallery: React.FC = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const LoadingSkeletonCard = () => (
+    const renderLoadingSkeletonCard = () => (
         <Card
             sx={{
                 position: "relative",
@@ -78,7 +78,7 @@ const FriendshipsGallery: React.FC = () => {
         </Card>
     );
 
-    const FriendCard = ({ friendship }: { friendship: IFriendship }) => {
+    const renderFriendCard = (friendship: IFriendship) => {
         const friend =
             friendship.sender !== user.me.username
                 ? friendship.sender
@@ -127,11 +127,7 @@ const FriendshipsGallery: React.FC = () => {
         );
     };
 
-    interface PaginationComponentProps {
-        showCount?: boolean;
-    }
-
-    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+    const renderPagination = (showCount = false) => {
         return (
             <Box
                 sx={{
@@ -158,7 +154,9 @@ const FriendshipsGallery: React.FC = () => {
                         )}
 
                         {showCount && (
-                            <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                            <Typography variant="subtitle2" color="textSecondary" sx={{
+                                textAlign: "center"
+                            }}>
                                 {friendships.filter((friendship) => friendship.status === "accepted").length} Freund{friendships.filter((friendship) => friendship.status === "accepted").length !== 1 ? "e" : ""}
                             </Typography>
                         )}
@@ -170,15 +168,19 @@ const FriendshipsGallery: React.FC = () => {
 
     return (
         <Stack spacing={2}>
-            {isSmallScreen && currentPage > 1 && (
-                <PaginationComponent />
-            )}
+            {isSmallScreen && currentPage > 1 && renderPagination()}
             <Box sx={{ px: 2 }}>
                 {friendshipsLoading ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                            <Grid item key={index} xs={6} sm={4} md={3}>
-                                <LoadingSkeletonCard />
+                            <Grid
+                                key={index}
+                                size={{
+                                    xs: 6,
+                                    sm: 4,
+                                    md: 3
+                                }}>
+                                {renderLoadingSkeletonCard()}
                             </Grid>
                         ))}
                     </Grid>
@@ -187,8 +189,14 @@ const FriendshipsGallery: React.FC = () => {
                         {currentFriendships
                             .filter((friendship) => friendship.status === "accepted")
                             .map((friendship) => (
-                                <Grid item key={friendship.id} xs={6} sm={4} md={3}>
-                                    <FriendCard friendship={friendship} />
+                                <Grid
+                                    key={friendship.id}
+                                    size={{
+                                        xs: 6,
+                                        sm: 4,
+                                        md: 3
+                                    }}>
+                                    {renderFriendCard(friendship)}
                                 </Grid>
                             ))}
                     </Grid>
@@ -197,7 +205,7 @@ const FriendshipsGallery: React.FC = () => {
                 )}
             </Box>
 
-            <PaginationComponent showCount={true} />
+            {renderPagination(true)}
         </Stack>
     );
 };

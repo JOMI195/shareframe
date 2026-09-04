@@ -155,7 +155,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                 accept={getAcceptedFileTypes()}
             />
             <Grid container spacing={2}>
-                <Grid item xs={12}>
+                <Grid size={12}>
                     {/* Drop Zone */}
                     <Box
                         sx={{
@@ -176,22 +176,42 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                         <Typography variant="h6" gutterBottom>
                             Fotos hierher ziehen
                         </Typography>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                mb: 2
+                            }}>
                             oder
                         </Typography>
                         <Button variant="contained" startIcon={(isMobile && useCamera) ? <CameraAltIcon /> : <PhotoLibraryIcon />}>
                             {(isMobile && useCamera) ? 'Foto aufnehmen' : 'Fotos auswählen'}
                         </Button>
-                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: "block",
+                                mt: 1
+                            }}>
                             {(isMobile && useCamera)
                                 ? 'Klicken Sie hier, um die Kamera zu öffnen'
                                 : 'Klicken Sie hier, um Dateien auszuwählen'
                             }
                         </Typography>
-                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: "block",
+                                mt: 1
+                            }}>
                             {`Nur Bilder mit Dateiendung ${validFileExtensions.join(", ")} werden akzeptiert`}
                         </Typography>
-                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                        <Typography
+                            variant="caption"
+                            sx={{
+                                display: "block",
+                                mt: 1
+                            }}>
                             {`Maximal ${maxFiles} Fotos können gleichzeitig hochgeladen werden`}
                         </Typography>
                     </Box>
@@ -256,7 +276,7 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                 </Grid>
                 {
                     imageStatuses.length > 0 && (
-                        <Grid item xs={12}>
+                        <Grid size={12}>
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="h6" sx={{ mb: 2 }}>
                                     Ausgewählte Fotos

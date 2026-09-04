@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
@@ -44,18 +44,9 @@ export default function PasswordResetConfirmation() {
     event.preventDefault();
   };
 
-  useEffect(() => {
-    setInitialValues({
-      uid: uid as string,
-      token: token as string,
-      new_password: "",
-      re_new_password: "",
-    });
-  }, []);
-
   const [initialValues, setInitialValues] = useState({
-    uid: "",
-    token: "",
+    uid: uid as string,
+    token: token as string,
     new_password: "",
     re_new_password: "",
   });
@@ -100,7 +91,9 @@ export default function PasswordResetConfirmation() {
 
   return (
     <Box>
-      <Typography component="h1" variant="h5" textAlign={"center"}>
+      <Typography component="h1" variant="h5" sx={{
+        textAlign: "center"
+      }}>
         {"Neues Passwort vergeben"}
       </Typography>
       <Box
@@ -111,12 +104,14 @@ export default function PasswordResetConfirmation() {
         sx={{ mt: 3 }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography variant="body1" textAlign={"center"}>
+          <Grid size={12}>
+            <Typography variant="body1" sx={{
+              textAlign: "center"
+            }}>
               {"Bitte vergebe ein neues Passwort um dein altes zurückzusetzen"}
             </Typography>
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="new_password"
               name="new_password"
@@ -137,27 +132,29 @@ export default function PasswordResetConfirmation() {
               variant="outlined"
               required
               type={showPassword.new_password ? "text" : "password"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle current new_password visibility"
-                      onClick={() => handleClickShowPassword("new_password")}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                    >
-                      {showPassword.new_password ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle current new_password visibility"
+                        onClick={() => handleClickShowPassword("new_password")}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword.new_password ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="re_new_password"
               name="re_new_password"
@@ -178,27 +175,33 @@ export default function PasswordResetConfirmation() {
               variant="outlined"
               required
               type={showPassword.new_password ? "text" : "password"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle current new_password visibility"
-                      onClick={() => handleClickShowPassword("new_password")}
-                      onMouseDown={handleMouseDownPassword}
-                      edge="end"
-                    >
-                      {showPassword.new_password ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle current new_password visibility"
+                        onClick={() => handleClickShowPassword("new_password")}
+                        onMouseDown={handleMouseDownPassword}
+                        edge="end"
+                      >
+                        {showPassword.new_password ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <Button
               type="submit"
               fullWidth
@@ -208,7 +211,11 @@ export default function PasswordResetConfirmation() {
               {"Passwort neu vergeben"}
             </Button>
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <Button
               type="button"
               fullWidth

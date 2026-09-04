@@ -57,7 +57,6 @@ export default function SignIn() {
 
   useEffect(() => {
     if (localStorage.getItem("loggedIn") === "true") {
-      setErrorMessage("");
       dispatch(loadMyUserProfile());
       navigate(getDashboardUrl());
     }
@@ -108,7 +107,9 @@ export default function SignIn() {
 
   return (
     <Box>
-      <Typography component="h1" variant="h5" textAlign={"center"}>
+      <Typography component="h1" variant="h5" sx={{
+        textAlign: "center"
+      }}>
         {"Anmelden"}
       </Typography>
       {errorMessage && (
@@ -124,7 +125,7 @@ export default function SignIn() {
         sx={{ mt: 3 }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="email"
               name="email"
@@ -142,23 +143,25 @@ export default function SignIn() {
               fullWidth
               autoComplete="email"
               variant="outlined"
-              InputProps={{
-                endAdornment: signInForm.values.email ? (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="clear email field"
-                      onClick={handleClearEmail}
-                      onMouseDown={handleMouseDownButton}
-                      edge="end"
-                    >
-                      <ClearIcon />
-                    </IconButton>
-                  </InputAdornment>
-                ) : null,
+              slotProps={{
+                input: {
+                  endAdornment: signInForm.values.email ? (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="clear email field"
+                        onClick={handleClearEmail}
+                        onMouseDown={handleMouseDownButton}
+                        edge="end"
+                      >
+                        <ClearIcon />
+                      </IconButton>
+                    </InputAdornment>
+                  ) : null,
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id="password"
               name="password"
@@ -178,23 +181,25 @@ export default function SignIn() {
               autoComplete="password"
               variant="outlined"
               type={showPassword ? "text" : "password"}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle current password visibility"
-                      onClick={() => handleClickShowPassword()}
-                      onMouseDown={handleMouseDownButton}
-                      edge="end"
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label="toggle current password visibility"
+                        onClick={() => handleClickShowPassword()}
+                        onMouseDown={handleMouseDownButton}
+                        edge="end"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button
               type="submit"
               form="sign-in-form"
@@ -205,7 +210,12 @@ export default function SignIn() {
               {"anmelden"}
             </Button>
           </Grid>
-          <Grid item xs={12} display="flex" justifyContent="center">
+          <Grid
+            size={12}
+            sx={{
+              display: "flex",
+              justifyContent: "center"
+            }}>
             <Link
               component={RouterLink}
               to={

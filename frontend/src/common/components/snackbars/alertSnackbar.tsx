@@ -54,8 +54,10 @@ const AlertSnackbar = (
       open={snackbar.open}
       autoHideDuration={10000}
       onClose={handleSnackbarClose}
-      TransitionComponent={Slide}
       sx={{ justifySelf: "center" }}
+      slots={{
+        transition: Slide
+      }}
     >
       <Alert
         severity={snackbar.severity}

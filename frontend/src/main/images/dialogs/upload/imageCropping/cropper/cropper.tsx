@@ -30,6 +30,14 @@ const Cropper: React.FC<CropperProps> = ({
     const [crop, setCrop] = useState({ x: 0, y: 0 });
     const [zoom, setZoom] = useState(1);
     const [isTouching, setIsTouching] = useState(false);
+    const [renderedSrc, setRenderedSrc] = useState(src);
+
+    // rotation is owned by the upload dialog and reset there on image selection
+    if (src !== renderedSrc) {
+        setRenderedSrc(src);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+    }
 
     const getCropperStyles = () => {
         const isLight = theme.palette.mode === 'light';
@@ -66,12 +74,6 @@ const Cropper: React.FC<CropperProps> = ({
             };
         }
     }, []);
-
-    useEffect(() => {
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-        setRotation(0);
-    }, [src, setRotation]);
 
     useEffect(() => {
         if (cropperContainerRef.current) {

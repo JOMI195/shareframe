@@ -8,7 +8,7 @@ import { useLocation } from "react-router";
 
 interface SettingsTab {
     label: string;
-    icon: React.ReactElement;
+    icon: React.ReactElement<any>;
     content: React.ReactNode;
 }
 
@@ -73,10 +73,20 @@ const Settings: React.FC<SettingsProps> = ({ title, tabs, headerAction }) => {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', width: "100%" }}>
             <Grid container spacing={2} sx={{ mb: 2 }}>
-                <Grid item xs={12} sm={6} sx={{ order: { xs: 2, sm: 1 }, textAlign: { xs: "center", sm: "left" } }}>
+                <Grid
+                    sx={{ order: { xs: 2, sm: 1 }, textAlign: { xs: "center", sm: "left" } }}
+                    size={{
+                        xs: 12,
+                        sm: 6
+                    }}>
                     <Typography variant="h4">{title}</Typography>
                 </Grid>
-                <Grid item xs={12} sm={6} sx={{ order: { xs: 1, sm: 2 }, textAlign: { xs: "center", sm: "right" } }}>
+                <Grid
+                    sx={{ order: { xs: 1, sm: 2 }, textAlign: { xs: "center", sm: "right" } }}
+                    size={{
+                        xs: 12,
+                        sm: 6
+                    }}>
                     {headerAction}
                 </Grid>
             </Grid>
@@ -108,7 +118,7 @@ const Settings: React.FC<SettingsProps> = ({ title, tabs, headerAction }) => {
                                     padding: '6px 12px',
                                     mx: "10px",
                                 },
-                                '& .MuiTab-iconWrapper': {
+                                "& .MuiTab-icon": {
                                     marginRight: '8px',
                                 },
                                 pl: 2,

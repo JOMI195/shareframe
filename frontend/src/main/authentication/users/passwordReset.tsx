@@ -74,7 +74,9 @@ export default function PasswordReset() {
 
   return (
     <Box>
-      <Typography component="h1" variant="h5" textAlign={"center"} gutterBottom>
+      <Typography component="h1" variant="h5" gutterBottom sx={{
+        textAlign: "center"
+      }}>
         {"Passwort zurücksetzen"}
       </Typography>
       <Box
@@ -85,12 +87,18 @@ export default function PasswordReset() {
         sx={{ mt: 3 }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography variant="body1" textAlign={"center"}>
+          <Grid size={12}>
+            <Typography variant="body1" sx={{
+              textAlign: "center"
+            }}>
               {"Bitte gib deine Emailadresse ein und wir senden dir ein neues Passwort zu"}
             </Typography>
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <TextField
               id="email"
               name="email"
@@ -111,7 +119,11 @@ export default function PasswordReset() {
               variant="outlined"
             />
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <Button
               type="submit"
               fullWidth
@@ -122,13 +134,19 @@ export default function PasswordReset() {
             </Button>
             {isDisabled && (
               <Box sx={{ display: "flex", justifyContent: "center" }}>
-                <Typography variant="body2" component="span" textAlign={"center"}>
+                <Typography variant="body2" component="span" sx={{
+                  textAlign: "center"
+                }}>
                   Bitte warte {secondsLeft} Sekunden um dein Passwort erneut zurückzusetzen
                 </Typography>
               </Box>
             )}
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <Button
               type="button"
               fullWidth

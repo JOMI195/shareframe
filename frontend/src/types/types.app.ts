@@ -1,5 +1,7 @@
 import { SvgIconComponent } from "@mui/icons-material";
 
+import type { JSX } from "react";
+
 export interface IAccountMenuItem {
     name: string;
     url: string;

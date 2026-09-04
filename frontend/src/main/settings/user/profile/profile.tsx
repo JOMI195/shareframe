@@ -2,7 +2,7 @@ import { Box, Button, Checkbox, FormControlLabel, FormGroup, FormHelperText, Gri
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { getIn, useFormik } from "formik";
 import { IUser, IPatchUserForm } from "@/types";
 import { updateMyUserData } from "@/store/entities/authentication/authentication.actions";
@@ -27,13 +27,13 @@ const Profile = () => {
         })
     });
 
-    const [initialUserPatchValues, setInitialUserPatchValues] = useState<IPatchUserForm>({
+    const initialUserPatchValues: IPatchUserForm = useMemo(() => ({
         username: me.username,
         account: {
             friendship_user_searchable: me.account.friendship_user_searchable,
             friendship_user_search_code: me.account.friendship_user_search_code
         }
-    });
+    }), [me.username, me.account.friendship_user_searchable, me.account.friendship_user_search_code]);
 
     const userPatchForm = useFormik({
         initialValues: initialUserPatchValues,
@@ -44,22 +44,6 @@ const Profile = () => {
         },
     });
 
-    useEffect(() => {
-        setInitialUserPatchValues(
-            {
-                username: me.username,
-                account: {
-                    friendship_user_searchable: me.account.friendship_user_searchable,
-                    friendship_user_search_code: me.account.friendship_user_search_code
-                }
-            }
-        );
-    }, [me]);
-
-    useEffect(() => {
-        userPatchForm.resetForm();
-    }, [initialUserPatchValues]);
-
     return (
         <Box
             component='form'
@@ -69,7 +53,7 @@ const Profile = () => {
         >
             <Grid container spacing={3}>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <TextField
                         id='username'
                         name='username'
@@ -91,7 +75,7 @@ const Profile = () => {
                     />
                 </Grid>
 
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <FormGroup>
                         <FormControlLabel
                             control={
@@ -114,15 +98,15 @@ const Profile = () => {
                     </FormGroup>
                 </Grid>
 
-                <Grid
-                    item
-                    xs={12}
-                    container spacing={2}
-                    justifyContent={"space-between"}
-                >
-                    <Grid item xs={12} md={5}
+                <Grid container spacing={2} size={12} sx={{
+                    justifyContent: "space-between"
+                }}>
+                    <Grid
                         sx={{ order: { xs: 1, md: 2 } }}
-                    >
+                        size={{
+                            xs: 12,
+                            md: 5
+                        }}>
                         <Button
                             type='submit'
                             fullWidth
@@ -134,9 +118,12 @@ const Profile = () => {
                         </Button>
                     </Grid>
 
-                    <Grid item xs={12} md={5}
+                    <Grid
                         sx={{ order: { xs: 2, md: 1 } }}
-                    >
+                        size={{
+                            xs: 12,
+                            md: 5
+                        }}>
                         <Button
                             type="button"
                             fullWidth

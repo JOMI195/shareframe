@@ -32,10 +32,12 @@ import ExpirationSelector from './expirationSelector';
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
 const MENU_PROPS = {
-    PaperProps: {
-        style: {
-            maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
-            width: 250,
+    slotProps: {
+        paper: {
+            style: {
+                maxHeight: ITEM_HEIGHT * 4.5 + ITEM_PADDING_TOP,
+                width: 250,
+            },
         },
     },
 };
@@ -120,11 +122,13 @@ const SendImageToUserFrameDialog = () => {
         <Dialog
             fullScreen={matches ? false : true}
             open={sendDialog.open}
-            TransitionComponent={matches ? ZoomTransition : SlideTransition}
             onClose={handleDialogClose}
             aria-describedby='send-image-dialog'
             maxWidth="md"
             fullWidth
+            slots={{
+                transition: matches ? ZoomTransition : SlideTransition
+            }}
         >
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -196,15 +200,19 @@ const SendImageToUserFrameDialog = () => {
 
                 <Grid
                     container
-                    display={"flex"}
-                    justifyContent={"space-between"}
-                    alignItems={"center"}
                     spacing={2}
                     sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
                         mt: 3
-                    }}
-                >
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
+                    }}>
+                    <Grid
+                        sx={{ order: { xs: 4, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleDialogClose}
                             color="primary"
@@ -215,7 +223,12 @@ const SendImageToUserFrameDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 3, md: 3 } }}>
+                    <Grid
+                        sx={{ order: { xs: 3, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"

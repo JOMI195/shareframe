@@ -1,4 +1,4 @@
-import { alpha, Theme } from '@mui/material/styles';
+import { Theme } from '@mui/material/styles';
 
 export const getRandomMuiColor = (theme: Theme): string => {
     const colorCorpora = [
@@ -11,7 +11,7 @@ export const getRandomMuiColor = (theme: Theme): string => {
 
     //const randomAlpha = (Math.random() * 0.8) + 0.1;
 
-    return alpha(randomColor, 1);
+    return theme.alpha(randomColor, 1);
 };
 
 export function stringToColor(string: string) {

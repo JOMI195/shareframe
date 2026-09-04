@@ -24,7 +24,7 @@ interface StatsSectionProps {
 const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiringImage, imagesCount, frameStats, activityData }) => {
     return (
         <Grid container spacing={1} sx={{ mb: 2 }}>
-            <Grid item xs={5} sx={{ display: "flex" }}>
+            <Grid sx={{ display: "flex" }} size={5}>
                 <StatCard
                     icon={<ImageIcon color="success" />}
                     title="Aktive Fotos"
@@ -32,7 +32,7 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                 />
             </Grid>
 
-            <Grid item xs={7} sx={{ display: "flex" }}>
+            <Grid sx={{ display: "flex" }} size={7}>
                 <StatCard
                     icon={<AccessAlarmIcon color="primary" />}
                     title="Letztes Foto läuft aus am:"
@@ -42,7 +42,7 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                 />
             </Grid>
 
-            <Grid item xs={6} sx={{ display: "flex" }}>
+            <Grid sx={{ display: "flex" }} size={6}>
                 <StatCard
                     icon={<AddPhotoAlternateIcon />}
                     title="Hochgeladene Fotos"
@@ -50,7 +50,7 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                 />
             </Grid>
 
-            <Grid item xs={6} sx={{ display: "flex" }}>
+            <Grid sx={{ display: "flex" }} size={6}>
                 <StatCard
                     icon={<FilterFramesIcon />}
                     title="Bilderrahmen"
@@ -77,7 +77,7 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
             </Grid>
 
             {activityData && (
-                <Grid item xs={12}>
+                <Grid size={12}>
                     <WeeklyActivity activityData={activityData} />
                 </Grid>
             )}

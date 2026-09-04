@@ -17,10 +17,17 @@ const StatCard: FC<StatCardProps> = ({ icon, title, value, customContent }) => {
                 alignItems: "center",
                 justifyContent: "flex-start"
             }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
+                <Stack direction="row" spacing={1} sx={{
+                    alignItems: "center"
+                }}>
                     {icon}
                     <Box>
-                        <Typography variant="body2" color="text.secondary" mb={customContent ? 1 : 0}>
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                color: "text.secondary",
+                                mb: customContent ? 1 : 0
+                            }}>
                             {title}
                         </Typography>
                         {customContent ? (

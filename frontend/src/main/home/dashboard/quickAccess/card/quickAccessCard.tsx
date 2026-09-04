@@ -24,7 +24,9 @@ const QuickAccessCard: FC<QuickAccessCardProps> = ({ title, icon, onClick }) => 
         >
             <CardContent sx={{ textAlign: 'center', py: 2 }}>
                 {icon}
-                <Typography variant="subtitle1" fontWeight="medium">
+                <Typography variant="subtitle1" sx={{
+                    fontWeight: "medium"
+                }}>
                     {title}
                 </Typography>
             </CardContent>

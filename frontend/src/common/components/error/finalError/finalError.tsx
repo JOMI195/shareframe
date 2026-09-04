@@ -47,7 +47,9 @@ const FinalError: React.FC = ({
                 <Typography variant="body1" color="black">
                     Es trat ein wiederholter Systemfehler auf. Um den Fehler zu beheben lösche bitte alle lokalen Websitedaten und lade die Seite erneut.
                 </Typography>
-                <Typography variant="body1" color="black" paragraph>
+                <Typography variant="body1" color="black" sx={{
+                    marginBottom: "16px"
+                }}>
                     Wenn dies nicht möglich ist oder der Fehler weiterhin besteht kontaktiere bitte unseren Support.
                 </Typography>
                 <Typography>

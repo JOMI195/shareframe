@@ -129,7 +129,9 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
                         onChange={(e) => handleCustomTimeValueChange(e.target.value)}
                         label="Zeit"
                         sx={styles.timeInput}
-                        inputProps={{ min: 1, max: 365 }}
+                        slotProps={{
+                            htmlInput: { min: 1, max: 365 }
+                        }}
                     />
                     <FormControl sx={styles.unitSelect}>
                         <InputLabel>Einheit</InputLabel>

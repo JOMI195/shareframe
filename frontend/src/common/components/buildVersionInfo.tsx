@@ -12,7 +12,9 @@ const BuildVersionInfo = () => {
         alignItems: "center",
       }}
     >
-      <Typography variant="body2" color="text.secondary" align='center'>
+      <Typography variant="body2" align='center' sx={{
+        color: "text.secondary"
+      }}>
         {currentBuildVersion !== undefined
           ? `app-version: ${currentBuildVersion}`
           : `app-version: unknown`

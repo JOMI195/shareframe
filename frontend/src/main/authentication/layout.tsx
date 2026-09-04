@@ -17,7 +17,14 @@ export default function Layout() {
           mb: 5
         }}
       >
-        <Stack spacing={0} display={"flex"} alignItems={"center"} sx={{ my: 1, width: "100%" }}>
+        <Stack
+          spacing={0}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            my: 1,
+            width: "100%"
+          }}>
           <Logo
             darkLogoSrc="/logo-dark-full-shareframe.svg"
             lightLogoSrc="/logo-light-full-shareframe.svg"

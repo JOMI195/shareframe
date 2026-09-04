@@ -91,16 +91,27 @@ export const Navigation: React.FC<NavigationProps> = ({
     };
 
     return (
-        <Box display="flex" flexDirection={"column"} alignItems="center" width="100%">
-            <Box display="flex" alignItems="center" width="100%" borderRadius={1}
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                width: "100%"
+            }}>
+            <Box
                 sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                    borderRadius: 1,
                     bgcolor: (theme) => theme.palette.background.default,
                     pl: 2,
                     pr: 1,
                     mt: 1
-                }}
-            >
-                <Typography variant='body2' width={60}>
+                }}>
+                <Typography variant='body2' sx={{
+                    width: 60
+                }}>
                     Zoom
                 </Typography>
                 <IconButton
@@ -143,15 +154,20 @@ export const Navigation: React.FC<NavigationProps> = ({
                     <ZoomInIcon />
                 </IconButton>
             </Box>
-            <Box display="flex" alignItems="center" width="100%" borderRadius={1}
+            <Box
                 sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    width: "100%",
+                    borderRadius: 1,
                     bgcolor: (theme) => theme.palette.background.default,
                     pl: 2,
                     pr: 1,
                     mt: 1
-                }}
-            >
-                <Typography variant='body2' width={60}>
+                }}>
+                <Typography variant='body2' sx={{
+                    width: 60
+                }}>
                     Rotation
                 </Typography>
                 <IconButton
@@ -194,8 +210,13 @@ export const Navigation: React.FC<NavigationProps> = ({
                     <Replay30Icon />
                 </IconButton>
             </Box>
-            <Grid justifyContent={"space-between"} container sx={{ mt: 1 }}>
-                <Grid item xs={5.8}>
+            <Grid
+                container
+                sx={{
+                    justifyContent: "space-between",
+                    mt: 1
+                }}>
+                <Grid size={5.8}>
                     <Button
                         disabled={disabled}
                         fullWidth
@@ -209,7 +230,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                         Zentrieren
                     </Button>
                 </Grid>
-                <Grid item xs={5.8}>
+                <Grid size={5.8}>
                     <Button
                         disabled={disabled}
                         fullWidth

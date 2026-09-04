@@ -27,10 +27,10 @@ const UserSettings = () => {
       icon: <PersonIcon />,
       content: (
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Email />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Profile />
           </Grid>
         </Grid>

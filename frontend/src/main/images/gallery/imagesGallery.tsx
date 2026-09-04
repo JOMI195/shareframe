@@ -67,7 +67,7 @@ const ImagesGallery: React.FC = () => {
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
-    const LoadingSkeleton = () => (
+    const renderLoadingSkeleton = () => (
         <ImageList cols={cols} gap={8}>
             {[...Array(cols * SKELETON_COLS)].map((_, index) => (
                 <ImageListItem key={index}>
@@ -88,11 +88,7 @@ const ImagesGallery: React.FC = () => {
     // Calculate total pages from the count in the paginated response
     const totalPages = Math.ceil(imagesPaginated.count / pageSize);
 
-    interface PaginationComponentProps {
-        showCount?: boolean;
-    }
-
-    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+    const renderPagination = (showCount = false) => {
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
                 {(imagesLoading || friendshipsLoading) ? (
@@ -115,7 +111,9 @@ const ImagesGallery: React.FC = () => {
                             <Typography
                                 variant="subtitle2"
                                 color="textSecondary"
-                                textAlign={"center"}
+                                sx={{
+                                    textAlign: "center"
+                                }}
                             >
                                 {imagesPaginated.count} Foto{imagesPaginated.count !== 1 ? "s" : ""}
                             </Typography>
@@ -129,12 +127,8 @@ const ImagesGallery: React.FC = () => {
     return (
         <Stack spacing={2}>
             <FilterControls />
-            {isSmallScreen && imagesPaginated.page > 1 && (
-                <PaginationComponent />
-            )}
-            {(imagesLoading || friendshipsLoading) ? (
-                <LoadingSkeleton />
-            ) :
+            {isSmallScreen && imagesPaginated.page > 1 && renderPagination()}
+            {(imagesLoading || friendshipsLoading) ? renderLoadingSkeleton() :
                 imagesPaginated.results.length !== 0 ?
                     (
                         <ImageList cols={cols} gap={8}>
@@ -168,7 +162,7 @@ const ImagesGallery: React.FC = () => {
                         <DataNotFound notFoundMessage={"Keine Fotos vorhanden"} />
                     )}
 
-            <PaginationComponent showCount={true} />
+            {renderPagination(true)}
         </Stack>
     );
 };

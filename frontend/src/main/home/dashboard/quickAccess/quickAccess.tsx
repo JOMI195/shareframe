@@ -43,7 +43,12 @@ const QuickAccess: FC = () => {
     return (
         <Grid container spacing={1} sx={{ mb: 2 }}>
             {cards.map((card, index) => (
-                <Grid item xs={6} sm={3} key={index}>
+                <Grid
+                    key={index}
+                    size={{
+                        xs: 6,
+                        sm: 3
+                    }}>
                     <QuickAccessCard
                         title={card.title}
                         icon={card.icon}

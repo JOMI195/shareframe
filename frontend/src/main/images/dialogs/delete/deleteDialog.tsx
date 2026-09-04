@@ -37,11 +37,13 @@ const ImageDeleteDialog = () => {
         <Dialog
             fullScreen={matches ? false : true}
             open={deleteDialog.open}
-            TransitionComponent={matches ? ZoomTransition : SlideTransition}
             onClose={handleDialogClose}
             aria-describedby='dedlete-image-dialog'
             maxWidth="sm"
             fullWidth
+            slots={{
+                transition: matches ? ZoomTransition : SlideTransition
+            }}
         >
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -65,10 +67,18 @@ const ImageDeleteDialog = () => {
                 <Typography sx={{ mb: 3 }}>Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden</Typography>
                 <Grid
                     container
-                    display={"flex"} justifyContent={"space-between"} alignItems={"center"}
                     spacing={2}
-                >
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                    }}>
+                    <Grid
+                        sx={{ order: { xs: 4, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleDialogClose}
                             color="primary"
@@ -78,7 +88,12 @@ const ImageDeleteDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 3, md: 3 } }}>
+                    <Grid
+                        sx={{ order: { xs: 3, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleConfirmDelete}
                             color="error"

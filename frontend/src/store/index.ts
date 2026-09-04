@@ -17,7 +17,7 @@ import {
   createTransform,
   PersistedState,
 } from 'redux-persist';
-import storage from 'redux-persist/lib/storage';
+import storage from 'redux-persist/es/storage';
 import rootReducer from './rootReducer';
 import autoMergeLevel2 from 'redux-persist/es/stateReconciler/autoMergeLevel2';
 import migrations from './migrations';

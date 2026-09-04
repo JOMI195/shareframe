@@ -28,7 +28,7 @@ export const useColorThemeContext = () => {
     return context;
 };
 
-export const ColorThemeProvider: React.FC<PropsWithChildren<{}>> = ({ children }) => {
+export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const dispatch = useAppDispatch();
     const colorModeFromState = useAppSelector((state: RootState) => getDesign(state) as ColorMode);
 
@@ -36,18 +36,12 @@ export const ColorThemeProvider: React.FC<PropsWithChildren<{}>> = ({ children }
     const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const initialColorMode: ColorMode = colorModeFromState || (systemPrefersDark ? 'dark' : 'light');
 
-    const [iconComponent, setIconComponent] = React.useState<IconComponent>(
-        initialColorMode === 'dark' ? DarkModeIcon : LightModeIcon
-    );
+    const iconComponent: IconComponent = initialColorMode === 'dark' ? DarkModeIcon : LightModeIcon;
 
     const toggleColorMode = () => {
         const newMode: ColorMode = colorModeFromState === 'light' ? 'dark' : 'light';
         dispatch(designSelected(newMode));
     };
-
-    useEffect(() => {
-        setIconComponent(colorModeFromState === 'dark' ? DarkModeIcon : LightModeIcon);
-    }, [colorModeFromState]);
 
     useEffect(() => {
         const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');

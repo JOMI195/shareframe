@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { allCookiesAccepted, allCookiesDeclined, getCookies } from '@/store/ui/settings/settings.slice';
@@ -8,26 +8,18 @@ import { getAppSettingsUrl, getSettingsUrl } from '@/assets/endpoints/app/settin
 import { isCookieConsentExpired } from '../utils/cookies';
 
 const CookieBanner: React.FC = () => {
-    const [open, setOpen] = useState(false);
     const cookies = useAppSelector(getCookies);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
-    useEffect(() => {
-        const isExpired = isCookieConsentExpired(cookies.consentExpiry)
-        if (isExpired) {
-            setOpen(true)
-        }
-    }, [cookies, dispatch]);
+    const open = isCookieConsentExpired(cookies.consentExpiry);
 
     const handleAcceptAll = () => {
         dispatch(allCookiesAccepted());
-        setOpen(false);
     };
 
     const handleDecline = () => {
         dispatch(allCookiesDeclined());
-        setOpen(false);
     };
 
     const handleSettings = () => {
@@ -79,7 +71,7 @@ const CookieBanner: React.FC = () => {
 
 export default CookieBanner;
 
-// import React, { useEffect, useState } from 'react';
+// import React from 'react';
 // import {
 //     Box,
 //     Button,

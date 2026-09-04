@@ -71,11 +71,13 @@ const FriendshipCreateDialog: React.FC = () => {
     <Dialog
       fullScreen={matches ? false : true}
       open={open}
-      TransitionComponent={matches ? ZoomTransition : SlideTransition}
       onClose={handleDialogClose}
       aria-describedby="friendship-create-dialog"
       maxWidth="xs"
       fullWidth
+      slots={{
+        transition: matches ? ZoomTransition : SlideTransition
+      }}
     >
       {!matches && (
         <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -109,10 +111,14 @@ const FriendshipCreateDialog: React.FC = () => {
             }}
           >
             <Stack spacing={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="subtitle1" sx={{
+                fontWeight: "bold"
+              }}>
                 Von Nutzern eine Anfrage erhalten:
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Dein Freundescode, wenn dir andere Personen eine Anfrage stellen sollen
               </Typography>
 
@@ -149,7 +155,9 @@ const FriendshipCreateDialog: React.FC = () => {
           </Paper>
 
           <Divider textAlign="center" sx={{ my: 2 }}>
-            <Typography variant="subtitle2" color="text.secondary">
+            <Typography variant="subtitle2" sx={{
+              color: "text.secondary"
+            }}>
               ODER
             </Typography>
           </Divider>
@@ -162,10 +170,14 @@ const FriendshipCreateDialog: React.FC = () => {
             }}
           >
             <Stack spacing={2}>
-              <Typography variant="subtitle1" fontWeight="bold">
+              <Typography variant="subtitle1" sx={{
+                fontWeight: "bold"
+              }}>
                 Freundschaftsanfrage senden
               </Typography>
-              <Typography variant="body2" color="text.secondary">
+              <Typography variant="body2" sx={{
+                color: "text.secondary"
+              }}>
                 Bitte gebe hier den Freundschaftscode der Person ein, welche du hinzufügen möchtest
               </Typography>
               <Box
@@ -176,7 +188,7 @@ const FriendshipCreateDialog: React.FC = () => {
                 sx={{ mt: 3 }}
               >
                 <Grid container spacing={2}>
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <TextField
                       id='friend_code'
                       name='reciever_friendship_user_search_code'
@@ -197,12 +209,14 @@ const FriendshipCreateDialog: React.FC = () => {
                       }
                       fullWidth
                       variant='outlined'
-                      inputProps={{
-                        style: { textTransform: 'uppercase' }
+                      slotProps={{
+                        htmlInput: {
+                          style: { textTransform: 'uppercase' }
+                        }
                       }}
                     />
                   </Grid>
-                  <Grid item xs={12}>
+                  <Grid size={12}>
                     <Button
                       type='submit'
                       fullWidth
@@ -212,7 +226,11 @@ const FriendshipCreateDialog: React.FC = () => {
                       {'Hinzufügen'}
                     </Button>
                   </Grid>
-                  <Grid item xs={12} sm={12}>
+                  <Grid
+                    size={{
+                      xs: 12,
+                      sm: 12
+                    }}>
                     <Button
                       type="button"
                       fullWidth

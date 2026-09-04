@@ -315,6 +315,8 @@ const UploadDialog: React.FC = () => {
 
       // Only update the selection if a valid target is found and it's different from the current selection.
       if (targetIndex !== null && currentImageIndex !== targetIndex) {
+        // selection follows async status changes from several handlers, so it stays an effect
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         selectImageForCropping(targetIndex);
       }
       // If there are no pending or actively cropping images, and something was selected, deselect it.
@@ -333,11 +335,13 @@ const UploadDialog: React.FC = () => {
       <Dialog
         fullScreen={matches ? false : true}
         open={open}
-        TransitionComponent={matches ? ZoomTransition : SlideTransition}
         onClose={handleDialogClose}
         aria-describedby="dialog-slide-upload"
         maxWidth="lg"
         fullWidth
+        slots={{
+          transition: matches ? ZoomTransition : SlideTransition
+        }}
       >
         {!matches && (
           <AppBar sx={{ position: 'relative' }} color="inherit">
@@ -401,7 +405,7 @@ const UploadDialog: React.FC = () => {
         </DialogContent>
       </Dialog>
     </Container>
-  )
+  );
 }
 
 export default UploadDialog

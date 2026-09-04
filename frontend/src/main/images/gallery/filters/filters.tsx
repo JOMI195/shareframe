@@ -9,10 +9,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { getApi, getImagesPaginatedPageSize } from '@/store/entities/images/images.slice';
 import { setImagesPaginatedPageSize } from '@/store/entities/images/images.actions';
 
-export interface FilterControlsProps {
-}
-
-const FilterControls: React.FC<FilterControlsProps> = () => {
+const FilterControls: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
@@ -26,7 +23,11 @@ const FilterControls: React.FC<FilterControlsProps> = () => {
     return (
         <Box sx={{ width: '100%', mb: 2 }}>
             <Grid container spacing={2}>
-                <Grid item xs={12} md={4}>
+                <Grid
+                    size={{
+                        xs: 12,
+                        md: 4
+                    }}>
                     <TextField
                         fullWidth
                         select

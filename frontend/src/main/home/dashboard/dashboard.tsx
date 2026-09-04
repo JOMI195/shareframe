@@ -39,13 +39,17 @@ const Dashboard: React.FC = () => {
             <Header username={user.me.username} />
 
             {/* Quick Access Cards */}
-            <Typography mb={1} variant="subtitle1">
+            <Typography variant="subtitle1" sx={{
+                mb: 1
+            }}>
                 Schnellzugriff
             </Typography>
             <QuickAccess />
 
             {/* Quick Stats Row */}
-            <Typography mb={1} variant="subtitle1">
+            <Typography variant="subtitle1" sx={{
+                mb: 1
+            }}>
                 Statistiken
             </Typography>
             {dashboardLoading ? (

@@ -18,7 +18,9 @@ const Header: FC<HeaderProps> = ({ username }) => {
             <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Typography variant="h5" fontWeight="bold">
+                        <Typography variant="h5" sx={{
+                            fontWeight: "bold"
+                        }}>
                             Hi, {username}
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.8 }}>

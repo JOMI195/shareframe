@@ -16,12 +16,9 @@ const SignUpConfirmation: React.FC = () => {
     const [isDisabled, setIsDisabled] = useState(false);
     const [secondsLeft, setSecondsLeft] = useState(30);
 
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(() => localStorage.getItem('loggedIn') === 'true');
 
     useEffect(() => {
-        const loggedIn = localStorage.getItem('loggedIn') === 'true';
-        setIsLoggedIn(loggedIn);
-
         const handleStorageChange = (event: StorageEvent) => {
             if (event.key === 'loggedIn') {
                 setIsLoggedIn(event.newValue === 'true');
@@ -66,8 +63,10 @@ const SignUpConfirmation: React.FC = () => {
     if (isLoggedIn) {
         return (
             <Grid container spacing={2}>
-                <Grid item xs={12}>
-                    <Typography variant="body1" textAlign={"center"}>
+                <Grid size={12}>
+                    <Typography variant="body1" sx={{
+                        textAlign: "center"
+                    }}>
                         Du kannst diese Seite jetzt schließen
                     </Typography>
                 </Grid>
@@ -77,24 +76,28 @@ const SignUpConfirmation: React.FC = () => {
 
     return (
         <Box>
-            <Typography component="h1" variant="h5" textAlign={"center"}>
+            <Typography component="h1" variant="h5" sx={{
+                textAlign: "center"
+            }}>
                 Nutzerregistrierung erfolgreich.
             </Typography>
             <Box sx={{ mt: 3 }}>
                 <Grid container spacing={2}>
-                    <Grid item xs={12}>
-                        <Typography variant="body1" textAlign={"center"}>
+                    <Grid size={12}>
+                        <Typography variant="body1" sx={{
+                            textAlign: "center"
+                        }}>
                             Schaue in dein Emailpostfach um deinen Account zu aktivieren!
                         </Typography>
                     </Grid>
                     {resendActivationTo && (
                         <Grid
-                            item
-                            xs={12}
-                            display='flex'
-                            justifyContent="center"
-                            alignItems="center"
-                        >
+                            size={12}
+                            sx={{
+                                display: 'flex',
+                                justifyContent: "center",
+                                alignItems: "center"
+                            }}>
                             <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", textAlign: "center" }}>
                                 <Typography variant="body2" component="span">
                                     Du hast keine Email erhalten?

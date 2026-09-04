@@ -37,9 +37,13 @@ const LoadingSnackbar = (
             open={snackbar.open}
             onClose={handleSnackbarClose}
             autoHideDuration={30000}
-            ClickAwayListenerProps={{ onClickAway: () => null }}
-            TransitionComponent={Slide}
             sx={{ justifySelf: "center" }}
+            slots={{
+                transition: Slide
+            }}
+            slotProps={{
+                clickAwayListener: { onClickAway: () => null }
+            }}
         >
             <Paper
                 elevation={5}

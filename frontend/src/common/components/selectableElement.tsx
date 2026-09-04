@@ -1,7 +1,7 @@
 import { useAppSelector } from "@/store";
 import { getDesign } from "@/store/ui/settings/settings.slice";
 import { Box } from "@mui/material";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CircleIcon from "@mui/icons-material/Circle";
 
@@ -25,29 +25,12 @@ const SelectableElement = <T extends SelectableItem>({
 }: SelectableElementProps<T>) => {
     const design = useAppSelector(getDesign);
 
-    const [isSelected, setIsSelected] = useState<boolean>(false);
-    const [selectedBackgroundColor, setSelectedBackgroundColor] = useState(
-        "rgba(25, 118, 210, 0.35)"
-    )
-
-    useEffect(() => {
-        const isElementSelected = selectedElements.find(
-            (selectedElement) => selectedElement.id === elementToSelect.id
-        );
-        if (isElementSelected === undefined) {
-            setIsSelected(false);
-        } else {
-            setIsSelected(true);
-        }
-    }, [selectedElements]);
-
-    useEffect(() => {
-        if (design === "dark") {
-            setSelectedBackgroundColor("rgba(90, 152, 218, 0.3)")
-        } else {
-            setSelectedBackgroundColor("rgba(25, 118, 210, 0.4)")
-        }
-    }, [design])
+    const isSelected = selectedElements.some(
+        (selectedElement) => selectedElement.id === elementToSelect.id
+    );
+    const selectedBackgroundColor = design === "dark"
+        ? "rgba(90, 152, 218, 0.3)"
+        : "rgba(25, 118, 210, 0.4)";
 
     return (
         <Box

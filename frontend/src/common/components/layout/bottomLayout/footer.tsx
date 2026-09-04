@@ -30,30 +30,62 @@ const Footer: React.FC = () => {
             }}
         >
             <Container maxWidth="lg">
-                <Grid container spacing={1} textAlign={{ xs: "center", sm: "inherit" }} alignItems={"center"} justifyContent={{ xs: "center" }}>
-                    <Grid item xs={12} container sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
-                        <Grid item xs={12} md={3} sx={{ display: "flex", justifyContent: "space-around", flexDirection: "row" }}>
+                <Grid
+                    container
+                    spacing={1}
+                    sx={{
+                        textAlign: { xs: "center", sm: "inherit" },
+                        alignItems: "center",
+                        justifyContent: { xs: "center" }
+                    }}>
+                    <Grid
+                        container
+                        sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                        size={12}>
+                        <Grid
+                            sx={{ display: "flex", justifyContent: "space-around", flexDirection: "row" }}
+                            size={{
+                                xs: 12,
+                                md: 3
+                            }}>
                             <StyledLink to={getSettingsUrl() + getAppSettingsUrl()} color="inherit">
                                 Einstellungen
                             </StyledLink>
                         </Grid>
-                        <Grid item xs={12} md={3} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                        <Grid
+                            sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                            size={{
+                                xs: 12,
+                                md: 3
+                            }}>
                             <StyledLink to={getContactUrl()} color="inherit">
                                 Kontaktformular
                             </StyledLink>
                         </Grid>
-                        <Grid item xs={12} md={3} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                        <Grid
+                            sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                            size={{
+                                xs: 12,
+                                md: 3
+                            }}>
                             <StyledLink to={getPrivacyPolicyUrl()} color="inherit">
                                 Datenschutzerklärung
                             </StyledLink>
                         </Grid>
-                        <Grid item xs={12} md={3} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                        <Grid
+                            sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                            size={{
+                                xs: 12,
+                                md: 3
+                            }}>
                             <StyledLink to={getImprintUrl()} color="inherit">
                                 Impressum
                             </StyledLink>
                         </Grid>
                     </Grid>
-                    <Grid item xs={12} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                    <Grid
+                        sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                        size={12}>
                         <Logo
                             darkLogoSrc="/logo-dark-full-shareframe.svg"
                             lightLogoSrc="/logo-light-full-shareframe.svg"
@@ -62,10 +94,14 @@ const Footer: React.FC = () => {
                             clickable={true}
                         />
                     </Grid>
-                    <Grid item xs={12} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                    <Grid
+                        sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                        size={12}>
                         {" Made with ❤️ by Johannes"}
                     </Grid>
-                    <Grid item xs={12} sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}>
+                    <Grid
+                        sx={{ display: "flex", justifyContent: "center", flexDirection: "row" }}
+                        size={12}>
                         <Typography variant="body1">
                             {"Copyright © "}
                             <StyledLink to="/" color="inherit">

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
     Box,
     CircularProgress,
@@ -10,7 +10,6 @@ import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
 
 const NewChangelogDialog: React.FC = () => {
-    const [open, setOpen] = useState(false);
     const {
         isLoading,
         changelogs,
@@ -18,24 +17,15 @@ const NewChangelogDialog: React.FC = () => {
         getNewestActiveChangelog
     } = useChangelogs();
 
-    useEffect(() => {
-        if (!isLoading && changelogs.length > 0) {
-            const newestChangelog = getNewestActiveChangelog();
-            if (newestChangelog) {
-                setOpen(true);
-            }
-        }
-    }, [isLoading, changelogs]);
-
     const handleClose = () => {
         const newestChangelog = getNewestActiveChangelog();
         if (newestChangelog) {
             deactivateChangelog(newestChangelog.id);
         }
-        setOpen(false);
     };
 
     const newestChangelog = getNewestActiveChangelog();
+    const open = !isLoading && changelogs.length > 0 && Boolean(newestChangelog);
 
     if (isLoading) {
         return (

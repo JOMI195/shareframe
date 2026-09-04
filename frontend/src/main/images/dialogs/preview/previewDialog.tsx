@@ -104,16 +104,29 @@ const ImagePreviewDialog = () => {
             actionPrimary={primaryAction}
             actionsShown={true}
         >
-            <Box display="flex" flexDirection="column" alignItems="center">
+            <Box
+                sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center"
+                }}>
                 {selectedImage && (
                     <Grid container spacing={2} sx={{ pb: { xs: selectedImage.auto_delete_after_period ? 2 : 0, sm: 2 } }}>
-                        <Grid item xs={12} sm={2}>
+                        <Grid
+                            size={{
+                                xs: 12,
+                                sm: 2
+                            }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Typography sx={{ mb: 0.5 }} color="GrayText" >Hochgeladen am</Typography>
                                 <Typography>{formatGermanDateTime(new Date(selectedImage.created_at))}</Typography>
                             </Box>
                         </Grid>
-                        <Grid item xs={12} sm={4}>
+                        <Grid
+                            size={{
+                                xs: 12,
+                                sm: 4
+                            }}>
                             {selectedImage.auto_delete_after_period && (
                                 <Box sx={{ display: "flex", flexDirection: "column" }}>
                                     <Typography sx={{ mb: 0.5 }} color="GrayText" >Verwendungszeit</Typography>

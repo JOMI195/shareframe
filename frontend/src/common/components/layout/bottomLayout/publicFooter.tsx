@@ -7,7 +7,13 @@ import { getImprintUrl, getPrivacyPolicyUrl } from "@/assets/endpoints/app/legal
 
 const PublicFooter = (props: TypographyProps) => {
   return (
-    <Typography variant="caption" color="text.secondary" align="center" {...props}>
+    <Typography
+      variant="caption"
+      align="center"
+      {...props}
+      sx={[{
+        color: "text.secondary"
+      }, ...(Array.isArray(props.sx) ? props.sx : [props.sx])]}>
       <Box>
         <Link component={RouterLink} to={"/" + getContactUrl()} color="inherit">
           {"Kontakt"}

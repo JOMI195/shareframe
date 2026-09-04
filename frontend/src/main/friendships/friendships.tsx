@@ -46,10 +46,6 @@ const Friendships: React.FC = () => {
     };
 
     useEffect(() => {
-        setSelectedTabIndex(0);
-    }, []);
-
-    useEffect(() => {
         dispatch(fetchFriendships());
     }, []);
 

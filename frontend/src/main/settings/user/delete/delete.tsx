@@ -43,7 +43,9 @@ const Delete = () => {
     return (
         <Box>
             <Box sx={{ p: 2, border: "1px solid red", borderRadius: 1, display: "flex", flexDirection: "column" }}>
-                <Box textAlign={{ xs: "center", sm: "left" }}>
+                <Box sx={{
+                    textAlign: { xs: "center", sm: "left" }
+                }}>
                     <Typography variant="h6" color="error">
                         Danger Zone
                     </Typography>
@@ -56,9 +58,19 @@ const Delete = () => {
                 </Box>
                 <Grid
                     container
-                    display={"flex"} justifyContent={"flex-end"}
-                >
-                    <Grid item xs={12} sm={5} display={"flex"} justifyContent={"flex-end"}>
+                    sx={{
+                        display: "flex",
+                        justifyContent: "flex-end"
+                    }}>
+                    <Grid
+                        size={{
+                            xs: 12,
+                            sm: 5
+                        }}
+                        sx={{
+                            display: "flex",
+                            justifyContent: "flex-end"
+                        }}>
                         <Button
                             fullWidth
                             variant="contained"
@@ -85,15 +97,18 @@ const Delete = () => {
                     <DialogContent>
                         <Grid
                             container
-                            display={"flex"} justifyContent={"space-between"} alignItems={"center"}
                             spacing={2}
-                        >
-                            <Grid item xs={12} sx={{ order: { xs: 1, md: 1 } }}>
+                            sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center"
+                            }}>
+                            <Grid sx={{ order: { xs: 1, md: 1 } }} size={12}>
                                 <Typography variant="h6">
                                     Bitte bestätige die Löschung deines Kontos mit deinem Passwort.
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sx={{ order: { xs: 2, md: 2 } }}>
+                            <Grid sx={{ order: { xs: 2, md: 2 } }} size={12}>
                                 <TextField
                                     margin="dense"
                                     id="password"
@@ -106,7 +121,12 @@ const Delete = () => {
                                     autoComplete="password"
                                 />
                             </Grid>
-                            <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
+                            <Grid
+                                sx={{ order: { xs: 4, md: 3 } }}
+                                size={{
+                                    xs: 12,
+                                    sm: 6
+                                }}>
                                 <Button
                                     onClick={handleDialogClose}
                                     color="primary"
@@ -116,7 +136,12 @@ const Delete = () => {
                                     Abbrechen
                                 </Button>
                             </Grid>
-                            <Grid item xs={12} sm={6} sx={{ order: { xs: 3, md: 3 } }}>
+                            <Grid
+                                sx={{ order: { xs: 3, md: 3 } }}
+                                size={{
+                                    xs: 12,
+                                    sm: 6
+                                }}>
                                 <Button
                                     type='submit'
                                     onClick={handleConfirmDelete}

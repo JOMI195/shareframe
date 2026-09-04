@@ -12,9 +12,13 @@ const BuildVersionChecker: React.FC = () => {
   const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
   const backendVersion = useAppSelector(getAppVersion);
-  const [open, setOpen] = useState<boolean>(false);
+  const [dismissedVersion, setDismissedVersion] = useState<string | null>(null);
 
   const frontendVersion = import.meta.env.VITE_APP_BUILD_VERSION;
+
+  const open = Boolean(backendVersion) && Boolean(frontendVersion)
+    && backendVersion !== frontendVersion
+    && backendVersion !== dismissedVersion;
 
   useEffect(() => {
     const getAppVersion = () => {
@@ -38,23 +42,15 @@ const BuildVersionChecker: React.FC = () => {
     return () => clearInterval(intervalId);
   }, [dispatch]);
 
-  useEffect(() => {
-    if (!backendVersion || !frontendVersion) return;
-
-    if (backendVersion !== frontendVersion) {
-      setOpen(true);
-    }
-  }, [backendVersion, frontendVersion]);
-
   const handleClose = (_event: React.SyntheticEvent | Event, reason?: string) => {
     if (reason === 'clickaway') {
       return;
     }
-    setOpen(false);
+    setDismissedVersion(backendVersion);
   };
 
   const handleReload = () => {
-    setOpen(false);
+    setDismissedVersion(backendVersion);
     window.location.reload();
   };
   return (

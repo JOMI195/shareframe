@@ -40,7 +40,9 @@ const Changelogs: React.FC = () => {
             <Typography variant="h4" component="h1" gutterBottom>
                 ✨ Neuste Änderungen
             </Typography>
-            <Typography paragraph>
+            <Typography sx={{
+                marginBottom: "16px"
+            }}>
                 Informiere dich hier über die neusten Änderungen deines Bilderrahmens und der Shareframe Plattform.
             </Typography>
 
@@ -88,8 +90,16 @@ const Changelogs: React.FC = () => {
                                 >
                                     {isSmallScreen ? (
                                         <>
-                                            <Stack width={"100%"}>
-                                                <Box display={"flex"} justifyContent={"space-between"} alignItems={"center"} sx={{ mb: 2 }}>
+                                            <Stack sx={{
+                                                width: "100%"
+                                            }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        mb: 2
+                                                    }}>
                                                     <Typography variant="subtitle1">
                                                         {new Date(changelog.date).toLocaleDateString()}
                                                     </Typography>

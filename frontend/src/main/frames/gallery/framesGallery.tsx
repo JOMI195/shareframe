@@ -57,7 +57,7 @@ const FramesGallery: React.FC = () => {
         window.scrollTo({ top: 0, behavior: "smooth" });
     };
 
-    const LoadingSkeletonCard = () => (
+    const renderLoadingSkeletonCard = () => (
         <Card
             sx={{
                 position: "relative",
@@ -81,7 +81,7 @@ const FramesGallery: React.FC = () => {
         </Card>
     );
 
-    const FrameCard = ({ frame }: { frame: IFrame }) => {
+    const renderFrameCard = (frame: IFrame) => {
         const hasConnection = isFrameActive(frame.last_seen);
         const ipAddress = frame.local_ip_address;
 
@@ -108,8 +108,20 @@ const FramesGallery: React.FC = () => {
                         height: "100%",
                         width: "100%"
                     }}>
-                        <Stack width={"100%"} direction="column" px={2} spacing={1}>
-                            <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+                        <Stack
+                            direction="column"
+                            spacing={1}
+                            sx={{
+                                width: "100%",
+                                px: 2
+                            }}>
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{
+                                    justifyContent: "space-between",
+                                    alignItems: "center"
+                                }}>
                                 <Typography>
                                     Status:
                                 </Typography>
@@ -123,7 +135,13 @@ const FramesGallery: React.FC = () => {
                                     }}
                                 />
                             </Stack>
-                            <Stack direction="row" spacing={1} justifyContent="space-between" alignItems="center">
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{
+                                    justifyContent: "space-between",
+                                    alignItems: "center"
+                                }}>
                                 <Typography>
                                     Einstellungen:
                                 </Typography>
@@ -143,7 +161,13 @@ const FramesGallery: React.FC = () => {
                                     </Button>
                                 </Tooltip>
                             </Stack>
-                            <Stack direction="row" spacing={1} justifyContent="center" alignItems="center">
+                            <Stack
+                                direction="row"
+                                spacing={1}
+                                sx={{
+                                    justifyContent: "center",
+                                    alignItems: "center"
+                                }}>
                                 <Tooltip title={"Bilderrahmen abmelden"}>
                                     <IconButton
                                         onClick={() => { unregisterFrameButtonClickHandle(frame) }}
@@ -169,11 +193,7 @@ const FramesGallery: React.FC = () => {
         );
     };
 
-    interface PaginationComponentProps {
-        showCount?: boolean;
-    }
-
-    const PaginationComponent: React.FC<PaginationComponentProps> = ({ showCount = false }) => {
+    const renderPagination = (showCount = false) => {
         return (
             <Box
                 sx={{
@@ -200,7 +220,9 @@ const FramesGallery: React.FC = () => {
                         )}
 
                         {showCount && (
-                            <Typography variant="subtitle2" color="textSecondary" textAlign="center">
+                            <Typography variant="subtitle2" color="textSecondary" sx={{
+                                textAlign: "center"
+                            }}>
                                 {frames.length} Bilderrahmen
                             </Typography>
                         )}
@@ -212,15 +234,18 @@ const FramesGallery: React.FC = () => {
 
     return (
         <Stack spacing={2}>
-            {isSmallScreen && currentPage > 1 && (
-                <PaginationComponent />
-            )}
+            {isSmallScreen && currentPage > 1 && renderPagination()}
             <Box sx={{ px: 2 }}>
                 {loading ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
-                            <Grid item key={index} xs={12} md={4}>
-                                <LoadingSkeletonCard />
+                            <Grid
+                                key={index}
+                                size={{
+                                    xs: 12,
+                                    md: 4
+                                }}>
+                                {renderLoadingSkeletonCard()}
                             </Grid>
                         ))}
                     </Grid>
@@ -228,8 +253,13 @@ const FramesGallery: React.FC = () => {
                     <Grid container spacing={2}>
                         {currentFrames
                             .map((frame) => (
-                                <Grid item key={frame.id} xs={12} md={4}>
-                                    <FrameCard frame={frame} />
+                                <Grid
+                                    key={frame.id}
+                                    size={{
+                                        xs: 12,
+                                        md: 4
+                                    }}>
+                                    {renderFrameCard(frame)}
                                 </Grid>
                             ))}
                     </Grid>
@@ -238,7 +268,7 @@ const FramesGallery: React.FC = () => {
                 )}
             </Box>
 
-            <PaginationComponent showCount={true} />
+            {renderPagination(true)}
         </Stack>
     );
 };

@@ -130,7 +130,9 @@ export default function SignUp() {
 
   return (
     <Box>
-      <Typography component="h1" variant="h5" textAlign={"center"}>
+      <Typography component="h1" variant="h5" sx={{
+        textAlign: "center"
+      }}>
         {"Registrieren"}
       </Typography>
       {errorMessage && (
@@ -146,7 +148,7 @@ export default function SignUp() {
         sx={{ mt: 3 }}
       >
         <Grid container spacing={2}>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id='email'
               name='email'
@@ -166,7 +168,7 @@ export default function SignUp() {
               variant='outlined'
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id='username'
               name='username'
@@ -187,7 +189,7 @@ export default function SignUp() {
               variant='outlined'
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id='password'
               name='password'
@@ -207,29 +209,31 @@ export default function SignUp() {
               autoComplete='password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <IconButton
-                      aria-label='toggle current password visibility'
-                      onClick={() =>
-                        handleClickShowPassword('current_password')
-                      }
-                      onMouseDown={handleMouseDownPassword}
-                      edge='end'
-                    >
-                      {showPassword.current_password ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        aria-label='toggle current password visibility'
+                        onClick={() =>
+                          handleClickShowPassword('current_password')
+                        }
+                        onMouseDown={handleMouseDownPassword}
+                        edge='end'
+                      >
+                        {showPassword.current_password ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <TextField
               id='re_password'
               name='re_password'
@@ -249,29 +253,31 @@ export default function SignUp() {
               autoComplete='re_password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position='end'>
-                    <IconButton
-                      aria-label='toggle current password visibility'
-                      onClick={() =>
-                        handleClickShowPassword('current_password')
-                      }
-                      onMouseDown={handleMouseDownPassword}
-                      edge='end'
-                    >
-                      {showPassword.current_password ? (
-                        <VisibilityOff />
-                      ) : (
-                        <Visibility />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
+              slotProps={{
+                input: {
+                  endAdornment: (
+                    <InputAdornment position='end'>
+                      <IconButton
+                        aria-label='toggle current password visibility'
+                        onClick={() =>
+                          handleClickShowPassword('current_password')
+                        }
+                        onMouseDown={handleMouseDownPassword}
+                        edge='end'
+                      >
+                        {showPassword.current_password ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }
               }}
             />
           </Grid>
-          <Grid item xs={12}>
+          <Grid size={12}>
             <Button
               type='submit'
               fullWidth
@@ -281,7 +287,11 @@ export default function SignUp() {
               {'Registrieren'}
             </Button>
           </Grid>
-          <Grid item xs={12} sm={12}>
+          <Grid
+            size={{
+              xs: 12,
+              sm: 12
+            }}>
             <Button
               type="button"
               fullWidth
@@ -292,7 +302,12 @@ export default function SignUp() {
               {"abbrechen"}
             </Button>
           </Grid>
-          <Grid item xs={12} display='flex' justifyContent='center'>
+          <Grid
+            size={12}
+            sx={{
+              display: 'flex',
+              justifyContent: 'center'
+            }}>
             <Link
               component={RouterLink}
               to={getAuthenticationUrl() + getSignInUrl()}

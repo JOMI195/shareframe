@@ -1,17 +1,8 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Box, FormControlLabel, Switch, Typography } from '@mui/material';
-import { useAppSelector } from '@/store';
-import { getCookies } from '@/store/ui/settings/settings.slice';
 
 const PrivacySettings: React.FC = () => {
     //const dispatch = useAppDispatch();
-    const cookies = useAppSelector(getCookies);
-
-    const [_analyticsCookies, setAnalyticsCookies] = React.useState(cookies.analyticsCookies);
-
-    useEffect(() => {
-        setAnalyticsCookies(cookies.analyticsCookies);
-    }, [cookies]);
 
     // const handleAnalyticsCookiesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     //     const isChecked = event.target.checked;
@@ -36,10 +27,14 @@ const PrivacySettings: React.FC = () => {
             <Typography variant="h6" gutterBottom>
                 Cookies
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" sx={{
+                marginBottom: "16px"
+            }}>
                 Du kannst mehr über die auf shareframe.de verwendeten Cookies in den Datenschutzbestimmungen erfahren.
             </Typography>
-            <Typography variant="body1" paragraph>
+            <Typography variant="body1" sx={{
+                marginBottom: "16px"
+            }}>
                 Um weitere Informationen zu erhalten, kontaktiere uns einfach.
             </Typography>
             <FormControlLabel
@@ -52,7 +47,9 @@ const PrivacySettings: React.FC = () => {
                 label="Notwendige Cookies"
                 labelPlacement="end"
             />
-            <Typography variant="body2" paragraph>
+            <Typography variant="body2" sx={{
+                marginBottom: "16px"
+            }}>
                 Notwendige Cookies werden nur von uns geschrieben und gelesen. Diese Cookies garantieren ein reibungsloses Funktionieren der Website und sind für dieses unabdingbar. Daher können notwendige Cookies nicht deaktiviert werden.
             </Typography>
             {/* <FormControlLabel

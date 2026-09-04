@@ -85,14 +85,15 @@ const Sidebar: React.FC = () => {
         { name: 'Abmelden', icon: <LogoutIcon />, url: getAuthenticationUrl() + getSignOutUrl() },
     ];
 
-    const SidebarBottomLegals: React.FC = () => {
+    const renderBottomLegals = () => {
         return (
             <Typography
                 variant="caption"
-                color="text.secondary"
                 align="left"
-                sx={{ mt: 1 }}
-            >
+                sx={{
+                    color: "text.secondary",
+                    mt: 1
+                }}>
                 <Box
                     sx={{
                         display: "flex",
@@ -239,7 +240,7 @@ const Sidebar: React.FC = () => {
                             <List>
                                 {sidebarBottomItems.map((item) => renderListItem(item, true))}
                             </List>
-                            {!shouldShowIconsOnly && <SidebarBottomLegals />}
+                            {!shouldShowIconsOnly && renderBottomLegals()}
                         </Box>
                     </Box>
                 </Drawer>

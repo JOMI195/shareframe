@@ -39,10 +39,12 @@ const FriendshipDeleteDialog = () => {
             fullScreen={matches ? false : true}
             maxWidth="sm"
             fullWidth
-            TransitionComponent={matches ? ZoomTransition : SlideTransition}
             open={deleteDialog.open}
             onClose={handleDialogClose}
             aria-describedby='dialog-delete-friendship'
+            slots={{
+                transition: matches ? ZoomTransition : SlideTransition
+            }}
         >
             {!matches && (
                 <AppBar sx={{ position: 'relative' }} color='inherit'>
@@ -66,10 +68,18 @@ const FriendshipDeleteDialog = () => {
                 <Typography sx={{ mb: 3 }}>Die Freundschaft kann mit einer Freundschaftanfrage jederzeit wieder hergestellt werden.</Typography>
                 <Grid
                     container
-                    display={"flex"} justifyContent={"space-between"} alignItems={"center"}
                     spacing={2}
-                >
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 4, md: 3 } }}>
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center"
+                    }}>
+                    <Grid
+                        sx={{ order: { xs: 4, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             onClick={handleDialogClose}
                             color="primary"
@@ -79,7 +89,12 @@ const FriendshipDeleteDialog = () => {
                             Abbrechen
                         </Button>
                     </Grid>
-                    <Grid item xs={12} sm={6} sx={{ order: { xs: 3, md: 3 } }}>
+                    <Grid
+                        sx={{ order: { xs: 3, md: 3 } }}
+                        size={{
+                            xs: 12,
+                            sm: 6
+                        }}>
                         <Button
                             type='submit'
                             onClick={handleConfirmDelete}

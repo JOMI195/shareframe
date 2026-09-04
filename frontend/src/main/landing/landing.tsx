@@ -13,7 +13,12 @@ const Landing = () => {
 
   return (
     <Container component="main" maxWidth="sm" sx={{ my: 6 }}>
-      <Stack spacing={4} alignItems="center" textAlign="center">
+      <Stack
+        spacing={4}
+        sx={{
+          alignItems: "center",
+          textAlign: "center"
+        }}>
         <Logo
           darkLogoSrc="/logo-dark-full-shareframe.svg"
           lightLogoSrc="/logo-light-full-shareframe.svg"
@@ -42,7 +47,9 @@ const Landing = () => {
         >
           {landingContent.ctaLabel}
         </Button>
-        <Typography variant="body2" color="text.secondary">
+        <Typography variant="body2" sx={{
+          color: "text.secondary"
+        }}>
           {landingContent.contactHint}
         </Typography>
         <PublicFooter />

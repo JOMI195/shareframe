@@ -4,12 +4,13 @@ import Logo from "./logo";
 const LoadingFallback = () => {
     return (
         <Box
-            display="flex"
-            flexDirection={"column"}
-            justifyContent="center"
-            alignItems="center"
-            height={"100vh"}
-        >
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh"
+            }}>
             <Logo
                 darkLogoSrc="/logo-dark-full-shareframe.svg"
                 lightLogoSrc="/logo-light-full-shareframe.svg"
