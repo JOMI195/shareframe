@@ -96,7 +96,7 @@
       "expires_at": "2100-06-01T00:00:00+00:00"
     },
     {
-      "sender": "seed_bob",
+      "sender": "seed_alice",
       "reciever": "seed_carol",
       "image_display_name": "seed_alice_forest",
       "expires_at": "2000-01-01T00:00:00+00:00"
