@@ -1,3 +1,6 @@
+import type { Theme } from "@mui/material/styles";
+import type { GridProps } from "@mui/material/Grid";
+
 declare module "@mui/material/styles" {
   interface Theme {
     layout: {
@@ -34,6 +37,18 @@ declare module "@mui/material/styles" {
 }
 
 export const commonThemeOptions = {
+  components: {
+    MuiGrid: {
+      styleOverrides: {
+        container: ({ ownerState, theme }: { ownerState: GridProps; theme: Theme }) => ({
+          width: '100%',
+          ...(typeof ownerState.spacing === 'number' && ownerState.spacing > 0
+            ? { paddingTop: theme.spacing(ownerState.spacing) }
+            : {}),
+        }),
+      },
+    },
+  },
   typography: {
     fontFamily: [
       "Inter",
