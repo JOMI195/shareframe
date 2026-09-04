@@ -99,9 +99,11 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     }, [url, isVisible, onError]);
 
     if (showSkeleton) {
-        // Height first so the box keeps the ratio the img will settle at once max-width clamps it.
-        const skeletonStyle: React.CSSProperties = aspectRatio
-            ? { ...style, height: style?.maxHeight, width: 'auto', aspectRatio }
+        const maxHeight = typeof style?.maxHeight === 'number' ? `${style.maxHeight}px` : style?.maxHeight;
+
+        // Same box the img settles into: container width, capped so a tall image can't widen past its ratio.
+        const skeletonStyle: React.CSSProperties = aspectRatio && maxHeight
+            ? { ...style, width: '100%', maxWidth: `calc(${maxHeight} * ${aspectRatio})`, height: 'auto', aspectRatio }
             : { width: '100%', height: '100%', ...style };
 
         return (
