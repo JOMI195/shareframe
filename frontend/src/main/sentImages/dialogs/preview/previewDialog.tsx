@@ -178,6 +178,7 @@ const ImagePreviewDialog = () => {
                         url={`${MEDIA_BASE_URL}${isSmallScreen ? getVariant(selectedImage.image, "medium")?.url : getVariant(selectedImage.image, "large")?.url}`}
                         alt={selectedImage.image.name}
                         style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
+                        aspectRatio={selectedImage.image.height ? selectedImage.image.width / selectedImage.image.height : undefined}
                     />
                 )}
 

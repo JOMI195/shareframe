@@ -1,6 +1,7 @@
 import axiosInstance from '@/services/api';
-import { Box } from '@mui/material';
+import { Skeleton } from '@mui/material';
 import React, { useState, useEffect, useRef } from 'react';
+import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 
 interface AuthenticatedImageProps {
     url: string;
@@ -10,6 +11,7 @@ interface AuthenticatedImageProps {
     onClick?: () => void;
     onError?: (error: Error) => void;
     hideToYouFilter?: boolean;
+    aspectRatio?: number;
 }
 
 const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
@@ -19,12 +21,14 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     style,
     onClick,
     onError,
-    hideToYouFilter
+    hideToYouFilter,
+    aspectRatio
 }) => {
     const [imageSrc, setImageSrc] = useState<string>('');
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const imgRef = useRef<HTMLDivElement>(null);
+    const showSkeleton = useMinimumLoading(isLoading);
 
     useEffect(() => {
         const observer = new IntersectionObserver(
@@ -94,21 +98,17 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
         };
     }, [url, isVisible, onError]);
 
-    if (isLoading && isVisible) {
+    if (showSkeleton) {
+        // Height first so the box keeps the ratio the img will settle at once max-width clamps it.
+        const skeletonStyle: React.CSSProperties = aspectRatio
+            ? { ...style, height: style?.maxHeight, width: 'auto', aspectRatio }
+            : { width: '100%', height: '100%', ...style };
+
         return (
-            <Box
-                sx={{
-                    width: "100%",
-                    height: "100%",
-                    bgcolor: 'grey.200',
-                    animation: 'pulse 2s infinite',
-                    '@keyframes pulse': {
-                        '0%, 100%': { opacity: 1 },
-                        '50%': { opacity: 0.5 }
-                    },
-                    ...style,
-                    borderRadius: 1,
-                }}
+            <Skeleton
+                variant="rectangular"
+                animation="wave"
+                style={skeletonStyle}
                 ref={imgRef}
             />
         );
