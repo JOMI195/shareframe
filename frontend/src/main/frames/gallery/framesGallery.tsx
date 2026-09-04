@@ -26,6 +26,7 @@ import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
 import { isFrameActive } from "@/common/utils/frame";
 import DataNotFound from "@/common/components/dataNotFound";
+import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -37,6 +38,7 @@ const FramesGallery: React.FC = () => {
 
     const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
+    const showSkeleton = useMinimumLoading(loading);
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(frames.length / ITEMS_PER_PAGE);
@@ -203,7 +205,7 @@ const FramesGallery: React.FC = () => {
                     py: 2,
                 }}
             >
-                {loading ? (
+                {showSkeleton ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
@@ -236,7 +238,7 @@ const FramesGallery: React.FC = () => {
         <Stack spacing={2}>
             {isSmallScreen && currentPage > 1 && renderPagination()}
             <Box sx={{ px: 2 }}>
-                {loading ? (
+                {showSkeleton ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
                             <Grid

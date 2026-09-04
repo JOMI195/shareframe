@@ -6,12 +6,14 @@ import LoadingSkeleton from "./loading/loadingSkeleton";
 import QuickAccess from "./quickAccess/quickAccess";
 import StatsSection from "./stats/stats";
 import { getDashboardData, getApi as getDashboardApi } from "@/store/entities/dashboard/dashboard.slice";
+import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const Dashboard: React.FC = () => {
     const user = useAppSelector(getUser);
     const dashboardStats = useAppSelector(getDashboardData);
 
     const dashboardLoading = useAppSelector(getDashboardApi).loading;
+    const showSkeleton = useMinimumLoading(dashboardLoading);
 
     const imagesStats = dashboardStats?.images;
     const sentImagesStats = dashboardStats?.sent_images;
@@ -52,7 +54,7 @@ const Dashboard: React.FC = () => {
             }}>
                 Statistiken
             </Typography>
-            {dashboardLoading ? (
+            {showSkeleton ? (
                 <LoadingSkeleton count={1} />
             ) : (
                 <StatsSection

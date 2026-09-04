@@ -25,6 +25,7 @@ import FilterControls from "./filters/filters";
 import { getVariant } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
 import SelectableElement from "../../../common/components/selectableElement";
+import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -37,6 +38,7 @@ const ImagesGallery: React.FC = () => {
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
     const friendshipsLoading = useAppSelector(friendshipsApi).loading;
+    const showSkeleton = useMinimumLoading(imagesLoading || friendshipsLoading);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -91,7 +93,7 @@ const ImagesGallery: React.FC = () => {
     const renderPagination = (showCount = false) => {
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                {(imagesLoading || friendshipsLoading) ? (
+                {showSkeleton ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
@@ -128,7 +130,7 @@ const ImagesGallery: React.FC = () => {
         <Stack spacing={2}>
             <FilterControls />
             {isSmallScreen && imagesPaginated.page > 1 && renderPagination()}
-            {(imagesLoading || friendshipsLoading) ? renderLoadingSkeleton() :
+            {showSkeleton ? renderLoadingSkeleton() :
                 imagesPaginated.results.length !== 0 ?
                     (
                         <ImageList cols={cols} gap={8}>

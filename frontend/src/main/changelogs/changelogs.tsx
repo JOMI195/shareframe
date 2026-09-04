@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
+import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import DataNotFound from '@/common/components/dataNotFound';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
 
@@ -27,6 +28,8 @@ const Changelogs: React.FC = () => {
         loadAllChangelogs,
         cleanUpdDeactivatedIds
     } = useChangelogs();
+
+    const showSkeleton = useMinimumLoading(isLoading);
 
     useEffect(() => {
         if (changelogIds.length > 0) {
@@ -46,7 +49,7 @@ const Changelogs: React.FC = () => {
                 Informiere dich hier über die neusten Änderungen deines Bilderrahmens und der Shareframe Plattform.
             </Typography>
 
-            {isLoading && (
+            {showSkeleton && (
                 <>
                     <Skeleton variant="rectangular" height={250} sx={{ mt: 1, mb: 2 }} />
                     {Array.from({ length: 5 }).map((_, i) => (
@@ -57,11 +60,11 @@ const Changelogs: React.FC = () => {
                 </>
             )}
 
-            {!isLoading && changelogs.length === 0 && (
+            {!showSkeleton && changelogs.length === 0 && (
                 <DataNotFound notFoundMessage={"Keine Änderungen vorhanden"} />
             )}
 
-            {!isLoading && changelogs.length > 0 && (
+            {!showSkeleton && changelogs.length > 0 && (
                 <>
                     {[...changelogs]
                         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())

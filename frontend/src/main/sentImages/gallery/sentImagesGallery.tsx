@@ -31,6 +31,7 @@ import { getVariant } from "@/common/utils/images";
 import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import DataNotFound from "@/common/components/dataNotFound";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -40,6 +41,7 @@ const SentImagesGallery = () => {
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
     const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
+    const showSkeleton = useMinimumLoading(loading || friendshipsLoading);
     const theme = useTheme();
 
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
@@ -164,7 +166,7 @@ const SentImagesGallery = () => {
     const renderPagination = (showCount = false) => {
         return (
             <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', py: 2 }}>
-                {loading ? (
+                {showSkeleton ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
@@ -204,10 +206,10 @@ const SentImagesGallery = () => {
         <Stack spacing={2}>
             <FilterControls
                 onFiltersChange={handleFiltersChange}
-                disabled={loading}
+                disabled={showSkeleton}
             />
             {isSmallScreen && currentPage > 1 && renderPagination()}
-            {(loading || friendshipsLoading) ? renderLoadingSkeleton() : sentImagesPaginated.results.length !== 0 ? (
+            {showSkeleton ? renderLoadingSkeleton() : sentImagesPaginated.results.length !== 0 ? (
                 <ImageList cols={cols} gap={8}>
                     {sentImagesPaginated.results.map((sentImage) => {
                         const expiryDate = new Date(sentImage.expires_at);

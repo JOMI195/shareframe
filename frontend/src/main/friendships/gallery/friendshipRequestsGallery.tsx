@@ -23,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
 import DataNotFound from "@/common/components/dataNotFound";
+import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -34,6 +35,7 @@ const FriendshipRequestsGallery: React.FC = () => {
 
     const friendships = useAppSelector(getFriendships);
     const friendshipsLoading = useAppSelector(getApi).loading;
+    const showSkeleton = useMinimumLoading(friendshipsLoading);
     const user = useAppSelector(getUser);
 
     const [currentPage, setCurrentPage] = useState(1);
@@ -192,7 +194,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                     py: 2,
                 }}
             >
-                {friendshipsLoading ? (
+                {showSkeleton ? (
                     <Skeleton width={200} height={40} />
                 ) : (
                     <>
@@ -225,7 +227,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         <Stack spacing={2}>
             {isSmallScreen && currentPage > 1 && renderPagination()}
             <Box sx={{ px: 2 }}>
-                {friendshipsLoading ? (
+                {showSkeleton ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
                             <Grid
