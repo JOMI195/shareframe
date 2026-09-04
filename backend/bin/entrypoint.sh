@@ -27,6 +27,7 @@ if [ -n "$PRODUCTION" ]; then
     python manage.py create_image_sizes
     echo "Seeding deterministic dev/local test data..."
     python manage.py seed_dev_data
+    python manage.py seed_changelogs
   fi
 else
   echo "PRODUCTION is not set, skipping adding fixtures."

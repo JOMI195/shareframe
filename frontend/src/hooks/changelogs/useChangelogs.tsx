@@ -21,6 +21,8 @@ export const useChangelogs = () => {
     };
 
     const cleanUpdDeactivatedIds = () => {
+        // Callers fire this on mount, before the ids are fetched; an empty list would drop every dismissal.
+        if (changelogIds.length === 0) return;
         dispatch(clearOutdatedDeactivatedIds(changelogIds.map(log => log.id)));
     };
 
