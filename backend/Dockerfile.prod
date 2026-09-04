@@ -6,7 +6,7 @@
 FROM python:3.13.6-slim-bullseye AS builder
 
 # uv: resolve + install from pyproject.toml + uv.lock
-COPY --from=ghcr.io/astral-sh/uv:0.11.15 /uv /bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.12.3 /uv /bin/uv
 
 # set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1

@@ -57,7 +57,7 @@ class ChangelogAdmin(admin.ModelAdmin):
     def group_list(self, obj):
         groups = obj.groups.all()
         if not groups:
-            return format_html('<span style="color: red;">No groups</span>')
+            return format_html('<span style="color: red;">{}</span>', "No groups")
         group_names = [group.name for group in groups]
         return format_html(
             '<span style="font-size: 12px;">{}</span>', ", ".join(group_names)

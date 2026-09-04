@@ -1,7 +1,6 @@
 #!/bin/sh
 
 echo "Migrating the database..."
-python manage.py makemigrations
 python manage.py migrate
 
 
