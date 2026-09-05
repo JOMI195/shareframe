@@ -30,21 +30,10 @@ const Security = () => {
     };
 
     const userPatchValidationSchema = yup.object({
+        // no policy here: an existing password predating it must stay changeable
         current_password: yup
             .string()
-            .required("Dieses Feld wird benötigt" as string)
-            .min(
-                8,
-                "Dein Passwort muss mindestens 8 Zeichen enthalten" as string
-            )
-            .max(
-                50,
-                "Dein Passwort darf maximal 50 Zeichen enthalten" as string
-            )
-            .matches(
-                /^(?=.*[0-9])(?=.*[a-zA-Z])(?=\S+$).{8,50}$/,
-                "Dein Passwort muss mindestens einen Buchstaben und eine Zahl enthalten" as string
-            ),
+            .required("Dieses Feld wird benötigt" as string),
         new_password: yup
             .string()
             .required("Dieses Feld wird benötigt" as string)

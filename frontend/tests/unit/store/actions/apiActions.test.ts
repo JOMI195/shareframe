@@ -21,8 +21,8 @@ describe('api request actions', () => {
       dashboard: dashboard.fetchDashboardStats(),
       contact: contact.sendContactEmail({ name: 'A', email: 'a@b.de', subject: 'S', message: 'M' }),
       framesFetch: frames.fetchframes(),
-      framesRegister: frames.registerFrame('AAAAA-BBBBB-CCCCC-DDDDD-EEEEE'),
-      framesUnregister: frames.unregisterFrame('AAAAA-BBBBB-CCCCC-DDDDD-EEEEE'),
+      framesRegister: frames.registerFrame('AAAA-BBBB-CCCC-DDDD'),
+      framesUnregister: frames.unregisterFrame('AAAA-BBBB-CCCC-DDDD'),
       framesOtp: frames.obtainFrameOTP(7),
       friendshipsFetch: friendships.fetchFriendships(),
       friendshipsSend: friendships.sendFrindshipRequest('ABCD1234'),
@@ -119,7 +119,7 @@ describe('api request actions', () => {
         "framesRegister": {
           "payload": {
             "data": {
-              "public_serial_number": "AAAAA-BBBBB-CCCCC-DDDDD-EEEEE",
+              "public_serial_number": "AAAA-BBBB-CCCC-DDDD",
             },
             "method": "post",
             "onError": "frames/registerFrameFailed",
@@ -132,7 +132,7 @@ describe('api request actions', () => {
         "framesUnregister": {
           "payload": {
             "data": {
-              "public_serial_number": "AAAAA-BBBBB-CCCCC-DDDDD-EEEEE",
+              "public_serial_number": "AAAA-BBBB-CCCC-DDDD",
             },
             "method": "post",
             "onError": "frames/unregisterFrameFailed",

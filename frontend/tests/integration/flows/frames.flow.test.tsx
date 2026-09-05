@@ -8,9 +8,7 @@ import { makeFrame } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withFrames } from '@tests/mocks';
 
-// The dialog's own format. Note the backend derives serials as four groups of
-// four (XXXX-XXXX-XXXX-XXXX), which this validation rejects — see README.tests.md.
-const SERIAL = 'EOJ8W-XBVY8-6U3LL-39I2F-1HUCU';
+const SERIAL = 'EOJ8-WXBV-Y86U-3LL3';
 
 const frame = makeFrame({ id: 1, public_serial_number: SERIAL, last_seen: new Date().toISOString() });
 
@@ -101,7 +99,7 @@ describe('registering a frame', () => {
     await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
 
     expect(
-      await screen.findByText('Der Code muss das Format EOJ8W-XBVY8-6U3LL-39I2F-1HUCU haben'),
+      await screen.findByText('Der Code muss das Format EOJ8-WXBV-Y86U-3LL3 haben'),
     ).toBeInTheDocument();
     expect(calls).toHaveLength(0);
   });

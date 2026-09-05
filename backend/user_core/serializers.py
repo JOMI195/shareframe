@@ -1,8 +1,19 @@
+from rest_framework import serializers
 from user_accounts.serializers import AccountRetrieveSerializer, AccountUpdateSerializer
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
 
 from .models import User
+from .validation import is_username_allowed
+
+
+class UsernameBlacklistMixin:
+    def validate_username(self, value):
+        if not is_username_allowed(value):
+            raise serializers.ValidationError(
+                "The username contains sensitive or problematic terms."
+            )
+        return value
 
 
 class UserRetrieveSerializer(BaseUserSerializer):
@@ -13,7 +24,7 @@ class UserRetrieveSerializer(BaseUserSerializer):
         fields = ("id", "email", "username", "account")
 
 
-class UserCreateSerializer(BaseUserCreateSerializer):
+class UserCreateSerializer(UsernameBlacklistMixin, BaseUserCreateSerializer):
     def create(self, validated_data):
         user = User.objects.create_user(
             email=validated_data["email"],
@@ -23,7 +34,7 @@ class UserCreateSerializer(BaseUserCreateSerializer):
         return user
 
 
-class UserRetrievePatchSerializer(BaseUserSerializer):
+class UserRetrievePatchSerializer(UsernameBlacklistMixin, BaseUserSerializer):
     account = AccountUpdateSerializer()
 
     class Meta(BaseUserSerializer.Meta):

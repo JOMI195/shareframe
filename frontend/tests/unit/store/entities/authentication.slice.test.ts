@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import reducer, {
-  accountUpdateFulfilled,
   authenticationFulfilled,
   authenticationPending,
   authenticationRejected,
@@ -76,15 +75,6 @@ describe('profile updates', () => {
     expect(withEmail.me.username).toBe(seedUser.username);
 
     expect(reducer(signedIn(), usernameUpdateFulfilled('neu')).me.username).toBe('neu');
-  });
-
-  it('writes only the account subtree', () => {
-    const account = { friendship_user_searchable: false, friendship_user_search_code: 'ZZZZ0000' };
-
-    const state = reducer(signedIn(), accountUpdateFulfilled(account));
-
-    expect(state.me.account).toEqual(account);
-    expect(state.me.email).toBe(seedUser.email);
   });
 });
 

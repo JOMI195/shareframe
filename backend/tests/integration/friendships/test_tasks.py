@@ -2,7 +2,6 @@ import pytest
 from django.utils import timezone
 from freezegun import freeze_time
 
-from friendships.models import Friendship
 from friendships.tasks import reject_long_pending_friendship_requestes
 from tests.support.factories import FriendshipFactory
 
@@ -33,12 +32,29 @@ def test_an_accepted_request_is_not_counted():
     assert reject_long_pending_friendship_requestes().startswith("Reject 0 ")
 
 
-def test_nothing_is_actually_rejected():
-    """Known bug: the task mutates request.status in a loop and never saves."""
+def test_the_stale_request_is_rejected():
     friendship = stale()
 
     reject_long_pending_friendship_requestes()
 
     friendship.refresh_from_db()
+    assert friendship.status == "rejected"
+
+
+def test_a_recent_request_is_left_alone():
+    friendship = FriendshipFactory(status="pending")
+
+    reject_long_pending_friendship_requestes()
+
+    friendship.refresh_from_db()
     assert friendship.status == "pending"
-    assert Friendship.objects.filter(status="rejected", id=friendship.id).count() == 0
+
+
+def test_the_rejection_is_timestamped():
+    friendship = stale()
+
+    reject_long_pending_friendship_requestes()
+
+    before = friendship.updated_at
+    friendship.refresh_from_db()
+    assert friendship.updated_at > before

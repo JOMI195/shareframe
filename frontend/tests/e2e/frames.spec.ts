@@ -1,9 +1,6 @@
 import { expect, test } from '../support/e2e/fixtures';
 
-// Matches the register dialog's own format. The backend derives serials as four
-// groups of four instead, so no real frame can be registered through this form —
-// see README.tests.md.
-const UNKNOWN_SERIAL = 'ZZZZZ-ZZZZZ-ZZZZZ-ZZZZZ-ZZZZZ';
+const UNKNOWN_SERIAL = 'ZZZZ-ZZZZ-ZZZZ-ZZZZ';
 
 // The loading skeletons are Cards too, so frame cards are the ones showing a serial.
 const SERIAL = /[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/;

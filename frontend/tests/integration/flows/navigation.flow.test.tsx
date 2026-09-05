@@ -76,7 +76,7 @@ describe('in-app navigation', () => {
     await user.click(await screen.findByRole('link', { name: 'Bilderrahmen' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/bilderrahmen/'));
-    expect(await screen.findByText(/AAAAA-BBBBB/)).toBeInTheDocument();
+    expect(await screen.findByText(/AAAA-BBBB/)).toBeInTheDocument();
     // Navigating closes it again on small screens.
     expect(store.getState().ui.navigation.sidebar.open).toBe(false);
   });

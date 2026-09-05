@@ -29,8 +29,8 @@ const RegisterFrameDialog: React.FC = () => {
       .string()
       .required("Dieses Feld wird benötigt" as string)
       .matches(
-        /^[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}-[A-Z0-9]{5}$/,
-        "Der Code muss das Format EOJ8W-XBVY8-6U3LL-39I2F-1HUCU haben" as string
+        /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
+        "Der Code muss das Format EOJ8-WXBV-Y86U-3LL3 haben" as string
       )
     ,
   });

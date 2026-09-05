@@ -1,8 +1,7 @@
 import * as userSlice from "./authentication.slice";
 import * as authEndpoints from "@/assets/endpoints/api/authEndpoints";
-import * as accountEndpoints from "@/assets/endpoints/api/accountsEndpoints";
 import { apiRequest } from "@/common/utils/constants/api.constants";
-import { IPatchUserForm, IUserAccount } from "@/types";
+import { IPatchUserForm } from "@/types";
 
 export const signUpUser = (userData: {
   username: string;
@@ -158,14 +157,4 @@ export const updateMyUserData = (user: IPatchUserForm
     onError: userSlice.userUpdateRejected.type,
     method: "patch",
     data: user,
-  });
-
-export const updateMyAccount = (account: Partial<IUserAccount>) =>
-  apiRequest({
-    url: accountEndpoints.getMyAccountUrl(),
-    onStart: userSlice.accountUpdatePending.type,
-    onSuccess: userSlice.accountUpdateFulfilled.type,
-    onError: userSlice.accountUpdateRejected.type,
-    method: "patch",
-    data: account,
   });

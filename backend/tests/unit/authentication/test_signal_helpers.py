@@ -28,6 +28,10 @@ def test_reports_unknown_when_there_is_no_address():
     assert _get_client_ip(request) == "unknown"
 
 
+def test_reports_unknown_without_a_request():
+    assert _get_client_ip(None) == "unknown"
+
+
 def test_recognises_an_admin_path():
     assert _is_admin_request(RequestFactory().get("/api/admin/login/"))
 

@@ -3,6 +3,7 @@ from django.core import mail
 
 from tests.support import seed
 from tests.support.factories import UserFactory
+from user_core.blacklist import USERNAME_BLACKLIST
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -55,17 +56,17 @@ class TestUpdateProfile:
         user.refresh_from_db()
         assert user.email == original
 
-    def test_a_blacklisted_username_is_accepted_on_update(self, client_as):
-        """Known gap: the blacklist is enforced in create_user only."""
-        from user_core.blacklist import USERNAME_BLACKLIST
-
+    def test_a_blacklisted_username_is_refused(self, client_as):
         user = UserFactory(is_active=True)
+        original = user.username
 
         response = client_as(user).patch(
             ME_URL, {"username": USERNAME_BLACKLIST[0]}, format="json"
         )
 
-        assert response.status_code == 200
+        assert response.status_code == 400
+        user.refresh_from_db()
+        assert user.username == original
 
     def test_the_csrf_header_is_required(self, client_as):
         user = UserFactory(is_active=True)
@@ -86,17 +87,24 @@ class TestDeleteAccount:
         assert response.status_code == 204
         assert User.objects.get(pk=user.pk).is_deleted
 
-    def test_a_wrong_password_raises_instead_of_answering_400(self, client_as):
-        """Known bug: authenticate() is called without the request, so the
-        user_login_failed receiver dereferences None. Should be the 400 below."""
+    def test_a_wrong_password_answers_400(self, client_as):
         user = UserFactory(is_active=True)
 
-        with pytest.raises(AttributeError):
-            client_as(user).delete(
-                ME_URL, {"password": "not-the-password1"}, format="json"
-            )
+        response = client_as(user).delete(
+            ME_URL, {"password": "not-the-password1"}, format="json"
+        )
 
+        assert response.status_code == 400
         assert not User.objects.get(pk=user.pk).is_deleted
+
+    def test_a_wrong_password_sends_no_mail(self, client_as):
+        """A re-check of the current user is not a login, so nothing is notified."""
+        client = client_as(UserFactory(is_active=True))
+        before = len(mail.outbox)
+
+        client.delete(ME_URL, {"password": "not-the-password1"}, format="json")
+
+        assert len(mail.outbox) == before
 
     def test_the_password_is_required(self, client_as):
         user = UserFactory(is_active=True)

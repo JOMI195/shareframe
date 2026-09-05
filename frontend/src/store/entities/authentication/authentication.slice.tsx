@@ -106,17 +106,6 @@ const userSlice = createSlice({
     userUpdateRejected: (user) => {
       user.api.loading = false;
     },
-    accountUpdatePending: (user) => {
-      user.api.loading = true;
-    },
-    accountUpdateFulfilled: (user, action) => {
-      user.me.account = action.payload;
-      user.api.loading = false;
-      user.api.lastFetch = Date.now();
-    },
-    accountUpdateRejected: (user) => {
-      user.api.loading = false;
-    },
     passwordResetPending: (user) => {
       user.api.loading = true;
     },
@@ -201,9 +190,6 @@ export const {
   userUpdatePending,
   userUpdateFulfilled,
   userUpdateRejected,
-  accountUpdatePending,
-  accountUpdateFulfilled,
-  accountUpdateRejected,
   profileUpdateRejected,
   passwordResetPending,
   passwordResetFulfilled,

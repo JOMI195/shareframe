@@ -107,7 +107,7 @@ class TestRegister:
         assert response.status_code == 400
 
     def test_the_serial_format_is_four_groups_of_four(self, spare_entry):
-        """Known bug: the register dialog's schema demands five groups of five."""
+        """The register dialog's schema matches this shape."""
         serial = serial_for(spare_entry["seed_b64"])
 
         assert len(serial.split("-")) == 4

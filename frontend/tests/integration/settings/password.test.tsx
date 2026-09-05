@@ -84,6 +84,16 @@ describe('password settings', () => {
     expect(bodies).toHaveLength(0);
   });
 
+  it('accepts a current password that predates the policy', async () => {
+    const bodies = recordChange();
+    const { user } = render();
+
+    await fill(user, { current: 'altes', next: VALID, repeat: VALID });
+
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0].current_password).toBe('altes');
+  });
+
   it('asks for every field', async () => {
     const { user } = render();
 

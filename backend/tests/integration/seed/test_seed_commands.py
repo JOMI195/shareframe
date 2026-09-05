@@ -52,3 +52,16 @@ def test_seeding_again_changes_nothing():
     call_command("seed_changelogs", verbosity=0)
 
     assert _counts() == before
+
+
+def test_a_friendship_that_moved_on_is_not_seeded_twice():
+    friendship = Friendship.objects.filter(status="pending").first()
+    friendship.status = "accepted"
+    friendship.save()
+    before = _counts()
+
+    call_command("seed_dev_data", verbosity=0)
+
+    assert _counts() == before
+    friendship.refresh_from_db()
+    assert friendship.status == "accepted"

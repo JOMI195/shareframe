@@ -1,7 +1,5 @@
 // Seeded by seed-data/users.json via `manage.py seed_dev_data`, which the
 // backend entrypoint runs whenever PRODUCTION is not True.
-// The passwords carry a digit because the change-password form validates the
-// *current* password against the new-password policy too.
 export const alice = { email: 'seed.alice@shareframe.local', password: 'seed-alice-dev-pass1', username: 'seed_alice', code: 'SEEDA001' };
 export const bob = { email: 'seed.bob@shareframe.local', password: 'seed-bob-dev-pass1', username: 'seed_bob', code: 'SEEDB001' };
 export const carol = { email: 'seed.carol@shareframe.local', password: 'seed-carol-dev-pass1', username: 'seed_carol', code: 'SEEDC001' };

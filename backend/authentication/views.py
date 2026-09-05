@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import status, serializers
 from drf_spectacular.utils import extend_schema
-from django.contrib.auth import authenticate
+from django.contrib.auth import get_user_model
 from appEmail.djoserEmailConfig import DjoserUserDeletedEmail
 
 
@@ -24,21 +24,20 @@ class CustomUserViewSet(BaseUserViewSet):
             password = serializer.validated_data["password"]
             anonymize = serializer.validated_data.get("anonymize", True)
 
-            user = authenticate(username=request.user.email, password=password)
-
-            if user is not None:
-                request.user.delete(anonymize=anonymize)
-
-                context = {"user": user}
-                to = [user.email]
-                DjoserUserDeletedEmail(self.request, context).send(to)
-
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            else:
+            if not request.user.check_password(password):
                 return Response(
                     {"detail": "Incorrect password."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
+
+            # delete() anonymises in place, so the mail needs a detached copy
+            user = get_user_model().objects.get(pk=request.user.pk)
+
+            request.user.delete(anonymize=anonymize)
+
+            DjoserUserDeletedEmail(self.request, {"user": user}).send([user.email])
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
         return super().me(request, *args, **kwargs)
 

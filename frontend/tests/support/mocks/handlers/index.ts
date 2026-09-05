@@ -1,4 +1,3 @@
-import { accountHandlers } from './accounts';
 import { appHandlers } from './app';
 import { authHandlers } from './auth';
 import { changelogHandlers } from './changelogs';
@@ -13,7 +12,6 @@ import { mediaHandlers } from './media';
 // world. Tests layer data or failures on top with server.use(...scenario).
 export const handlers = [
   ...authHandlers,
-  ...accountHandlers,
   ...appHandlers,
   ...dashboardHandlers,
   ...imageHandlers,
@@ -25,7 +23,6 @@ export const handlers = [
 ];
 
 export {
-  accountHandlers,
   appHandlers,
   authHandlers,
   changelogHandlers,

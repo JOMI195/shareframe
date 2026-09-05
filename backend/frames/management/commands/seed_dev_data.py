@@ -382,7 +382,7 @@ class Command(BaseCommand):
             _, created = Friendship.objects.get_or_create(
                 sender=users[spec["sender"]],
                 reciever=users[spec["reciever"]],
-                status=spec["status"],
+                defaults={"status": spec["status"]},
             )
             if created:
                 summary["friendships_created"] += 1

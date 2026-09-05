@@ -1,5 +1,4 @@
 import { describe, expect, it } from 'vitest';
-import * as accounts from '@/assets/endpoints/api/accountsEndpoints';
 import * as app from '@/assets/endpoints/api/appEndpoints';
 import * as auth from '@/assets/endpoints/api/authEndpoints';
 import * as changelogs from '@/assets/endpoints/api/changelogsEndpoints';
@@ -13,7 +12,6 @@ import * as images from '@/assets/endpoints/api/imagesEndpoints';
 describe('api endpoints', () => {
   it('matches the backend routes', () => {
     expect({
-      accounts: [accounts.getAccountListUrl(), accounts.getAccountItemUrl(7), accounts.getMyAccountUrl()],
       app: [app.getAppVersionUrl()],
       auth: [
         auth.getTokenCreateUrl(),
@@ -64,11 +62,6 @@ describe('api endpoints', () => {
       ],
     }).toMatchInlineSnapshot(`
       {
-        "accounts": [
-          "accounts/",
-          "accounts/7/",
-          "accounts/me/",
-        ],
         "app": [
           "version/",
         ],
