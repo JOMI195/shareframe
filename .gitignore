@@ -117,6 +117,8 @@ ENV/
 env.bak/ 
 venv.bak/
 !.env.example
+# test-only, fake values, needed to reproduce the e2e stack
+!.env.e2e
 
 # Backup copies
 *.old
@@ -203,3 +205,9 @@ nginx/*.mmdb
 .claude/
 CLAUDE.md
 nginx/.geoipupdate.lock
+
+# Frontend test output
+frontend/coverage/
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/

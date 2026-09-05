@@ -1,0 +1,32 @@
+[
+  {
+    "sender": "seed_alice",
+    "reciever": "seed_bob",
+    "status": "accepted"
+  },
+  {
+    "sender": "seed_alice",
+    "reciever": "seed_carol",
+    "status": "accepted"
+  },
+  {
+    "sender": "seed_bob",
+    "reciever": "seed_carol",
+    "status": "accepted"
+  },
+  {
+    "sender": "seed_dave",
+    "reciever": "seed_alice",
+    "status": "pending"
+  },
+  {
+    "sender": "seed_alice",
+    "reciever": "seed_erin",
+    "status": "pending"
+  },
+  {
+    "sender": "seed_erin",
+    "reciever": "seed_bob",
+    "status": "rejected"
+  }
+]

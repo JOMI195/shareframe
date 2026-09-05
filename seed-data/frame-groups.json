@@ -1,0 +1,14 @@
+[
+  {
+    "name": "Seed Living Room",
+    "description": "Deterministic frame group for local seeded traffic tests."
+  },
+  {
+    "name": "Seed Office",
+    "description": "Second deterministic frame group for local seeded traffic tests."
+  },
+  {
+    "name": "Seed Garden",
+    "description": "Third group, used to check that changelogs are filtered per group."
+  }
+]

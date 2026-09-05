@@ -38,6 +38,8 @@ CORS_ALLOW_CREDENTIALS = True
 PRODUCTION = os.environ.get("PRODUCTION", False) == "True"
 APP_BUILD_VERSION = os.environ.get("APP_BUILD_VERSION", "")
 
+SEED_DATA_DIR = Path(os.environ.get("SEED_DATA_DIR", BASE_DIR.parent / "seed-data"))
+
 if PRODUCTION:
     # Trust proxy headers and force HTTPS in production
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")

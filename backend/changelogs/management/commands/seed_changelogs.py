@@ -9,7 +9,7 @@ from django.core.management.base import BaseCommand, CommandError
 from changelogs.models import Changelog
 from frames.models import FrameGroup
 
-SEED_DATA_FILE_NAME = "changelog_seed_data.json"
+SEED_DATA_FILE_NAME = "changelogs.json"
 
 
 class Command(BaseCommand):
@@ -48,11 +48,11 @@ class Command(BaseCommand):
 
     @property
     def _seed_assets_dir(self):
-        return Path(settings.BASE_DIR) / "seed_assets" / "changelogs"
+        return Path(settings.SEED_DATA_DIR) / "assets" / "changelogs"
 
     @property
     def _seed_data_path(self):
-        return Path(settings.BASE_DIR) / "seed_assets" / SEED_DATA_FILE_NAME
+        return Path(settings.SEED_DATA_DIR) / SEED_DATA_FILE_NAME
 
     def _load_seed_data(self):
         if not self._seed_data_path.exists():
@@ -63,10 +63,10 @@ class Command(BaseCommand):
         except json.JSONDecodeError as exc:
             raise CommandError(f"Invalid JSON in {self._seed_data_path}: {exc}") from exc
 
-        if not isinstance(seed_data.get("changelogs"), list):
-            raise CommandError("Seed section 'changelogs' must be a JSON array.")
+        if not isinstance(seed_data, list):
+            raise CommandError(f"{self._seed_data_path} must contain a JSON array.")
 
-        return seed_data["changelogs"]
+        return seed_data
 
     def _validate_seed_assets(self, specs):
         missing = [

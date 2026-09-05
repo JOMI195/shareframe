@@ -106,7 +106,9 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
         }
       }
 
-      if (error.response?.status === 401) {
+      // Auth endpoints are excluded: a failed refresh is already counted by the
+      // catch above, and counting it twice signs out on a single expired session.
+      if (error.response?.status === 401 && !isAuthEndpoint) {
         authFailureCount++;
 
         if (authFailureCount >= MAX_AUTH_FAILURES) {

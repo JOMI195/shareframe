@@ -72,7 +72,9 @@ const friendshipsSlice = createSlice({
       const index = sliceState.friendships.findIndex(
         (friendship) => friendship.created_at === oldCreation.created_at
       );
-      sliceState.friendships.splice(index, 1);
+      if (index !== -1) {
+        sliceState.friendships.splice(index, 1);
+      }
       sliceState.api.loading = false;
     },
     friendshipDeleteDeleteFailed: (sliceState) => {

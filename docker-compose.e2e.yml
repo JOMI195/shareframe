@@ -1,0 +1,79 @@
+# Throwaway stack for the Playwright run: started by tests/support/e2e/stack.ts
+# and destroyed with `down -v` afterwards. The database lives in tmpfs, so every
+# run starts from the seed data and nothing survives.
+# Ports are offset from the dev stack so both can run at the same time.
+services:
+  backend:
+    container_name: backend-e2e
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./backend/:/app/backend
+      - ./seed-data:/app/seed-data:ro
+    ports:
+      - 8100:8000
+    env_file:
+      - ./.env.e2e
+    depends_on:
+      backend_db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mailhog:
+        condition: service_started
+    healthcheck:
+      # The slim image has no curl; migrations and seeding run before the server binds.
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/auth/csrf/')",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 20s
+    networks:
+      - backend_network
+
+  backend_db:
+    container_name: backend_db-e2e
+    image: postgres:15
+    env_file:
+      - ./.env.e2e
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend_network
+
+  # Account deletion and the account mails go through SMTP, and a refused
+  # connection turns into a 500 that rolls the whole request back.
+  mailhog:
+    container_name: mailhog-e2e
+    image: mailhog/mailhog
+    networks:
+      - backend_network
+
+  redis:
+    container_name: redis-e2e
+    image: redis:6.2-alpine
+    command: redis-server --save "" --appendonly no --loglevel warning
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge

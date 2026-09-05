@@ -94,8 +94,10 @@ const imagesSlice = createSlice({
       const index = sliceState.imagesPaginated.results.findIndex(
         (image) => image.created_at === oldCreation.created_at
       );
-      sliceState.imagesPaginated.results.splice(index, 1);
-      sliceState.imagesPaginated.count -= 1;
+      if (index !== -1) {
+        sliceState.imagesPaginated.results.splice(index, 1);
+        sliceState.imagesPaginated.count -= 1;
+      }
       resetApiState(sliceState);
     },
     deleteImageFailed: (sliceState) => {

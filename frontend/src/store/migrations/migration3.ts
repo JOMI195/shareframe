@@ -10,7 +10,7 @@ const migration3 = (state: RootState): RootState => {
         dialogs: {
           ...state.ui.sentImages.dialogs,
           preview: {
-            ...state.ui.images.dialogs.preview,
+            ...state.ui.sentImages.dialogs.preview,
             selectedSentImage: null
           }
         },

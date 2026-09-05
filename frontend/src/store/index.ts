@@ -3,16 +3,11 @@ import { ThunkDispatch } from 'redux-thunk';
 import { Action } from 'redux';
 import { TypedUseSelectorHook, useDispatch, useSelector } from 'react-redux';
 import apiMiddleware from "./middleware/api";
+import { serializableCheckOptions } from "./setupStore";
 import {
   persistStore,
   persistReducer,
   PersistConfig,
-  FLUSH,
-  REHYDRATE,
-  PAUSE,
-  PERSIST,
-  PURGE,
-  REGISTER,
   createMigrate,
   createTransform,
   PersistedState,
@@ -48,11 +43,7 @@ const persistedReducer = persistReducer(persistConfig, rootReducer);
 export const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER, "api/request"],
-      },
-    }).concat(apiMiddleware),
+    getDefaultMiddleware({ serializableCheck: serializableCheckOptions }).concat(apiMiddleware),
 });
 
 export const persistor = persistStore(store);

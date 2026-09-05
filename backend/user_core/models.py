@@ -102,8 +102,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         """Custom delete method to handle soft deletion and updates."""
 
         if anonymize:
-            new_username = f"{random.choice(RANDOM_USERNAMES)}-{uuid.uuid4()}"
-            self.username = new_username
+            max_length = self._meta.get_field("username").max_length
+            suffix = uuid.uuid4().hex[:8]
+            prefix = random.choice(RANDOM_USERNAMES)[: max_length - len(suffix) - 1]
+            self.username = f"{prefix}-{suffix}"
 
         new_email = f"{uuid.uuid4()}@deleted.de"
         self.email = new_email

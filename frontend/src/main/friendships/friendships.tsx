@@ -10,6 +10,7 @@ import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import FriendshipsGallery from "./gallery/friendshipsGallery";
 import FriendshipRequestsGallery from "./gallery/friendshipRequestsGallery";
+import { getIncomingPendingRequests } from "./pendingRequests";
 
 const Friendships: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -18,29 +19,7 @@ const Friendships: React.FC = () => {
     const user = useAppSelector(getUser);
     const friendships = useAppSelector(getFriendships);
 
-    const pendingRequests = friendships.filter(
-        (friendship) =>
-            friendship.status === "pending"
-    )
-        // Only show friend requests received by the current user
-        .filter((friendship) => friendship.reciever === user.me.username)
-        // Exclude friend requests if an accepted friendship already exists between user and friend
-        .filter((friendship) => {
-            // For a friend request received by the user, the friend is the sender
-            const friend = friendship.sender;
-            // Check in the complete friendships array for an accepted friendship with that friend
-            const acceptedExists = friendships.some(
-                (f) =>
-                    f.status === "accepted" &&
-                    (
-                        // Either the current user sent the accepted request...
-                        (f.sender === user.me.username && f.reciever === friend) ||
-                        // ...or the current user received the accepted request.
-                        (f.reciever === user.me.username && f.sender === friend)
-                    )
-            );
-            return !acceptedExists;
-        }).length;
+    const pendingRequests = getIncomingPendingRequests(friendships, user.me.username).length;
 
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
         setSelectedTabIndex(newValue);

@@ -24,12 +24,16 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "@tests/*": [
+        "./tests/support/*"
       ]
     }
   },
   "include": [
     "src",
     "vite",
+    "tests"
   ],
   "exclude": [
     "node_modules",

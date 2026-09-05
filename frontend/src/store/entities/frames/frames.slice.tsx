@@ -54,7 +54,9 @@ const framesSlice = createSlice({
       const index = sliceState.frames.findIndex(
         (frame) => frame.registered_at === oldCreation.registered_at
       );
-      sliceState.frames.splice(index, 1);
+      if (index !== -1) {
+        sliceState.frames.splice(index, 1);
+      }
       sliceState.api.loading = false;
     },
     registerFrameFailed: (sliceState) => {

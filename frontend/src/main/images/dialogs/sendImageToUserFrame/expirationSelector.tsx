@@ -10,26 +10,14 @@ import {
     Radio,
     Box,
 } from '@mui/material';
-
-interface ExpirationOption {
-    label: string;
-    hours: number;
-}
+import { PREDEFINED_EXPIRATION_OPTIONS, TimeUnit, toExpirationHours } from './expiration';
 
 interface ExpirationSelectorProps {
     expirationHours: number;
     onExpirationHoursChange: (hours: number) => void;
 }
 
-type TimeUnit = 'hours' | 'days';
 type SelectionMode = 'predefined' | 'custom';
-
-const PREDEFINED_OPTIONS: ExpirationOption[] = [
-    { label: '24 Stunden', hours: 24 },
-    { label: '7 Tage', hours: 168 },
-    { label: '14 Tage', hours: 336 },
-    { label: '30 Tage', hours: 720 }
-];
 
 const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
     expirationHours,
@@ -65,7 +53,7 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
         const newMode = event.target.value as SelectionMode;
         setSelectionMode(newMode);
         if (newMode === 'predefined') {
-            onExpirationHoursChange(PREDEFINED_OPTIONS[0].hours);
+            onExpirationHoursChange(PREDEFINED_EXPIRATION_OPTIONS[0].hours);
         } else {
             setCustomTimeValue('1');
             setCustomTimeUnit('hours');
@@ -75,16 +63,12 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
 
     const handleCustomTimeValueChange = (newValue: string) => {
         setCustomTimeValue(newValue);
-        const numericValue = parseInt(newValue) || 1;
-        const hoursValue = customTimeUnit === 'days' ? numericValue * 24 : numericValue;
-        onExpirationHoursChange(hoursValue);
+        onExpirationHoursChange(toExpirationHours(newValue, customTimeUnit));
     };
 
     const handleCustomTimeUnitChange = (newUnit: TimeUnit) => {
         setCustomTimeUnit(newUnit);
-        const numericValue = parseInt(customTimeValue) || 1;
-        const hoursValue = newUnit === 'days' ? numericValue * 24 : numericValue;
-        onExpirationHoursChange(hoursValue);
+        onExpirationHoursChange(toExpirationHours(customTimeValue, newUnit));
     };
 
     return (
@@ -114,7 +98,7 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
                         label="Ablaufzeit"
                         onChange={(e) => onExpirationHoursChange(Number(e.target.value))}
                     >
-                        {PREDEFINED_OPTIONS.map((option) => (
+                        {PREDEFINED_EXPIRATION_OPTIONS.map((option) => (
                             <MenuItem key={option.hours} value={option.hours}>
                                 {option.label}
                             </MenuItem>

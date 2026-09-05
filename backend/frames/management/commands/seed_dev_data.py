@@ -1,6 +1,6 @@
 import base64
 import json
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
@@ -17,7 +17,14 @@ from sent_images.models import SentImage
 from user_accounts.models import Account
 from user_core.models import User
 
-SEED_DATA_FILE_NAME = "dev_seed_data.json"
+SECTION_FILES = {
+    "users": "users.json",
+    "groups": "frame-groups.json",
+    "frames": "frames.json",
+    "images": "images.json",
+    "friendships": "friendships.json",
+    "sent_images": "sent-images.json",
+}
 
 
 class Command(BaseCommand):
@@ -58,6 +65,7 @@ class Command(BaseCommand):
             "images_reactivated": 0,
             "friendships_created": 0,
             "sent_images_created": 0,
+            "sent_images_backdated": 0,
         }
 
         users = self._ensure_users(seed_data["users"], summary)
@@ -74,42 +82,39 @@ class Command(BaseCommand):
         self.stdout.write("\nSeed frame credentials (test-only):")
         for frame_fact in frame_facts:
             self.stdout.write(
-                "- {name}: serial={serial}, seed_b64={seed_b64}".format(
+                "- {name} (owner={owner}): serial={serial}, seed_b64={seed_b64}".format(
                     name=frame_fact["name"],
+                    owner=frame_fact["owner"],
                     serial=frame_fact["serial"],
                     seed_b64=frame_fact["seed_b64"],
                 )
             )
 
     @property
-    def _seed_assets_dir(self):
-        return Path(settings.BASE_DIR) / "seed_assets" / "images"
+    def _seed_data_dir(self):
+        return Path(settings.SEED_DATA_DIR)
 
     @property
-    def _seed_data_path(self):
-        return Path(settings.BASE_DIR) / "seed_assets" / SEED_DATA_FILE_NAME
+    def _seed_assets_dir(self):
+        return self._seed_data_dir / "assets" / "images"
 
     def _load_seed_data(self):
-        if not self._seed_data_path.exists():
-            raise CommandError(f"Seed data file not found: {self._seed_data_path}")
+        return {section: self._load_section(file_name) for section, file_name in SECTION_FILES.items()}
+
+    def _load_section(self, file_name):
+        path = self._seed_data_dir / file_name
+        if not path.exists():
+            raise CommandError(f"Seed data file not found: {path}")
 
         try:
-            seed_data = json.loads(self._seed_data_path.read_text(encoding="utf-8"))
+            section = json.loads(path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
-            raise CommandError(f"Invalid JSON in {self._seed_data_path}: {exc}") from exc
+            raise CommandError(f"Invalid JSON in {path}: {exc}") from exc
 
-        required = {"users", "groups", "frames", "images", "friendships", "sent_images"}
-        missing = sorted(required - set(seed_data.keys()))
-        if missing:
-            raise CommandError(
-                f"Seed data file is missing required sections: {', '.join(missing)}"
-            )
+        if not isinstance(section, list):
+            raise CommandError(f"{path} must contain a JSON array.")
 
-        for section in required:
-            if not isinstance(seed_data.get(section), list):
-                raise CommandError(f"Seed section '{section}' must be a JSON array.")
-
-        return seed_data
+        return section
 
     def _validate_seed_assets(self, image_specs):
         missing = []
@@ -171,6 +176,12 @@ class Command(BaseCommand):
             ):
                 summary["accounts_updated"] += 1
 
+            searchable = spec.get("friendship_user_searchable", True)
+            if account.friendship_user_searchable != searchable:
+                account.friendship_user_searchable = searchable
+                account.save(update_fields=["friendship_user_searchable"])
+                summary["accounts_updated"] += 1
+
             users[spec["username"]] = user
         return users
 
@@ -219,7 +230,8 @@ class Command(BaseCommand):
     def _ensure_frames(self, frame_specs, users, groups, summary):
         frame_facts = []
         for spec in frame_specs:
-            owner = users[spec["owner_username"]]
+            owner_username = spec.get("owner_username")
+            owner = users[owner_username] if owner_username else None
             public_key, serial = self._derive_public_key_and_serial(spec["seed_b64"])
 
             self._validate_frame_collisions(
@@ -255,7 +267,7 @@ class Command(BaseCommand):
                 if not frame.private_serial_number:
                     frame.private_serial_number = spec["private_serial_number"]
                     updated_fields.append("private_serial_number")
-                if frame.user_id is None:
+                if frame.user_id is None and owner is not None:
                     frame.user = owner
                     updated_fields.append("user")
                 if not frame.version:
@@ -279,6 +291,7 @@ class Command(BaseCommand):
                     "serial": serial,
                     "seed_b64": spec["seed_b64"],
                     "public_key": public_key,
+                    "owner": owner_username or "-",
                 }
             )
         return frame_facts
@@ -341,7 +354,9 @@ class Command(BaseCommand):
             )
             if deleted_image is not None:
                 deleted_image.markedAsDeleted = False
-                deleted_image.auto_delete_after_period = False
+                deleted_image.auto_delete_after_period = spec.get(
+                    "auto_delete_after_period", False
+                )
                 deleted_image.save(
                     update_fields_only=True,
                     update_fields=["markedAsDeleted", "auto_delete_after_period"],
@@ -354,7 +369,7 @@ class Command(BaseCommand):
             image = Image(
                 user=owner,
                 display_name=spec["display_name"],
-                auto_delete_after_period=False,
+                auto_delete_after_period=spec.get("auto_delete_after_period", False),
             )
             image.image.save(spec["file_name"], ContentFile(image_bytes), save=False)
             image.save()
@@ -374,14 +389,30 @@ class Command(BaseCommand):
 
     def _ensure_sent_images(self, sent_image_specs, users, images, summary):
         for spec in sent_image_specs:
-            _, created = SentImage.objects.get_or_create(
+            sent_image, created = SentImage.objects.get_or_create(
                 sender=users[spec["sender"]],
                 reciever=users[spec["reciever"]],
                 image=images[spec["image_display_name"]],
-                expires_at=self._parse_expiry(spec["expires_at"]),
+                defaults={"expires_at": self._resolve_expiry(spec)},
             )
             if created:
                 summary["sent_images_created"] += 1
+
+            # sent_at is auto_now_add, so back-dating needs a direct update.
+            sent_days_ago = spec.get("sent_days_ago")
+            if sent_days_ago is not None:
+                sent_at = self._now() - timedelta(days=sent_days_ago)
+                if sent_image.sent_at != sent_at:
+                    SentImage.objects.filter(pk=sent_image.pk).update(sent_at=sent_at)
+                    summary["sent_images_backdated"] += 1
+
+    def _now(self):
+        return datetime.now(tz=UTC).replace(hour=12, minute=0, second=0, microsecond=0)
+
+    def _resolve_expiry(self, spec):
+        if "expires_in_days" in spec:
+            return self._now() + timedelta(days=spec["expires_in_days"])
+        return self._parse_expiry(spec["expires_at"])
 
     def _parse_expiry(self, iso_value):
         try:

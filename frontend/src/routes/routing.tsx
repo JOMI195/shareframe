@@ -24,7 +24,9 @@ import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
 import Changelogs from '@/main/changelogs/changelogs';
 
-const Routing = createBrowserRouter([
+// Exported so tests can mount the real route tree with createMemoryRouter.
+// eslint-disable-next-line react-refresh/only-export-components
+export const routes = [
   {
     element: <SeoHead />,
     HydrateFallback: LoadingFallback,
@@ -119,6 +121,8 @@ const Routing = createBrowserRouter([
       },
     ],
   },
-]);
+];
+
+const Routing = createBrowserRouter(routes);
 
 export default Routing;

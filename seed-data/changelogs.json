@@ -1,0 +1,51 @@
+[
+  {
+    "title": "Seed: Bilder in Gruppen sortieren",
+    "date": "2026-05-15",
+    "is_published": true,
+    "groups": [
+      "Seed Living Room",
+      "Seed Office"
+    ],
+    "content_file_name": "seed_changelog_1.md"
+  },
+  {
+    "title": "Seed: Schnellere Übertragung an den Rahmen",
+    "date": "2026-06-10",
+    "is_published": true,
+    "groups": [
+      "Seed Living Room",
+      "Seed Office"
+    ],
+    "content_file_name": "seed_changelog_2.md"
+  },
+  {
+    "title": "Seed: Freundschaften und geteilte Rahmen",
+    "date": "2026-07-01",
+    "is_published": true,
+    "groups": [
+      "Seed Living Room",
+      "Seed Office",
+      "Seed Garden"
+    ],
+    "content_file_name": "seed_changelog_3.md"
+  },
+  {
+    "title": "Seed: Automatisches Löschen alter Fotos",
+    "date": "2026-08-12",
+    "is_published": true,
+    "groups": [
+      "Seed Garden"
+    ],
+    "content_file_name": "seed_changelog_4.md"
+  },
+  {
+    "title": "Seed: Noch nicht veröffentlicht",
+    "date": "2026-09-20",
+    "is_published": false,
+    "groups": [
+      "Seed Living Room"
+    ],
+    "content_file_name": "seed_changelog_5.md"
+  }
+]

@@ -28,6 +28,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import ExpirationSelector from './expirationSelector';
+import { DEFAULT_EXPIRATION_HOURS, expirationTimestamp } from './expiration';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -41,8 +42,6 @@ const MENU_PROPS = {
         },
     },
 };
-const DEFAULT_EXPIRATION_HOURS = 24;
-
 const SendImageToUserFrameDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
@@ -90,22 +89,20 @@ const SendImageToUserFrameDialog = () => {
         setIsSendingInProgress(true);
 
         try {
-            const expirationTimestamp = Math.floor(
-                Date.now() / 1000 + (expirationHours * 3600)
+            const expiresAt = expirationTimestamp(expirationHours);
+
+            await Promise.all(
+                imagesToSend.flatMap(imageToSend =>
+                    selectedReceiverUsernames.map(receiverUsername =>
+                        dispatch(sendImageToUserFrames(
+                            receiverUsername,
+                            imageToSend.id,
+                            // TODO: sent as number
+                            expiresAt.toString()
+                        ))
+                    )
+                )
             );
-
-            imagesToSend.forEach(async imageToSend => {
-                const sendPromises = selectedReceiverUsernames.map(receiverUsername =>
-                    dispatch(sendImageToUserFrames(
-                        receiverUsername,
-                        imageToSend.id,
-                        // TODO: sent as number
-                        expirationTimestamp.toString()
-                    ))
-                );
-
-                await Promise.all(sendPromises);
-            });
         } catch {
             // cleanup happens in finally
         } finally {

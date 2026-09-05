@@ -1,0 +1,98 @@
+[
+  {
+    "display_name": "alice_sunrise",
+    "owner_username": "seed_alice",
+    "file_name": "seed-sunrise.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_forest",
+    "owner_username": "seed_alice",
+    "file_name": "seed-forest.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_desert",
+    "owner_username": "seed_alice",
+    "file_name": "seed-desert.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_mountain",
+    "owner_username": "seed_alice",
+    "file_name": "seed-mountain.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_city",
+    "owner_username": "seed_alice",
+    "file_name": "seed-city.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_ocean",
+    "owner_username": "seed_alice",
+    "file_name": "seed-ocean.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "alice_sunrise_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-sunrise.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "alice_forest_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-forest.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "alice_desert_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-desert.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "alice_mountain_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-mountain.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "alice_city_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-city.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "alice_ocean_2",
+    "owner_username": "seed_alice",
+    "file_name": "seed-ocean.png",
+    "auto_delete_after_period": true
+  },
+  {
+    "display_name": "bob_city",
+    "owner_username": "seed_bob",
+    "file_name": "seed-city.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "bob_street",
+    "owner_username": "seed_bob",
+    "file_name": "seed-mountain.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "carol_ocean",
+    "owner_username": "seed_carol",
+    "file_name": "seed-ocean.png",
+    "auto_delete_after_period": false
+  },
+  {
+    "display_name": "carol_lake",
+    "owner_username": "seed_carol",
+    "file_name": "seed-forest.png",
+    "auto_delete_after_period": false
+  }
+]

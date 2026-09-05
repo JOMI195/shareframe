@@ -1,0 +1,44 @@
+[
+  {
+    "username": "seed_alice",
+    "email": "seed.alice@shareframe.local",
+    "password": "seed-alice-dev-pass1",
+    "friendship_code": "SEEDA001",
+    "friendship_user_searchable": true
+  },
+  {
+    "username": "seed_bob",
+    "email": "seed.bob@shareframe.local",
+    "password": "seed-bob-dev-pass1",
+    "friendship_code": "SEEDB001",
+    "friendship_user_searchable": true
+  },
+  {
+    "username": "seed_carol",
+    "email": "seed.carol@shareframe.local",
+    "password": "seed-carol-dev-pass1",
+    "friendship_code": "SEEDC001",
+    "friendship_user_searchable": true
+  },
+  {
+    "username": "seed_dave",
+    "email": "seed.dave@shareframe.local",
+    "password": "seed-dave-dev-pass1",
+    "friendship_code": "SEEDD001",
+    "friendship_user_searchable": true
+  },
+  {
+    "username": "seed_erin",
+    "email": "seed.erin@shareframe.local",
+    "password": "seed-erin-dev-pass1",
+    "friendship_code": "SEEDE001",
+    "friendship_user_searchable": true
+  },
+  {
+    "username": "seed_mallory",
+    "email": "seed.mallory@shareframe.local",
+    "password": "seed-mallory-dev-pass1",
+    "friendship_code": "SEEDM001",
+    "friendship_user_searchable": false
+  }
+]

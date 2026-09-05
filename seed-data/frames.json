@@ -1,0 +1,47 @@
+[
+  {
+    "name": "seed-frame-alice-living",
+    "seed_b64": "4Lt78vIuTn62C9832MKfPzKN89RoMzyudfu1W4+0V6M=",
+    "private_serial_number": "SEED-PRIVATE-0003",
+    "owner_username": "seed_alice",
+    "groups": ["Seed Living Room"],
+    "version": "7.3.0",
+    "local_ip_address": "192.168.0.12"
+  },
+  {
+    "name": "seed-frame-alice-kitchen",
+    "seed_b64": "zLEDV1As9nYULfu2kQlUMJXufe1qcU1/lQRl9RbO3bg=",
+    "private_serial_number": "SEED-PRIVATE-0004",
+    "owner_username": "seed_alice",
+    "groups": ["Seed Living Room", "Seed Garden"],
+    "version": "7.1.0",
+    "local_ip_address": "192.168.0.13"
+  },
+  {
+    "name": "seed-frame-main",
+    "seed_b64": "GsmLsUiA7A8V5FM8dCj30jxqSZyh29kaUFheJDTFqtQ=",
+    "private_serial_number": "SEED-PRIVATE-0001",
+    "owner_username": "seed_bob",
+    "groups": ["Seed Living Room"],
+    "version": "7.3.0",
+    "local_ip_address": "192.168.0.10"
+  },
+  {
+    "name": "seed-frame-office",
+    "seed_b64": "eENYNI2gTamRkXmvtQDm0pGDoQcmqXCAso3JxH5o1SQ=",
+    "private_serial_number": "SEED-PRIVATE-0002",
+    "owner_username": "seed_carol",
+    "groups": ["Seed Office"],
+    "version": "7.0.0",
+    "local_ip_address": "192.168.0.11"
+  },
+  {
+    "name": "seed-frame-spare",
+    "seed_b64": "mL793+phUE7WA3aESMGeW/HnwBOPKPi7UL5b6zc/Xlg=",
+    "private_serial_number": "SEED-PRIVATE-0005",
+    "owner_username": null,
+    "groups": ["Seed Office"],
+    "version": "7.3.0",
+    "local_ip_address": "192.168.0.14"
+  }
+]

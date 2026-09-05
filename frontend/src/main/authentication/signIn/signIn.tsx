@@ -4,10 +4,7 @@ import {
   authenticateUser,
   loadMyUserProfile,
 } from "@/store/entities/authentication/authentication.actions";
-import {
-  getApi,
-  getUser,
-} from "@/store/entities/authentication/authentication.slice";
+import { getApi } from "@/store/entities/authentication/authentication.slice";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router";
@@ -38,7 +35,6 @@ export default function SignIn() {
   const navigate = useNavigate();
 
   const api = useAppSelector(getApi);
-  const user = useAppSelector(getUser);
 
   const [errorMessage, setErrorMessage] = useState("");
 
@@ -55,12 +51,15 @@ export default function SignIn() {
     };
   }, [errorMessage]);
 
+  // Only for an already-signed-in visitor. The post-login redirect happens in
+  // onSubmit: watching the auth slice here would loop, since loadMyUserProfile
+  // mutates the very slice the effect depends on.
   useEffect(() => {
     if (localStorage.getItem("loggedIn") === "true") {
       dispatch(loadMyUserProfile());
       navigate(getDashboardUrl());
     }
-  }, [dispatch, navigate, user]);
+  }, [dispatch, navigate]);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -100,8 +99,12 @@ export default function SignIn() {
       await dispatch(authenticateUser(values));
       if (localStorage.getItem("loggedIn") !== "true") {
         setErrorMessage("Bitte überprüfe deine E-Mail-Adresse und dein Passwort auf Tippfehler (Groß-/ Kleinschreibung beachten). Falls dein Konto noch nicht aktiviert wurde, prüfe bitte deine E-Mails auf die Aktivierungsmail. Versuche es anschließend erneut. Bei wiederholten Problemen kontaktiere bitte unseren Support.");
+        signInForm.resetForm();
+        return;
       }
       signInForm.resetForm();
+      dispatch(loadMyUserProfile());
+      navigate(getDashboardUrl());
     },
   });
 
