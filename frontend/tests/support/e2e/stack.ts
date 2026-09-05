@@ -5,16 +5,16 @@ import { promisify } from 'node:util';
 const run = promisify(execFile);
 
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../../..');
-const PROJECT = 'shareframe-e2e';
+const PROJECT = 'shareframe-test';
 
 const composeArgs = [
   'compose',
   '-p',
   PROJECT,
   '-f',
-  path.join(REPO_ROOT, 'docker-compose.e2e.yml'),
+  path.join(REPO_ROOT, 'docker-compose.test.yml'),
   '--env-file',
-  path.join(REPO_ROOT, '.env.e2e'),
+  path.join(REPO_ROOT, '.env.test'),
 ];
 
 // app-command.sh is bypassed on purpose: it edits the env file in place and
@@ -36,7 +36,7 @@ export const startStack = async () => {
     return;
   }
 
-  console.log('[e2e] starting the throwaway backend stack (fresh database, seeded)');
+  console.log('[e2e] starting the shared test stack (fresh database, seeded)');
   await compose(['up', '-d', '--build', '--wait']);
 };
 
@@ -48,6 +48,6 @@ export const stopStack = async () => {
     return;
   }
 
-  console.log('[e2e] destroying the throwaway backend stack');
+  console.log('[e2e] destroying the shared test stack');
   await compose(['down', '-v', '--remove-orphans'], 5 * 60_000);
 };

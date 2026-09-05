@@ -89,6 +89,8 @@ htmlcov/
 .coverage.* 
 .cache 
 .pytest_cache/ 
+# media root for the backend pytest run
+backend/.pytest-mediafiles/
 nosetests.xml 
 coverage.xml 
 *.cover 
@@ -117,8 +119,8 @@ ENV/
 env.bak/ 
 venv.bak/
 !.env.example
-# test-only, fake values, needed to reproduce the e2e stack
-!.env.e2e
+# test-only, fake values, needed to reproduce the test stack
+!.env.test
 
 # Backup copies
 *.old

@@ -2,9 +2,9 @@ import { defineConfig, devices } from '@playwright/test';
 
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 
-// globalSetup starts a throwaway backend + database (docker-compose.e2e.yml) and
-// globalTeardown destroys it. The SPA is served by vite in `e2e` mode, which
-// reads the same .env.e2e as the stack.
+// globalSetup starts the shared test stack (docker-compose.test.yml) and
+// globalTeardown destroys it. The SPA is served by vite in `test` mode, which
+// reads the same .env.test as the stack.
 export default defineConfig({
   testDir: './tests/e2e',
   testMatch: '**/*.spec.ts',
@@ -22,7 +22,7 @@ export default defineConfig({
     screenshot: 'only-on-failure',
   },
   webServer: {
-    command: 'npx vite --mode e2e --port 3100 --strictPort',
+    command: 'npx vite --mode test --port 3100 --strictPort',
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,

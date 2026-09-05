@@ -45,3 +45,52 @@ constraint-dependencies = [
     "pyOpenSSL>=26.4.0",
     "twisted>=26.4.0",
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4",
+    "pytest-django>=4.11",
+    "pytest-asyncio>=1.0",
+    "pytest-cov>=6.0",
+    "pytest-dotenv>=0.5.2",
+    "factory-boy>=3.3",
+    "freezegun>=1.5",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings_test"
+# The committed, all-fake test env. Loaded before Django settings are imported.
+env_files = ["../.env.test"]
+testpaths = ["tests"]
+python_files = "test_*.py"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+# --ds beats the DJANGO_SETTINGS_MODULE that .env.test sets for the containers.
+addopts = "--ds=config.settings_test --strict-markers --reuse-db"
+markers = [
+    "throttled: run with the real DRF throttle classes restored",
+]
+
+[tool.coverage.run]
+source = ["."]
+omit = [
+    "*/migrations/*",
+    "*/management/commands/*",
+    "conftest.py",
+    "tests/*",
+    "manage.py",
+    "config/asgi.py",
+    "config/wsgi.py",
+    "config/celery.py",
+    "config/celeryconfig.py",
+    "config/settings*.py",
+    "*/admin.py",
+    "*/apps.py",
+    # A vendored copy of django-request-logging, disabled under test.
+    "utils/request_logging/middleware.py",
+]
+
+[tool.coverage.report]
+# Raise it, never lower it.
+fail_under = 89
+skip_covered = true

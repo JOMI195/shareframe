@@ -13,8 +13,8 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "e2e:up": "docker compose -p shareframe-e2e -f ../docker-compose.e2e.yml --env-file ../.env.e2e up -d --build --wait",
-    "e2e:down": "docker compose -p shareframe-e2e -f ../docker-compose.e2e.yml --env-file ../.env.e2e down -v --remove-orphans",
+    "e2e:up": "docker compose -p shareframe-test -f ../docker-compose.test.yml --env-file ../.env.test up -d --build --wait",
+    "e2e:down": "docker compose -p shareframe-test -f ../docker-compose.test.yml --env-file ../.env.test down -v --remove-orphans",
     "db:reset": "docker exec backend-dev python manage.py flush --noinput && docker exec backend-dev python manage.py create_image_sizes && docker exec backend-dev python manage.py seed_dev_data && docker exec backend-dev python manage.py seed_changelogs",
     "check": "npm run lint && tsc --noEmit && npm run test",
     "preview": "vite preview"
