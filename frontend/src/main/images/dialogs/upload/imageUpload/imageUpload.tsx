@@ -10,9 +10,11 @@ interface ImageUploadProps {
     handleNext: () => void;
     handleBack: () => void;
     imagePreviews: { [id: string]: string };
+    previewErrors: { [id: string]: string };
+    markPreviewBroken: (id: string, reason: string) => void;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, removeImage, handleNext, handleBack, imagePreviews }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, removeImage, handleNext, handleBack, imagePreviews, previewErrors, markPreviewBroken }) => {
     return (
         <Box sx={{ mt: 2 }}>
             <ImageUploadForm
@@ -20,6 +22,8 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, rem
                 addImages={addImages}
                 removeImage={removeImage}
                 imagePreviews={imagePreviews}
+                previewErrors={previewErrors}
+                markPreviewBroken={markPreviewBroken}
             />
             <Grid container spacing={2} sx={{ mt: 1, alignItems: "center" }}>
                 <Grid

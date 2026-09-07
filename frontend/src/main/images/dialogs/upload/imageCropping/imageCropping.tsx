@@ -12,9 +12,9 @@ import {
     Typography,
     useMediaQuery,
     useTheme,
-    Avatar,
     FormControlLabel,
-    Checkbox
+    Checkbox,
+    Alert
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CropIcon from '@mui/icons-material/Crop';
@@ -23,6 +23,7 @@ import { Area } from 'react-easy-crop';
 import Cropper from './cropper/cropper';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../uploadDialog';
+import ImagePreviewThumb, { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
 
 const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
     ? +import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
@@ -42,6 +43,8 @@ interface ImageCroppingProps {
     allImagesUploaded: boolean;
     sending: boolean;
     imagePreviews: { [id: string]: string };
+    previewErrors: { [id: string]: string };
+    markPreviewBroken: (id: string, reason: string) => void;
     autoDeleteAfterPeriod: boolean;
     setAutoDeleteAfterPeriod: (value: boolean) => void;
 }
@@ -61,6 +64,8 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     allImagesUploaded,
     sending,
     imagePreviews,
+    previewErrors,
+    markPreviewBroken,
     autoDeleteAfterPeriod,
     setAutoDeleteAfterPeriod
 }) => {
@@ -111,16 +116,17 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                                         size="small"
                                         sx={{ mr: 1, bgcolor: 'primary.main', color: 'primary.contrastText' }}
                                     />
-                                    {imagePreviews[imageStatus.id] && (
-                                        <Avatar
-                                            src={imagePreviews[imageStatus.id]}
-                                            variant="square"
-                                            sx={{ width: 40, height: 40, mr: 1, objectFit: 'cover' }}
-                                        />
-                                    )}
+                                    <ImagePreviewThumb
+                                        src={imagePreviews[imageStatus.id]}
+                                        alt={imageStatus.file.name}
+                                        error={previewErrors[imageStatus.id]}
+                                        onError={() => markPreviewBroken(imageStatus.id, PREVIEW_ERROR_MESSAGE)}
+                                    />
                                     <ListItemText
                                         primary={imageStatus.file.name}
-                                        secondary={getReadablyFileSize(imageStatus.file.size)}
+                                        secondary={previewErrors[imageStatus.id]
+                                            ? <Typography style={{ color: '#f24444' }}>{previewErrors[imageStatus.id]}</Typography>
+                                            : getReadablyFileSize(imageStatus.file.size)}
                                     />
                                     {imageStatus.status === 'uploaded' && (
                                         <IconButton edge="end" aria-label="uploaded" size="small" color="success">
@@ -157,13 +163,19 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         md: 7
                     }}>
                     <Box sx={{ maxHeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {currentImage && imagePreviews[currentImage.id] && (
+                        {currentImage && imagePreviews[currentImage.id] && !previewErrors[currentImage.id] && (
                             <Cropper
                                 src={imagePreviews[currentImage.id]}
                                 setCroppedAreaPixels={setCroppedAreaPixels}
                                 rotation={rotation}
                                 setRotation={setRotation}
+                                onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
                             />
+                        )}
+                        {currentImage && previewErrors[currentImage.id] && (
+                            <Alert severity="error" sx={{ width: '100%' }}>
+                                {`${currentImage.file.name}: ${previewErrors[currentImage.id]}`}
+                            </Alert>
                         )}
                         {!currentImage && (
                             <Typography variant="body2" sx={{

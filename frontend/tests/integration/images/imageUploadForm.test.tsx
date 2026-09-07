@@ -15,6 +15,7 @@ const file = (name: string, type: string, sizeMb = 1) =>
 const setup = (over: { existingCount?: number; selected?: number } = {}) => {
   const addImages = vi.fn();
   const removeImage = vi.fn();
+  const markPreviewBroken = vi.fn();
   const imageStatuses = Array.from({ length: over.selected ?? 0 }, (_, i) => ({
     id: `id-${i}`,
     file: file(`vorhanden-${i}.jpg`, 'image/jpeg'),
@@ -27,6 +28,8 @@ const setup = (over: { existingCount?: number; selected?: number } = {}) => {
       removeImage={removeImage}
       imageStatuses={imageStatuses}
       imagePreviews={{}}
+      previewErrors={{}}
+      markPreviewBroken={markPreviewBroken}
     />,
     {
       preloadedState: {
@@ -36,7 +39,7 @@ const setup = (over: { existingCount?: number; selected?: number } = {}) => {
   );
 
   const input = rendered.container.querySelector('input[type="file"]') as HTMLInputElement;
-  return { ...rendered, addImages, removeImage, input };
+  return { ...rendered, addImages, removeImage, markPreviewBroken, input };
 };
 
 describe('ImageUploadForm file input', () => {
@@ -107,5 +110,58 @@ describe('ImageUploadForm file input', () => {
     await user.upload(input, [file('zuviel.jpg', 'image/jpeg')]);
 
     await waitFor(() => expect(addImages).not.toHaveBeenCalled());
+  });
+});
+
+// Android Chrome releases the picker's staged file once the input is touched
+// again, so the bytes have to be copied before that can happen.
+describe('ImageUploadForm android file lifetime', () => {
+  it('hands the parent a detached copy, not the picked file', async () => {
+    const { user, addImages, input } = setup();
+    const picked = file('a.jpg', 'image/jpeg');
+
+    await user.upload(input, [picked]);
+
+    await waitFor(() => expect(addImages).toHaveBeenCalledOnce());
+    const forwarded: File = addImages.mock.calls[0][0][0];
+    expect(forwarded).not.toBe(picked);
+    expect([forwarded.name, forwarded.type, forwarded.size]).toEqual([picked.name, picked.type, picked.size]);
+    expect(await forwarded.arrayBuffer()).toEqual(await picked.arrayBuffer());
+  });
+
+  it('leaves the input populated after a selection', async () => {
+    const { user, addImages, input } = setup();
+
+    await user.upload(input, [file('a.jpg', 'image/jpeg')]);
+
+    await waitFor(() => expect(addImages).toHaveBeenCalledOnce());
+    // past the window in which the input used to be cleared on a timer
+    await new Promise(resolve => setTimeout(resolve, 300));
+    expect(input.files).toHaveLength(1);
+  });
+
+  it('clears the input when the picker is opened, so the same photo can be picked twice', async () => {
+    const { user, input, getByRole } = setup();
+
+    await user.upload(input, [file('a.jpg', 'image/jpeg')]);
+    const click = vi.spyOn(input, 'click').mockImplementation(() => {});
+    await user.click(getByRole('button', { name: /Fotos auswählen/ }));
+
+    expect(click).toHaveBeenCalled();
+    expect(input.files).toHaveLength(0);
+  });
+
+  it('reports a file whose bytes cannot be read instead of failing silently', async () => {
+    const { user, addImages, store, input } = setup();
+    const unreadable = file('kaputt.jpg', 'image/jpeg');
+    vi.spyOn(unreadable, 'arrayBuffer').mockRejectedValue(
+      Object.assign(new Error('could not be read'), { name: 'NotReadableError' }),
+    );
+
+    await user.upload(input, [unreadable]);
+
+    await waitFor(() => expect(store.getState().ui.images.snackbar.alert.open).toBe(true));
+    expect(store.getState().ui.images.snackbar.alert.message).toContain('kaputt.jpg: NotReadableError');
+    expect(addImages).not.toHaveBeenCalled();
   });
 });

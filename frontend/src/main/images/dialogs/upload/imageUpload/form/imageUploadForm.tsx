@@ -8,11 +8,11 @@ import {
     ListItemSecondaryAction,
     IconButton,
     Chip,
-    Avatar,
     Switch,
     Box,
     Typography,
     Button,
+    CircularProgress,
     useTheme,
     useMediaQuery
 } from '@mui/material';
@@ -26,24 +26,32 @@ import {
     getAllowedExtensionLabels
 } from '../validation/imageValidation';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
+import { materializeFiles } from '@/common/utils/files/fileCopy.helpers';
+import ImagePreviewThumb, { PREVIEW_ERROR_MESSAGE } from '../../imagePreviewThumb';
 import { ImageStatus } from '../../uploadDialog';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getImagesPaginated } from '@/store/entities/images/images.slice';
 import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
+
+// Selected photos are held in memory until upload, so the batch needs a ceiling.
+const MAX_MATERIALIZED_BYTES = 200 * 1024 * 1024;
 
 interface IImageUploadFormProps {
     addImages: (images: File[]) => void;
     removeImage: (index: number) => void;
     imageStatuses: ImageStatus[];
     imagePreviews: { [id: string]: string };
+    previewErrors: { [id: string]: string };
+    markPreviewBroken: (id: string, reason: string) => void;
 }
 
-const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeImage, imageStatuses, imagePreviews }) => {
+const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeImage, imageStatuses, imagePreviews, previewErrors, markPreviewBroken }) => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const inputRef = useRef<HTMLInputElement>(null);
     const [isOver, setIsOver] = useState(false);
     const [useCamera, setUseCamera] = useState(false);
+    const [isPreparing, setIsPreparing] = useState(false);
 
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
@@ -56,28 +64,57 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
         : 5;
 
     // Updated file selection handler with total validation
-    const handleFileSelection = (selectedFiles: File[]) => {
+    const handleFileSelection = async (selectedFiles: File[]) => {
         const { validFiles, invalidFiles } = validateImages(
             selectedFiles,
             imagesPaginatedCount,
             imageStatuses.length
         );
 
-        // Show errors for invalid files
-        if (invalidFiles.length > 0) {
-            const errorMessages = invalidFiles.map(({ file, errors }) =>
-                `${file.name}: ${errors.join(', ')}`
-            ).join('\n');
+        const problems = invalidFiles.map(({ file, errors }) => `${file.name}: ${errors.join(', ')}`);
+
+        let remainingBytes = MAX_MATERIALIZED_BYTES - imageStatuses.reduce((sum, status) => sum + status.file.size, 0);
+        const accepted: File[] = [];
+
+        validFiles.forEach(file => {
+            if (file.size <= remainingBytes) {
+                remainingBytes -= file.size;
+                accepted.push(file);
+            } else {
+                problems.push(`${file.name}: Zu viele Daten in einer Auswahl`);
+            }
+        });
+
+        if (accepted.length > 0) {
+            setIsPreparing(true);
+            // Copy the bytes now. Android releases the picker's staged file as soon as
+            // the input is touched again, long before the preview or cropper read it.
+            const { copies, failures } = await materializeFiles(accepted);
+            setIsPreparing(false);
+
+            failures.forEach(({ file, reason }) => problems.push(`${file.name}: ${reason}`));
+
+            if (copies.length > 0) {
+                addImages(copies);
+            }
+        }
+
+        if (problems.length > 0) {
             dispatch(openImagesAlertSnackbar({
-                message: `Einige Fotos konnten nicht hinzugefügt werden:\n${errorMessages}`,
+                message: `Einige Fotos konnten nicht hinzugefügt werden:\n${problems.join('\n')}`,
                 severity: "warning"
             }));
         }
+    };
 
-        // Only add the valid files
-        if (validFiles.length > 0) {
-            addImages(validFiles);
-        }
+    const runFileSelection = (files: File[]) => {
+        handleFileSelection(files).catch(error => {
+            setIsPreparing(false);
+            dispatch(openImagesAlertSnackbar({
+                message: error instanceof Error ? error.message : 'Fotos konnten nicht gelesen werden',
+                severity: "error"
+            }));
+        });
     };
 
     const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
@@ -94,38 +131,18 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
         event.preventDefault();
         setIsOver(false);
         if (event.dataTransfer.files) {
-            const filesArray = Array.from(event.dataTransfer.files);
-            handleFileSelection(filesArray);
-            if (inputRef.current) {
-                inputRef.current.value = '';
-            }
+            runFileSelection(Array.from(event.dataTransfer.files));
         }
     };
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        try {
-            if (event.target.files) {
-                const filesArray = Array.from(event.target.files);
-                handleFileSelection(filesArray);
-
-                // Reset input with longer delay for Android compatibility
-                setTimeout(() => {
-                    if (inputRef.current) {
-                        inputRef.current.value = '';
-                    }
-                }, 200);
-            }
-        } catch {
-            //console.error('Error handling file selection:', error);
-            // Reset input on error
-            if (inputRef.current) {
-                inputRef.current.value = '';
-            }
+        if (event.target.files) {
+            runFileSelection(Array.from(event.target.files));
         }
     };
 
     const handleButtonClick = () => {
-        if (inputRef.current) {
+        if (inputRef.current && !isPreparing) {
             // Remove any existing capture attribute
             inputRef.current.removeAttribute('capture');
 
@@ -134,6 +151,10 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                 inputRef.current.setAttribute('capture', 'environment');
             }
             // For gallery mode (default or when useCamera is false), don't set capture attribute
+
+            // Cleared here, not after a selection: picking the same photo twice needs a
+            // change event, and on Android clearing it invalidates files still to be read.
+            inputRef.current.value = '';
 
             // Must stay inside the user gesture or iOS Safari drops the picker.
             inputRef.current.click();
@@ -164,9 +185,10 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                             borderRadius: 1,
                             p: 4,
                             textAlign: 'center',
-                            cursor: 'pointer',
+                            cursor: isPreparing ? 'progress' : 'pointer',
                             transition: 'border-color 0.3s ease-in-out',
-                            bgcolor: isOver ? 'primary.light' : 'transparent'
+                            bgcolor: isOver ? 'primary.light' : 'transparent',
+                            opacity: isPreparing ? 0.6 : 1
                         }}
                         onDragOver={handleDragOver}
                         onDragLeave={handleDragLeave}
@@ -184,8 +206,16 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                             }}>
                             oder
                         </Typography>
-                        <Button variant="contained" startIcon={(isMobile && useCamera) ? <CameraAltIcon /> : <PhotoLibraryIcon />}>
-                            {(isMobile && useCamera) ? 'Foto aufnehmen' : 'Fotos auswählen'}
+                        <Button
+                            variant="contained"
+                            disabled={isPreparing}
+                            startIcon={isPreparing
+                                ? <CircularProgress size={18} color="inherit" />
+                                : ((isMobile && useCamera) ? <CameraAltIcon /> : <PhotoLibraryIcon />)}
+                        >
+                            {isPreparing
+                                ? 'Fotos werden vorbereitet…'
+                                : ((isMobile && useCamera) ? 'Foto aufnehmen' : 'Fotos auswählen')}
                         </Button>
                         <Typography
                             variant="caption"
@@ -299,18 +329,20 @@ const ImageUploadForm: React.FC<IImageUploadFormProps> = ({ addImages, removeIma
                                                     size="small"
                                                     sx={{ mr: 1, bgcolor: 'primary.main', color: 'primary.contrastText' }}
                                                 />
-                                                {imagePreviews[imageStatus.id] && (
-                                                    <Avatar
-                                                        src={imagePreviews[imageStatus.id]}
-                                                        variant="square"
-                                                        sx={{ width: 40, height: 40, mr: 1, objectFit: 'cover' }}
-                                                    />
-                                                )}
+                                                <ImagePreviewThumb
+                                                    src={imagePreviews[imageStatus.id]}
+                                                    alt={imageStatus.file.name}
+                                                    error={previewErrors[imageStatus.id]}
+                                                    onError={() => markPreviewBroken(imageStatus.id, PREVIEW_ERROR_MESSAGE)}
+                                                />
                                                 <ListItemText
                                                     primary={imageStatus.file.name}
                                                     secondary={
-                                                        validation.valid ? getReadablyFileSize(imageStatus.file.size)
-                                                            : <Typography style={{ color: '#f24444' }}>{validation.errors.join(" | ")}</Typography>
+                                                        !validation.valid
+                                                            ? <Typography style={{ color: '#f24444' }}>{validation.errors.join(" | ")}</Typography>
+                                                            : previewErrors[imageStatus.id]
+                                                                ? <Typography style={{ color: '#f24444' }}>{previewErrors[imageStatus.id]}</Typography>
+                                                                : getReadablyFileSize(imageStatus.file.size)
                                                     }
                                                 />
                                                 <ListItemSecondaryAction>

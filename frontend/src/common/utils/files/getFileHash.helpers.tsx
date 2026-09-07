@@ -1,25 +1,7 @@
 import { sha256 } from 'js-sha256';
 
-const fileToArrayBuffer = async (file: File): Promise<ArrayBuffer> => {
-    return new Promise<ArrayBuffer>((resolve, reject) => {
-        const reader = new FileReader();
-
-        const readFile = function (event: ProgressEvent<FileReader>) {
-            const result = event.target?.result;
-            if (result instanceof ArrayBuffer) {
-                resolve(result);
-            } else {
-                reject(new Error('Failed to read file as ArrayBuffer.'));
-            }
-        };
-
-        reader.addEventListener('load', readFile);
-        reader.readAsArrayBuffer(file);
-    });
-}
-
 export const fileToSha256Hex = async (file: File): Promise<string> => {
-    const buffer = await fileToArrayBuffer(file);
+    const buffer = await file.arrayBuffer();
     const data = new Uint8Array(buffer);
 
     // Web Crypto (crypto.subtle) only exists in secure contexts (HTTPS / localhost).

@@ -17,13 +17,15 @@ interface CropperProps {
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
+    onError: () => void;
 }
 
 const Cropper: React.FC<CropperProps> = ({
     src,
     setCroppedAreaPixels,
     rotation,
-    setRotation
+    setRotation,
+    onError
 }) => {
     const theme = useTheme();
     const cropperRef = useRef<EasyCropper>(null);
@@ -139,6 +141,7 @@ const Cropper: React.FC<CropperProps> = ({
                             restrictPosition={false}
                             cropShape="rect"
                             objectFit="horizontal-cover"
+                            mediaProps={{ onError }}
                         />
                     </div>
                     <Navigation

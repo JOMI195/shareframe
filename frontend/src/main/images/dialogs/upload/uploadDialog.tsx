@@ -78,6 +78,7 @@ const UploadDialog: React.FC = () => {
   const [autoDeleteAfterPeriod, setAutoDeleteAfterPeriod] = useState(true);
 
   const [imagePreviews, setImagePreviews] = useState<{ [id: string]: string }>({});
+  const [previewErrors, setPreviewErrors] = useState<{ [id: string]: string }>({});
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
@@ -92,6 +93,7 @@ const UploadDialog: React.FC = () => {
     setAutoDeleteAfterPeriod(true);
     resetCropperState();
     setImagePreviews({});
+    setPreviewErrors({});
   }
 
   const resetCropperState = useCallback(() => {
@@ -189,6 +191,15 @@ const UploadDialog: React.FC = () => {
 
     // Update the React state
     setImagePreviews(newPreviewsMap);
+    setPreviewErrors(prev => {
+      const staleIds = Object.keys(prev).filter(id => !currentImageIdsInStatus.has(id));
+      if (staleIds.length === 0) {
+        return prev;
+      }
+      const next = { ...prev };
+      staleIds.forEach(id => delete next[id]);
+      return next;
+    });
 
     // Update the mutable ref to reflect the URLs that are now active
     activeUrlRefs.current = newPreviewsMap;
@@ -210,6 +221,10 @@ const UploadDialog: React.FC = () => {
       activeUrlRefs.current = {};
     };
   }, []);
+
+  const markPreviewBroken = useCallback((id: string, reason: string) => {
+    setPreviewErrors(prev => (prev[id] ? prev : { ...prev, [id]: reason }))
+  }, [])
 
   const selectImageForCropping = useCallback((index: number) => {
     if (imageStatuses[index].status === 'uploaded') return
@@ -375,6 +390,8 @@ const UploadDialog: React.FC = () => {
                         handleNext={handleNext}
                         handleBack={handleBack}
                         imagePreviews={imagePreviews}
+                        previewErrors={previewErrors}
+                        markPreviewBroken={markPreviewBroken}
                       />
                     )}
                     {index === 1 && (
@@ -393,6 +410,8 @@ const UploadDialog: React.FC = () => {
                         allImagesUploaded={allImagesUploaded}
                         sending={sending}
                         imagePreviews={imagePreviews}
+                        previewErrors={previewErrors}
+                        markPreviewBroken={markPreviewBroken}
                         autoDeleteAfterPeriod={autoDeleteAfterPeriod}
                         setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
                       />
