@@ -1,14 +1,16 @@
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework.decorators import action
-from django.utils import timezone
 from asgiref.sync import async_to_sync
 from django.db.models import Q
+from django.utils import timezone
+from drf_spectacular.utils import OpenApiParameter, extend_schema
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 from frames.consumers import FrameWebSocketConsumer
+
 from .models import SentImage
 from .serializers import (
     SentImagesRetrieveSerializer,
@@ -121,23 +123,6 @@ class SentImagesViewSet(viewsets.ModelViewSet):
             return self.get_paginated_response(serializer.data)
 
         serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
-    @extend_schema(
-        responses={200: SentImagesRetrieveSerializer},
-    )
-    def retrieve(self, request, *args, **kwargs):
-        try:
-            element = self.get_queryset().get(pk=self.kwargs["pk"])
-        except SentImage.DoesNotExist:
-            return Response(
-                {
-                    "detail": "Sent image entry not found or you don't have permission to view it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        serializer = self.get_serializer(element)
         return Response(serializer.data)
 
     @extend_schema(
