@@ -13,7 +13,7 @@ pytestmark = pytest.mark.django_db
 def test_every_recipient_gets_a_separate_mail():
     users = [UserFactory(is_active=True) for _ in range(2)]
 
-    send_changelog_email(ChangelogFactory().id, [user.id for user in users])
+    send_changelog_email(ChangelogFactory().id, [user.email for user in users])
 
     assert sorted(message.to for message in mail.outbox) == sorted(
         [user.email] for user in users
@@ -26,7 +26,7 @@ def test_the_mail_carries_title_body_and_link(settings):
         content_file=SimpleUploadedFile("pwr.md", b"New **power** button.\n"),
     )
 
-    send_changelog_email(changelog.id, [UserFactory(is_active=True).id])
+    send_changelog_email(changelog.id, [UserFactory(is_active=True).email])
 
     message = mail.outbox[-1]
     assert message.subject == "ShareFrame - Power"
@@ -42,7 +42,7 @@ def test_referenced_images_are_attached_next_to_the_logo():
         changelog=changelog, tag="pwr", image=upload_file()
     )
 
-    send_changelog_email(changelog.id, [UserFactory(is_active=True).id])
+    send_changelog_email(changelog.id, [UserFactory(is_active=True).email])
 
     content_ids = [part["Content-ID"] for part in mail.outbox[-1].attachments]
     assert content_ids == ["<logo_image>", f"<changelog_image_{image.pk}>"]

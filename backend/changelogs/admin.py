@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.template.response import TemplateResponse
@@ -73,9 +74,14 @@ class ChangelogAdmin(admin.ModelAdmin):
 
     @admin.action(description="Send test email to me")
     def send_test_email(self, request, queryset):
+        to_email = (
+            settings.ADMIN_NOTIFICATION_EMAIL
+            if getattr(request.user, "is_admin", False)
+            else request.user.email
+        )
         for changelog in queryset:
-            send_changelog_email.delay(changelog.id, [request.user.id])
-        self.message_user(request, f"Test email queued for {request.user.email}.")
+            send_changelog_email.delay(changelog.id, [to_email])
+        self.message_user(request, f"Test email queued for {to_email}.")
 
     @admin.action(description="Send email to group members")
     def send_email_to_group_members(self, request, queryset):
@@ -116,12 +122,12 @@ class ChangelogAdmin(admin.ModelAdmin):
             )
 
         for changelog, _ in sendable:
-            user_ids = list(changelog.recipients().values_list("id", flat=True))
-            send_changelog_email.delay(changelog.id, user_ids)
+            emails = list(changelog.recipients().values_list("email", flat=True))
+            send_changelog_email.delay(changelog.id, emails)
             changelog.email_sent_at = timezone.now()
             changelog.save(update_fields=["email_sent_at"])
             self.message_user(
                 request,
-                f'"{changelog}" queued for {len(user_ids)} recipients.',
+                f'"{changelog}" queued for {len(emails)} recipients.',
                 messages.SUCCESS,
             )

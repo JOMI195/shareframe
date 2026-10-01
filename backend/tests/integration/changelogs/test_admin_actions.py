@@ -90,9 +90,23 @@ class TestSendToGroupMembers:
         assert mail.outbox == []
 
 
-def test_a_test_mail_only_reaches_the_admin(model_admin, staff, changelog):
+def test_a_test_mail_only_reaches_the_admin_notification_address(
+    model_admin, staff, changelog, settings
+):
     model_admin.send_test_email(admin_request(staff), selected(changelog))
 
-    assert [message.to for message in mail.outbox] == [[staff.email]]
+    assert [message.to for message in mail.outbox] == [
+        [settings.ADMIN_NOTIFICATION_EMAIL]
+    ]
     changelog.refresh_from_db()
     assert changelog.email_sent_at is None
+
+
+def test_a_test_mail_for_non_admin_staff_reaches_their_own_address(
+    model_admin, changelog
+):
+    user = UserFactory(is_active=True, is_staff=True, is_admin=False)
+
+    model_admin.send_test_email(admin_request(user), selected(changelog))
+
+    assert [message.to for message in mail.outbox] == [[user.email]]
