@@ -112,6 +112,10 @@ _FRAME_TIMESTAMPS = (
 class ShareframeFrameCollector:
     """Fleet roster, queried from the DB at scrape time. One series per frame."""
 
+    # Stops the auto-describing global registry from calling collect() at startup.
+    def describe(self):
+        return []
+
     def collect(self):
         try:
             yield from self._collect()

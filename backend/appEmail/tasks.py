@@ -1,7 +1,8 @@
 from typing import List, Dict, Tuple
 from django.core.mail import EmailMessage
 from django.template.loader import render_to_string
-from email.mime.image import MIMEImage
+from email.message import MIMEPart
+import mimetypes
 import os
 from django.conf import settings
 from config.celery import celery
@@ -47,10 +48,17 @@ def send_django_mail(
 
     for image in images:
         with open(image["path"], "rb") as f:
-            img = MIMEImage(f.read())
-            img.add_header("Content-ID", f"<{image['cid']}>")
-            img.add_header("Content-Disposition", "inline", filename=image["filename"])
-            email.attach(img)
+            maintype, subtype = mimetypes.guess_type(image["path"])[0].split("/")
+            part = MIMEPart()
+            part.set_content(
+                f.read(),
+                maintype=maintype,
+                subtype=subtype,
+                disposition="inline",
+                filename=image["filename"],
+                cid=f"<{image['cid']}>",
+            )
+            email.attach(part)
 
     email.send(fail_silently=False)
 
