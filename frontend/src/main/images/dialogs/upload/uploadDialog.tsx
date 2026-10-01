@@ -22,7 +22,7 @@ import CloseIcon from '@mui/icons-material/Close'
 
 import { validateImage } from './imageUpload/validation/imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { closeCreateImageDialog, getDialogs, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
+import { closeCreateImageDialog, getDialogs, openCreateImageDialog, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
@@ -31,6 +31,7 @@ import { Area } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
 import ImageUpload from './imageUpload/imageUpload'
 import ImageCropping from './imageCropping/imageCropping'
+import { takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -165,6 +166,19 @@ const UploadDialog: React.FC = () => {
       setActiveStep(0)
     }
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    takeSharedFiles().then((files) => {
+      if (cancelled || files.length === 0) return;
+      addImages(files);
+      dispatch(openCreateImageDialog());
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- photos shared into the app are picked up once on mount
+  }, []);
 
   const activeUrlRefs = useRef<{ [id: string]: string }>({});
 

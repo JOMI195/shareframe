@@ -3,6 +3,8 @@ import Appearance from './appearance/appearance';
 import PaletteIcon from '@mui/icons-material/Palette';
 import Privacy from './privacy/privacy';
 import PolicyIcon from '@mui/icons-material/Policy';
+import Install from './install/install';
+import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 
 const App = () => {
     const tabs = [
@@ -15,6 +17,11 @@ const App = () => {
             label: "Privatspähre",
             icon: <PolicyIcon />,
             content: <Privacy />
+        },
+        {
+            label: "App",
+            icon: <InstallMobileIcon />,
+            content: <Install />
         },
     ];
 

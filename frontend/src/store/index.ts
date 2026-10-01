@@ -30,7 +30,7 @@ type RootReducerState = ReturnType<typeof rootReducer>;
 
 const persistConfig: PersistConfig<RootReducerState> = {
   key: 'shareframe-data',
-  version: 10,
+  version: 11,
   storage,
   whitelist: ['ui'],
   transforms: [uiSubsetTransform],
