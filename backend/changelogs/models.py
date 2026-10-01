@@ -2,6 +2,7 @@ import os
 import time
 import uuid
 
+from django.contrib.auth import get_user_model
 from django.db import models
 
 from frames.models import FrameGroup
@@ -33,6 +34,7 @@ class Changelog(models.Model):
         related_name="changelogs",
     )
     is_published = models.BooleanField(default=True)
+    email_sent_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,6 +58,18 @@ class Changelog(models.Model):
                 old.content_file.delete(save=False)
 
         super().save(*args, **kwargs)
+
+    def recipients(self):
+        return (
+            get_user_model()
+            .objects.filter(
+                is_active=True,
+                is_deleted=False,
+                frame__is_active=True,
+                frame__groups__in=self.groups.all(),
+            )
+            .distinct()
+        )
 
     def get_markdown_content(self):
         if self.content_file and self.content_file.storage.exists(
