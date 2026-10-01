@@ -1,0 +1,22 @@
+#!/bin/sh
+# Runs both suites once per working tree, so a batch of commits split from it pays only once.
+set -e
+
+stamp=$(git rev-parse --git-path shareframe-tests-passed)
+tmp_index=$(mktemp)
+trap 'rm -f "$tmp_index"' EXIT
+cp "${GIT_INDEX_FILE:-$(git rev-parse --git-path index)}" "$tmp_index"
+GIT_INDEX_FILE=$tmp_index git add -A
+tree=$(GIT_INDEX_FILE=$tmp_index git write-tree)
+
+if [ "$(cat "$stamp" 2>/dev/null)" = "$tree" ]; then
+    echo "pre-commit: tests already passed for this working tree, skipping"
+    exit 0
+fi
+
+echo "pre-commit: frontend (npm run check)"
+(cd frontend && npm run check)
+echo "pre-commit: backend (uv run pytest)"
+(cd backend && uv run pytest -q)
+
+echo "$tree" > "$stamp"
