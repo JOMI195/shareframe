@@ -18,7 +18,9 @@ def request_with(auth):
 
 def test_a_frame_throttle_keys_on_the_frame_not_the_owner():
     """request.auth is the Frame; two frames of one user must not share a bucket."""
-    key = FrameBurstRateThrottle().get_cache_key(request_with(SimpleNamespace(pk=7)), None)
+    key = FrameBurstRateThrottle().get_cache_key(
+        request_with(SimpleNamespace(pk=7)), None
+    )
 
     assert key.endswith("7")
     assert "frame_burst" in key

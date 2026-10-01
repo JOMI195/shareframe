@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from django.conf import settings
-from django.contrib.admin.models import LogEntry, ADDITION, CHANGE, DELETION
+from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.db.models.signals import post_save

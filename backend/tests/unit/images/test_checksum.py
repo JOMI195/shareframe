@@ -11,7 +11,10 @@ CONTENT = b"shareframe" * 1000
 
 
 def test_hashes_a_file_object():
-    assert get_sha256_sum_from_file(io.BytesIO(CONTENT)) == hashlib.sha256(CONTENT).hexdigest()
+    assert (
+        get_sha256_sum_from_file(io.BytesIO(CONTENT))
+        == hashlib.sha256(CONTENT).hexdigest()
+    )
 
 
 def test_hashes_a_path(tmp_path):
@@ -25,7 +28,9 @@ def test_the_two_readers_agree(tmp_path):
     target = tmp_path / "photo.bin"
     target.write_bytes(CONTENT)
 
-    assert get_sha256_sum_from_path(str(target)) == get_sha256_sum_from_file(io.BytesIO(CONTENT))
+    assert get_sha256_sum_from_path(str(target)) == get_sha256_sum_from_file(
+        io.BytesIO(CONTENT)
+    )
 
 
 def test_hashes_an_empty_input():

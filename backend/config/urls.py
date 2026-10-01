@@ -1,23 +1,23 @@
 from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
-from django.conf.urls.static import static
 from django_otp.admin import OTPAdminSite
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from authentication.jwt import (
-    CSRFView,
     CookieTokenObtainPairView,
     CookieTokenRefreshView,
+    CSRFView,
     LogoutView,
 )
 from metrics.views import business_metrics_view, metrics_view
 
 from .views import (
+    ChangelogsAccessView,
     FrameUpdatesAccessView,
     MediaAccessView,
-    ChangelogsAccessView,
     VersionView,
 )
 
@@ -37,7 +37,9 @@ urlpatterns = [
     # path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("authentication.urls")),
     path("api/auth/csrf/", CSRFView.as_view(), name="csrf"),
-    path("api/auth/jwt/create/", CookieTokenObtainPairView.as_view(), name="jwt-create"),
+    path(
+        "api/auth/jwt/create/", CookieTokenObtainPairView.as_view(), name="jwt-create"
+    ),
     path("api/auth/jwt/refresh/", CookieTokenRefreshView.as_view(), name="jwt-refresh"),
     path("api/auth/jwt/logout/", LogoutView.as_view(), name="jwt-logout"),
     path("api/auth/jwt/verify/", TokenVerifyView.as_view(), name="jwt-verify"),

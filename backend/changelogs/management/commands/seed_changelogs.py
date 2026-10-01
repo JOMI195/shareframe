@@ -61,7 +61,9 @@ class Command(BaseCommand):
         try:
             seed_data = json.loads(self._seed_data_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
-            raise CommandError(f"Invalid JSON in {self._seed_data_path}: {exc}") from exc
+            raise CommandError(
+                f"Invalid JSON in {self._seed_data_path}: {exc}"
+            ) from exc
 
         if not isinstance(seed_data, list):
             raise CommandError(f"{self._seed_data_path} must contain a JSON array.")
@@ -127,7 +129,8 @@ class Command(BaseCommand):
 
         if missing:
             raise CommandError(
-                "Frame groups are missing, run seed_dev_data first: " + ", ".join(missing)
+                "Frame groups are missing, run seed_dev_data first: "
+                + ", ".join(missing)
             )
 
         changelog.groups.set(groups)

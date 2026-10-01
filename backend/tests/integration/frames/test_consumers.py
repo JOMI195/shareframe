@@ -56,7 +56,9 @@ async def test_no_token_is_rejected():
 
 
 async def test_an_expired_token_is_rejected():
-    communicator, connected, code = await connect(await make_token(await make_frame(), expired=True))
+    communicator, connected, code = await connect(
+        await make_token(await make_frame(), expired=True)
+    )
 
     assert not connected
     assert code == WS_CLOSE_AUTH_REJECTED
@@ -79,7 +81,10 @@ async def test_ping_is_answered_with_pong():
 
     await communicator.send_to(text_data=json.dumps({"type": "ping", "timestamp": 42}))
 
-    assert json.loads(await communicator.receive_from()) == {"type": "pong", "timestamp": 42}
+    assert json.loads(await communicator.receive_from()) == {
+        "type": "pong",
+        "timestamp": 42,
+    }
     await communicator.disconnect()
 
 

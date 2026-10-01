@@ -34,7 +34,9 @@ def test_the_admin_gets_the_higher_ceiling():
     """Firmware releases are uploaded through the admin."""
     over_app = settings.APP_UPLOAD_MAX_SIZE + 1
 
-    assert build(settings.ADMIN_URL_PREFIX + "frame_updates/release/add/", over_app) is OK
+    assert (
+        build(settings.ADMIN_URL_PREFIX + "frame_updates/release/add/", over_app) is OK
+    )
 
 
 def test_rejects_an_admin_request_over_the_admin_limit():

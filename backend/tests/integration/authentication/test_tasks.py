@@ -38,6 +38,8 @@ def test_keeps_a_live_token():
 
 
 def test_reports_how_many_it_deleted():
-    outstanding_for(UserFactory(), expires_at=aware_utcnow() - datetime.timedelta(days=1))
+    outstanding_for(
+        UserFactory(), expires_at=aware_utcnow() - datetime.timedelta(days=1)
+    )
 
     assert flush_expired_tokens() == "Deleted 1 expired tokens."

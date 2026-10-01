@@ -38,7 +38,9 @@ class TestList:
     def test_the_second_page_holds_the_rest(self, alice):
         response = alice.get(URL, {"page": 2})
 
-        assert len(response.data["results"]) == len(seed.images_of(seed.ALICE)) - PAGE_SIZE
+        assert (
+            len(response.data["results"]) == len(seed.images_of(seed.ALICE)) - PAGE_SIZE
+        )
 
     def test_the_page_size_can_be_changed(self, alice):
         response = alice.get(URL, {"page_size": 3})

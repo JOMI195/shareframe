@@ -1,14 +1,15 @@
 import os
 import random
 import uuid
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 
-from .forms import UserChangeForm, UserCreationForm
+from user_accounts.models import Account
 
 from .choices import RANDOM_USERNAMES
-from user_accounts.models import Account
+from .forms import UserChangeForm, UserCreationForm
 from .models import User
 
 

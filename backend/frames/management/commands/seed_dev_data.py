@@ -99,7 +99,10 @@ class Command(BaseCommand):
         return self._seed_data_dir / "assets" / "images"
 
     def _load_seed_data(self):
-        return {section: self._load_section(file_name) for section, file_name in SECTION_FILES.items()}
+        return {
+            section: self._load_section(file_name)
+            for section, file_name in SECTION_FILES.items()
+        }
 
     def _load_section(self, file_name):
         path = self._seed_data_dir / file_name
@@ -418,7 +421,9 @@ class Command(BaseCommand):
         try:
             parsed = datetime.fromisoformat(iso_value)
         except ValueError as exc:
-            raise CommandError(f"Invalid sent image expires_at value '{iso_value}'.") from exc
+            raise CommandError(
+                f"Invalid sent image expires_at value '{iso_value}'."
+            ) from exc
         if parsed.tzinfo is None:
             parsed = parsed.replace(tzinfo=UTC)
         return parsed

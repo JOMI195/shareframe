@@ -1,9 +1,10 @@
-import os
 import base64
-from django.contrib import admin
-from django.contrib import messages
-from django.utils.html import format_html
+import os
+
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
+from django.contrib import admin, messages
+from django.utils.html import format_html
+
 from .keys import public_key_fingerprint
 from .models import Frame, FrameGroup, FrameToken, FrameWebsocketConnection
 

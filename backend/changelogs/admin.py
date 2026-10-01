@@ -1,8 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
 
-from .models import Changelog, ChangelogImage
 from .forms import ChangelogAdminForm
+from .models import Changelog, ChangelogImage
 
 
 class ChangelogImageInline(admin.StackedInline):

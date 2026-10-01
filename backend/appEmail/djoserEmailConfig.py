@@ -1,12 +1,13 @@
 from django.conf import settings
-from .tasks import send_django_mail_with_logo
 from djoser.email import (
     ActivationEmail,
-    ConfirmationEmail,
-    PasswordResetEmail,
-    PasswordChangedConfirmationEmail,
     BaseDjoserEmail,
+    ConfirmationEmail,
+    PasswordChangedConfirmationEmail,
+    PasswordResetEmail,
 )
+
+from .tasks import send_django_mail_with_logo
 
 
 class DjoserActivationEmail(ActivationEmail):

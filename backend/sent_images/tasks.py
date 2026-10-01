@@ -1,7 +1,10 @@
-from config.celery import celery
-from django.utils import timezone
-from django.conf import settings
 from datetime import timedelta
+
+from django.conf import settings
+from django.utils import timezone
+
+from config.celery import celery
+
 from .models import SentImage
 
 

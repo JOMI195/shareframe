@@ -1,16 +1,15 @@
 import base64
-from datetime import datetime
-import logging
-from typing import List, Optional
-from django.utils import timezone
 import json
-from channels.generic.websocket import AsyncWebsocketConsumer
+import logging
+from datetime import datetime
+
 from channels.db import database_sync_to_async
+from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.layers import get_channel_layer
+from django.utils import timezone
 
-
-from sent_images.models import SentImage
 from images.models import Image
+from sent_images.models import SentImage
 from user_core.models import User
 
 from .close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
@@ -31,7 +30,6 @@ def _read_delivery_image_b64(image: Image) -> str:
 
 
 class FrameWebSocketConsumer(AsyncWebsocketConsumer):
-
     @database_sync_to_async
     def update_last_seen(self):
         try:
@@ -138,9 +136,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         return missing_images
 
     @database_sync_to_async
-    def get_existing_sent_image_ids(
-        self, frame_user: User, sent_image_ids: list[int]
-    ):
+    def get_existing_sent_image_ids(self, frame_user: User, sent_image_ids: list[int]):
         return set(
             SentImage.objects.filter(
                 reciever=frame_user,
@@ -257,7 +253,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 logger.warning("No frame or user found in scope during expiry check")
                 return
 
-            current_images: List[dict] = message_data.get("user_frame_images", [])
+            current_images: list[dict] = message_data.get("user_frame_images", [])
 
             logger.debug(
                 f"Checking expiry for user {frame.user.username}, "
@@ -379,9 +375,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         sender: User,
         reciever: User,
         image: Image,
-        expiry_unix_timestamp: Optional[int] = None,
-        expiry_datetime: Optional[datetime] = None,
-        sent_image_id: Optional[int] = None,
+        expiry_unix_timestamp: int | None = None,
+        expiry_datetime: datetime | None = None,
+        sent_image_id: int | None = None,
     ):
         channel_layer = get_channel_layer()
         connections = await cls.get_user_frame_connections(reciever)
@@ -475,9 +471,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             frame = self.scope.get("frame")
             frame_id = frame.id if frame else "unknown"
 
-            logger.info(
-                f"Received message type '{message_type}' from frame {frame_id}"
-            )
+            logger.info(f"Received message type '{message_type}' from frame {frame_id}")
 
             if message_type == "close_connection":
                 await self.close_connection()

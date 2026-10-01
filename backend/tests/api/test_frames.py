@@ -63,7 +63,9 @@ class TestListAndRetrieve:
         assert alice.get(f"{URL}{theirs.pk}/").status_code == 400
 
 
-@pytest.mark.parametrize("method,path", [("post", ""), ("put", "1/"), ("patch", "1/"), ("delete", "1/")])
+@pytest.mark.parametrize(
+    "method,path", [("post", ""), ("put", "1/"), ("patch", "1/"), ("delete", "1/")]
+)
 def test_the_crud_verbs_are_disabled(alice, method, path):
     response = getattr(alice, method)(f"{URL}{path}", {}, format="json")
 
@@ -79,7 +81,9 @@ class TestRegister:
         )
 
         assert response.status_code == 200
-        assert Frame.objects.get(public_serial_number=serial).user.username == seed.ALICE
+        assert (
+            Frame.objects.get(public_serial_number=serial).user.username == seed.ALICE
+        )
 
     def test_the_serial_is_required(self, alice):
         response = alice.post(f"{URL}register-user/", {}, format="json")
@@ -126,7 +130,9 @@ class TestUnregister:
         assert alice_frame.user is None
 
     def test_the_serial_is_required(self, alice):
-        assert alice.post(f"{URL}unregister-user/", {}, format="json").status_code == 400
+        assert (
+            alice.post(f"{URL}unregister-user/", {}, format="json").status_code == 400
+        )
 
     def test_another_users_frame_cannot_be_released(self, alice):
         theirs = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
@@ -184,7 +190,9 @@ class TestSendImage:
         assert self.send(world, image_id=world.image.id).status_code == 400
 
     def test_an_image_id_is_required(self, world):
-        assert self.send(world, reciever_username=world.friend.username).status_code == 400
+        assert (
+            self.send(world, reciever_username=world.friend.username).status_code == 400
+        )
 
     def test_someone_elses_image_cannot_be_sent(self, world):
         response = self.send(
@@ -261,7 +269,10 @@ class TestObtainToken:
 
     def test_without_a_signature_it_is_forbidden(self, client):
         # DRF answers 403, not 401: no authenticator sets a WWW-Authenticate header.
-        assert client.post(f"{URL}obtain-frame-token/", {}, format="json").status_code == 403
+        assert (
+            client.post(f"{URL}obtain-frame-token/", {}, format="json").status_code
+            == 403
+        )
 
     def test_the_legacy_hmac_route_still_works(self, client, alice_entry):
         response = client.post(
@@ -284,9 +295,12 @@ class TestObtainToken:
         assert response.status_code == 200
 
     def test_the_legacy_ws_route_needs_the_serial(self, client):
-        assert client.post(
-            f"{URL}obtain-frame-ws-auth-token/", {}, format="json"
-        ).status_code == 400
+        assert (
+            client.post(
+                f"{URL}obtain-frame-ws-auth-token/", {}, format="json"
+            ).status_code
+            == 400
+        )
 
     def test_an_unknown_serial_is_not_found(self, client):
         response = client.post(
@@ -334,7 +348,9 @@ class TestVerifyToken:
 
 class TestOTP:
     def test_the_owner_can_ask_for_an_otp(self, alice, alice_frame):
-        response = alice.post(f"{URL}{alice_frame.pk}/obtain-frame-otp/", {}, format="json")
+        response = alice.post(
+            f"{URL}{alice_frame.pk}/obtain-frame-otp/", {}, format="json"
+        )
 
         assert response.status_code == 200
         assert len(response.data["otp"]) == 6
@@ -342,9 +358,12 @@ class TestOTP:
     def test_another_users_frame_gives_no_otp(self, alice):
         theirs = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
 
-        assert alice.post(
-            f"{URL}{theirs.pk}/obtain-frame-otp/", {}, format="json"
-        ).status_code == 404
+        assert (
+            alice.post(
+                f"{URL}{theirs.pk}/obtain-frame-otp/", {}, format="json"
+            ).status_code
+            == 404
+        )
 
     def test_the_frame_verifies_the_code(self, client, alice_frame):
         code = alice_frame.generate_otp()
@@ -377,7 +396,10 @@ class TestOTP:
         token = FrameTokenFactory(frame=alice_frame)
 
         response = client.post(
-            f"{URL}verify-otp/", {}, format="json", headers=token_headers(token.access_token)
+            f"{URL}verify-otp/",
+            {},
+            format="json",
+            headers=token_headers(token.access_token),
         )
 
         assert response.status_code == 400
@@ -385,7 +407,10 @@ class TestOTP:
     def test_verification_needs_a_frame_token(self, client, alice_frame):
         code = alice_frame.generate_otp()
 
-        assert client.post(f"{URL}verify-otp/", {"otp": code}, format="json").status_code == 403
+        assert (
+            client.post(f"{URL}verify-otp/", {"otp": code}, format="json").status_code
+            == 403
+        )
 
     def test_the_legacy_route_answers_with_a_secure_payload(
         self, client, alice_frame, settings
@@ -430,7 +455,9 @@ class TestHeartbeat:
         token = FrameTokenFactory(frame=alice_frame)
 
         response = client.post(
-            self.url(), {"version": "8.0.0"}, format="json",
+            self.url(),
+            {"version": "8.0.0"},
+            format="json",
             headers=token_headers(token.access_token),
         )
 
@@ -440,7 +467,9 @@ class TestHeartbeat:
         token = FrameTokenFactory(frame=alice_frame)
 
         response = client.post(
-            self.url(), {"local_ip_address": "192.168.9.9"}, format="json",
+            self.url(),
+            {"local_ip_address": "192.168.9.9"},
+            format="json",
             headers=token_headers(token.access_token),
         )
 

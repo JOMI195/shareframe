@@ -1,7 +1,6 @@
 import pytest
 
 from frames.models import Frame
-from tests.support import seed
 from tests.support.factories import FrameGroupFactory, FrameTokenFactory, ReleaseFactory
 from tests.support.helpers.frames import token_headers
 
@@ -18,7 +17,13 @@ def frame():
 
 @pytest.fixture
 def board(client, frame):
-    client.credentials(**{"HTTP_AUTHORIZATION": token_headers(FrameTokenFactory(frame=frame).access_token)["Authorization"]})
+    client.credentials(
+        **{
+            "HTTP_AUTHORIZATION": token_headers(
+                FrameTokenFactory(frame=frame).access_token
+            )["Authorization"]
+        }
+    )
     return client
 
 

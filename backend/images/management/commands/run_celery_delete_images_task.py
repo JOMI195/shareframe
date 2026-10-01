@@ -1,5 +1,5 @@
-import os
 from django.core.management.base import BaseCommand
+
 from images.tasks import delete_marked_as_deleted_images_without_sent_images
 
 

@@ -116,4 +116,7 @@ def test_the_seeded_serial_is_derived_from_the_seed(frame):
 def test_a_frame_may_be_unowned():
     entry = seed.unowned_frame()
 
-    assert Frame.objects.get(private_serial_number=entry["private_serial_number"]).user is None
+    assert (
+        Frame.objects.get(private_serial_number=entry["private_serial_number"]).user
+        is None
+    )

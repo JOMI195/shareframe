@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
-from images.models import ImageSize
 
+from images.models import ImageSize
 
 IMAGE_SIZES = [
     {"name": "large", "width": 1600, "height": None, "quality": 90},

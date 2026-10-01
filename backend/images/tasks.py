@@ -1,7 +1,9 @@
 import logging
+
 from config.celery import celery
-from .models import Image
 from sent_images.models import SentImage
+
+from .models import Image
 
 logger = logging.getLogger("celery.images")
 

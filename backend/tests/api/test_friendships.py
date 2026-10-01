@@ -52,7 +52,9 @@ class TestSendRequest:
 
     def test_an_unknown_code_is_rejected(self, alice):
         response = alice.post(
-            SEND_URL, {"reciever_friendship_user_search_code": "NOSUCH01"}, format="json"
+            SEND_URL,
+            {"reciever_friendship_user_search_code": "NOSUCH01"},
+            format="json",
         )
 
         assert response.status_code == 400
@@ -100,7 +102,9 @@ class TestAcceptRequest:
     def test_the_receiver_can_accept(self, alice):
         pending = friendship_between(seed.DAVE, seed.ALICE, "pending")
 
-        response = alice.post(f"{LIST_URL}{pending.pk}/accept-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{pending.pk}/accept-request/", {}, format="json"
+        )
 
         assert response.status_code == 200
         pending.refresh_from_db()
@@ -109,14 +113,18 @@ class TestAcceptRequest:
     def test_the_sender_cannot_accept_their_own(self, alice):
         pending = friendship_between(seed.ALICE, seed.ERIN, "pending")
 
-        response = alice.post(f"{LIST_URL}{pending.pk}/accept-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{pending.pk}/accept-request/", {}, format="json"
+        )
 
         assert response.status_code == 400
 
     def test_an_already_accepted_request_cannot_be_accepted_again(self, alice):
         accepted = friendship_between(seed.ALICE, seed.BOB, "accepted")
 
-        response = alice.post(f"{LIST_URL}{accepted.pk}/accept-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{accepted.pk}/accept-request/", {}, format="json"
+        )
 
         assert response.status_code == 400
 
@@ -126,7 +134,9 @@ class TestAcceptRequest:
             sender=bob, reciever=User.objects.get(username=seed.ALICE), status="pending"
         )
 
-        response = alice.post(f"{LIST_URL}{duplicate.pk}/accept-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{duplicate.pk}/accept-request/", {}, format="json"
+        )
 
         assert response.status_code == 400
         duplicate.refresh_from_db()
@@ -137,7 +147,9 @@ class TestRejectRequest:
     def test_the_receiver_can_reject(self, alice):
         pending = friendship_between(seed.DAVE, seed.ALICE, "pending")
 
-        response = alice.post(f"{LIST_URL}{pending.pk}/reject-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{pending.pk}/reject-request/", {}, format="json"
+        )
 
         assert response.status_code == 200
         pending.refresh_from_db()
@@ -146,7 +158,9 @@ class TestRejectRequest:
     def test_the_sender_cannot_reject_their_own(self, alice):
         pending = friendship_between(seed.ALICE, seed.ERIN, "pending")
 
-        response = alice.post(f"{LIST_URL}{pending.pk}/reject-request/", {}, format="json")
+        response = alice.post(
+            f"{LIST_URL}{pending.pk}/reject-request/", {}, format="json"
+        )
 
         assert response.status_code == 400
 

@@ -32,17 +32,21 @@ def test_reports_the_three_sections(alice):
 def test_counts_the_users_own_uploads(alice, alice_user):
     response = alice.get(URL)
 
-    assert response.data["images"]["uploaded_images_by_me_count"] == Image.objects.filter(
-        user=alice_user, markedAsDeleted=False
-    ).count()
+    assert (
+        response.data["images"]["uploaded_images_by_me_count"]
+        == Image.objects.filter(user=alice_user, markedAsDeleted=False).count()
+    )
 
 
 def test_counts_only_active_images_received(alice, alice_user):
     response = alice.get(URL)
 
-    assert response.data["sent_images"]["active_images_to_me_count"] == SentImage.objects.filter(
-        reciever=alice_user, expires_at__gt=timezone.now()
-    ).count()
+    assert (
+        response.data["sent_images"]["active_images_to_me_count"]
+        == SentImage.objects.filter(
+            reciever=alice_user, expires_at__gt=timezone.now()
+        ).count()
+    )
 
 
 def test_reports_the_latest_expiring_image(alice, alice_user):

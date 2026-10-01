@@ -1,8 +1,10 @@
-import os
 import logging
+import os
+
 from django.conf import settings
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
+
 from .checksum import get_sha256_sum_from_file
 from .models import Image, ImageSize, ImageVariant
 

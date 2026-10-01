@@ -4,7 +4,7 @@ seed_alice is the default subject; the others absorb the destructive cases.
 """
 
 import json
-from functools import lru_cache
+from functools import cache
 
 from django.conf import settings
 
@@ -16,7 +16,7 @@ ERIN = "seed_erin"
 MALLORY = "seed_mallory"
 
 
-@lru_cache(maxsize=None)
+@cache
 def _load(name):
     with open(settings.SEED_DATA_DIR / f"{name}.json") as f:
         return json.load(f)

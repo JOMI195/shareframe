@@ -13,7 +13,9 @@ CHANNEL = "test-channel-for-the-reaper"
 
 def connection_for(frame, last_seen, channel_name=CHANNEL):
     Frame.objects.filter(pk=frame.pk).update(last_seen=last_seen)
-    return FrameWebsocketConnection.objects.create(frame=frame, channel_name=channel_name)
+    return FrameWebsocketConnection.objects.create(
+        frame=frame, channel_name=channel_name
+    )
 
 
 @pytest.fixture

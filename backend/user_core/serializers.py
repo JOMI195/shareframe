@@ -1,7 +1,8 @@
-from rest_framework import serializers
-from user_accounts.serializers import AccountRetrieveSerializer, AccountUpdateSerializer
 from djoser.serializers import UserCreateSerializer as BaseUserCreateSerializer
 from djoser.serializers import UserSerializer as BaseUserSerializer
+from rest_framework import serializers
+
+from user_accounts.serializers import AccountRetrieveSerializer, AccountUpdateSerializer
 
 from .models import User
 from .validation import is_username_allowed

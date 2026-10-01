@@ -72,7 +72,9 @@ def test_the_seeded_changelogs_are_linked_to_their_groups():
     for entry in seed.changelogs():
         changelog = Changelog.objects.get(title=entry["title"])
 
-        assert set(changelog.groups.values_list("name", flat=True)) == set(entry["groups"])
+        assert set(changelog.groups.values_list("name", flat=True)) == set(
+            entry["groups"]
+        )
 
 
 def test_one_image_per_tag_per_changelog():

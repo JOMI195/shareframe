@@ -1,6 +1,7 @@
-from channels.middleware import BaseMiddleware
 from channels.db import database_sync_to_async
+from channels.middleware import BaseMiddleware
 from django.utils import timezone
+
 from frames.models import FrameToken
 
 
