@@ -1,5 +1,6 @@
 import { RootState } from '@/store';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { ColorPreference } from '@/context/colorTheme/colorThemeContextValue';
 
 const COOKIE_CONSENT_LIFETIME = Number(import.meta.env.VITE_APP_COOKIE_CONSENT_LIFETIME) || 30;
 
@@ -9,7 +10,7 @@ const getNewConsentExpiryDate = () => {
 }
 
 type SliceState = {
-  design: { colorTheme: string };
+  design: { colorTheme: ColorPreference };
   cookies: {
     analyticsCookies: boolean;
     consentExpiry: number | null;
@@ -19,7 +20,7 @@ type SliceState = {
 };
 
 const initialState: SliceState = {
-  design: { colorTheme: localStorage.getItem('colorTheme') || 'light' },
+  design: { colorTheme: (localStorage.getItem('colorTheme') as ColorPreference | null) || 'system' },
   cookies: {
     analyticsCookies: JSON.parse(localStorage.getItem('analyticsCookies') || 'false'),
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
@@ -32,7 +33,7 @@ const settingsSlice = createSlice({
   name: 'settings',
   initialState,
   reducers: {
-    designSelected: (settings, action: PayloadAction<string>) => {
+    designSelected: (settings, action: PayloadAction<ColorPreference>) => {
       settings.design.colorTheme = action.payload;
       localStorage.setItem('colorTheme', action.payload);
     },

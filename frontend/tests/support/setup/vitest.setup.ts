@@ -14,24 +14,36 @@ afterAll(() => server.close());
 // --- jsdom gaps ---
 
 const matchMediaState = { prefersDark: false };
+const darkSchemeListeners = new Set<() => void>();
 
+// Notifies like the OS does when its appearance flips; plain functions so restoreMocks keeps them.
 export const setPrefersDark = (value: boolean) => {
   matchMediaState.prefersDark = value;
+  darkSchemeListeners.forEach((listener) => listener());
 };
 
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   configurable: true,
-  value: (query: string) => ({
-    matches: query.includes('prefers-color-scheme: dark') ? matchMediaState.prefersDark : false,
-    media: query,
-    onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  }),
+  value: (query: string) => {
+    const isDarkQuery = query.includes('prefers-color-scheme: dark');
+    const add = (_type: string, listener: () => void) => {
+      if (isDarkQuery) darkSchemeListeners.add(listener);
+    };
+    const remove = (_type: string, listener: () => void) => {
+      darkSchemeListeners.delete(listener);
+    };
+    return {
+      matches: isDarkQuery ? matchMediaState.prefersDark : false,
+      media: query,
+      onchange: null,
+      addEventListener: add,
+      removeEventListener: remove,
+      addListener: (listener: () => void) => add('change', listener),
+      removeListener: (listener: () => void) => remove('change', listener),
+      dispatchEvent: () => false,
+    };
+  },
 });
 
 type ObserverCallback = (entries: { isIntersecting: boolean; target: Element }[]) => void;
@@ -96,5 +108,6 @@ afterEach(() => {
   sessionStorage.clear();
   intersectionObservers.length = 0;
   matchMediaState.prefersDark = false;
+  darkSchemeListeners.clear();
   document.head.querySelectorAll('meta[data-seo], link[rel="canonical"]').forEach((el) => el.remove());
 });
