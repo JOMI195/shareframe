@@ -1,34 +1,36 @@
 import os
-from django.conf import settings
-from django.utils import timezone
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
-from drf_spectacular.utils import extend_schema
-from django.db.models import Q
-from asgiref.sync import async_to_sync
 from datetime import datetime
+
+from asgiref.sync import async_to_sync
+from django.conf import settings
+from django.db.models import Q
+from django.utils import timezone
 from django.utils.timezone import make_aware, now
+from drf_spectacular.utils import extend_schema
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.response import Response
 
 from config.throttles import (
     BurstRateThrottle,
-    SustainedRateThrottle,
     FrameBurstRateThrottle,
     FrameSustainedRateThrottle,
+    SustainedRateThrottle,
 )
-from .models import Frame, FrameToken
-from .serializers import FrameRetrieveSerializer
-from .consumers import FrameWebSocketConsumer
-from user_core.models import User
 from friendships.models import Friendship
 from images.models import Image
+from securePayload.securePayload import SecurePayload
+from user_core.models import User
+
 from .auth import (
-    FrameSignatureAuthentication,
     FrameHTTPAuthentication,
+    FrameSignatureAuthentication,
     FrameTokenAuthentication,
 )
-from securePayload.securePayload import SecurePayload
+from .consumers import FrameWebSocketConsumer
+from .models import Frame, FrameToken
+from .serializers import FrameRetrieveSerializer
 
 
 class FramesViewSet(viewsets.ModelViewSet):
@@ -261,7 +263,7 @@ class FramesViewSet(viewsets.ModelViewSet):
                 expiry_datetime=expiry_datetime,
             )
 
-        except:
+        except Exception:
             return Response(
                 {"error": "Error sending the image."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -518,8 +520,6 @@ class FramesViewSet(viewsets.ModelViewSet):
         frame.version = version
         frame.last_seen = timezone.now()
 
-        frame.save(
-            update_fields=["local_ip_address", "version", "last_seen"]
-        )
+        frame.save(update_fields=["local_ip_address", "version", "last_seen"])
 
         return Response({"message": "Recieved heartbeat."}, status=status.HTTP_200_OK)

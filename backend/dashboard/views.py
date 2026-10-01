@@ -1,16 +1,17 @@
 import datetime
-from datetime import timedelta, timezone
-from rest_framework import viewsets, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.decorators import action
-from django.utils import timezone
+from datetime import timedelta
+
 from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from config.throttles import BurstRateThrottle, SustainedRateThrottle
-from sent_images.models import SentImage
-from images.models import Image
 from frames.models import Frame
+from images.models import Image
+from sent_images.models import SentImage
 
 
 class DashboardAPIViewSet(viewsets.ViewSet):
@@ -124,9 +125,7 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                     {
                         "id": frame.id,
                         "last_seen": (
-                            frame.last_seen.isoformat()
-                            if frame.last_seen
-                            else None
+                            frame.last_seen.isoformat() if frame.last_seen else None
                         ),
                     }
                 )

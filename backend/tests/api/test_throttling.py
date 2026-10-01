@@ -27,7 +27,9 @@ def download_url(frame):
 
 def board_for(client, frame):
     token = FrameTokenFactory(frame=frame)
-    client.credentials(HTTP_AUTHORIZATION=token_headers(token.access_token)["Authorization"])
+    client.credentials(
+        HTTP_AUTHORIZATION=token_headers(token.access_token)["Authorization"]
+    )
     return client
 
 

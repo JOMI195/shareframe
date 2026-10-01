@@ -1,12 +1,13 @@
-from rest_framework import viewsets
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
 import semver
+from django.shortcuts import get_object_or_404
+from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from config.throttles import FrameBurstRateThrottle, FrameSustainedRateThrottle
 from frames.auth import FrameTokenAuthentication
-from frames.models import Frame, FrameGroup
+from frames.models import Frame
+
 from .models import Release
 from .serializers import (
     ReleaseSerializer,

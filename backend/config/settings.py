@@ -10,9 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
-from datetime import timedelta
 import logging
 import os
+from datetime import timedelta
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -335,7 +335,7 @@ DATABASES = {
 CACHES = {
     "default": {
         "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": f'redis://{os.environ.get("REDIS_HOST", "redis")}:{os.environ.get("REDIS_PORT", "6379")}/{os.environ.get("REDIS_DB", "0")}',
+        "LOCATION": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/{os.environ.get('REDIS_DB', '0')}",
     }
 }
 
@@ -391,9 +391,7 @@ AUTH_USER_MODEL = "user_core.User"
 AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 
 REST_FRAMEWORK = {
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "authentication.auth.CookieJWTAuthentication",
-    ),
+    "DEFAULT_AUTHENTICATION_CLASSES": ("authentication.auth.CookieJWTAuthentication",),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
@@ -488,9 +486,9 @@ CHANNEL_LAYERS = {
             "expiry": 10,
             "hosts": [
                 {
-                    "address": f'redis://{os.environ.get("REDIS_HOST", "redis")}:{os.environ.get("REDIS_PORT", "6379")}/{os.environ.get("REDIS_DB", "0")}',
+                    "address": f"redis://{os.environ.get('REDIS_HOST', 'redis')}:{os.environ.get('REDIS_PORT', '6379')}/{os.environ.get('REDIS_DB', '0')}",
                 }
-            ]
+            ],
         },
     }
 }
@@ -523,7 +521,9 @@ else:
 
 # Recipient for admin login / failed-login notifications.
 # Falls back to DEFAULT_FROM_EMAIL when unset.
-ADMIN_NOTIFICATION_EMAIL = os.environ.get("ADMIN_NOTIFICATION_EMAIL", DEFAULT_FROM_EMAIL)
+ADMIN_NOTIFICATION_EMAIL = os.environ.get(
+    "ADMIN_NOTIFICATION_EMAIL", DEFAULT_FROM_EMAIL
+)
 
 #### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]

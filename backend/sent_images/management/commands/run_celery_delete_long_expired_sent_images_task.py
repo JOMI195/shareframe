@@ -1,5 +1,5 @@
-import os
 from django.core.management.base import BaseCommand
+
 from sent_images.tasks import delete_long_expired_sent_images
 
 

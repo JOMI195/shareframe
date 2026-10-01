@@ -1,22 +1,23 @@
 import logging
+
 from django.db import transaction
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
+from rest_framework.exceptions import NotFound
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from drf_spectacular.utils import extend_schema
-from rest_framework.pagination import PageNumberPagination
-from rest_framework.exceptions import NotFound
+
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 
 from .models import Image
 from .serializers import (
     ImageCreateSerializer,
-    ImageRetrieveSerializer,
     ImageDestroySerializer,
+    ImageRetrieveSerializer,
 )
-from sent_images.models import SentImage
 
 logger = logging.getLogger("images")
 
@@ -77,8 +78,10 @@ class ImagesViewSet(ModelViewSet):
             element = Image.objects.get(
                 pk=self.kwargs["pk"], user=request.user, markedAsDeleted=False
             )
-        except Image.DoesNotExist:
-            raise NotFound("Image not found or you don't have permission to view it.")
+        except Image.DoesNotExist as e:
+            raise NotFound(
+                "Image not found or you don't have permission to view it."
+            ) from e
 
         serializer = self.get_serializer(element)
         return Response(serializer.data)
@@ -119,11 +122,13 @@ class ImagesViewSet(ModelViewSet):
             element = Image.objects.get(
                 pk=pk_to_delete, user=request.user, markedAsDeleted=False
             )
-        except Image.DoesNotExist:
+        except Image.DoesNotExist as e:
             logger.warning(
                 f"Image {pk_to_delete} not found or user has no permission to delete"
             )
-            raise NotFound("Image not found or you don't have permission to delete it.")
+            raise NotFound(
+                "Image not found or you don't have permission to delete it."
+            ) from e
 
         # dont delete images directly, instead mark them as deleted
         element.markedAsDeleted = True

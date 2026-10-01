@@ -1,6 +1,6 @@
 import os
-from celery.schedules import crontab, timedelta
 
+from celery.schedules import crontab, timedelta
 
 broker_host = os.environ.get("REDIS_HOST")
 broker_port = os.environ.get("REDIS_PORT")

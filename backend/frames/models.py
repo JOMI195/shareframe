@@ -1,13 +1,13 @@
 import base64
 import os
+import random
 import string
+import uuid
+
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils import timezone
-from django.utils.timezone import now
-from django.core.exceptions import ValidationError
-import uuid
-import random
 
 
 class FrameGroup(models.Model):
@@ -50,6 +50,9 @@ class Frame(models.Model):
     version = models.CharField(max_length=100, default="1.0.0")
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)
 
+    def __str__(self):
+        return self.public_serial_number
+
     def clean(self):
         super().clean()
         if self.public_key:
@@ -62,7 +65,7 @@ class Frame(models.Model):
             except (ValueError, Exception) as e:
                 if isinstance(e, ValidationError):
                     raise
-                raise ValidationError({"public_key": "Invalid base64 encoding."})
+                raise ValidationError({"public_key": "Invalid base64 encoding."}) from e
 
     def get_or_create_token(self):
         """
@@ -146,6 +149,9 @@ class FrameToken(models.Model):
     access_token_expires_at = models.DateTimeField()
     last_obtained = models.DateTimeField(auto_now=True)
 
+    def __str__(self):
+        return f"Token for frame {self.frame_id}"
+
     @classmethod
     def generate_tokens(cls, frame):
         access_token_lifetime_days = os.environ.get(
@@ -171,6 +177,9 @@ class FrameOTP(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     expires_at = models.DateTimeField()
 
+    def __str__(self):
+        return f"OTP for frame {self.frame_id}"
+
     def save(self, *args, **kwargs):
         if not self.code:
             self.code = "".join(random.choices(string.digits, k=6))
@@ -187,3 +196,6 @@ class FrameWebsocketConnection(models.Model):
     channel_name = models.CharField(max_length=255, unique=True)
     connected_at = models.DateTimeField(auto_now_add=True)
     last_active = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Connection for frame {self.frame_id}"

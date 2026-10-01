@@ -45,7 +45,9 @@ class TestPrivateMedia:
         assert response["X-Accel-Redirect"].endswith(media_path(image.image))
 
     def test_the_owner_may_fetch_a_variant(self, alice):
-        variant = Image.objects.filter(user__username=seed.ALICE).first().variants.first()
+        variant = (
+            Image.objects.filter(user__username=seed.ALICE).first().variants.first()
+        )
 
         response = alice.get(PRIVATE + media_path(variant.file))
 
@@ -95,7 +97,9 @@ class TestFrameUpdatesMedia:
         )
 
         assert response.status_code == 200
-        assert response["X-Accel-Redirect"].startswith("/api/media/protected/frame-updates/")
+        assert response["X-Accel-Redirect"].startswith(
+            "/api/media/protected/frame-updates/"
+        )
 
     def test_a_release_for_another_group_is_refused(self, client, frame):
         release = ReleaseFactory(groups=[FrameGroupFactory()])
@@ -150,30 +154,44 @@ class TestChangelogMedia:
         response = alice.get(CHANGELOGS + os.path.basename(image.image.name))
 
         assert response.status_code == 200
-        assert response["X-Accel-Redirect"].startswith("/api/media/protected/changelogs/")
+        assert response["X-Accel-Redirect"].startswith(
+            "/api/media/protected/changelogs/"
+        )
 
     def test_a_changelog_without_groups_is_public_to_frame_owners(self, alice):
         image = self.attach(ChangelogFactory())
 
-        assert alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code == 200
+        assert (
+            alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code
+            == 200
+        )
 
     def test_a_changelog_for_another_group_is_refused(self, alice):
         image = self.attach(ChangelogFactory(groups=[FrameGroupFactory()]))
 
-        assert alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code == 403
+        assert (
+            alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code
+            == 403
+        )
 
     def test_an_unpublished_changelog_is_refused(self, alice):
         image = self.attach(
             ChangelogFactory(is_published=False, groups=[self.alice_group()])
         )
 
-        assert alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code == 403
+        assert (
+            alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code
+            == 403
+        )
 
     def test_a_user_without_frames_is_refused(self, alice):
         image = self.attach(ChangelogFactory(groups=[self.alice_group()]))
         Frame.objects.filter(user__username=seed.ALICE).update(user=None)
 
-        assert alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code == 403
+        assert (
+            alice.get(CHANGELOGS + os.path.basename(image.image.name)).status_code
+            == 403
+        )
 
     def test_an_unknown_file_is_refused(self, alice):
         assert alice.get(CHANGELOGS + "images/nothing.png").status_code == 403

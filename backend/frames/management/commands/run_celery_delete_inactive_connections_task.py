@@ -1,5 +1,5 @@
-import os
 from django.core.management.base import BaseCommand
+
 from frames.tasks import close_and_delete_long_inactive_frame_websocket_connections
 
 

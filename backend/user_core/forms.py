@@ -1,8 +1,9 @@
 from django import forms
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .validation import is_username_allowed
-from .models import User
 from django.urls import reverse
+
+from .models import User
+from .validation import is_username_allowed
 
 
 class UserChangeForm(forms.ModelForm):
@@ -26,7 +27,7 @@ class UserChangeForm(forms.ModelForm):
         if self.instance.pk:
             self.fields["password"].help_text = (
                 f"Raw passwords are not stored, so there is no way to see this user's password, "
-                f"but you can change the password using <a href=\"{reverse('admin:auth_user_password_change', args=[self.instance.pk])}\">this form</a>."
+                f'but you can change the password using <a href="{reverse("admin:auth_user_password_change", args=[self.instance.pk])}">this form</a>.'
             )
 
     def clean_password(self):

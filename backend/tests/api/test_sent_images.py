@@ -28,9 +28,12 @@ def test_lists_the_users_own_traffic(alice, alice_user):
     assert response.status_code == 200
     from django.db.models import Q
 
-    assert response.data["count"] == SentImage.objects.filter(
-        Q(sender=alice_user) | Q(reciever=alice_user)
-    ).count()
+    assert (
+        response.data["count"]
+        == SentImage.objects.filter(
+            Q(sender=alice_user) | Q(reciever=alice_user)
+        ).count()
+    )
 
 
 def test_the_page_size_can_be_changed(alice):
@@ -55,7 +58,9 @@ def test_filters_to_active_entries(alice):
     response = alice.get(URL, {"status": "active"})
 
     now = timezone.now()
-    assert all(entry["expires_at"] > now.isoformat() for entry in response.data["results"])
+    assert all(
+        entry["expires_at"] > now.isoformat() for entry in response.data["results"]
+    )
 
 
 def test_filters_by_sender_name(alice):

@@ -43,9 +43,12 @@ class TestSignatureAuth:
         assert user == frame.user
 
     def test_another_scheme_is_left_to_the_next_class(self):
-        assert FrameSignatureAuthentication().authenticate(
-            request_with({"Authorization": "Bearer something"})
-        ) is None
+        assert (
+            FrameSignatureAuthentication().authenticate(
+                request_with({"Authorization": "Bearer something"})
+            )
+            is None
+        )
 
     def test_a_missing_timestamp_is_rejected(self, entry):
         headers = signature_headers(entry["seed_b64"])
@@ -69,7 +72,10 @@ class TestSignatureAuth:
             FrameSignatureAuthentication().authenticate(request_with(headers))
 
     def test_a_stale_timestamp_is_rejected(self, entry, settings):
-        stale = int(time.time()) - (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        stale = (
+            int(time.time())
+            - (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        )
 
         with pytest.raises(AuthenticationFailed):
             FrameSignatureAuthentication().authenticate(
@@ -77,7 +83,10 @@ class TestSignatureAuth:
             )
 
     def test_a_future_dated_timestamp_is_rejected(self, entry, settings):
-        ahead = int(time.time()) + (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        ahead = (
+            int(time.time())
+            + (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        )
 
         with pytest.raises(AuthenticationFailed):
             FrameSignatureAuthentication().authenticate(
@@ -117,13 +126,18 @@ class TestLegacyHmacAuth:
         assert user == frame.user
 
     def test_another_scheme_is_left_to_the_next_class(self, entry):
-        assert FrameHTTPAuthentication().authenticate(
-            request_with(signature_headers(entry["seed_b64"]))
-        ) is None
+        assert (
+            FrameHTTPAuthentication().authenticate(
+                request_with(signature_headers(entry["seed_b64"]))
+            )
+            is None
+        )
 
     def test_an_unknown_serial_is_rejected(self):
         with pytest.raises(AuthenticationFailed):
-            FrameHTTPAuthentication().authenticate(request_with(hmac_headers("NOPE-0000")))
+            FrameHTTPAuthentication().authenticate(
+                request_with(hmac_headers("NOPE-0000"))
+            )
 
     def test_the_wrong_secret_is_rejected(self, entry):
         headers = hmac_headers(entry["private_serial_number"], secret="not-the-secret")
@@ -132,11 +146,16 @@ class TestLegacyHmacAuth:
             FrameHTTPAuthentication().authenticate(request_with(headers))
 
     def test_a_stale_timestamp_is_rejected(self, entry, settings):
-        stale = int(time.time()) - (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        stale = (
+            int(time.time())
+            - (settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN + 1) * 60
+        )
 
         with pytest.raises(AuthenticationFailed):
             FrameHTTPAuthentication().authenticate(
-                request_with(hmac_headers(entry["private_serial_number"], timestamp=stale))
+                request_with(
+                    hmac_headers(entry["private_serial_number"], timestamp=stale)
+                )
             )
 
 
@@ -155,14 +174,20 @@ class TestTokenAuth:
         assert FrameTokenAuthentication().authenticate(request_with({})) is None
 
     def test_another_scheme_is_left_to_the_next_class(self):
-        assert FrameTokenAuthentication().authenticate(
-            request_with({"Authorization": "Bearer abc"})
-        ) is None
+        assert (
+            FrameTokenAuthentication().authenticate(
+                request_with({"Authorization": "Bearer abc"})
+            )
+            is None
+        )
 
     def test_an_unparsable_header_is_left_to_the_next_class(self):
-        assert FrameTokenAuthentication().authenticate(
-            request_with({"Authorization": "no-space"})
-        ) is None
+        assert (
+            FrameTokenAuthentication().authenticate(
+                request_with({"Authorization": "no-space"})
+            )
+            is None
+        )
 
     def test_an_unknown_token_is_rejected(self):
         with pytest.raises(AuthenticationFailed):

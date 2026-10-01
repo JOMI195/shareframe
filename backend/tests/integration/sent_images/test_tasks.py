@@ -40,8 +40,13 @@ def test_keeps_an_active_one():
 
 def test_reports_how_many_it_deleted(settings):
     """The seed corpus carries long-expired rows of its own, so count them in."""
-    threshold = timezone.now() - timezone.timedelta(days=settings.SENT_IMAGE_DELETE_DAYS)
+    threshold = timezone.now() - timezone.timedelta(
+        days=settings.SENT_IMAGE_DELETE_DAYS
+    )
     expected = SentImage.objects.filter(expires_at__lt=threshold).count() + 1
     SentImageFactory(expires_at=long_ago(settings, 1))
 
-    assert delete_long_expired_sent_images() == f"Deleted {expected} long expired sent images."
+    assert (
+        delete_long_expired_sent_images()
+        == f"Deleted {expected} long expired sent images."
+    )

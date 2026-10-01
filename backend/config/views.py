@@ -1,17 +1,13 @@
 import os
-from frames.auth import FrameTokenAuthentication
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.exceptions import PermissionDenied
+
 from django.conf import settings
 from django.db.models import Q
 from rest_framework import status
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
-from images.models import Image, ImageVariant
-from sent_images.models import SentImage
-from frame_updates.models import Release
-from frames.models import Frame
 from changelogs.models import ChangelogImage
 from config.throttles import (
     ChangelogsBurstRateThrottle,
@@ -21,6 +17,11 @@ from config.throttles import (
     MediaBurstRateThrottle,
     MediaSustainedRateThrottle,
 )
+from frame_updates.models import Release
+from frames.auth import FrameTokenAuthentication
+from frames.models import Frame
+from images.models import Image, ImageVariant
+from sent_images.models import SentImage
 
 
 class MediaAccessView(APIView):
@@ -177,7 +178,6 @@ class ChangelogsAccessView(APIView):
         changelog_images = ChangelogImage.objects.select_related("changelog").all()
         for changelog_image in changelog_images:
             if changelog_image.image and changelog_image.image.name:
-
                 image_filename = os.path.basename(changelog_image.image.name)
                 requested_filename = os.path.basename(path)
 

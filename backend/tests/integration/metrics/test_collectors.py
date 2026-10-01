@@ -10,7 +10,11 @@ pytestmark = pytest.mark.django_db
 
 
 def gauges(collector):
-    return {metric.name: metric.samples[0].value for metric in collector.collect() if metric.samples}
+    return {
+        metric.name: metric.samples[0].value
+        for metric in collector.collect()
+        if metric.samples
+    }
 
 
 def series(collector, name):
@@ -24,18 +28,20 @@ class TestBusinessCollector:
     def test_counts_stored_images(self):
         values = gauges(ShareframeBusinessCollector())
 
-        assert values["shareframe_images_total"] == Image.objects.filter(
-            markedAsDeleted=False
-        ).count()
+        assert (
+            values["shareframe_images_total"]
+            == Image.objects.filter(markedAsDeleted=False).count()
+        )
 
     def test_soft_deleted_images_are_counted_separately(self):
         ImageFactory(markedAsDeleted=True)
 
         values = gauges(ShareframeBusinessCollector())
 
-        assert values["shareframe_images_marked_deleted_total"] == Image.objects.filter(
-            markedAsDeleted=True
-        ).count()
+        assert (
+            values["shareframe_images_marked_deleted_total"]
+            == Image.objects.filter(markedAsDeleted=True).count()
+        )
 
     def test_storage_bytes_covers_originals_and_variants(self):
         originals = sum(
@@ -49,9 +55,10 @@ class TestBusinessCollector:
     def test_counts_live_users(self):
         values = gauges(ShareframeBusinessCollector())
 
-        assert values["shareframe_users_total"] == User.objects.filter(
-            is_deleted=False
-        ).count()
+        assert (
+            values["shareframe_users_total"]
+            == User.objects.filter(is_deleted=False).count()
+        )
 
     def test_a_deleted_user_drops_out(self):
         before = gauges(ShareframeBusinessCollector())["shareframe_users_total"]
@@ -94,7 +101,9 @@ class TestFrameCollector:
         samples = series(ShareframeFrameCollector(), "shareframe_frame_info")
         serials = {sample.labels["serial_number"] for sample in samples}
 
-        assert serials == set(Frame.objects.values_list("public_serial_number", flat=True))
+        assert serials == set(
+            Frame.objects.values_list("public_serial_number", flat=True)
+        )
 
     def test_a_broken_query_does_not_raise(self, monkeypatch):
         monkeypatch.setattr(

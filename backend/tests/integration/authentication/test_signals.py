@@ -16,7 +16,9 @@ def alice_user():
 
 
 def login(user, request=None):
-    user_logged_in.send(sender=None, request=request or RequestFactory().get("/"), user=user)
+    user_logged_in.send(
+        sender=None, request=request or RequestFactory().get("/"), user=user
+    )
     return mail.outbox[-1]
 
 
@@ -44,7 +46,9 @@ class TestLogin:
         assert message.subject == "ShareFrame Admin Login"
 
     def test_the_client_ip_is_reported(self, alice_user):
-        request = RequestFactory().get("/", HTTP_X_FORWARDED_FOR="198.51.100.7, 10.0.0.1")
+        request = RequestFactory().get(
+            "/", HTTP_X_FORWARDED_FOR="198.51.100.7, 10.0.0.1"
+        )
 
         message = login(alice_user, request)
 

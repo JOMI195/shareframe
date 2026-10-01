@@ -60,7 +60,22 @@ dev = [
     "pytest-dotenv>=0.5.2",
     "factory-boy>=3.3",
     "freezegun>=1.5",
+    "ruff>=0.16",
 ]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 88
+extend-exclude = ["**/migrations/**"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "DJ"]
+# The formatter wraps code; long strings and comments are left alone.
+ignore = ["E501"]
+
+[tool.ruff.lint.per-file-ignores]
+# django.setup() must run before these imports.
+"config/asgi.py" = ["E402"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings_test"

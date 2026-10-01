@@ -1,13 +1,14 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
-from drf_spectacular.utils import extend_schema
 from django.db import models
+from drf_spectacular.utils import extend_schema
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+
+from frames.models import Frame
 
 from .models import Changelog
 from .serializers import ChangelogIdSerializer, ChangelogsSerializer
-from frames.models import Frame
 
 
 class ChangelogViewSet(viewsets.GenericViewSet):

@@ -77,7 +77,9 @@ class ShareframeBusinessCollector:
         sent = SentImage.objects.aggregate(
             total=Count("id"), expired=Count("id", filter=Q(expires_at__lt=now))
         )
-        yield _gauge("shareframe_sent_images_total", "Sent image records", sent["total"])
+        yield _gauge(
+            "shareframe_sent_images_total", "Sent image records", sent["total"]
+        )
         yield _gauge(
             "shareframe_sent_images_expired",
             "Sent images past their expiry",

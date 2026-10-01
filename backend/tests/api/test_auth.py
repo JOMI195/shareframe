@@ -27,7 +27,9 @@ def test_sign_in_sets_both_auth_cookies_and_hides_the_tokens(client):
     client.get(CSRF_URL)
     email, password = seed.credentials(seed.ALICE)
 
-    response = client.post(CREATE_URL, {"email": email, "password": password}, format="json")
+    response = client.post(
+        CREATE_URL, {"email": email, "password": password}, format="json"
+    )
 
     assert response.status_code == 200
     assert response.data == {"detail": "Authenticated."}
@@ -43,7 +45,9 @@ def test_sign_in_rejects_a_wrong_password(client):
     client.get(CSRF_URL)
     email, _ = seed.credentials(seed.ALICE)
 
-    response = client.post(CREATE_URL, {"email": email, "password": "wrong-pass1"}, format="json")
+    response = client.post(
+        CREATE_URL, {"email": email, "password": "wrong-pass1"}, format="json"
+    )
 
     assert response.status_code == 401
     assert settings.AUTH_COOKIE_ACCESS_NAME not in client.cookies
@@ -60,7 +64,9 @@ def test_an_authorization_header_is_ignored(client):
     """CookieJWTAuthentication reads the cookie only; Bearer is no longer accepted."""
     token = RefreshToken.for_user(User.objects.get(username=seed.ALICE))
 
-    response = client.get(ME_URL, headers={"Authorization": f"Bearer {token.access_token}"})
+    response = client.get(
+        ME_URL, headers={"Authorization": f"Bearer {token.access_token}"}
+    )
 
     assert response.status_code == 401
 

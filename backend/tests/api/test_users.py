@@ -22,16 +22,19 @@ def test_me_returns_the_profile_with_its_account(alice):
 
     assert response.status_code == 200
     assert response.data["username"] == seed.ALICE
-    assert response.data["account"]["friendship_user_search_code"] == seed.user(
-        seed.ALICE
-    )["friendship_code"]
+    assert (
+        response.data["account"]["friendship_user_search_code"]
+        == seed.user(seed.ALICE)["friendship_code"]
+    )
 
 
 class TestUpdateProfile:
     def test_the_username_can_be_changed(self, client_as):
         user = UserFactory(is_active=True)
 
-        response = client_as(user).patch(ME_URL, {"username": "renamed_user"}, format="json")
+        response = client_as(user).patch(
+            ME_URL, {"username": "renamed_user"}, format="json"
+        )
 
         assert response.status_code == 200
         user.refresh_from_db()
@@ -73,7 +76,9 @@ class TestUpdateProfile:
         client = client_as(user)
         client.cookies.pop("csrftoken")
 
-        assert client.patch(ME_URL, {"username": "nope"}, format="json").status_code == 403
+        assert (
+            client.patch(ME_URL, {"username": "nope"}, format="json").status_code == 403
+        )
 
 
 class TestDeleteAccount:

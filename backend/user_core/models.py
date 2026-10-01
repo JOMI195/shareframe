@@ -1,16 +1,19 @@
 import os
 import random
 import uuid
-from django.utils import timezone
+
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
     PermissionsMixin,
 )
 from django.db import models, transaction
-from .validation import is_username_allowed
-from .choices import RANDOM_USERNAMES
+from django.utils import timezone
+
 from user_accounts.models import Account
+
+from .choices import RANDOM_USERNAMES
+from .validation import is_username_allowed
 
 
 class CustomUserManager(BaseUserManager):

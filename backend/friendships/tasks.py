@@ -1,6 +1,9 @@
-from config.celery import celery
-from django.utils import timezone
 from datetime import timedelta
+
+from django.utils import timezone
+
+from config.celery import celery
+
 from .models import Friendship
 
 

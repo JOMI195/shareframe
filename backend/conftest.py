@@ -6,8 +6,8 @@ import subprocess
 
 import pytest
 from django.conf import settings as django_settings
-from django.core.management import call_command
 from django.core.cache import cache
+from django.core.management import call_command
 
 from tests.support import seed
 from tests.support.helpers.auth import CookieClient, sign_in, sign_in_with

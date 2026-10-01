@@ -1,6 +1,7 @@
 import os
 import time
 import uuid
+
 from django.db import models
 
 from frames.models import FrameGroup
@@ -41,6 +42,21 @@ class Changelog(models.Model):
     def __str__(self):
         return self.title
 
+    def save(self, *args, **kwargs):
+        try:
+            old = Changelog.objects.get(pk=self.pk)
+        except Changelog.DoesNotExist:
+            old = None
+
+        # If updating and the file has changed, delete the old file
+        if old and old.content_file != self.content_file:
+            if old.content_file and old.content_file.storage.exists(
+                old.content_file.name
+            ):
+                old.content_file.delete(save=False)
+
+        super().save(*args, **kwargs)
+
     def get_markdown_content(self):
         if self.content_file and self.content_file.storage.exists(
             self.content_file.name
@@ -58,21 +74,6 @@ class Changelog(models.Model):
         ):
             self.content_file.delete(save=False)
         super().delete(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        try:
-            old = Changelog.objects.get(pk=self.pk)
-        except Changelog.DoesNotExist:
-            old = None
-
-        # If updating and the file has changed, delete the old file
-        if old and old.content_file != self.content_file:
-            if old.content_file and old.content_file.storage.exists(
-                old.content_file.name
-            ):
-                old.content_file.delete(save=False)
-
-        super().save(*args, **kwargs)
 
 
 class ChangelogImage(models.Model):
@@ -94,11 +95,6 @@ class ChangelogImage(models.Model):
     def __str__(self):
         return f"{self.tag} for {self.changelog.title}"
 
-    def delete(self, *args, **kwargs):
-        if self.image and self.image.storage.exists(self.image.name):
-            self.image.delete(save=False)
-        super().delete(*args, **kwargs)
-
     def save(self, *args, **kwargs):
         try:
             old = ChangelogImage.objects.get(pk=self.pk)
@@ -110,3 +106,8 @@ class ChangelogImage(models.Model):
                 old.image.delete(save=False)
 
         super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        if self.image and self.image.storage.exists(self.image.name):
+            self.image.delete(save=False)
+        super().delete(*args, **kwargs)

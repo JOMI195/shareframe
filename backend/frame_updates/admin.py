@@ -1,10 +1,11 @@
-from django.contrib import admin
-from django.utils.html import format_html
-from django.db.models import Case, When
-from django.contrib.admin.views.main import ChangeList
-from django.http import HttpRequest
-from .models import Release
 import semver
+from django.contrib import admin
+from django.contrib.admin.views.main import ChangeList
+from django.db.models import Case, When
+from django.http import HttpRequest
+from django.utils.html import format_html
+
+from .models import Release
 
 
 class SemverChangeList(ChangeList):

@@ -1,5 +1,4 @@
 import base64
-import os
 
 import factory
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey

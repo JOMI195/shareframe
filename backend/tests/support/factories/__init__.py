@@ -1,4 +1,5 @@
 from .changelogs import ChangelogFactory
+from .frame_updates import ReleaseFactory
 from .frames import (
     FrameFactory,
     FrameGroupFactory,
@@ -6,7 +7,6 @@ from .frames import (
     FrameTokenFactory,
     keypair,
 )
-from .frame_updates import ReleaseFactory
 from .friendships import FriendshipFactory
 from .images import ImageFactory, ImageSizeFactory
 from .sent_images import SentImageFactory

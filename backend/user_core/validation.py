@@ -1,5 +1,6 @@
-from .blacklist import USERNAME_BLACKLIST
 import Levenshtein as lev
+
+from .blacklist import USERNAME_BLACKLIST
 
 
 def is_username_allowed(username, threshold=0.9):

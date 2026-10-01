@@ -6,10 +6,10 @@ from django.conf import settings
 
 try:
     # Django >= 1.10
-    from django.urls import resolve, Resolver404
+    from django.urls import Resolver404, resolve
 except ImportError:
     # Django < 1.10
-    from django.core.urlresolvers import resolve, Resolver404
+    from django.core.urlresolvers import Resolver404, resolve
 from django.utils.termcolors import colorize
 
 DEFAULT_LOG_LEVEL = logging.DEBUG
@@ -93,7 +93,7 @@ class ColourLogger(Logger):
             request_logger.log(level, line, *args, **kwargs)
 
 
-class LoggingMiddleware(object):
+class LoggingMiddleware:
     def __init__(self, get_response=None):
         # ensure that all the member references of LoggingMiddleware are read-only after construction
         # no other methods/properties invocations mutate these references so they can be safely read from any thread
@@ -129,9 +129,7 @@ class LoggingMiddleware(object):
                 logging.CRITICAL,
             ]:
                 raise ValueError(
-                    "Unknown log level({}) in setting({})".format(
-                        level, SETTING_NAMES[log_attr]
-                    )
+                    f"Unknown log level({level}) in setting({SETTING_NAMES[log_attr]})"
                 )
 
         # TODO: remove deprecated legacy settings
@@ -233,7 +231,7 @@ class LoggingMiddleware(object):
         return response_logging, no_response_logging_msg
 
     def _skip_logging_request(self, request, reason):
-        method_path = "{} {}".format(request.method, request.get_full_path())
+        method_path = f"{request.method} {request.get_full_path()}"
         no_log_context = {
             "args": (),
             "kwargs": {"extra": {"no_logging": reason}},
@@ -245,7 +243,7 @@ class LoggingMiddleware(object):
         )
 
     def _log_request(self, request, response, cached_request_body):
-        method_path = "{} {}".format(request.method, request.get_full_path())
+        method_path = f"{request.method} {request.get_full_path()}"
         logging_context = self._get_logging_context(request, None)
 
         # Determine log level depending on response status
@@ -320,8 +318,8 @@ class LoggingMiddleware(object):
                 )
 
     def process_response(self, request, response):
-        resp_log = "{} {} - {}".format(
-            request.method, request.get_full_path(), response.status_code
+        resp_log = (
+            f"{request.method} {request.get_full_path()} - {response.status_code}"
         )
         skip_logging, because = self._should_log_route(request)
         if skip_logging:
@@ -391,7 +389,7 @@ class LoggingMiddleware(object):
                 if (
                     match
                     and match.group(2) in BINARY_TYPES
-                    and not match.group(4) in ("", "\r\n")
+                    and match.group(4) not in ("", "\r\n")
                 ):
                     part = match.expand(r"\1\2/\3\r\n\r\n(binary data)\r\n")
 
