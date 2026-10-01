@@ -33,10 +33,12 @@ against a real backend → e2e, and prefer a step in an existing spec.
 
 ```bash
 cd backend
-uv sync --group dev       # once
-./bin/test.sh             # starts the test database, runs everything
-./bin/test.sh tests/api   # or -k <subject>, --create-db, --cov
-uv run pytest tests/unit  # no database, no Docker
+uv sync --group dev                # once
+
+uv run pytest                      # everything; starts the test database when needed
+uv run pytest tests/unit           # no database, no Docker
+uv run pytest tests/integration
+uv run pytest tests/api
 ```
 
 ```
@@ -63,6 +65,10 @@ integration test; extract the pure part instead.
 pytest creates `test_backend_db` beside the stack's `backend_db`, so a Playwright run
 and a pytest run can share one container. The corpus is seeded once per session and
 each test rolls back onto it. `--reuse-db` is the default; `--create-db` rebuilds.
+
+The first database test starts `backend_db` of the test stack, and it stays up
+afterwards; `npm run e2e:down` from `frontend/` stops it. `TEST_DB_EXTERNAL=1` skips
+that when the database is provided elsewhere.
 
 `django_db(transaction=True)` commits for real and flushes afterwards, which empties
 the corpus. `conftest.py` runs those last and re-seeds if needed, so such a test must
