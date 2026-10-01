@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import * as authEndpoints from '@/assets/endpoints/api/authEndpoints';
 import { renderRoute } from '@tests/helpers/renderRoute';
@@ -7,6 +7,8 @@ import { signedInState } from '@tests/helpers/preloadedState';
 import { seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server } from '@tests/mocks';
+import { setPrefersDark } from '@tests/setup/vitest.setup';
+import type { TestStore } from '@/store/setupStore';
 
 const openAppSettings = async () => {
   const view = renderRoute('/settings/app/', { preloadedState: signedInState() });
@@ -21,28 +23,62 @@ const openUserSettings = async () => {
   return view;
 };
 
-// The MUI Switch input is not exposed as a checkbox to the accessibility tree.
-const appearanceSwitch = () => document.querySelector('.MuiSwitch-input') as HTMLInputElement;
+const preference = (name: 'Hell' | 'Dunkel' | 'System') => screen.getByRole('button', { name });
+const storedTheme = (store: TestStore) => store.getState().ui.settings.design.colorTheme;
+// The app bar button names the opposite of the theme on screen.
+const showsDark = () => screen.queryByRole('button', { name: 'Wechsel in den hellen Modus' }) !== null;
 
 describe('appearance', () => {
+  it('follows the device until a theme is picked', async () => {
+    setPrefersDark(true);
+    await openAppSettings();
+
+    expect(preference('System')).toHaveAttribute('aria-pressed', 'true');
+    expect(showsDark()).toBe(true);
+  });
+
   it('switches to the dark theme and remembers it', async () => {
     const { user, store } = await openAppSettings();
 
-    await user.click(appearanceSwitch());
+    await user.click(preference('Dunkel'));
 
-    await waitFor(() => expect(store.getState().ui.settings.design.colorTheme).toBe('dark'));
+    await waitFor(() => expect(storedTheme(store)).toBe('dark'));
     // The theme is also mirrored outside redux so the first paint is not light.
     expect(localStorage.getItem('colorTheme')).toBe('dark');
+    expect(showsDark()).toBe(true);
   });
 
-  it('switches back to light', async () => {
+  // iOS flips the scheme back and forth while snapshotting a backgrounded app.
+  it('keeps a picked theme when the device appearance flips', async () => {
     const { user, store } = await openAppSettings();
+    await user.click(preference('Dunkel'));
 
-    await user.click(appearanceSwitch());
-    await waitFor(() => expect(store.getState().ui.settings.design.colorTheme).toBe('dark'));
-    await user.click(appearanceSwitch());
+    act(() => setPrefersDark(true));
+    act(() => setPrefersDark(false));
 
-    await waitFor(() => expect(store.getState().ui.settings.design.colorTheme).toBe('light'));
+    expect(storedTheme(store)).toBe('dark');
+    expect(showsDark()).toBe(true);
+  });
+
+  it('tracks the device live on System without storing it', async () => {
+    const { store } = await openAppSettings();
+
+    act(() => setPrefersDark(true));
+    expect(showsDark()).toBe(true);
+    act(() => setPrefersDark(false));
+    expect(showsDark()).toBe(false);
+
+    expect(storedTheme(store)).toBe('system');
+  });
+
+  it('returns to System after a picked theme', async () => {
+    const { user, store } = await openAppSettings();
+    await user.click(preference('Dunkel'));
+
+    await user.click(preference('System'));
+
+    await waitFor(() => expect(storedTheme(store)).toBe('system'));
+    expect(showsDark()).toBe(false);
   });
 
   it('is also reachable from the app bar', async () => {
@@ -50,8 +86,8 @@ describe('appearance', () => {
 
     await user.click(screen.getByRole('button', { name: 'Wechsel in den dunklen Modus' }));
 
-    await waitFor(() => expect(store.getState().ui.settings.design.colorTheme).toBe('dark'));
-    expect(appearanceSwitch()).toBeChecked();
+    await waitFor(() => expect(storedTheme(store)).toBe('dark'));
+    expect(preference('Dunkel')).toHaveAttribute('aria-pressed', 'true');
   });
 });
 

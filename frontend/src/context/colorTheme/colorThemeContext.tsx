@@ -1,48 +1,49 @@
-import React, { PropsWithChildren, useEffect } from 'react';
+import React, { PropsWithChildren, useSyncExternalStore } from 'react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
 import dark from '@/common/themes/darkTheme';
 import { ThemeProvider } from '@mui/material';
-import { RootState, useAppDispatch, useAppSelector } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { designSelected, getDesign } from '@/store/ui/settings/settings.slice';
-import { ColorMode, ColorThemeContext, ColorThemeContextType, IconComponent } from './colorThemeContextValue';
+import { ColorMode, ColorPreference, ColorThemeContext, ColorThemeContextType } from './colorThemeContextValue';
+
+const DARK_QUERY = '(prefers-color-scheme: dark)';
+
+// Read live, never stored: iOS flips the scheme while snapshotting a backgrounded app.
+const subscribeToSystemScheme = (onChange: () => void) => {
+    const mediaQuery = window.matchMedia(DARK_QUERY);
+    // Safari 13 and older only know addListener.
+    if (typeof mediaQuery.addEventListener !== 'function') {
+        mediaQuery.addListener(onChange);
+        return () => mediaQuery.removeListener(onChange);
+    }
+    mediaQuery.addEventListener('change', onChange);
+    return () => mediaQuery.removeEventListener('change', onChange);
+};
+
+const getSystemPrefersDark = () => window.matchMedia(DARK_QUERY).matches;
 
 export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) => {
     const dispatch = useAppDispatch();
-    const colorModeFromState = useAppSelector((state: RootState) => getDesign(state) as ColorMode);
+    const colorPreference = useAppSelector(getDesign);
+    const systemPrefersDark = useSyncExternalStore(subscribeToSystemScheme, getSystemPrefersDark);
 
-    // Determine the initial color mode based on the system preference
-    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const initialColorMode: ColorMode = colorModeFromState || (systemPrefersDark ? 'dark' : 'light');
+    const colorMode: ColorMode = colorPreference === 'system'
+        ? (systemPrefersDark ? 'dark' : 'light')
+        : colorPreference;
 
-    const iconComponent: IconComponent = initialColorMode === 'dark' ? DarkModeIcon : LightModeIcon;
-
-    const toggleColorMode = () => {
-        const newMode: ColorMode = colorModeFromState === 'light' ? 'dark' : 'light';
-        dispatch(designSelected(newMode));
+    const setColorPreference = (preference: ColorPreference) => {
+        dispatch(designSelected(preference));
     };
 
-    useEffect(() => {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-        const handleSystemColorModeChange = (e: MediaQueryListEvent) => {
-            const newMode: ColorMode = e.matches ? 'dark' : 'light';
-            dispatch(designSelected(newMode));
-        };
-
-        mediaQuery.addEventListener('change', handleSystemColorModeChange);
-
-        return () => {
-            mediaQuery.removeEventListener('change', handleSystemColorModeChange);
-        };
-    }, [dispatch]);
-
     const contextValue: ColorThemeContextType = {
-        theme: colorModeFromState === 'dark' ? dark : light,
-        colorMode: colorModeFromState,
-        toggleColorMode,
-        iconComponent,
+        theme: colorMode === 'dark' ? dark : light,
+        colorMode,
+        colorPreference,
+        setColorPreference,
+        toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
+        iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
     };
 
     return (

@@ -18,12 +18,12 @@ afterEach(() => {
 });
 
 describe('initial state', () => {
-  it('defaults to the light theme with no consent', async () => {
+  it('defaults to the system theme with no consent', async () => {
     const { default: reducer } = await loadSlice();
     const state = reducer(undefined, { type: '@@init' });
 
     expect(state).toEqual({
-      design: { colorTheme: 'light' },
+      design: { colorTheme: 'system' },
       cookies: { analyticsCookies: false, consentExpiry: null },
       navigation: { bottomNavigation: { open: false } },
       pwa: { installPromptDismissed: false },

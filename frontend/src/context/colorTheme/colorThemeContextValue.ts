@@ -5,6 +5,7 @@ import light from '@/common/themes/lightTheme';
 import dark from '@/common/themes/darkTheme';
 
 export type ColorMode = 'light' | 'dark';
+export type ColorPreference = ColorMode | 'system';
 export type Theme = typeof light | typeof dark;
 export type IconComponent = typeof LightModeIcon | typeof DarkModeIcon;
 
@@ -12,6 +13,8 @@ export interface ColorThemeContextType {
     theme: Theme;
     toggleColorMode: () => void;
     colorMode: ColorMode;
+    colorPreference: ColorPreference;
+    setColorPreference: (preference: ColorPreference) => void;
     iconComponent: IconComponent;
 }
 
