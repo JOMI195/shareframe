@@ -40,6 +40,8 @@ def test_the_logo_is_attached_inline():
 
     assert len(message.attachments) == 1
     assert message.attachments[0]["Content-ID"] == "<logo_image>"
+    assert message.attachments[0].get_content_type() == "image/png"
+    assert message.attachments[0].get_content_disposition() == "inline"
 
 
 def test_the_template_references_the_attachment_by_cid():
