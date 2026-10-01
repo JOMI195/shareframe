@@ -50,6 +50,12 @@ Shareframe is a web application platform for sharing photos to a network of e-pa
 
 - **Database**: A PostgreSQL database interacts with Django and Celery for storing and retrieving users, frames, images, friendships, and other persistent data.
 
+**Monitoring**:
+
+- **Grafana**: Grafana dashboards give a live view of the whole platform. They show which picture frames are online along with their connection status, firmware version and device health. They also show the traffic, response times and errors of the web application and the resource usage of the server and each running service.
+
+- **Prometheus and Loki**: Prometheus collects metrics from the backend, the server and the containers, while Loki gathers the logs of all services. Both feed the Grafana dashboards.
+
 **Deployment**:
 
 - **Hetzner Cloud**: The entire application is hosted on Hetzner Cloud, a hosting service.
