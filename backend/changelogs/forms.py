@@ -1,4 +1,5 @@
 from django import forms
+
 from .models import Changelog
 
 
@@ -12,15 +13,15 @@ class ChangelogAdminForm(forms.ModelForm):
 
     class Meta:
         model = Changelog
-        fields = "__all__"
+        fields = ["date", "title", "content_file", "groups", "is_published"]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if self.instance and self.instance.content_file:
             try:
-                self.fields["content_text"].initial = (
-                    self.instance.get_markdown_content()
-                )
+                self.fields[
+                    "content_text"
+                ].initial = self.instance.get_markdown_content()
             except Exception:
                 self.fields["content_text"].initial = ""
 
@@ -31,8 +32,9 @@ class ChangelogAdminForm(forms.ModelForm):
         if content:
             # Save the edited content back into the file
             if not instance.content_file:
-                from django.core.files.base import ContentFile
                 import time
+
+                from django.core.files.base import ContentFile
 
                 filename = (
                     f"{instance.title.lower().replace(' ', '_')}_{int(time.time())}.md"

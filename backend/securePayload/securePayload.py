@@ -67,4 +67,4 @@ class SecurePayload:
             return secure_payload["data"]
 
         except Exception as e:
-            raise ValueError(f"Decryption failed: {str(e)}")
+            raise ValueError(f"Decryption failed: {str(e)}") from e

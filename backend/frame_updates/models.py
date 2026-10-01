@@ -1,9 +1,10 @@
 import os
 import uuid
-from django.db import models
-from django.core.validators import RegexValidator
-from django.core.exceptions import ValidationError
+
 import semver
+from django.core.exceptions import ValidationError
+from django.core.validators import RegexValidator
+from django.db import models
 
 from frames.models import FrameGroup
 
@@ -49,11 +50,8 @@ class Release(models.Model):
     class Meta:
         ordering = ["-release_date"]
 
-    def clean(self):
-        try:
-            semver.VersionInfo.parse(self.version)
-        except ValueError:
-            raise ValidationError({"version": "Invalid semantic version format"})
+    def __str__(self):
+        return f"ShareFrame v{self.version} ({self.criticality})"
 
     def save(self, *args, **kwargs):
         try:
@@ -69,10 +67,13 @@ class Release(models.Model):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def clean(self):
+        try:
+            semver.VersionInfo.parse(self.version)
+        except ValueError as e:
+            raise ValidationError({"version": "Invalid semantic version format"}) from e
+
     def delete(self, *args, **kwargs):
         if self.file and self.file.storage.exists(self.file.name):
             self.file.delete(save=False)
         super().delete(*args, **kwargs)
-
-    def __str__(self):
-        return f"ShareFrame v{self.version} ({self.criticality})"

@@ -3,15 +3,16 @@ import datetime
 import hashlib
 import hmac
 import logging
+
+from cryptography.exceptions import InvalidSignature
+from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from django.conf import settings
-from datetime import timezone as dt_timezone
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.response import Response
 from rest_framework.authentication import BaseAuthentication
 from rest_framework.exceptions import AuthenticationFailed
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
-from cryptography.exceptions import InvalidSignature
+from rest_framework.response import Response
+
 from .models import Frame, FrameToken
 
 logger = logging.getLogger(__name__)
@@ -43,10 +44,10 @@ class FrameSignatureAuthentication(BaseAuthentication):
         # Reject stale / future-dated requests
         try:
             timestamp_dt = datetime.datetime.fromtimestamp(
-                int(timestamp), tz=dt_timezone.utc
+                int(timestamp), tz=datetime.UTC
             )
-        except (ValueError, TypeError):
-            raise AuthenticationFailed("Invalid timestamp format.")
+        except (ValueError, TypeError) as e:
+            raise AuthenticationFailed("Invalid timestamp format.") from e
         if abs((timezone.now() - timestamp_dt).total_seconds()) > (
             settings.FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN * 60
         ):
@@ -57,8 +58,8 @@ class FrameSignatureAuthentication(BaseAuthentication):
                 public_serial_number=frame_id,
                 public_key__isnull=False,
             )
-        except Frame.DoesNotExist:
-            raise AuthenticationFailed("Invalid authorization credentials.")
+        except Frame.DoesNotExist as e:
+            raise AuthenticationFailed("Invalid authorization credentials.") from e
 
         try:
             public_key = Ed25519PublicKey.from_public_bytes(
@@ -72,7 +73,7 @@ class FrameSignatureAuthentication(BaseAuthentication):
             logger.warning(
                 "Signature auth failed for frame %s: %s", frame_id, type(e).__name__
             )
-            raise AuthenticationFailed("Invalid authorization credentials.")
+            raise AuthenticationFailed("Invalid authorization credentials.") from e
 
         return (frame.user, frame)
 
@@ -105,7 +106,7 @@ class FrameHTTPAuth:
         # Validate timestamp is recent
         try:
             timestamp_dt = datetime.datetime.fromtimestamp(
-                int(timestamp), tz=dt_timezone.utc
+                int(timestamp), tz=datetime.UTC
             )
             time_diff = timezone.now() - timestamp_dt
             if abs(time_diff.total_seconds()) > (
@@ -163,17 +164,20 @@ class FrameHTTPAuth:
 
 # LEGACY DRF authentication class wrapping FrameHTTPAuth (HMAC only)
 class FrameHTTPAuthentication(BaseAuthentication):
-
     def authenticate(self, request):
         auth_header = request.headers.get("Authorization", "")
 
         if not auth_header.startswith("Auth-Hash "):
             return None
 
-        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(request)
+        is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
+            request
+        )
 
         if not is_authenticated:
-            raise AuthenticationFailed(result.data.get("error", "Authentication failed"))
+            raise AuthenticationFailed(
+                result.data.get("error", "Authentication failed")
+            )
 
         frame = result
         return (frame.user, frame)
@@ -181,7 +185,6 @@ class FrameHTTPAuthentication(BaseAuthentication):
 
 # authentication with frame-token
 class FrameTokenAuthentication(BaseAuthentication):
-
     def authenticate(self, request):
         token = request.headers.get("Authorization")
 
@@ -205,5 +208,5 @@ class FrameTokenAuthentication(BaseAuthentication):
 
             return (frame_token.frame.user, frame_token.frame)
 
-        except FrameToken.DoesNotExist:
-            raise AuthenticationFailed("Invalid token")
+        except FrameToken.DoesNotExist as e:
+            raise AuthenticationFailed("Invalid token") from e

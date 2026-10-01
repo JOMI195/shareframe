@@ -1,19 +1,20 @@
-from typing import List, Dict, Tuple
-from django.core.mail import EmailMessage
-from django.template.loader import render_to_string
-from email.message import MIMEPart
 import mimetypes
 import os
+from email.message import MIMEPart
+
 from django.conf import settings
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
+
 from config.celery import celery
 
 
 def send_django_mail(
     template_name: str,
-    context: Dict[str, any],
+    context: dict[str, any],
     from_email: str,
-    to_emails: List[str],
-    images: List[Dict[str, str]],
+    to_emails: list[str],
+    images: list[dict[str, str]],
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -66,10 +67,10 @@ def send_django_mail(
 @celery.task
 def send_django_mail_with_logo(
     template_name: str,
-    context: Dict[str, any],
+    context: dict[str, any],
     from_email: str,
-    to_emails: List[str],
-    images: List[Dict[str, str]] = [],
+    to_emails: list[str],
+    images: list[dict[str, str]] | None = None,
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -103,5 +104,5 @@ def send_django_mail_with_logo(
                 "filename": "shareframe-logo.png",
             }
         ]
-        + images,
+        + (images or []),
     )

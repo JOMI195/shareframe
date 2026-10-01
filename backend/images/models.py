@@ -1,14 +1,16 @@
+import logging
 import os
 import uuid
-import logging
-from io import BytesIO
-from django.utils import timezone
 from datetime import timedelta
+from io import BytesIO
+
 from django.conf import settings
-from django.db import models
-from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
-from PIL import Image as PILImage, ImageOps
+from django.core.files.storage import default_storage
+from django.db import models
+from django.utils import timezone
+from PIL import Image as PILImage
+from PIL import ImageOps
 
 logger = logging.getLogger("images")
 
@@ -97,6 +99,57 @@ class Image(models.Model):
             return self.display_name
         return self.name
 
+    def save(self, *args, **kwargs):
+        update_fields_only = kwargs.pop("update_fields_only", False)
+
+        if update_fields_only:
+            logger.debug(f"Limited field update in save for Image with ID {self.pk}")
+            super().save(*args, **kwargs)
+            return
+
+        is_new = not self.pk
+
+        if is_new:
+            logger.info("Creating new image")
+        else:
+            logger.info(f"Updating existing image ID {self.pk}")
+
+        if self.pk:
+            try:
+                old_instance = Image.objects.get(pk=self.pk)
+                if old_instance.image != self.image:
+                    logger.info(
+                        f"Image file changed for ID {self.pk}, removing old files"
+                    )
+                    # Delete old image file
+                    old_instance.image.delete(save=False)
+
+                    # Delete all old variants
+                    for variant in old_instance.variants.all():
+                        variant.file.delete(save=False)
+                        variant.delete()
+            except Image.DoesNotExist:
+                pass
+
+        # set image size
+        self.size = self.image.size
+
+        # First save to ensure we have an ID
+        super().save(*args, **kwargs)
+
+        self.name = self.get_actual_filename()
+        if not self.display_name:
+            self.display_name = f"image_{self.id}"
+        super().save(update_fields=["name", "display_name"])
+
+        # Generate variants after the original is saved
+        if is_new or not self.variants.exists():
+            self.generate_sized_images()
+            # Save again to store updated metadata
+            super().save(update_fields=["width", "height", "format"])
+
+        logger.info(f"Image ID {self.id} saved successfully")
+
     def get_actual_filename(self):
         if os.path.sep in self.image.name:
             return os.path.basename(self.image.name)
@@ -144,14 +197,27 @@ class Image(models.Model):
         # Generate each size
         for size in image_sizes:
             self._create_resized_image(
-                img, size.name, size.width, size.height, size.quality, size, source_format
+                img,
+                size.name,
+                size.width,
+                size.height,
+                size.quality,
+                size,
+                source_format,
             )
         logger.info(
             f"Successfully generated {image_sizes.count()} image variants for image ID {self.id}"
         )
 
     def _create_resized_image(
-        self, img, size_name, width, height, quality=85, size_model=None, source_format=None
+        self,
+        img,
+        size_name,
+        width,
+        height,
+        quality=85,
+        size_model=None,
+        source_format=None,
     ):
         """Create a resized version of the image"""
         if not width:
@@ -172,7 +238,7 @@ class Image(models.Model):
         # Calculate new dimensions maintaining aspect ratio if height is None
         if height is None:
             wpercent = width / float(img_copy.width)
-            height = int((float(img_copy.height) * float(wpercent)))
+            height = int(float(img_copy.height) * float(wpercent))
 
         # Resize the image
         img_copy = img_copy.resize((width, height), PILImage.LANCZOS)
@@ -222,57 +288,6 @@ class Image(models.Model):
             if variant_file:
                 return variant_file
         return self.image
-
-    def save(self, *args, **kwargs):
-        update_fields_only = kwargs.pop("update_fields_only", False)
-
-        if update_fields_only:
-            logger.debug(f"Limited field update in save for Image with ID {self.pk}")
-            super().save(*args, **kwargs)
-            return
-
-        is_new = not self.pk
-
-        if is_new:
-            logger.info("Creating new image")
-        else:
-            logger.info(f"Updating existing image ID {self.pk}")
-
-        if self.pk:
-            try:
-                old_instance = Image.objects.get(pk=self.pk)
-                if old_instance.image != self.image:
-                    logger.info(
-                        f"Image file changed for ID {self.pk}, removing old files"
-                    )
-                    # Delete old image file
-                    old_instance.image.delete(save=False)
-
-                    # Delete all old variants
-                    for variant in old_instance.variants.all():
-                        variant.file.delete(save=False)
-                        variant.delete()
-            except Image.DoesNotExist:
-                pass
-
-        # set image size
-        self.size = self.image.size
-
-        # First save to ensure we have an ID
-        super(Image, self).save(*args, **kwargs)
-
-        self.name = self.get_actual_filename()
-        if not self.display_name:
-            self.display_name = f"image_{self.id}"
-        super(Image, self).save(update_fields=["name", "display_name"])
-
-        # Generate variants after the original is saved
-        if is_new or not self.variants.exists():
-            self.generate_sized_images()
-            # Save again to store updated metadata
-            super(Image, self).save(update_fields=["width", "height", "format"])
-
-        logger.info(f"Image ID {self.id} saved successfully")
 
     def delete(self, *args, **kwargs):
         logger.info(f"Permanently deleting image ID {self.id}")

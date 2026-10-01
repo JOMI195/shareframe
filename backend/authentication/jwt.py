@@ -65,7 +65,7 @@ class CookieTokenRefreshView(TokenRefreshView):
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
-            raise InvalidToken(e.args[0])
+            raise InvalidToken(e.args[0]) from e
 
         tokens = serializer.validated_data
         response = Response({"detail": "Refreshed."})

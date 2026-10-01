@@ -14,7 +14,7 @@ def enforce_csrf(request):
     check.process_request(request)
     reason = check.process_view(request, None, (), {})
     if reason:
-        raise exceptions.PermissionDenied("CSRF Failed: %s" % reason)
+        raise exceptions.PermissionDenied(f"CSRF Failed: {reason}")
 
 
 class CookieJWTAuthentication(JWTAuthentication):

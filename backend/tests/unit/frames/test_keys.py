@@ -1,4 +1,5 @@
 import base64
+import binascii
 
 import pytest
 
@@ -35,5 +36,5 @@ def test_a_different_key_gives_a_different_serial():
 
 
 def test_rejects_input_that_is_not_base64():
-    with pytest.raises(Exception):
+    with pytest.raises(binascii.Error):
         public_key_fingerprint("not base64 at all!!")
