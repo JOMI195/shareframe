@@ -28,9 +28,10 @@ compose files bind-mount it into the backend container.
 | `images.json` | `display_name`, `owner_username`, `file_name` (under `assets/images/`), `auto_delete_after_period` |
 | `friendships.json` | `sender`, `reciever`, `status` (`pending` / `accepted` / `rejected`) |
 | `sent-images.json` | `sender`, `reciever`, `image_display_name`, `sent_days_ago`, and either `expires_in_days` or an absolute `expires_at` |
-| `changelogs.json` | `title`, `date`, `is_published`, `groups[]`, `content_file_name` (under `assets/changelogs/`) |
+| `changelogs.json` | `title`, `date`, `is_published`, `groups[]`, `content_file_name` (under `assets/changelogs/`), optional `images[]` of `tag`, `description`, `file_name` (under `assets/changelogs/images/`) |
 
-`assets/images/` holds small PNGs, `assets/changelogs/` the markdown bodies.
+`assets/images/` holds small PNGs, `assets/changelogs/` the markdown bodies and
+`assets/changelogs/images/` the pictures they embed.
 
 ## Invariants
 
@@ -40,6 +41,8 @@ compose files bind-mount it into the backend container.
   client can connect.
 - **Changelog groups must already exist** — run `seed_dev_data` before
   `seed_changelogs`.
+- **Every changelog image must be placed in its body** as `::tag::`, otherwise
+  `seed_changelogs` fails. That placeholder is where the picture is shown.
 - **Sent images are keyed on (sender, receiver, image)**, so a given pair may not
   share the same photo twice.
 - `sent_days_ago` is applied after creation because `sent_at` is `auto_now_add`.
@@ -69,7 +72,8 @@ Every password carries a digit on purpose: the change-password form validates th
   is non-zero), one pending from alice, one rejected.
 - **9 sent images** — received, sent, to alice's own frames, active and expired,
   spread over the last week.
-- **5 changelogs** — dates spread, one unpublished, groups split.
+- **5 changelogs** — dates spread, one unpublished, groups split. One carries a
+  picture and one carries two, so the in-app dialog and the changelog email show images.
 
 ## Adding data
 

@@ -1,7 +1,7 @@
 import pytest
 from django.core.management import call_command
 
-from changelogs.models import Changelog
+from changelogs.models import Changelog, ChangelogImage
 from frames.models import Frame, FrameGroup
 from friendships.models import Friendship
 from images.models import Image, ImageSize
@@ -21,6 +21,7 @@ def _counts():
         "friendships": Friendship.objects.count(),
         "sent_images": SentImage.objects.count(),
         "changelogs": Changelog.objects.count(),
+        "changelog_images": ChangelogImage.objects.count(),
     }
 
 
@@ -33,6 +34,7 @@ def test_corpus_matches_seed_data():
         "friendships": len(seed.friendships()),
         "sent_images": len(seed.sent_images()),
         "changelogs": len(seed.changelogs()),
+        "changelog_images": sum(len(c.get("images", [])) for c in seed.changelogs()),
     }
 
 

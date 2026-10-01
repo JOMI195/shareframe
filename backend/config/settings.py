@@ -545,6 +545,7 @@ FRAME_HEARTBEAT_TIMEOUT_MINUTES = 60
 
 #### Frontend URLS
 FRONTEND_CONTACT_URL = "kontakt/"
+FRONTEND_CHANGELOGS_URL = "aenderungen/"
 
 #### Sent_Images
 # Number of days after expiration before deleting sent images
