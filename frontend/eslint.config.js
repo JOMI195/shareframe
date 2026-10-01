@@ -14,6 +14,10 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ['public/sw.js'],
+    languageOptions: { globals: globals.serviceworker },
+  },
+  {
     // Playwright's fixture callback is named `use`, which trips the hooks rule.
     files: ['tests/e2e/**/*.ts', 'tests/support/e2e/**/*.ts'],
     rules: { 'react-hooks/rules-of-hooks': 'off' },

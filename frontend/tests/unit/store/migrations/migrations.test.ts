@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import migrations from '@/store/migrations';
 
-const PERSIST_VERSION = 10;
+const PERSIST_VERSION = 11;
 
 describe('migration manifest', () => {
   const keys = Object.keys(migrations).map(Number).sort((a, b) => a - b);
 
   it('is contiguous from 2', () => {
-    expect(keys).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    expect(keys).toEqual([2, 3, 4, 5, 6, 7, 8, 9, 10, 11]);
   });
 
   // Adding a migration without bumping persistConfig.version means it never runs.

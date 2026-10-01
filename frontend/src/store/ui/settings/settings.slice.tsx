@@ -15,6 +15,7 @@ type SliceState = {
     consentExpiry: number | null;
   };
   navigation: { bottomNavigation: { open: boolean } };
+  pwa: { installPromptDismissed: boolean };
 };
 
 const initialState: SliceState = {
@@ -23,7 +24,8 @@ const initialState: SliceState = {
     analyticsCookies: JSON.parse(localStorage.getItem('analyticsCookies') || 'false'),
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
   },
-  navigation: { bottomNavigation: { open: false } }
+  navigation: { bottomNavigation: { open: false } },
+  pwa: { installPromptDismissed: false }
 };
 
 const settingsSlice = createSlice({
@@ -71,6 +73,9 @@ const settingsSlice = createSlice({
     },
     bottomNavigationClosed: (state) => {
       state.navigation.bottomNavigation.open = false;
+    },
+    installPromptDismissed: (state) => {
+      state.pwa.installPromptDismissed = true;
     }
   },
 });
@@ -102,7 +107,8 @@ export const {
   allCookiesAccepted,
   allCookiesDeclined,
   bottomNavigationOpened,
-  bottomNavigationClosed
+  bottomNavigationClosed,
+  installPromptDismissed
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;
@@ -110,3 +116,4 @@ export default settingsSlice.reducer;
 export const getDesign = (state: RootState) => state.ui.settings.design.colorTheme;
 export const getCookies = (state: RootState) => state.ui.settings.cookies;
 export const getNavigation = (state: RootState) => state.ui.settings.navigation;
+export const getPwa = (state: RootState) => state.ui.settings.pwa;
