@@ -6,7 +6,7 @@ from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.management.base import BaseCommand, CommandError
 
-from changelogs.models import Changelog
+from changelogs.models import Changelog, ChangelogImage
 from frames.models import FrameGroup
 
 SEED_DATA_FILE_NAME = "changelogs.json"
@@ -37,6 +37,7 @@ class Command(BaseCommand):
             "changelogs_updated": 0,
             "content_files_written": 0,
             "group_links_set": 0,
+            "images_written": 0,
         }
 
         for spec in specs:
@@ -49,6 +50,10 @@ class Command(BaseCommand):
     @property
     def _seed_assets_dir(self):
         return Path(settings.SEED_DATA_DIR) / "assets" / "changelogs"
+
+    @property
+    def _seed_images_dir(self):
+        return self._seed_assets_dir / "images"
 
     @property
     def _seed_data_path(self):
@@ -71,15 +76,33 @@ class Command(BaseCommand):
         return seed_data
 
     def _validate_seed_assets(self, specs):
-        missing = [
-            str(self._seed_assets_dir / spec["content_file_name"])
+        paths = [self._seed_assets_dir / spec["content_file_name"] for spec in specs]
+        paths += [
+            self._seed_images_dir / image["file_name"]
             for spec in specs
-            if not (self._seed_assets_dir / spec["content_file_name"]).exists()
+            for image in spec.get("images", [])
         ]
+        missing = [str(path) for path in paths if not path.exists()]
 
         if missing:
             raise CommandError(
                 "Seed changelog assets are missing:\n- " + "\n- ".join(missing)
+            )
+
+        unreferenced = [
+            f"{spec['content_file_name']}: ::{image['tag']}::"
+            for spec in specs
+            for image in spec.get("images", [])
+            if f"::{image['tag']}::"
+            not in (self._seed_assets_dir / spec["content_file_name"]).read_text(
+                encoding="utf-8"
+            )
+        ]
+
+        if unreferenced:
+            raise CommandError(
+                "Seed changelog images are not referenced in their body:\n- "
+                + "\n- ".join(unreferenced)
             )
 
     def _ensure_changelog(self, spec, summary):
@@ -107,6 +130,7 @@ class Command(BaseCommand):
 
         self._ensure_content_file(changelog, spec, summary)
         self._ensure_groups(changelog, spec, summary)
+        self._ensure_images(changelog, spec, summary)
 
     def _ensure_content_file(self, changelog, spec, summary):
         content = (self._seed_assets_dir / spec["content_file_name"]).read_text(
@@ -135,3 +159,28 @@ class Command(BaseCommand):
 
         changelog.groups.set(groups)
         summary["group_links_set"] += len(found)
+
+    def _ensure_images(self, changelog, spec, summary):
+        for image_spec in spec.get("images", []):
+            content = (self._seed_images_dir / image_spec["file_name"]).read_bytes()
+            image = ChangelogImage.objects.filter(
+                changelog=changelog, tag=image_spec["tag"]
+            ).first()
+
+            if image is None:
+                image = ChangelogImage(changelog=changelog, tag=image_spec["tag"])
+            elif (
+                image.description == image_spec["description"]
+                and self._stored_bytes(image) == content
+            ):
+                continue
+
+            image.description = image_spec["description"]
+            image.image.save(image_spec["file_name"], ContentFile(content), save=True)
+            summary["images_written"] += 1
+
+    def _stored_bytes(self, image):
+        if not image.image or not image.image.storage.exists(image.image.name):
+            return None
+        with image.image.open("rb") as f:
+            return f.read()

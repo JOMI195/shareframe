@@ -7,7 +7,14 @@
       "Seed Living Room",
       "Seed Office"
     ],
-    "content_file_name": "seed_changelog_1.md"
+    "content_file_name": "seed_changelog_1.md",
+    "images": [
+      {
+        "tag": "groups",
+        "description": "Gruppenauswahl in der Bilderübersicht",
+        "file_name": "seed-changelog-groups.png"
+      }
+    ]
   },
   {
     "title": "Seed: Schnellere Übertragung an den Rahmen",
@@ -28,7 +35,19 @@
       "Seed Office",
       "Seed Garden"
     ],
-    "content_file_name": "seed_changelog_3.md"
+    "content_file_name": "seed_changelog_3.md",
+    "images": [
+      {
+        "tag": "share",
+        "description": "Geteilte Rahmen in der Seitenleiste",
+        "file_name": "seed-changelog-share.png"
+      },
+      {
+        "tag": "invite",
+        "description": "Freund per Suchcode einladen",
+        "file_name": "seed-changelog-invite.png"
+      }
+    ]
   },
   {
     "title": "Seed: Automatisches Löschen alter Fotos",
