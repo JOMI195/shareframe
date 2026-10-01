@@ -1,6 +1,8 @@
 """Root fixtures. Scaffolding lives in tests/support/."""
 
+import os
 import shutil
+import subprocess
 
 import pytest
 from django.conf import settings as django_settings
@@ -38,6 +40,30 @@ def seed_corpus():
     call_command("seed_changelogs", verbosity=0)
 
 
+def _start_test_database():
+    if os.environ.get("TEST_DB_EXTERNAL") == "1":
+        return
+    repo_root = django_settings.BASE_DIR.parent
+    # Always -p shareframe-test: without it a `down -v` hits the dev database.
+    subprocess.run(
+        [
+            "docker",
+            "compose",
+            "-p",
+            "shareframe-test",
+            "-f",
+            repo_root / "docker-compose.test.yml",
+            "--env-file",
+            repo_root / ".env.test",
+            "up",
+            "-d",
+            "--wait",
+            "backend_db",
+        ],
+        check=True,
+    )
+
+
 def pytest_collection_modifyitems(items):
     """Enforce the tier split, then order the run."""
     misfiled = [
@@ -56,6 +82,12 @@ def pytest_collection_modifyitems(items):
         return bool(marker and marker.kwargs.get("transaction"))
 
     items.sort(key=is_transactional)
+
+
+@pytest.fixture(scope="session")
+def django_db_modify_db_settings(django_db_modify_db_settings):
+    """Only requested once a database test runs, so unit runs need no Docker."""
+    _start_test_database()
 
 
 @pytest.fixture(scope="session")
