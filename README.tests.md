@@ -39,6 +39,8 @@ uv run pytest                      # everything; starts the test database when n
 uv run pytest tests/unit           # no database, no Docker
 uv run pytest tests/integration
 uv run pytest tests/api
+
+uv run ruff check --fix . && uv run ruff format .   # lint + format
 ```
 
 ```
@@ -119,7 +121,7 @@ npm run db:reset                       # flushes and re-seeds the DEV database
 git config core.hooksPath .githooks    # once per clone
 ```
 
-Every commit runs `npm run check` and `uv run pytest`, so Docker has to be up. The
+Every commit runs `npm run check`, `ruff` and `uv run pytest`, so Docker has to be up. The
 hook fingerprints the whole working tree, not the index: when one working tree is
 split into several commits, only the first one runs the suites. Any edit runs them
 again. `git commit --no-verify` skips the hook.
