@@ -28,7 +28,7 @@ Shareframe is a web application platform for sharing photos to a network of e-pa
 
 ## Architecture
 
-<img width="902" height="971" alt="shareframe server architecture" src="https://github.com/user-attachments/assets/f2b9c7d0-b53a-4cb8-9fe4-61d5cee8fa13" />
+<img width="1002" height="971" alt="shareframe server architecture" src="https://github.com/user-attachments/assets/a0f1e82e-dcf2-4ee9-bae8-a932c6cb2526" />
 
 *Figure 2: Outline of the architecture of the server side of the Shareframe application*
 
@@ -49,6 +49,12 @@ Shareframe is a web application platform for sharing photos to a network of e-pa
 - **Celery**: Celery handles asynchronous task execution, such as sending emails. A Celery Beat scheduler additionally triggers periodic maintenance jobs, for example deleting expired images, removing inactive users and stale WebSocket connections, and rejecting long-pending friendship requests.
 
 - **Database**: A PostgreSQL database interacts with Django and Celery for storing and retrieving users, frames, images, friendships, and other persistent data.
+
+**Monitoring**:
+
+- **Grafana**: Grafana dashboards give a live view of the whole platform. They show which picture frames are online along with their connection status, firmware version and device health. They also show the traffic, response times and errors of the web application and the resource usage of the server and each running service.
+
+- **Prometheus and Loki**: Prometheus collects metrics from the backend, the server and the containers, while Loki gathers the logs of all services. Both feed the Grafana dashboards.
 
 **Deployment**:
 
