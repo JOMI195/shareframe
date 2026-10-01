@@ -28,7 +28,7 @@ Shareframe is a web application platform for sharing photos to a network of e-pa
 
 ## Architecture
 
-<img width="902" height="971" alt="shareframe server architecture" src="https://github.com/user-attachments/assets/f2b9c7d0-b53a-4cb8-9fe4-61d5cee8fa13" />
+<img width="1002" height="971" alt="shareframe server architecture" src="https://github.com/user-attachments/assets/a0f1e82e-dcf2-4ee9-bae8-a932c6cb2526" />
 
 *Figure 2: Outline of the architecture of the server side of the Shareframe application*
 
