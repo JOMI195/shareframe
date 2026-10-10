@@ -24,7 +24,7 @@ const Changelogs: React.FC = () => {
     const {
         isLoading,
         changelogIds,
-        changelogs,
+        listedChangelogs,
         loadAllChangelogs,
         cleanUpdDeactivatedIds
     } = useChangelogs();
@@ -60,98 +60,95 @@ const Changelogs: React.FC = () => {
                 </>
             )}
 
-            {!showSkeleton && changelogs.length === 0 && (
+            {!showSkeleton && listedChangelogs.length === 0 && (
                 <DataNotFound notFoundMessage={"Keine Änderungen vorhanden"} />
             )}
 
-            {!showSkeleton && changelogs.length > 0 && (
+            {!showSkeleton && listedChangelogs.length > 0 && (
                 <>
-                    {[...changelogs]
-                        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-                        .map((changelog, index) => (
-                            <Accordion
-                                key={changelog.id}
-                                elevation={1}
-                                square={true}
+                    {listedChangelogs.map((changelog, index) => (
+                        <Accordion
+                            key={changelog.id}
+                            elevation={1}
+                            square={true}
+                            sx={{
+                                mb: 2,
+                                borderRadius: `${theme.shape.borderRadius}px`,
+                                "&.MuiAccordion-root:before": {
+                                    backgroundColor: "transparent"
+                                }
+                            }}
+                            defaultExpanded={index === 0}
+                        >
+                            <AccordionSummary
+                                expandIcon={<ExpandMoreIcon />}
                                 sx={{
-                                    mb: 2,
-                                    borderRadius: `${theme.shape.borderRadius}px`,
-                                    "&.MuiAccordion-root:before": {
-                                        backgroundColor: "transparent"
+                                    '& .MuiAccordionSummary-content': {
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
                                     }
                                 }}
-                                defaultExpanded={index === 0}
                             >
-                                <AccordionSummary
-                                    expandIcon={<ExpandMoreIcon />}
-                                    sx={{
-                                        '& .MuiAccordionSummary-content': {
-                                            justifyContent: 'space-between',
-                                            alignItems: 'center'
-                                        }
-                                    }}
-                                >
-                                    {isSmallScreen ? (
-                                        <>
-                                            <Stack sx={{
-                                                width: "100%"
-                                            }}>
-                                                <Box
-                                                    sx={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        mb: 2
-                                                    }}>
-                                                    <Typography variant="subtitle1">
-                                                        {new Date(changelog.date).toLocaleDateString()}
-                                                    </Typography>
-                                                    {index === 0 && (
-                                                        <Chip
-                                                            label="Neuste Änderung"
-                                                            size="small"
-                                                            color="primary"
-                                                            variant="filled"
-                                                            sx={{ mx: 1 }}
-                                                        />
-                                                    )}
-                                                </Box>
+                                {isSmallScreen ? (
+                                    <>
+                                        <Stack sx={{
+                                            width: "100%"
+                                        }}>
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "center",
+                                                    mb: 2
+                                                }}>
                                                 <Typography variant="subtitle1">
-                                                    {changelog.title}
+                                                    {new Date(changelog.date).toLocaleDateString()}
                                                 </Typography>
-                                            </Stack>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Box>
-                                                <Typography variant="subtitle1">
-                                                    {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
-                                                </Typography>
+                                                {index === 0 && (
+                                                    <Chip
+                                                        label="Neuste Änderung"
+                                                        size="small"
+                                                        color="primary"
+                                                        variant="filled"
+                                                        sx={{ mx: 1 }}
+                                                    />
+                                                )}
                                             </Box>
-                                            {index === 0 && (
-                                                <Chip
-                                                    label="Neuste Änderung"
-                                                    size="small"
-                                                    color="primary"
-                                                    variant="filled"
-                                                    sx={{ mx: 1 }}
-                                                />
-                                            )}
-                                        </>
-                                    )}
-                                </AccordionSummary>
-                                <AccordionDetails>
-                                    <Box sx={{
-                                        '& img': { maxWidth: '100%', height: 'auto' } // Style for images in markdown
-                                    }}>
-                                        <MarkdownImagesIntercept>
-                                            {changelog.content}
-                                        </MarkdownImagesIntercept>
-                                    </Box>
-                                </AccordionDetails>
-                            </Accordion>
-                        ))
-                    }
+                                            <Typography variant="subtitle1">
+                                                {changelog.title}
+                                            </Typography>
+                                        </Stack>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Box>
+                                            <Typography variant="subtitle1">
+                                                {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
+                                            </Typography>
+                                        </Box>
+                                        {index === 0 && (
+                                            <Chip
+                                                label="Neuste Änderung"
+                                                size="small"
+                                                color="primary"
+                                                variant="filled"
+                                                sx={{ mx: 1 }}
+                                            />
+                                        )}
+                                    </>
+                                )}
+                            </AccordionSummary>
+                            <AccordionDetails>
+                                <Box sx={{
+                                    '& img': { maxWidth: '100%', height: 'auto' } // Style for images in markdown
+                                }}>
+                                    <MarkdownImagesIntercept>
+                                        {changelog.content}
+                                    </MarkdownImagesIntercept>
+                                </Box>
+                            </AccordionDetails>
+                        </Accordion>
+                    ))}
                 </>
             )}
         </Container>

@@ -101,14 +101,35 @@ describe('changelogs entity slice', () => {
     expect(allDone.api).toMatchObject({ idsLoading: false, loading: false });
   });
 
-  it('replaces both lists', () => {
+  it('replaces the id list', () => {
     const ids = [makeChangelogId({ id: 1 }), makeChangelogId({ id: 2 })];
-    const logs = [makeChangelog({ id: 1 })];
 
-    const state = changelogsReducer(changelogsReducer(initial(), changelogIdsReceived(ids)), changelogsReceived(logs));
+    expect(changelogsReducer(initial(), changelogIdsReceived(ids)).changelogIds).toEqual(ids);
+  });
 
-    expect(state.changelogIds).toEqual(ids);
-    expect(state.changelogs).toEqual(logs);
+  it('merges received content by id', () => {
+    const stale = makeChangelog({ id: 1, title: 'alt' });
+    const fresh = makeChangelog({ id: 1, title: 'neu' });
+    const other = makeChangelog({ id: 2 });
+
+    const state = [changelogsReceived([stale, other]), changelogsReceived([fresh])].reduce(
+      changelogsReducer,
+      initial(),
+    );
+
+    expect(state.changelogs).toHaveLength(2);
+    expect(state.changelogs).toEqual(expect.arrayContaining([fresh, other]));
+  });
+
+  it('drops content whose id is no longer listed', () => {
+    const loaded = changelogsReducer(
+      initial(),
+      changelogsReceived([makeChangelog({ id: 1 }), makeChangelog({ id: 2 })]),
+    );
+
+    const state = changelogsReducer(loaded, changelogIdsReceived([makeChangelogId({ id: 2 })]));
+
+    expect(state.changelogs.map((log) => log.id)).toEqual([2]);
   });
 
   it('clears only the matching flag on failure', () => {

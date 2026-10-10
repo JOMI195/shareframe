@@ -23,6 +23,15 @@ const MainLayout: React.FC = () => {
         loadChangelogIds();
     }, [loadChangelogIds, location]);
 
+    // A resumed PWA keeps its route, so the effect above would not run again.
+    useEffect(() => {
+        const onVisible = () => {
+            if (document.visibilityState === 'visible') loadChangelogIds();
+        };
+        document.addEventListener('visibilitychange', onVisible);
+        return () => document.removeEventListener('visibilitychange', onVisible);
+    }, [loadChangelogIds]);
+
     useEffect(() => {
         loadChangelogs();
         cleanUpdDeactivatedIds();

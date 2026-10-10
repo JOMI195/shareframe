@@ -1,6 +1,6 @@
 import { RootState } from "@/store";
 import { IChangelog, IChangelogId } from "@/types/types.changelogs";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SliceState = {
     api: {
@@ -31,6 +31,8 @@ const changelogsSlice = createSlice({
         },
         changelogIdsReceived: (sliceState, action: PayloadAction<IChangelogId[]>) => {
             sliceState.changelogIds = action.payload;
+            const listed = new Set(action.payload.map(item => item.id));
+            sliceState.changelogs = sliceState.changelogs.filter(log => listed.has(log.id));
             sliceState.api.idsLoading = false;
         },
         changelogIdsRequestFailed: (sliceState) => {
@@ -41,7 +43,12 @@ const changelogsSlice = createSlice({
             sliceState.api.loading = true;
         },
         changelogsReceived: (sliceState, action: PayloadAction<IChangelog[]>) => {
-            sliceState.changelogs = action.payload;
+            // Merged, not replaced: overlapping requests fetch different id subsets.
+            const received = new Set(action.payload.map(log => log.id));
+            sliceState.changelogs = [
+                ...sliceState.changelogs.filter(log => !received.has(log.id)),
+                ...action.payload,
+            ];
             sliceState.api.lastFetch = Date.now();
             sliceState.api.loading = false;
         },
@@ -65,3 +72,13 @@ export default changelogsSlice.reducer;
 export const getApi = (state: RootState) => state.entities.changelogs.api;
 export const getChangelogIds = (state: RootState) => state.entities.changelogs.changelogIds;
 export const getChangelogs = (state: RootState) => state.entities.changelogs.changelogs;
+
+export const getListedChangelogs = createSelector(
+    [getChangelogIds, getChangelogs],
+    (changelogIds, changelogs) => {
+        const byId = new Map(changelogs.map(log => [log.id, log]));
+        return changelogIds
+            .flatMap(item => byId.get(item.id) ?? [])
+            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    },
+);
