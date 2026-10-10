@@ -32,10 +32,6 @@ const PrivacyPolicy = () => {
                 <h2 id="m3">Verantwortlicher</h2>
                 <p>
                     Johannes Middelberg<br />
-                    c/o Block Services<br />
-                    Stuttgarter Str. 106<br />
-                    70736 Fellbach<br />
-                    DE - Deutschland<br />
                 </p>
                 <p>E-Mail-Adresse: <a href="mailto:info@shareframe.de">info@shareframe.de</a></p>
 
