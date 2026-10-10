@@ -1,0 +1,8 @@
+[
+  {
+    "username": "seed_bob",
+    "kind": "inactivity_reminder",
+    "channel": "email",
+    "enabled": false
+  }
+]

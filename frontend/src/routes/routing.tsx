@@ -23,6 +23,8 @@ import Home from '@/main/home/home';
 import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
 import Changelogs from '@/main/changelogs/changelogs';
+import Unsubscribe from '@/main/notifications/unsubscribe';
+import { getUnsubscribePageUrl } from '@/assets/endpoints/app/notificationEndpoints';
 
 // Exported so tests can mount the real route tree with createMemoryRouter.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -64,6 +66,10 @@ export const routes = [
                   {
                     path: getImprintUrl(),
                     element: <Impressum />,
+                  },
+                  {
+                    path: getUnsubscribePageUrl() + ":token",
+                    element: <Unsubscribe />,
                   },
                 ],
               },

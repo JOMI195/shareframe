@@ -2,6 +2,7 @@ import { Box } from "@mui/material";
 import NewChangelogDialog from "@/main/changelogs/dialogs/newChangelogDialog";
 import BuildVersionChecker from "../buildVersionChecker";
 import InstallPrompt from "../pwa/installPrompt";
+import PushPrompt from "../pwa/pushPrompt";
 import ShareTargetRedirect from "../pwa/shareTargetRedirect";
 
 const Lifecycle: React.FC = () => {
@@ -10,6 +11,7 @@ const Lifecycle: React.FC = () => {
             <NewChangelogDialog />
             <BuildVersionChecker />
             <InstallPrompt />
+            <PushPrompt />
             <ShareTargetRedirect />
         </Box>
     );

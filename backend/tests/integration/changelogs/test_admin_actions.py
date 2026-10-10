@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 from django.contrib import admin
 from django.contrib.messages import get_messages
@@ -6,12 +8,15 @@ from django.core import mail
 from django.test import RequestFactory
 
 from changelogs.models import Changelog
+from notifications.choices import NotificationChannel, NotificationKind
+from notifications.models import ChannelSetting
 from tests.support.factories import (
     ChangelogFactory,
     FrameFactory,
     FrameGroupFactory,
     UserFactory,
 )
+from tests.support.helpers.notifications import enable_channels
 
 pytestmark = pytest.mark.django_db
 
@@ -46,67 +51,98 @@ def selected(changelog):
     return Changelog.objects.filter(pk=changelog.pk)
 
 
-class TestSendToGroupMembers:
-    def test_asks_for_confirmation_first(self, model_admin, staff, changelog):
-        response = model_admin.send_email_to_group_members(
-            admin_request(staff), selected(changelog)
-        )
+class TestPublishTrigger:
+    @pytest.fixture(autouse=True)
+    def mail_enabled(self):
+        enable_channels(NotificationKind.CHANGELOG, NotificationChannel.EMAIL)
 
-        assert "2 recipients" in response.render().content.decode()
-        assert mail.outbox == []
-        changelog.refresh_from_db()
-        assert changelog.email_sent_at is None
+    def save(self, model_admin, staff, changelog, capture):
+        request = admin_request(staff)
+        form = SimpleNamespace(instance=changelog, save_m2m=lambda: None)
+        with capture(execute=True):
+            model_admin.save_related(request, form, [], change=True)
+        return [str(message) for message in get_messages(request)]
 
-    def test_sends_after_confirmation(self, model_admin, staff, changelog):
-        model_admin.send_email_to_group_members(
-            admin_request(staff, {"apply": "yes"}), selected(changelog)
+    def test_publishing_notifies_the_group_members(
+        self, model_admin, staff, changelog, django_capture_on_commit_callbacks
+    ):
+        messages = self.save(
+            model_admin, staff, changelog, django_capture_on_commit_callbacks
         )
 
         assert len(mail.outbox) == 2
+        assert "queued for 2 recipients" in messages[0]
         changelog.refresh_from_db()
-        assert changelog.email_sent_at is not None
+        assert changelog.notified_at is not None
 
-    def test_a_sent_changelog_is_not_sent_again(self, model_admin, staff, changelog):
-        model_admin.send_email_to_group_members(
-            admin_request(staff, {"apply": "yes"}), selected(changelog)
-        )
+    def test_saving_again_does_not_notify_twice(
+        self, model_admin, staff, changelog, django_capture_on_commit_callbacks
+    ):
+        self.save(model_admin, staff, changelog, django_capture_on_commit_callbacks)
         mail.outbox.clear()
-        request = admin_request(staff)
 
-        response = model_admin.send_email_to_group_members(request, selected(changelog))
+        messages = self.save(
+            model_admin, staff, changelog, django_capture_on_commit_callbacks
+        )
 
-        assert response is None
         assert mail.outbox == []
-        assert "already sent" in str(list(get_messages(request))[0])
+        assert messages == []
 
-    def test_an_unpublished_changelog_is_skipped(self, model_admin, staff, changelog):
+    def test_an_unpublished_changelog_is_not_sent(
+        self, model_admin, staff, changelog, django_capture_on_commit_callbacks
+    ):
         changelog.is_published = False
         changelog.save()
 
-        model_admin.send_email_to_group_members(
-            admin_request(staff, {"apply": "yes"}), selected(changelog)
+        self.save(model_admin, staff, changelog, django_capture_on_commit_callbacks)
+
+        assert mail.outbox == []
+        changelog.refresh_from_db()
+        assert changelog.notified_at is None
+
+    def test_without_an_enabled_channel_it_waits_and_warns(
+        self, model_admin, staff, changelog, django_capture_on_commit_callbacks
+    ):
+        ChannelSetting.objects.update(enabled=False)
+
+        messages = self.save(
+            model_admin, staff, changelog, django_capture_on_commit_callbacks
         )
 
         assert mail.outbox == []
+        assert "no channel enabled" in messages[0]
+        changelog.refresh_from_db()
+        assert changelog.notified_at is None
+
+    def test_without_recipients_it_waits_and_warns(
+        self, model_admin, staff, django_capture_on_commit_callbacks
+    ):
+        changelog = ChangelogFactory(groups=[FrameGroupFactory()])
+
+        messages = self.save(
+            model_admin, staff, changelog, django_capture_on_commit_callbacks
+        )
+
+        assert "no recipients" in messages[0]
+        changelog.refresh_from_db()
+        assert changelog.notified_at is None
 
 
-def test_a_test_mail_only_reaches_the_admin_notification_address(
+def test_a_test_reaches_the_admin_notification_address(
     model_admin, staff, changelog, settings
 ):
-    model_admin.send_test_email(admin_request(staff), selected(changelog))
+    model_admin.send_test_to_me(admin_request(staff), selected(changelog))
 
     assert [message.to for message in mail.outbox] == [
         [settings.ADMIN_NOTIFICATION_EMAIL]
     ]
     changelog.refresh_from_db()
-    assert changelog.email_sent_at is None
+    assert changelog.notified_at is None
 
 
-def test_a_test_mail_for_non_admin_staff_reaches_their_own_address(
-    model_admin, changelog
-):
+def test_a_test_for_non_admin_staff_reaches_their_own_address(model_admin, changelog):
     user = UserFactory(is_active=True, is_staff=True, is_admin=False)
 
-    model_admin.send_test_email(admin_request(user), selected(changelog))
+    model_admin.send_test_to_me(admin_request(user), selected(changelog))
 
     assert [message.to for message in mail.outbox] == [[user.email]]

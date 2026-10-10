@@ -9,6 +9,7 @@ import migration8 from './migrations/migration8';
 import migration9 from './migrations/migration9';
 import migration10 from './migrations/migration10';
 import migration11 from './migrations/migration11';
+import migration12 from './migrations/migration12';
 
 const typedMigrations = {
     2: migration2,
@@ -20,7 +21,8 @@ const typedMigrations = {
     8: migration8,
     9: migration9,
     10: migration10,
-    11: migration11
+    11: migration11,
+    12: migration12
 };
 
 const migrations = typedMigrations as unknown as MigrationManifest;

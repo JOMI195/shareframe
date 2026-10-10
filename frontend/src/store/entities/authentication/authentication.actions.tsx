@@ -1,7 +1,7 @@
 import * as userSlice from "./authentication.slice";
 import * as authEndpoints from "@/assets/endpoints/api/authEndpoints";
 import { apiRequest } from "@/common/utils/constants/api.constants";
-import { IPatchUserForm } from "@/types";
+import { INotificationKindPatch, IPatchUserForm } from "@/types";
 
 export const signUpUser = (userData: {
   username: string;
@@ -157,4 +157,14 @@ export const updateMyUserData = (user: IPatchUserForm
     onError: userSlice.userUpdateRejected.type,
     method: "patch",
     data: user,
+  });
+
+export const updateMyNotificationPreferences = (preferences: INotificationKindPatch[]) =>
+  apiRequest({
+    url: authEndpoints.getMyUserDataUrl(),
+    onStart: userSlice.userUpdatePending.type,
+    onSuccess: userSlice.userUpdateFulfilled.type,
+    onError: userSlice.userUpdateRejected.type,
+    method: "patch",
+    data: { account: { notification_preferences: preferences } },
   });

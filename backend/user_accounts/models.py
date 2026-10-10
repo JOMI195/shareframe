@@ -3,6 +3,8 @@ import uuid
 from django.conf import settings
 from django.db import models
 
+from notifications.choices import NotificationChannel, NotificationKind
+
 
 class AccountManager(models.Manager):
     def create_account(self, user, **extra_fields):
@@ -35,3 +37,53 @@ class Account(models.Model):
 
     def __str__(self):
         return self.user.email
+
+
+class NotificationPreference(models.Model):
+    account = models.ForeignKey(
+        Account, related_name="notification_preferences", on_delete=models.CASCADE
+    )
+    kind = models.CharField(max_length=50, choices=NotificationKind.choices)
+    channel = models.CharField(max_length=20, choices=NotificationChannel.choices)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "kind", "channel"],
+                name="unique_notification_preference",
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.account} - {self.kind} / {self.channel}"
+
+    @classmethod
+    def is_enabled(cls, account, kind, channel):
+        preference = cls.objects.filter(
+            account=account, kind=kind, channel=channel
+        ).first()
+        return preference is not None and preference.enabled
+
+
+class NotificationKindPreference(models.Model):
+    account = models.ForeignKey(
+        Account, related_name="notification_kind_preferences", on_delete=models.CASCADE
+    )
+    kind = models.CharField(max_length=50, choices=NotificationKind.choices)
+    enabled = models.BooleanField(default=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["account", "kind"], name="unique_notification_kind_preference"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.account} - {self.kind}"
+
+    @classmethod
+    def is_enabled(cls, account, kind):
+        preference = cls.objects.filter(account=account, kind=kind).first()
+        return preference is not None and preference.enabled

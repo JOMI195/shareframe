@@ -101,6 +101,7 @@ INSTALLED_APPS = [
     "changelogs",
     "dashboard",
     "metrics",
+    "notifications",
 ]
 
 # Upload size limits. App endpoints (/api/...) get a smaller total-request cap
@@ -417,6 +418,8 @@ REST_FRAMEWORK = {
         "frame_updates_sustained": "100/day",
         "changelogs_burst": "1000/min",
         "changelogs_sustained": "3000/day",
+        "unsubscribe_burst": "10/min",
+        "unsubscribe_sustained": "100/day",
     },
 }
 
@@ -546,6 +549,14 @@ FRAME_HEARTBEAT_TIMEOUT_MINUTES = 60
 #### Frontend URLS
 FRONTEND_CONTACT_URL = "kontakt/"
 FRONTEND_CHANGELOGS_URL = "aenderungen/"
+FRONTEND_IMAGES_URL = "fotos/"
+FRONTEND_UNSUBSCRIBE_URL = "benachrichtigungen/abmelden/"
+FRONTEND_NOTIFICATION_SETTINGS_URL = "settings/user/?tab=notifications"
+
+#### Notifications
+VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "")
 
 #### Sent_Images
 # Number of days after expiration before deleting sent images

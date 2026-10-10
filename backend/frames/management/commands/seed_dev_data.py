@@ -154,6 +154,11 @@ class Command(BaseCommand):
                     password=spec["password"],
                     is_active=True,
                 )
+                if "joined_days_ago" in spec:
+                    user.date_joined = datetime.now(UTC) - timedelta(
+                        days=spec["joined_days_ago"]
+                    )
+                    user.save(update_fields=["date_joined"])
                 summary["users_created"] += 1
                 summary["accounts_created"] += 1
                 created = True

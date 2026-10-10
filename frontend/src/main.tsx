@@ -15,7 +15,12 @@ initInstallPrompt();
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => undefined);
+    navigator.serviceWorker.register('/sw.js').then((registration) => {
+      // Installed apps can stay open for days without a navigation.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') registration.update().catch(() => undefined);
+      });
+    }).catch(() => undefined);
   });
 }
 

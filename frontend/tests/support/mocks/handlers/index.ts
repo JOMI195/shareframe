@@ -7,6 +7,7 @@ import { frameHandlers } from './frames';
 import { friendshipHandlers } from './friendships';
 import { imageHandlers } from './images';
 import { mediaHandlers } from './media';
+import { notificationHandlers } from './notifications';
 
 // The default set answers every call the app can make with an empty, signed-in
 // world. Tests layer data or failures on top with server.use(...scenario).
@@ -20,6 +21,7 @@ export const handlers = [
   ...changelogHandlers,
   ...contactHandlers,
   ...mediaHandlers,
+  ...notificationHandlers,
 ];
 
 export {
@@ -32,4 +34,5 @@ export {
   friendshipHandlers,
   imageHandlers,
   mediaHandlers,
+  notificationHandlers,
 };

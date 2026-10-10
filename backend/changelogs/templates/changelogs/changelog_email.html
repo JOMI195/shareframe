@@ -19,3 +19,8 @@
     </tr>
 </table>
 {% endblock %}
+
+{% block footer %}
+{{ block.super }}
+{% include "notifications/footer.html" %}
+{% endblock %}

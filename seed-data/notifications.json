@@ -1,0 +1,14 @@
+[
+  {
+    "username": "seed_alice",
+    "kind": "inactivity_reminder",
+    "channel": "email",
+    "sent_days_ago": 30
+  },
+  {
+    "username": "seed_erin",
+    "kind": "inactivity_reminder",
+    "channel": "email",
+    "sent_days_ago": 10
+  }
+]

@@ -15,6 +15,7 @@ def send_django_mail(
     from_email: str,
     to_emails: list[str],
     images: list[dict[str, str]],
+    headers: dict[str, str] | None = None,
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -44,6 +45,7 @@ def send_django_mail(
         body=html_message,
         from_email=from_email,
         to=to_emails,
+        headers=headers,
     )
     email.content_subtype = "html"
 
@@ -71,6 +73,7 @@ def send_django_mail_with_logo(
     from_email: str,
     to_emails: list[str],
     images: list[dict[str, str]] | None = None,
+    headers: dict[str, str] | None = None,
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -105,4 +108,5 @@ def send_django_mail_with_logo(
             }
         ]
         + (images or []),
+        headers=headers,
     )

@@ -4,10 +4,12 @@ import { useMediaQuery, useTheme } from "@mui/material";
 import { useAppDispatch } from "@/store";
 import { closeBottomNavigation, openBottomNavigation } from "@/store/ui/settings/settings.slice";
 import { useEffect } from "react";
-import { useLocation } from "react-router";
+import { useLocation, useSearchParams } from "react-router";
 
 interface SettingsTab {
     label: string;
+    // Shown as ?tab=<id>, so a tab can be linked to.
+    id: string;
     icon: React.ReactElement;
     content: React.ReactNode;
 }
@@ -52,14 +54,19 @@ function a11yProps(index: number) {
 }
 
 const Settings: React.FC<SettingsProps> = ({ title, tabs, headerAction }) => {
-    const [value, setValue] = React.useState(0);
+    const location = useLocation();
+    const [searchParams, setSearchParams] = useSearchParams();
+    const value = Math.max(0, tabs.findIndex((tab) => tab.id === searchParams.get("tab")));
+
+    const selectTab = (index: number) => {
+        setSearchParams({ tab: tabs[index].id }, { replace: true });
+    };
     const theme = useTheme();
     const dispatch = useAppDispatch();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-    const location = useLocation();
 
     const handleChange = (_event: React.SyntheticEvent, newValue: number) => {
-        setValue(newValue);
+        selectTab(newValue);
     };
 
     useEffect(() => {
@@ -150,7 +157,7 @@ const Settings: React.FC<SettingsProps> = ({ title, tabs, headerAction }) => {
                     <BottomNavigation
                         value={value}
                         onChange={(_event, newValue) => {
-                            setValue(newValue);
+                            selectTab(newValue);
                         }}
                         showLabels
                     >

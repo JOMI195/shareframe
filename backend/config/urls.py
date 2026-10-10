@@ -52,6 +52,7 @@ urlpatterns = [
     path("api/", include("friendships.urls")),
     path("api/", include("changelogs.urls")),
     path("api/", include("dashboard.urls")),
+    path("api/", include("notifications.urls")),
 ]
 
 if not bool(settings.DEBUG):

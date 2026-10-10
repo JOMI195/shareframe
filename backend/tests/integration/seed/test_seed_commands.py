@@ -1,12 +1,15 @@
 import pytest
 from django.core.management import call_command
+from django.utils import timezone
 
 from changelogs.models import Changelog, ChangelogImage
 from frames.models import Frame, FrameGroup
 from friendships.models import Friendship
 from images.models import Image, ImageSize
+from notifications.models import Notification
 from sent_images.models import SentImage
 from tests.support import seed
+from user_accounts.models import NotificationPreference
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -22,6 +25,7 @@ def _counts():
         "sent_images": SentImage.objects.count(),
         "changelogs": Changelog.objects.count(),
         "changelog_images": ChangelogImage.objects.count(),
+        "notifications": Notification.objects.count(),
     }
 
 
@@ -35,6 +39,7 @@ def test_corpus_matches_seed_data():
         "sent_images": len(seed.sent_images()),
         "changelogs": len(seed.changelogs()),
         "changelog_images": sum(len(c.get("images", [])) for c in seed.changelogs()),
+        "notifications": len(seed.notifications()),
     }
 
 
@@ -52,6 +57,7 @@ def test_seeding_again_changes_nothing():
     call_command("create_image_sizes", verbosity=0)
     call_command("seed_dev_data", verbosity=0)
     call_command("seed_changelogs", verbosity=0)
+    call_command("seed_notifications", verbosity=0)
 
     assert _counts() == before
 
@@ -67,3 +73,30 @@ def test_a_friendship_that_moved_on_is_not_seeded_twice():
     assert _counts() == before
     friendship.refresh_from_db()
     assert friendship.status == "accepted"
+
+
+def test_seeded_reminders_are_backdated():
+    for spec in seed.notifications():
+        notification = Notification.objects.get(
+            account__user__username=spec["username"], kind=spec["kind"]
+        )
+        assert (timezone.now() - notification.sent_at).days == spec["sent_days_ago"]
+
+
+def test_users_with_a_join_offset_are_backdated():
+    for spec in seed.users().values():
+        if "joined_days_ago" in spec:
+            user = User.objects.get(username=spec["username"])
+            assert (timezone.now() - user.date_joined).days == spec["joined_days_ago"]
+
+
+def test_seeded_notification_preferences_are_applied():
+    for spec in seed.notification_preferences():
+        assert (
+            NotificationPreference.is_enabled(
+                User.objects.get(username=spec["username"]).account,
+                spec["kind"],
+                spec["channel"],
+            )
+            is spec["enabled"]
+        )

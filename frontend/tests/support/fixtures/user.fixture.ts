@@ -4,7 +4,11 @@ export const makeUser = (over: Partial<IUser> = {}): IUser => ({
   id: 1,
   email: 'alice@example.com',
   username: 'alice',
-  account: { friendship_user_searchable: true, friendship_user_search_code: 'ABCD1234' },
+  account: {
+    friendship_user_searchable: true,
+    friendship_user_search_code: 'ABCD1234',
+    notification_preferences: [],
+  },
   ...over,
 });
 
@@ -14,5 +18,9 @@ export const otherUser = makeUser({
   id: 2,
   email: 'bob@example.com',
   username: 'bob',
-  account: { friendship_user_searchable: true, friendship_user_search_code: 'EFGH5678' },
+  account: {
+    friendship_user_searchable: true,
+    friendship_user_search_code: 'EFGH5678',
+    notification_preferences: [],
+  },
 });
