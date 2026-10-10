@@ -2,6 +2,9 @@ from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.template.response import TemplateResponse
 from django.utils.html import format_html
+from inline_actions.admin import InlineActionsModelAdminMixin
+
+from utils.admin import RowAction
 
 from .forms import ChangelogAdminForm
 from .models import Changelog, ChangelogImage
@@ -17,7 +20,7 @@ class ChangelogImageInline(admin.StackedInline):
 
 
 @admin.register(Changelog)
-class ChangelogAdmin(admin.ModelAdmin):
+class ChangelogAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
     form = ChangelogAdminForm
 
     list_display = (
@@ -113,3 +116,7 @@ class ChangelogAdmin(admin.ModelAdmin):
         for changelog in queryset:
             notify_changelog_test.delay(changelog.id, request.user.id)
         self.message_user(request, "Test notification queued for you.")
+
+    notify_members = RowAction(notify_group_members, "Notify group members")
+    notify_test = RowAction(notify_me_as_test, "Notify me (test)")
+    inline_actions = ["notify_members", "notify_test"]

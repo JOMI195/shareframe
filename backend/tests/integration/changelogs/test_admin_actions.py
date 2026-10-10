@@ -82,6 +82,17 @@ class TestNotifyGroupMembers:
         changelog.refresh_from_db()
         assert changelog.notified_at is None
 
+    def test_a_row_click_asks_for_confirmation_for_that_changelog(
+        self, model_admin, staff, changelog
+    ):
+        ChangelogFactory(groups=changelog.groups.all())
+
+        response = model_admin.notify_members(admin_request(staff), changelog)
+
+        assert response.template_name == "admin/changelogs/confirm_notify.html"
+        assert response.context_data["notifiable"] == [(changelog, 2)]
+        assert mail.outbox == []
+
     def test_confirming_notifies_the_group_members(self, model_admin, staff, changelog):
         _, messages = self.notify(model_admin, staff, changelog)
 
@@ -162,3 +173,11 @@ def test_a_test_for_non_admin_staff_reaches_their_own_address(model_admin, chang
     model_admin.notify_me_as_test(admin_request(user), selected(changelog))
 
     assert [message.to for message in mail.outbox] == [[user.email]]
+
+
+def test_a_row_click_notifies_me_as_test(model_admin, staff, changelog, settings):
+    model_admin.notify_test(admin_request(staff), changelog)
+
+    assert [message.to for message in mail.outbox] == [
+        [settings.ADMIN_NOTIFICATION_EMAIL]
+    ]
