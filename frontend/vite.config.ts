@@ -36,7 +36,21 @@ export default defineConfig(({ mode }) => {
       },
     },
     optimizeDeps: {
-      include: ['@mui/material/Tooltip', '@emotion/styled', '@emotion/react'],
+      // The lazy text editor is found late by the dev scanner, which then reloads the page mid-use.
+      include: [
+        '@mui/material/Tooltip',
+        '@emotion/styled',
+        '@emotion/react',
+        'konva',
+        'react-konva',
+        '@mui/icons-material/BookmarkAdd',
+        '@mui/icons-material/Cancel',
+        '@mui/icons-material/Delete',
+        '@mui/icons-material/Event',
+        '@mui/icons-material/FormatBold',
+        '@mui/icons-material/FormatColorFill',
+        '@mui/icons-material/TextFields',
+      ],
     },
     define: {
       'process.env': {

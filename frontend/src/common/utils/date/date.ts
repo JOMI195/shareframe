@@ -7,6 +7,15 @@ export const formatDateOnly = (isoDateString: string | number | Date, locale = '
     }).format(date);
 };
 
+export const formatDateNumeric = (isoDateString: string | number | Date, locale = 'de-DE') => {
+    const date = new Date(isoDateString);
+    return new Intl.DateTimeFormat(locale, {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    }).format(date);
+};
+
 export const formatDate = (isoDateString: string | number | Date, locale = 'de-DE') => {
     const date = new Date(isoDateString);
     return new Intl.DateTimeFormat(locale, {

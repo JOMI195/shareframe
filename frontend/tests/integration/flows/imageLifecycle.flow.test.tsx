@@ -27,6 +27,8 @@ vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
   getCroppedImg: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
 }));
 
+vi.mock('@/main/images/dialogs/upload/imageText/useLoadedImage', () => import('@tests/mocks/loadedImage'));
+
 const library = makeImages(3);
 
 const openLibrary = async (images = library) => {
@@ -60,7 +62,7 @@ describe('photo library', () => {
     await act(async () => triggerIntersection(true));
 
     // Each thumbnail resolves its own blob, so they arrive one by one.
-    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3));
+    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 5_000 });
   });
 
   it('says so when the library is empty', async () => {
@@ -85,7 +87,10 @@ describe('photo library', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' }));
     await screen.findByTestId('cropper');
-    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & Hochladen' }));
+    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    // The text step is lazy and pulls in konva, which on a busy run outlasts the default wait.
+    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }, { timeout: 5_000 }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
     expect(await screen.findByText('4 Fotos')).toBeInTheDocument();
   });

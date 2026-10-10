@@ -10,3 +10,7 @@ export const getSentImagesUrl = () => "sent-images/"
 export const getSentImagesDetailUrl = (sentImageId: number) => `${getSentImagesUrl()}${sentImageId}/`
 
 export const getSentImagesDeactivateUrl = (sentImageId: number) => `${getSentImagesDetailUrl(sentImageId)}deactivate-sent-image/`
+
+export const getTextPresetsUrl = () => "text-presets/"
+
+export const getTextPresetDetailUrl = (presetId: number) => `${getTextPresetsUrl()}${presetId}/`

@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
-import EasyCropper, { Area } from 'react-easy-crop';
+import EasyCropper, { Area, Point } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
+import { FRAME_ASPECT_RATIO } from '../../frameAspectBox';
 
 const ZOOM_FACTOR = 0.05;
 const MOVE_STEP = 5;
@@ -14,6 +15,10 @@ const MAX_ROTATION = 360;
 
 interface CropperProps {
     src: string;
+    crop: Point;
+    setCrop: React.Dispatch<React.SetStateAction<Point>>;
+    zoom: number;
+    setZoom: React.Dispatch<React.SetStateAction<number>>;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
@@ -22,6 +27,10 @@ interface CropperProps {
 
 const Cropper: React.FC<CropperProps> = ({
     src,
+    crop,
+    setCrop,
+    zoom,
+    setZoom,
     setCroppedAreaPixels,
     rotation,
     setRotation,
@@ -30,17 +39,7 @@ const Cropper: React.FC<CropperProps> = ({
     const theme = useTheme();
     const cropperRef = useRef<EasyCropper>(null);
     const cropperContainerRef = useRef<HTMLDivElement>(null);
-    const [crop, setCrop] = useState({ x: 0, y: 0 });
-    const [zoom, setZoom] = useState(1);
     const [isTouching, setIsTouching] = useState(false);
-    const [renderedSrc, setRenderedSrc] = useState(src);
-
-    // rotation is owned by the upload dialog and reset there on image selection
-    if (src !== renderedSrc) {
-        setRenderedSrc(src);
-        setCrop({ x: 0, y: 0 });
-        setZoom(1);
-    }
 
     const getCropperStyles = () => {
         const isLight = theme.palette.mode === 'light';
@@ -78,16 +77,18 @@ const Cropper: React.FC<CropperProps> = ({
         }
     }, []);
 
+    // Opening the step scrolls its title into view, so only a switch to another photo scrolls here.
+    const scrolledSrcRef = useRef(src);
     useEffect(() => {
-        if (cropperContainerRef.current) {
-            const timeout = setTimeout(() => {
-                cropperContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 300);
-            return () => clearTimeout(timeout);
-        }
+        if (scrolledSrcRef.current === src) return;
+        scrolledSrcRef.current = src;
+        const timeout = setTimeout(() => {
+            cropperContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+        return () => clearTimeout(timeout);
     }, [src]);
 
-    const onCropChange = (newCrop: { x: number; y: number }) => setCrop(newCrop);
+    const onCropChange = (newCrop: Point) => setCrop(newCrop);
 
     const onCropComplete = (_: Area, croppedAreaPixels: Area) => setCroppedAreaPixels(croppedAreaPixels);
 
@@ -126,7 +127,7 @@ const Cropper: React.FC<CropperProps> = ({
                             crop={crop}
                             zoom={zoom}
                             rotation={rotation}
-                            aspect={800 / 480}
+                            aspect={FRAME_ASPECT_RATIO}
                             onCropChange={onCropChange}
                             onCropComplete={onCropComplete}
                             onCropAreaChange={onCropComplete}

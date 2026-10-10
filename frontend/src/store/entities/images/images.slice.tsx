@@ -1,6 +1,7 @@
 import { RootState } from "@/store";
-import { IImagesPaginated, ISentImagesFilters, ISentImagesPaginated } from "@/types";
-import { createSlice } from "@reduxjs/toolkit";
+import { IImagesPaginated, ISentImagesFilters, ISentImagesPaginated, ITextPreset } from "@/types";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 
 type SliceState = {
   api: {
@@ -13,6 +14,11 @@ type SliceState = {
   sentImagesPaginated: ISentImagesPaginated;
   sentImagesPaginatedPageSize: number;
   sentImagesFilters: ISentImagesFilters;
+  textPresets: {
+    items: ITextPreset[];
+    loaded: boolean;
+    saving: boolean;
+  };
 };
 
 const initialState: SliceState = {
@@ -42,6 +48,11 @@ const initialState: SliceState = {
     shipping: 'all',
     sender: '',
     receiver: '',
+  },
+  textPresets: {
+    items: [],
+    loaded: false,
+    saving: false,
   },
 };
 
@@ -160,6 +171,32 @@ const imagesSlice = createSlice({
     deactivateSentImageFailed: (sliceState) => {
       resetApiState(sliceState);
     },
+    textPresetsReceived: (sliceState, action: PayloadAction<ITextPreset[]>) => {
+      sliceState.textPresets.items = action.payload;
+      sliceState.textPresets.loaded = true;
+    },
+    textPresetsRequestFailed: () => {
+    },
+    createTextPresetPending: (sliceState) => {
+      sliceState.textPresets.saving = true;
+    },
+    createTextPresetFulfilled: (sliceState, action: PayloadAction<ITextPreset>) => {
+      sliceState.textPresets.items.push(action.payload);
+      sliceState.textPresets.saving = false;
+    },
+    createTextPresetFailed: (sliceState) => {
+      sliceState.textPresets.saving = false;
+    },
+    deleteTextPresetFulfilled: (sliceState, action: PayloadAction<number>) => {
+      sliceState.textPresets.items = sliceState.textPresets.items.filter((preset) => preset.id !== action.payload);
+    },
+    deleteTextPresetFailed: () => {
+    },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, (sliceState) => {
+      sliceState.textPresets = initialState.textPresets;
+    });
   },
 });
 
@@ -190,6 +227,13 @@ export const {
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
   deactivateSentImagePending,
+  textPresetsReceived,
+  textPresetsRequestFailed,
+  createTextPresetPending,
+  createTextPresetFulfilled,
+  createTextPresetFailed,
+  deleteTextPresetFulfilled,
+  deleteTextPresetFailed,
 } = imagesSlice.actions;
 export default imagesSlice.reducer;
 
@@ -202,3 +246,4 @@ export const getImagesPaginatedPageSize = (state: RootState) => state.entities.i
 export const getSentImagesPaginated = (state: RootState) => state.entities.images.sentImagesPaginated;
 export const getSentImagesPaginatedPageSize = (state: RootState) => state.entities.images.sentImagesPaginatedPageSize;
 export const getSentImagesFilters = (state: RootState) => state.entities.images.sentImagesFilters;
+export const getTextPresets = (state: RootState) => state.entities.images.textPresets;

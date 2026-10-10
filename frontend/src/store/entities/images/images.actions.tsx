@@ -4,6 +4,7 @@ import * as ImagesEndpoints from "@/assets/endpoints/api/imagesEndpoints";
 import * as FramesEndpoints from "@/assets/endpoints/api/framesEndpoints";
 import { AppDispatch } from "@/store";
 import http from "@/services/httpService";
+import { ITextPresetDraft } from "@/types";
 
 export const fetchImages = (
   page: number = 1,
@@ -177,3 +178,29 @@ export const downloadImage = (url: string, fileName: string) => {
     }
   }
 }
+
+export const fetchTextPresets = () =>
+  apiRequest({
+    url: ImagesEndpoints.getTextPresetsUrl(),
+    onSuccess: ImagesSlice.textPresetsReceived.type,
+    onError: ImagesSlice.textPresetsRequestFailed.type,
+  });
+
+export const createTextPreset = (preset: ITextPresetDraft) =>
+  apiRequest({
+    url: ImagesEndpoints.getTextPresetsUrl(),
+    method: "post",
+    data: preset,
+    onStart: ImagesSlice.createTextPresetPending.type,
+    onSuccess: ImagesSlice.createTextPresetFulfilled.type,
+    onError: ImagesSlice.createTextPresetFailed.type,
+  });
+
+export const deleteTextPreset = (presetId: number) =>
+  apiRequest({
+    url: ImagesEndpoints.getTextPresetDetailUrl(presetId),
+    method: "delete",
+    onSuccess: ImagesSlice.deleteTextPresetFulfilled.type,
+    onSuccessPayload: presetId,
+    onError: ImagesSlice.deleteTextPresetFailed.type,
+  });

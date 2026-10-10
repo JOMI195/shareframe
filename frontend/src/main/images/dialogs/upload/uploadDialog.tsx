@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import {
   AppBar,
   Box,
@@ -27,11 +27,17 @@ import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
 import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
-import { Area } from 'react-easy-crop'
+import { Area, Point } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
 import ImageUpload from './imageUpload/imageUpload'
 import ImageCropping from './imageCropping/imageCropping'
 import { takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
+import ImagePreview from './imagePreview/imagePreview'
+import FrameAspectBox from './frameAspectBox'
+import { useBlobImage } from './useBlobImage'
+import type { TextOverlay } from './imageText/textOverlays'
+
+const ImageText = lazy(() => import('./imageText/imageText'))
 
 const ZoomTransition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -58,9 +64,13 @@ export interface ImageStatus {
   croppedFile?: File;
 }
 
-const steps = ['Fotos auswählen', 'Fotos zuschneiden und hochladen']
+const steps = ['Fotos auswählen', 'Fotos zuschneiden', 'Text hinzufügen', 'Vorschau und hochladen']
+// Collapsing and expanding steps end together, so nothing shifts after the scroll.
+const STEP_TRANSITION_MS = 300
 
 const CROPPER_PROPS_INITIAL_STATE = {
+  crop: { x: 0, y: 0 },
+  zoom: 1,
   rotation: 0,
   croppedAreaPixels: { x: 0, y: 0, width: 0, height: 0 }
 }
@@ -82,12 +92,58 @@ const UploadDialog: React.FC = () => {
   const [previewErrors, setPreviewErrors] = useState<{ [id: string]: string }>({});
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
+  const [crop, setCrop] = useState<Point>(CROPPER_PROPS_INITIAL_STATE.crop)
+  const [zoom, setZoom] = useState(CROPPER_PROPS_INITIAL_STATE.zoom)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
+  const [croppedImage, replaceCroppedImage] = useBlobImage()
+  const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
+  const [finalImage, replaceFinalImage] = useBlobImage()
 
   const open = useAppSelector(getDialogs).create.open
 
+  const contentRef = useRef<HTMLDivElement>(null)
+  const stepRefs = useRef<(HTMLDivElement | null)[]>([])
+  const [stepScroll, setStepScroll] = useState<{ index: number; minHeight?: number } | null>(null)
+
+  // A short last step cannot reach the top on its own, so it gets at least one screen of height.
+  const stepperRef = useRef<HTMLDivElement>(null)
+  const scrollableRef = useRef(false)
+
+  const scrollStepToTop = useCallback((index: number) => {
+    const content = contentRef.current
+    if (!content) return
+    const scrollable = content.scrollHeight > content.clientHeight
+    setStepScroll({ index, minHeight: scrollable ? content.clientHeight : undefined })
+  }, [])
+
+  useLayoutEffect(() => {
+    if (stepScroll) {
+      stepRefs.current[stepScroll.index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+  }, [stepScroll])
+
+  // An opened step that grows into a scrollbar later, e.g. by the text actions, scrolls up then.
+  const openedStep = stepScroll?.index === activeStep ? activeStep : null
+  useEffect(() => {
+    const content = contentRef.current
+    const stepper = stepperRef.current
+    if (!open || !content || !stepper) return
+    const observer = new ResizeObserver(() => {
+      const scrollable = content.scrollHeight > content.clientHeight
+      if (scrollable && !scrollableRef.current && openedStep !== null) {
+        scrollStepToTop(openedStep)
+      }
+      scrollableRef.current = scrollable
+    })
+    observer.observe(content)
+    observer.observe(stepper)
+    return () => observer.disconnect()
+  }, [open, openedStep, scrollStepToTop])
+
   const handleDialogClose = () => {
     dispatch(closeCreateImageDialog());
+    setStepScroll(null);
+    scrollableRef.current = false;
     setImageStatuses([]);
     setActiveStep(0);
     setCurrentImageIndex(null);
@@ -97,10 +153,16 @@ const UploadDialog: React.FC = () => {
     setPreviewErrors({});
   }
 
+  // Everything derived from the photo in edit belongs to that photo only.
   const resetCropperState = useCallback(() => {
     setCroppedAreaPixels(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
+    setCrop(CROPPER_PROPS_INITIAL_STATE.crop)
+    setZoom(CROPPER_PROPS_INITIAL_STATE.zoom)
     setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
-  }, [])
+    replaceCroppedImage(null)
+    setTextOverlays([])
+    replaceFinalImage(null)
+  }, [replaceCroppedImage, replaceFinalImage])
 
   const handleNext = () => {
     if (activeStep === 0 && imageStatuses.length === 0) {
@@ -253,8 +315,8 @@ const UploadDialog: React.FC = () => {
     )
   }, [imageStatuses, resetCropperState])
 
-  const handleCropAndUpload = async (index: number) => {
-    if (!imageStatuses[index]) {
+  const handleCrop = async () => {
+    if (currentImageIndex === null || !imageStatuses[currentImageIndex]) {
       return
     }
 
@@ -266,13 +328,43 @@ const UploadDialog: React.FC = () => {
       return
     }
 
+    try {
+      replaceCroppedImage(await getCroppedImg(imageStatuses[currentImageIndex].file, croppedAreaPixels, rotation))
+      setActiveStep(2)
+    } catch (error) {
+      dispatch(openImagesAlertSnackbar({
+        message: error instanceof Error ? error.message : 'Zuschneiden fehlgeschlagen',
+        severity: 'error'
+      }));
+    }
+  }
+
+  const handleBackToCrop = () => {
+    replaceCroppedImage(null)
+    setActiveStep(1)
+  }
+
+  const handleTextDone = (blob: Blob) => {
+    replaceFinalImage(blob)
+    setActiveStep(3)
+  }
+
+  const handleBackToText = () => {
+    replaceFinalImage(null)
+    setActiveStep(2)
+  }
+
+  const handleUpload = async (blob: Blob) => {
+    const index = currentImageIndex
+    if (index === null || !imageStatuses[index]) {
+      return
+    }
+
     const imageStatus = imageStatuses[index]
 
     try {
-      const croppedBlob = await getCroppedImg(imageStatus.file, croppedAreaPixels, rotation)
-
       const baseName = (imageStatus.file.name || 'cropped-image').replace(/\.[^.]+$/, '')
-      const croppedFile = new File([croppedBlob], `${baseName}.jpg`, {
+      const croppedFile = new File([blob], `${baseName}.jpg`, {
         type: 'image/jpeg',
         lastModified: Date.now()
       })
@@ -284,7 +376,6 @@ const UploadDialog: React.FC = () => {
         const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash, autoDeleteAfterPeriod))
 
         if (isIImage(newImage)) {
-          // Mark this image as uploaded
           setImageStatuses(prev =>
             prev.map((status, i) =>
               i === index
@@ -293,22 +384,23 @@ const UploadDialog: React.FC = () => {
             )
           )
 
-          // Find next pending image to crop
+          const allUploaded = imageStatuses.every((status, i) =>
+            i === index || status.status === 'uploaded'
+          )
+          if (allUploaded) {
+            handleDialogClose()
+            return
+          }
+
+          resetCropperState()
+          setActiveStep(1)
           const nextPendingIndex = imageStatuses.findIndex((status, i) =>
             i !== index && status.status === 'pending'
           )
-
           if (nextPendingIndex !== -1) {
             selectImageForCropping(nextPendingIndex)
           } else {
             setCurrentImageIndex(null)
-            // Check if all images are uploaded
-            const allUploaded = imageStatuses.every((status, i) =>
-              i === index || status.status === 'uploaded'
-            )
-            if (allUploaded) {
-              handleDialogClose()
-            }
           }
         }
       } else {
@@ -389,15 +481,27 @@ const UploadDialog: React.FC = () => {
             </Toolbar>
           </AppBar>
         )}
-        <DialogContent sx={{ p: matches ? 3 : 1 }}>
-          <Box sx={{ width: '100%' }}>
+        <DialogContent ref={contentRef} sx={{ p: matches ? 3 : 1 }}>
+          <Box ref={stepperRef} sx={{ width: '100%' }}>
             <Stepper orientation="vertical" activeStep={activeStep}>
               {steps.map((label, index) => (
-                <Step key={label} sx={{ width: "100%", height: "100%" }}>
+                <Step
+                  key={label}
+                  ref={(element: HTMLDivElement | null) => { stepRefs.current[index] = element }}
+                  sx={{
+                    width: "100%",
+                    height: "100%",
+                    minHeight: stepScroll?.index === index && activeStep === index ? stepScroll.minHeight : undefined
+                  }}
+                >
                   <StepLabel>{label}</StepLabel>
-                  <StepContent>
+                  <StepContent
+                    transitionDuration={STEP_TRANSITION_MS}
+                    slotProps={{ transition: { onEntered: () => scrollStepToTop(index) } }}
+                  >
                     {index === 0 && (
                       <ImageUpload
+                        showCloseButton={matches}
                         imageStatuses={imageStatuses}
                         addImages={addImages}
                         removeImage={removeImage}
@@ -410,15 +514,20 @@ const UploadDialog: React.FC = () => {
                     )}
                     {index === 1 && (
                       <ImageCropping
+                        showCloseButton={matches}
                         imageStatuses={imageStatuses}
                         currentImageIndex={currentImageIndex}
                         selectImageForCropping={selectImageForCropping}
                         removeImage={removeImage}
                         setCroppedAreaPixels={setCroppedAreaPixels}
+                        crop={crop}
+                        setCrop={setCrop}
+                        zoom={zoom}
+                        setZoom={setZoom}
                         rotation={rotation}
                         setRotation={setRotation}
                         croppedAreaPixels={croppedAreaPixels}
-                        handleCropAndUpload={handleCropAndUpload}
+                        handleCrop={handleCrop}
                         handleDialogClose={handleDialogClose}
                         handleBack={handleBack}
                         allImagesUploaded={allImagesUploaded}
@@ -426,6 +535,32 @@ const UploadDialog: React.FC = () => {
                         imagePreviews={imagePreviews}
                         previewErrors={previewErrors}
                         markPreviewBroken={markPreviewBroken}
+                      />
+                    )}
+                    {index === 2 && croppedImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
+                      <Suspense fallback={<Box sx={{ my: 2 }}><FrameAspectBox /></Box>}>
+                        <ImageText
+                          showCloseButton={matches}
+                          key={croppedImage.url}
+                          croppedImage={croppedImage}
+                          fileName={imageStatuses[currentImageIndex].file.name}
+                          overlays={textOverlays}
+                          setOverlays={setTextOverlays}
+                          handleTextDone={handleTextDone}
+                          handleBackToCrop={handleBackToCrop}
+                          handleDialogClose={handleDialogClose}
+                        />
+                      </Suspense>
+                    )}
+                    {index === 3 && finalImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
+                      <ImagePreview
+                        showCloseButton={matches}
+                        finalImage={finalImage}
+                        fileName={imageStatuses[currentImageIndex].file.name}
+                        handleUpload={handleUpload}
+                        handleBackToText={handleBackToText}
+                        handleDialogClose={handleDialogClose}
+                        sending={sending}
                         autoDeleteAfterPeriod={autoDeleteAfterPeriod}
                         setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
                       />
