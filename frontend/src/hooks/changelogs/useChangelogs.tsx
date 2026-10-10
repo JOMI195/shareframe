@@ -1,6 +1,6 @@
 import { useAppDispatch } from '@/store';
 import { fetchActiveChangelogs, fetchChangelogIds, fetchChangelogsByIds } from '@/store/entities/changelogs/changelogs.actions';
-import { getApi, getChangelogIds, getChangelogs } from '@/store/entities/changelogs/changelogs.slice';
+import { getApi, getChangelogIds, getChangelogs, getListedChangelogs } from '@/store/entities/changelogs/changelogs.slice';
 import { clearOutdatedDeactivatedIds, toggleChangelogDeactivation } from '@/store/ui/changelogs/changelogs.actions';
 import { getDeactivatedIds } from '@/store/ui/changelogs/changelogs.slice';
 import { useSelector } from 'react-redux';
@@ -11,6 +11,7 @@ export const useChangelogs = () => {
     const api = useSelector(getApi);
     const changelogIds = useSelector(getChangelogIds);
     const changelogs = useSelector(getChangelogs);
+    const listedChangelogs = useSelector(getListedChangelogs);
     const deactivatedIds = useSelector(getDeactivatedIds);
 
     const loadChangelogIds = useCallback(() => {
@@ -67,6 +68,7 @@ export const useChangelogs = () => {
         isLoading: api.loading || api.idsLoading,
         changelogIds,
         changelogs,
+        listedChangelogs,
         deactivatedIds,
 
         loadChangelogIds,

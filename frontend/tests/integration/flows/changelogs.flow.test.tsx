@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
 import { makeChangelog } from '@tests/fixtures';
-import { server, withChangelogs } from '@tests/mocks';
+import { http, HttpResponse } from 'msw';
+import * as changelogEndpoints from '@/assets/endpoints/api/changelogsEndpoints';
+import { apiUrl, server, withChangelogs } from '@tests/mocks';
 
 const older = makeChangelog({
   id: 1,
@@ -37,6 +39,31 @@ describe('changelog list', () => {
 
     expect(await screen.findAllByText(/Ältere Änderung/)).not.toHaveLength(0);
     expect(screen.getAllByText(/Neuste Änderung/)).not.toHaveLength(0);
+  });
+
+  // The announcement load fetches only undismissed entries; answering last must not shrink the list.
+  it('keeps the newest entry when the announcement load answers last', async () => {
+    let release = () => {};
+    const held = new Promise<void>((resolve) => { release = resolve; });
+    server.use(
+      http.post(apiUrl(changelogEndpoints.getChangelogsByIdsUrl()), async ({ request }) => {
+        const { ids } = (await request.json()) as { ids: number[] };
+        if (!ids.includes(newest.id)) await held;
+        return HttpResponse.json([older, newest].filter((entry) => ids.includes(entry.id)));
+      }),
+      ...withChangelogs([older, newest]),
+    );
+    const { store } = renderRoute('/aenderungen/', {
+      preloadedState: signedInState({ ui: { changelogs: { deactivatedIds: [newest.id] } } }),
+    });
+
+    expect(await screen.findByText(/- Neuste Änderung$/)).toBeInTheDocument();
+    const before = store.getState().entities.changelogs.changelogs;
+    release();
+    await waitFor(() => expect(store.getState().entities.changelogs.changelogs).not.toBe(before));
+
+    expect(screen.getByText(/- Neuste Änderung$/)).toBeInTheDocument();
+    expect(screen.getByText(/- Ältere Änderung$/)).toBeInTheDocument();
   });
 
   it('says so when there is nothing to report', async () => {
@@ -93,6 +120,21 @@ describe('new changelog dialog', () => {
         screen.queryByText('✨ Neue Änderungen während deiner Abwesenheit'),
       ).not.toBeInTheDocument(),
     );
+  });
+
+  it('announces an entry published while the app was in the background', async () => {
+    server.use(...withChangelogs([older]));
+    renderRoute('/dashboard/', {
+      preloadedState: signedInState({ ui: { changelogs: { deactivatedIds: [older.id] } } }),
+    });
+    await screen.findByText(/Hi, /);
+
+    server.use(...withChangelogs([older, newest]));
+    act(() => document.dispatchEvent(new Event('visibilitychange')));
+
+    expect(
+      await screen.findByText('✨ Neue Änderungen während deiner Abwesenheit'),
+    ).toBeInTheDocument();
   });
 
   it('stays away when everything has been seen', async () => {
