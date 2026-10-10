@@ -322,3 +322,37 @@ class Image(models.Model):
         logger.info(
             f"Image ID {self.id} and associated variant files successfully deleted ({len(image_paths)} files)"
         )
+
+
+class TextPreset(models.Model):
+    class Color(models.TextChoices):
+        BLACK = "black"
+        WHITE = "white"
+
+    class Font(models.TextChoices):
+        SANS = "sans"
+        SERIF = "serif"
+        HANDWRITTEN = "handwritten"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="text_presets",
+    )
+    text = models.CharField(max_length=200)
+    # Position and size are relative to the image, so a preset fits every crop.
+    x = models.FloatField()
+    y = models.FloatField()
+    rotation = models.FloatField(default=0)
+    font_size = models.FloatField()
+    color = models.CharField(max_length=10, choices=Color.choices)
+    background = models.BooleanField(default=False)
+    font = models.CharField(max_length=20, choices=Font.choices)
+    bold = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return self.text

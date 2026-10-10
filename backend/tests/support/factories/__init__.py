@@ -8,7 +8,7 @@ from .frames import (
     keypair,
 )
 from .friendships import FriendshipFactory
-from .images import ImageFactory, ImageSizeFactory
+from .images import ImageFactory, ImageSizeFactory, TextPresetFactory
 from .sent_images import SentImageFactory
 from .users import UserFactory
 
@@ -23,6 +23,7 @@ __all__ = [
     "ImageSizeFactory",
     "ReleaseFactory",
     "SentImageFactory",
+    "TextPresetFactory",
     "UserFactory",
     "keypair",
 ]

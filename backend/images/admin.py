@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Image, ImageSize, ImageVariant
+from .models import Image, ImageSize, ImageVariant, TextPreset
 
 
 class ImageVariantInline(admin.TabularInline):
@@ -80,3 +80,9 @@ class ImagesAdmin(admin.ModelAdmin):
         return f"{size_bytes:.2f} {unit}"
 
     size_display.short_description = "Size"
+
+
+@admin.register(TextPreset)
+class TextPresetAdmin(admin.ModelAdmin):
+    list_display = ("text", "user", "created_at")
+    search_fields = ("text", "user__email")

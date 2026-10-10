@@ -6,7 +6,9 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from .checksum import get_sha256_sum_from_file
-from .models import Image, ImageSize, ImageVariant
+from .models import Image, ImageSize, ImageVariant, TextPreset
+
+MAX_TEXT_PRESETS = 30
 
 logger = logging.getLogger("images")
 
@@ -155,3 +157,41 @@ class ImageSizeSerializer(serializers.ModelSerializer):
         model = ImageSize
         fields = ("id", "name", "width", "height", "quality")
         read_only_fields = fields
+
+
+class TextPresetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = TextPreset
+        fields = (
+            "id",
+            "text",
+            "x",
+            "y",
+            "rotation",
+            "font_size",
+            "color",
+            "background",
+            "font",
+            "bold",
+            "created_at",
+        )
+        read_only_fields = ("id", "created_at")
+        extra_kwargs = {
+            "x": {"min_value": 0, "max_value": 1},
+            "y": {"min_value": 0, "max_value": 1},
+            "rotation": {"min_value": -360, "max_value": 360},
+            "font_size": {"max_value": 1},
+        }
+
+    def validate_font_size(self, value):
+        if value <= 0:
+            raise ValidationError("Font size must be greater than 0.")
+        return value
+
+    def validate(self, attrs):
+        user = self.context["request"].user
+        if TextPreset.objects.filter(user=user).count() >= MAX_TEXT_PRESETS:
+            raise ValidationError(
+                f"You can save at most {MAX_TEXT_PRESETS} text presets."
+            )
+        return attrs

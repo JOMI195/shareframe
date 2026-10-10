@@ -5,18 +5,19 @@ from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.parsers import FormParser, MultiPartParser
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 
-from .models import Image
+from .models import Image, TextPreset
 from .serializers import (
     ImageCreateSerializer,
     ImageDestroySerializer,
     ImageRetrieveSerializer,
+    TextPresetSerializer,
 )
 
 logger = logging.getLogger("images")
@@ -137,3 +138,17 @@ class ImagesViewSet(ModelViewSet):
         logger.info(f"Image {element.id} marked as deleted")
         serializer = ImageRetrieveSerializer(element)
         return Response(serializer.data)
+
+
+class TextPresetsViewSet(ModelViewSet):
+    http_method_names = ["get", "post", "delete", "head", "options"]
+    parser_classes = (JSONParser,)
+    permission_classes = [IsAuthenticated]
+    serializer_class = TextPresetSerializer
+    pagination_class = None
+
+    def get_queryset(self):
+        return TextPreset.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
