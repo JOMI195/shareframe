@@ -25,14 +25,16 @@
     "email": "seed.dave@shareframe.local",
     "password": "seed-dave-dev-pass1",
     "friendship_code": "SEEDD001",
-    "friendship_user_searchable": true
+    "friendship_user_searchable": true,
+    "joined_days_ago": 30
   },
   {
     "username": "seed_erin",
     "email": "seed.erin@shareframe.local",
     "password": "seed-erin-dev-pass1",
     "friendship_code": "SEEDE001",
-    "friendship_user_searchable": true
+    "friendship_user_searchable": true,
+    "joined_days_ago": 40
   },
   {
     "username": "seed_mallory",

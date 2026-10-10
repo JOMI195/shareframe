@@ -3,6 +3,9 @@
 echo "Migrating the database..."
 python manage.py migrate
 
+echo "Creating missing notification preferences..."
+python manage.py create_notification_preferences
+
 
 # echo "Translating content..."
 # django-admin makemessages
@@ -27,6 +30,7 @@ if [ -n "$PRODUCTION" ]; then
     echo "Seeding deterministic dev/local test data..."
     python manage.py seed_dev_data
     python manage.py seed_changelogs
+    python manage.py seed_notifications
   fi
 else
   echo "PRODUCTION is not set, skipping adding fixtures."

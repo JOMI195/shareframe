@@ -1,0 +1,23 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif; margin: 0 0 16px;">{{ title }}</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif; margin: 0 0 12px;">{{ body }}</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 0;">
+    <tr>
+        <td style="background-color: #8b5cf6; border-radius: 6px;">
+            <a href="{{ cta_link }}"
+                style="display: inline-block; padding: 12px 24px; color: #ffffff; text-decoration: none; font-size: 16px; font-family: Inter, Roboto, Arial, sans-serif;">
+                {{ cta_label }}
+            </a>
+        </td>
+    </tr>
+</table>
+{% endblock %}
+
+{% block footer %}
+{{ block.super }}
+{% include "notifications/footer.html" %}
+{% endblock %}

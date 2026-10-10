@@ -3,15 +3,16 @@
 Deterministic data for the local stacks and the frontend e2e run. One file per
 entity, all plain JSON arrays.
 
-Loaded by two management commands, which the backend entrypoint runs whenever
+Loaded by three management commands, which the backend entrypoint runs whenever
 `PRODUCTION` is not `True`:
 
 ```bash
 python manage.py seed_dev_data     # users, groups, frames, images, friendships, sent images
 python manage.py seed_changelogs   # changelogs (needs the frame groups to exist)
+python manage.py seed_notifications  # notification opt-outs and history (needs the users to exist)
 ```
 
-Both are idempotent — re-running changes nothing — and both refuse to run against
+All are idempotent — re-running changes nothing — and all refuse to run against
 `PRODUCTION=True` without `--allow-production`.
 
 The directory is resolved from `settings.SEED_DATA_DIR`, which defaults to
@@ -22,13 +23,15 @@ compose files bind-mount it into the backend container.
 
 | File | Fields |
 |---|---|
-| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable` |
+| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable`, optional `joined_days_ago` |
 | `frame-groups.json` | `name` (unique), `description` |
 | `frames.json` | `name`, `seed_b64`, `private_serial_number`, `owner_username` (or `null`), `groups[]`, `version`, `local_ip_address` |
 | `images.json` | `display_name`, `owner_username`, `file_name` (under `assets/images/`), `auto_delete_after_period` |
 | `friendships.json` | `sender`, `reciever`, `status` (`pending` / `accepted` / `rejected`) |
 | `sent-images.json` | `sender`, `reciever`, `image_display_name`, `sent_days_ago`, and either `expires_in_days` or an absolute `expires_at` |
 | `changelogs.json` | `title`, `date`, `is_published`, `groups[]`, `content_file_name` (under `assets/changelogs/`), optional `images[]` of `tag`, `description`, `file_name` (under `assets/changelogs/images/`) |
+| `notification-preferences.json` | `username`, `kind`, `channel`, `enabled` |
+| `notifications.json` | `username`, `kind`, `channel`, `sent_days_ago` |
 
 `assets/images/` holds small PNGs, `assets/changelogs/` the markdown bodies and
 `assets/changelogs/images/` the pictures they embed.
@@ -41,13 +44,18 @@ compose files bind-mount it into the backend container.
   client can connect.
 - **Changelog groups must already exist** — run `seed_dev_data` before
   `seed_changelogs`.
+- **Notification accounts must already exist** — run `seed_dev_data` before
+  `seed_notifications`.
+- **Notification channels are never seeded.** Every kind and channel starts
+  switched off and is enabled by hand in the admin under Channel settings.
 - **Every changelog image must be placed in its body** as `::tag::`, otherwise
   `seed_changelogs` fails. That placeholder is where the picture is shown.
 - **Sent images are keyed on (sender, receiver, image)**, so a given pair may not
   share the same photo twice.
 - `sent_days_ago` is applied after creation because `sent_at` is `auto_now_add`.
   Relative dates keep the dashboard's weekly-activity chart populated no matter
-  when the seed runs.
+  when the seed runs. `joined_days_ago` and the notification `sent_days_ago` work
+  the same way, but `joined_days_ago` is only applied when the user is created.
 - Referenced usernames, group names, image display names and asset files must all
   exist; the command fails loudly if they do not.
 
@@ -74,6 +82,10 @@ Every password carries a digit on purpose: the change-password form validates th
   spread over the last week.
 - **5 changelogs** — dates spread, one unpublished, groups split. One carries a
   picture and one carries two, so the in-app dialog and the changelog email show images.
+- **Inactivity reminder** — once the admin enables a channel, `seed_dave` is due
+  (joined a month ago, never sent), `seed_erin` is skipped (already reminded in
+  this stretch) and everyone else sent recently or just joined. `seed_alice` has an old
+  reminder in her history. `seed_bob` opted out of the reminder by mail.
 
 ## Adding data
 

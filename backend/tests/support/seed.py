@@ -71,5 +71,13 @@ def changelogs():
     return _load("changelogs")
 
 
+def notification_preferences():
+    return _load("notification-preferences")
+
+
+def notifications():
+    return _load("notifications")
+
+
 def assets_dir():
     return settings.SEED_DATA_DIR / "assets"

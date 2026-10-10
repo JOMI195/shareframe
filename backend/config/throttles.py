@@ -43,6 +43,24 @@ class ChangelogsSustainedRateThrottle(UserRateThrottle):
     scope = "changelogs_sustained"
 
 
+class _IpScopedThrottle(SimpleRateThrottle):
+    """Key on the client IP, signed in or not."""
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {
+            "scope": self.scope,
+            "ident": self.get_ident(request),
+        }
+
+
+class UnsubscribeBurstRateThrottle(_IpScopedThrottle):
+    scope = "unsubscribe_burst"
+
+
+class UnsubscribeSustainedRateThrottle(_IpScopedThrottle):
+    scope = "unsubscribe_sustained"
+
+
 class _FrameScopedThrottle(SimpleRateThrottle):
     """Key on the authenticated frame (request.auth), not the frame's owner user."""
 
