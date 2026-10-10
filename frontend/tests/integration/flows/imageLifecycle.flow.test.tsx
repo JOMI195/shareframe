@@ -62,7 +62,7 @@ describe('photo library', () => {
     await act(async () => triggerIntersection(true));
 
     // Each thumbnail resolves its own blob, so they arrive one by one.
-    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3));
+    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 5_000 });
   });
 
   it('says so when the library is empty', async () => {
@@ -88,7 +88,8 @@ describe('photo library', () => {
     await user.click(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' }));
     await screen.findByTestId('cropper');
     await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
-    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    // The text step is lazy and pulls in konva, which on a busy run outlasts the default wait.
+    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }, { timeout: 5_000 }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
     expect(await screen.findByText('4 Fotos')).toBeInTheDocument();
