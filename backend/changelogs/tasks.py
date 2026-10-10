@@ -25,7 +25,7 @@ def notify_changelog(changelog_id: int) -> int:
 
 
 @celery.task
-def send_changelog_test(changelog_id: int, user_id: int) -> list[str]:
+def notify_changelog_test(changelog_id: int, user_id: int) -> list[str]:
     changelog = Changelog.objects.get(pk=changelog_id)
     account = User.objects.get(pk=user_id).account
     return preview(account, NotificationKind.CHANGELOG, build_message(changelog))

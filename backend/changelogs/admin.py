@@ -1,13 +1,12 @@
 from django.contrib import admin, messages
-from django.db import transaction
+from django.contrib.admin import helpers
+from django.template.response import TemplateResponse
 from django.utils.html import format_html
-
-from notifications.channels.email import preview_address
 
 from .forms import ChangelogAdminForm
 from .models import Changelog, ChangelogImage
-from .publish import notify_when_published
-from .tasks import send_changelog_test
+from .publish import notify_group_members, skip_reason
+from .tasks import notify_changelog_test
 
 
 class ChangelogImageInline(admin.StackedInline):
@@ -59,7 +58,7 @@ class ChangelogAdmin(admin.ModelAdmin):
         ),
     )
     inlines = [ChangelogImageInline]
-    actions = ["send_test_to_me"]
+    actions = ["notify_group_members", "notify_me_as_test"]
 
     def group_list(self, obj):
         groups = obj.groups.all()
@@ -72,37 +71,45 @@ class ChangelogAdmin(admin.ModelAdmin):
 
     group_list.short_description = "Groups"
 
-    def save_related(self, request, form, formsets, change):
-        super().save_related(request, form, formsets, change)
-        changelog = form.instance
-        # After commit: groups and images are saved by then.
-        transaction.on_commit(lambda: self._notify_when_published(request, changelog))
-
-    def _notify_when_published(self, request, changelog):
-        changelog.refresh_from_db()
-        reason = notify_when_published(changelog)
-        if reason is None:
-            self.message_user(
-                request,
-                f'"{changelog}" published: notifications queued for '
-                f"{changelog.recipients().count()} recipients.",
-                messages.SUCCESS,
-            )
-        elif reason != "not due":
-            self.message_user(
-                request,
-                f'"{changelog}" published but not sent: {reason}. '
-                "Save it again once this is fixed.",
-                messages.WARNING,
-            )
-
-    @admin.action(description="Send test to me (mail and push)")
-    def send_test_to_me(self, request, queryset):
+    @admin.action(description="Notify group members")
+    def notify_group_members(self, request, queryset):
+        notifiable, skipped = [], []
         for changelog in queryset:
-            send_changelog_test.delay(changelog.id, request.user.id)
-        devices = request.user.account.push_subscriptions.count()
-        self.message_user(
-            request,
-            f"Test queued: mail to {preview_address(request.user)}, "
-            f"push to {devices} subscribed device{'s' if devices != 1 else ''}.",
-        )
+            reason = skip_reason(changelog)
+            if reason:
+                skipped.append((changelog, reason))
+            else:
+                notifiable.append((changelog, changelog.recipients().count()))
+
+        if notifiable and "apply" not in request.POST:
+            return TemplateResponse(
+                request,
+                "admin/changelogs/confirm_notify.html",
+                {
+                    **self.admin_site.each_context(request),
+                    "title": "Notify group members",
+                    "opts": self.model._meta,
+                    "notifiable": notifiable,
+                    "skipped": skipped,
+                    "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
+                },
+            )
+
+        for changelog, reason in skipped:
+            self.message_user(
+                request, f'"{changelog}" skipped: {reason}.', messages.WARNING
+            )
+
+        for changelog, count in notifiable:
+            if notify_group_members(changelog):
+                self.message_user(
+                    request,
+                    f'"{changelog}": notifications queued for {count} recipients.',
+                    messages.SUCCESS,
+                )
+
+    @admin.action(description="Notify me (test)")
+    def notify_me_as_test(self, request, queryset):
+        for changelog in queryset:
+            notify_changelog_test.delay(changelog.id, request.user.id)
+        self.message_user(request, "Test notification queued for you.")

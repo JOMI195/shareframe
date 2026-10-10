@@ -5,7 +5,7 @@ from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 from changelogs.models import ChangelogImage
-from changelogs.tasks import notify_changelog, send_changelog_test
+from changelogs.tasks import notify_changelog, notify_changelog_test
 from notifications.choices import NotificationChannel, NotificationKind
 from notifications.models import Notification
 from tests.support.factories import (
@@ -139,7 +139,7 @@ class TestSendChangelogTest:
     def test_reaches_the_admin_address_while_channels_are_off(
         self, changelog, staff, settings
     ):
-        assert send_changelog_test(changelog.id, staff.id) == [EMAIL]
+        assert notify_changelog_test(changelog.id, staff.id) == [EMAIL]
         assert [message.to for message in mail.outbox] == [
             [settings.ADMIN_NOTIFICATION_EMAIL]
         ]
@@ -147,20 +147,20 @@ class TestSendChangelogTest:
     def test_non_admin_staff_get_it_on_their_own_address(self, changelog):
         user = UserFactory(is_active=True, is_staff=True, is_admin=False)
 
-        send_changelog_test(changelog.id, user.id)
+        notify_changelog_test(changelog.id, user.id)
 
         assert [message.to for message in mail.outbox] == [[user.email]]
 
     def test_ignores_own_opt_outs_and_is_not_logged(self, changelog, staff):
         set_preference(staff.account, KIND, enabled=False)
 
-        send_changelog_test(changelog.id, staff.id)
+        notify_changelog_test(changelog.id, staff.id)
 
         assert len(mail.outbox) == 1
         assert not Notification.objects.filter(account=staff.account).exists()
 
     def test_has_no_unsubscribe_link(self, changelog, staff, settings):
-        send_changelog_test(changelog.id, staff.id)
+        notify_changelog_test(changelog.id, staff.id)
 
         message = mail.outbox[-1]
         assert settings.FRONTEND_UNSUBSCRIBE_URL not in message.body
@@ -170,5 +170,5 @@ class TestSendChangelogTest:
     def test_reaches_the_admins_push_devices(self, changelog, staff, webpush):
         subscribe_push(staff.account)
 
-        assert send_changelog_test(changelog.id, staff.id) == [PUSH, EMAIL]
+        assert notify_changelog_test(changelog.id, staff.id) == [PUSH, EMAIL]
         assert len(webpush) == 1
