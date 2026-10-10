@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed } from "@/store/entities/images/images.slice";
+import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
 import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -67,6 +67,27 @@ const imagesSlice = createSlice({
           open: false,
           message: "",
         };
+      })
+      .addCase(textPresetsRequestFailed, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Vorlagen laden fehlgeschlagen", severity: "error" };
+      })
+      .addCase(createTextPresetFulfilled, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Vorlage gespeichert", severity: "success" };
+      })
+      .addCase(createTextPresetFailed, (sliceState, action: PayloadAction<string | undefined>) => {
+        sliceState.snackbar.alert = {
+          open: true,
+          message: action.payload
+            ? `Vorlage speichern fehlgeschlagen: ${action.payload}`
+            : "Vorlage speichern fehlgeschlagen",
+          severity: "error",
+        };
+      })
+      .addCase(deleteTextPresetFulfilled, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Vorlage gelöscht", severity: "success" };
+      })
+      .addCase(deleteTextPresetFailed, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Vorlage löschen fehlgeschlagen", severity: "error" };
       })
       .addCase(createImagePending, (sliceState) => {
         sliceState.snackbar.loading = {

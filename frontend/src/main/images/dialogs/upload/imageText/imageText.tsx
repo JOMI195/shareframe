@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type Konva from 'konva';
 import { Alert, Box, Button, Grid, Typography } from '@mui/material';
-import { useAppDispatch } from '@/store';
+import { useAppDispatch, useAppSelector } from '@/store';
 import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
+import { getTextPresets } from '@/store/entities/images/images.slice';
+import { createTextPreset, deleteTextPreset, fetchTextPresets } from '@/store/entities/images/images.actions';
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
 import TextEditor from './textEditor';
@@ -10,7 +12,7 @@ import TextToolbar from './textToolbar';
 import { exportStageToBlob } from './exportImage';
 import { loadFonts } from './fonts';
 import { useLoadedImage } from './useLoadedImage';
-import { createDateOverlay, createTextOverlay, TextOverlay } from './textOverlays';
+import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, TextOverlay } from './textOverlays';
 
 interface ImageTextProps {
     croppedImage: BlobImage;
@@ -39,6 +41,11 @@ const ImageText: React.FC<ImageTextProps> = ({
     const [fontsReady, setFontsReady] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [exporting, setExporting] = useState(false);
+    const presets = useAppSelector(getTextPresets);
+
+    useEffect(() => {
+        if (!presets.loaded) dispatch(fetchTextPresets());
+    }, [dispatch, presets.loaded]);
 
     useEffect(() => {
         let cancelled = false;
@@ -114,6 +121,11 @@ const ImageText: React.FC<ImageTextProps> = ({
                 onSelect={setSelectedId}
                 onChange={updateOverlay}
                 onDelete={deleteOverlay}
+                presets={presets.items}
+                savingPreset={presets.saving}
+                onAddPreset={(preset) => image && addOverlay(overlayFromPreset(preset, image.width, image.height))}
+                onSavePreset={(overlay) => image && dispatch(createTextPreset(overlayToPreset(overlay, image.width, image.height)))}
+                onDeletePreset={(preset) => dispatch(deleteTextPreset(preset.id))}
             />
 
             <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>

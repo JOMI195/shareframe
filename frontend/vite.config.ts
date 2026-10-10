@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => {
         '@emotion/react',
         'konva',
         'react-konva',
+        '@mui/icons-material/BookmarkAdd',
+        '@mui/icons-material/Cancel',
         '@mui/icons-material/Delete',
         '@mui/icons-material/Event',
         '@mui/icons-material/FormatBold',

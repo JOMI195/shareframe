@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Button,
@@ -17,6 +17,10 @@ import EventIcon from '@mui/icons-material/Event';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
+import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { ITextPreset } from '@/types';
+import DeletePresetDialog from './deletePresetDialog';
 import { FONTS, TextColor, TextFont, TextOverlay } from './textOverlays';
 
 const CHIP_LABEL_MAX_LENGTH = 20;
@@ -37,6 +41,8 @@ const actionButtonSx = {
     bgcolor: (theme: Theme) => theme.palette.background.default,
     color: (theme: Theme) => theme.palette.text.primary,
 };
+
+const twoColumnsSx = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mt: 1 };
 
 const Row: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
     <Box sx={rowSx}>
@@ -61,6 +67,11 @@ interface TextToolbarProps {
     onSelect: (id: string) => void;
     onChange: (overlay: TextOverlay) => void;
     onDelete: (id: string) => void;
+    presets: ITextPreset[];
+    savingPreset: boolean;
+    onAddPreset: (preset: ITextPreset) => void;
+    onSavePreset: (overlay: TextOverlay) => void;
+    onDeletePreset: (preset: ITextPreset) => void;
 }
 
 const TextToolbar: React.FC<TextToolbarProps> = ({
@@ -72,10 +83,17 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
     onSelect,
     onChange,
     onDelete,
+    presets,
+    savingPreset,
+    onAddPreset,
+    onSavePreset,
+    onDeletePreset,
 }) => {
+    const [presetToDelete, setPresetToDelete] = useState<ITextPreset | null>(null);
+
     return (
         <Box sx={{ width: '100%' }}>
-            <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5, mt: 1 }}>
+            <Box sx={twoColumnsSx}>
                 <Button startIcon={<TextFieldsIcon />} sx={actionButtonSx} onClick={onAddText} disabled={disabled}>
                     Text hinzufügen
                 </Button>
@@ -84,9 +102,28 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
                 </Button>
             </Box>
 
+            {presets.length > 0 && (
+                <Row label="Vorlagen">
+                    <Box role="group" aria-label="Vorlagen" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {presets.map((preset) => (
+                            <Chip
+                                key={preset.id}
+                                label={chipLabel(preset.text)}
+                                size="small"
+                                variant="outlined"
+                                disabled={disabled}
+                                onClick={() => onAddPreset(preset)}
+                                onDelete={() => setPresetToDelete(preset)}
+                                deleteIcon={<CancelIcon titleAccess="Vorlage löschen" />}
+                            />
+                        ))}
+                    </Box>
+                </Row>
+            )}
+
             {overlays.length > 0 && (
                 <Row label="Texte">
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                    <Box role="group" aria-label="Texte" sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                         {overlays.map((overlay) => (
                             <Chip
                                 key={overlay.id}
@@ -179,16 +216,34 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
                             <FormatBoldIcon />
                         </ToggleButton>
                     </Row>
-                    <Button
-                        fullWidth
-                        startIcon={<DeleteIcon />}
-                        sx={{ ...actionButtonSx, mt: 1 }}
-                        onClick={() => onDelete(selected.id)}
-                    >
-                        Text löschen
-                    </Button>
+                    <Box sx={twoColumnsSx}>
+                        <Button
+                            startIcon={<BookmarkAddIcon />}
+                            sx={actionButtonSx}
+                            disabled={savingPreset || !selected.text.trim()}
+                            onClick={() => onSavePreset(selected)}
+                        >
+                            Als Vorlage speichern
+                        </Button>
+                        <Button
+                            startIcon={<DeleteIcon />}
+                            sx={actionButtonSx}
+                            onClick={() => onDelete(selected.id)}
+                        >
+                            Text löschen
+                        </Button>
+                    </Box>
                 </Box>
             )}
+
+            <DeletePresetDialog
+                preset={presetToDelete}
+                onCancel={() => setPresetToDelete(null)}
+                onConfirm={(preset) => {
+                    setPresetToDelete(null);
+                    onDeletePreset(preset);
+                }}
+            />
         </Box>
     );
 };

@@ -1,4 +1,4 @@
-import type { IImage, IImageVariant } from '@/types';
+import type { IImage, IImageVariant, ITextPreset } from '@/types';
 
 // Relative paths: the app prepends VITE_API_MEDIA_BASE_URL before fetching.
 export const makeVariant = (over: Partial<IImageVariant> = {}): IImageVariant => ({
@@ -46,3 +46,18 @@ export const makeImages = (count: number, over: Partial<IImage> = {}): IImage[] 
       ...over,
     }),
   );
+
+export const makeTextPreset = (over: Partial<ITextPreset> = {}): ITextPreset => ({
+  id: 1,
+  text: 'Vorlage',
+  x: 0.5,
+  y: 0.5,
+  rotation: 0,
+  font_size: 0.125,
+  color: 'black',
+  background: false,
+  font: 'sans',
+  bold: false,
+  created_at: '2026-01-01T10:00:00Z',
+  ...over,
+});

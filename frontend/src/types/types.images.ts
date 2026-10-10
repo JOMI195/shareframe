@@ -81,3 +81,21 @@ export interface ISentImage {
     sent_at: string;
     expires_at: string;
 }
+
+export interface ITextPresetDraft {
+    text: string;
+    // center and font size relative to the image
+    x: number;
+    y: number;
+    rotation: number;
+    font_size: number;
+    color: 'black' | 'white';
+    background: boolean;
+    font: 'sans' | 'serif' | 'handwritten';
+    bold: boolean;
+}
+
+export interface ITextPreset extends ITextPresetDraft {
+    id: number;
+    created_at: string;
+}

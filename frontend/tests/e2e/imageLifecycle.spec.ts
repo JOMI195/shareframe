@@ -63,7 +63,23 @@ test.describe('photo lifecycle', () => {
       await selectedText.getByRole('button', { name: 'Weiß' }).click();
       await selectedText.getByRole('button', { name: 'Hintergrund' }).click();
       await expect(selectedText.getByRole('button', { name: 'Hintergrund' })).toHaveAttribute('aria-pressed', 'true');
+    });
 
+    await test.step('save, insert and delete a text preset', async () => {
+      const selectedText = page.getByRole('group', { name: 'Ausgewählter Text' });
+      const presets = page.getByRole('group', { name: 'Vorlagen' });
+
+      await selectedText.getByRole('button', { name: 'Als Vorlage speichern' }).click();
+      await presets.getByRole('button', { name: /^\d{2}\.\d{2}\.\d{4}/ }).click();
+      await expect(page.getByRole('group', { name: 'Texte' }).getByRole('button')).toHaveCount(3);
+      await expect(selectedText.getByRole('button', { name: 'Weiß' })).toHaveAttribute('aria-pressed', 'true');
+
+      await presets.getByRole('img', { name: 'Vorlage löschen' }).click();
+      await page.getByRole('dialog', { name: 'Vorlage löschen?' }).getByRole('button', { name: 'Löschen' }).click();
+      await expect(presets).toBeHidden();
+    });
+
+    await test.step('preview', async () => {
       await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
       const preview = page.getByRole('img', { name: 'Vorschau von upload-fixture.jpg' });
       await expect(preview).toBeVisible();

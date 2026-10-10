@@ -1,4 +1,5 @@
 import { formatDateNumeric } from '@/common/utils/date/date';
+import { ITextPresetDraft } from '@/types';
 
 export type TextColor = 'black' | 'white';
 export type TextFont = 'sans' | 'serif' | 'handwritten';
@@ -69,6 +70,38 @@ export const applyTransform = (
     y: transform.y,
     rotation: transform.rotation,
     fontSize: Math.max(MIN_FONT_SIZE, Math.round(overlay.fontSize * transform.scale)),
+});
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const normalizeRotation = (rotation: number) => {
+    const turned = ((rotation % 360) + 360) % 360;
+    return turned > 180 ? turned - 360 : turned;
+};
+
+export const overlayToPreset = (overlay: TextOverlay, imageWidth: number, imageHeight: number): ITextPresetDraft => ({
+    text: overlay.text,
+    x: clamp(overlay.x / imageWidth, 0, 1),
+    y: clamp(overlay.y / imageHeight, 0, 1),
+    rotation: normalizeRotation(overlay.rotation),
+    font_size: Math.min(1, overlay.fontSize / imageHeight),
+    color: overlay.color,
+    background: overlay.background,
+    font: overlay.font,
+    bold: overlay.bold,
+});
+
+export const overlayFromPreset = (preset: ITextPresetDraft, imageWidth: number, imageHeight: number): TextOverlay => ({
+    id: `text-${Date.now()}-${++idCounter}`,
+    text: preset.text,
+    x: preset.x * imageWidth,
+    y: preset.y * imageHeight,
+    rotation: preset.rotation,
+    fontSize: Math.max(MIN_FONT_SIZE, Math.round(preset.font_size * imageHeight)),
+    color: preset.color,
+    background: preset.background,
+    font: preset.font,
+    bold: preset.bold,
 });
 
 export const oppositeColor = (color: TextColor): TextColor => (color === 'black' ? 'white' : 'black');

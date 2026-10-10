@@ -1,14 +1,15 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import UploadDialog from '@/main/images/dialogs/upload/uploadDialog';
 import * as imageEndpoints from '@/assets/endpoints/api/imagesEndpoints';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { signedInState } from '@tests/helpers/preloadedState';
-import { makeImage } from '@tests/fixtures';
+import { makeImage, makeTextPreset } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server } from '@tests/mocks/server';
 import { uploadImage } from '@/store/entities/images/images.actions';
+import type { ITextPreset } from '@/types';
 import { exportStageToBlob } from '@/main/images/dialogs/upload/imageText/exportImage';
 
 // jsdom has no layout, so react-easy-crop never reports a crop area, and no
@@ -51,6 +52,9 @@ vi.mock('@/store/entities/images/images.actions', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/store/entities/images/images.actions')>();
   return { ...actual, uploadImage: vi.fn(actual.uploadImage) };
 });
+
+// The text step is lazy and pulls in konva, which on a busy run takes longer than a findBy wait.
+beforeAll(() => import('@/main/images/dialogs/upload/imageText/imageText'));
 
 const photo = (name: string, lastModified = 1) =>
   new File(['x'.repeat(64)], name, { type: 'image/jpeg', lastModified });
@@ -307,6 +311,83 @@ describe('UploadDialog text step', () => {
     await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
 
     expect(await screen.findByRole('button', { name: 'Bleibt' })).toBeInTheDocument();
+  });
+});
+
+const servePresets = (presets: ITextPreset[]) =>
+  server.use(mswHttp.get(apiUrl(imageEndpoints.getTextPresetsUrl()), () => HttpResponse.json(presets)));
+
+const presetsGroup = () => screen.findByRole('group', { name: 'Vorlagen' });
+
+describe('UploadDialog text presets', () => {
+  beforeEach(acceptUploads);
+
+  it('saves the selected text with its style and a position relative to the photo', async () => {
+    let saved: unknown;
+    server.use(
+      mswHttp.post(apiUrl(imageEndpoints.getTextPresetsUrl()), async ({ request }) => {
+        saved = await request.json();
+        return HttpResponse.json(makeTextPreset({ ...(saved as object), id: 7 }), { status: 201 });
+      }),
+    );
+    const { user } = await goToText();
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Weiß' }));
+    await user.click(screen.getByRole('button', { name: 'Fett' }));
+
+    await user.click(screen.getByRole('button', { name: 'Als Vorlage speichern' }));
+
+    expect(within(await presetsGroup()).getByRole('button', { name: /^Text/ })).toBeInTheDocument();
+    expect(saved).toEqual({
+      text: 'Text', x: 0.5, y: 0.5, rotation: 0, font_size: 0.125,
+      color: 'white', background: false, font: 'sans', bold: true,
+    });
+  });
+
+  it('cannot save an empty text as a preset', async () => {
+    const { user } = await goToText();
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+
+    await user.clear(textField());
+
+    expect(screen.getByRole('button', { name: 'Als Vorlage speichern' })).toBeDisabled();
+  });
+
+  it('inserts a saved preset with its style as a new text', async () => {
+    servePresets([makeTextPreset({ text: 'Gespeichert', color: 'white', bold: true })]);
+    const { user } = await goToText();
+
+    await user.click(within(await presetsGroup()).getByRole('button', { name: /^Gespeichert/ }));
+
+    const selected = screen.getByRole('group', { name: 'Ausgewählter Text' });
+    expect(within(selected).getByRole('textbox', { name: 'Text' })).toHaveValue('Gespeichert');
+    expect(within(selected).getByRole('button', { name: 'Weiß' })).toHaveAttribute('aria-pressed', 'true');
+    expect(within(selected).getByRole('button', { name: 'Fett' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('deletes a preset only after confirming', async () => {
+    servePresets([makeTextPreset({ id: 3, text: 'Weg damit' })]);
+    const deleted = vi.fn();
+    server.use(
+      mswHttp.delete(apiUrl(imageEndpoints.getTextPresetDetailUrl(3)), () => {
+        deleted();
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { user } = await goToText();
+    const removeIcon = () => within(screen.getByRole('group', { name: 'Vorlagen' })).getByRole('img', { name: 'Vorlage löschen' });
+    await presetsGroup();
+
+    await user.click(removeIcon());
+    await user.click(within(screen.getByRole('dialog', { name: 'Vorlage löschen?' })).getByRole('button', { name: 'Abbrechen' }));
+    await waitFor(() => expect(screen.queryByRole('dialog', { name: 'Vorlage löschen?' })).not.toBeInTheDocument());
+    expect(deleted).not.toHaveBeenCalled();
+
+    await user.click(removeIcon());
+    await user.click(within(screen.getByRole('dialog', { name: 'Vorlage löschen?' })).getByRole('button', { name: 'Löschen' }));
+
+    await waitFor(() => expect(screen.queryByRole('group', { name: 'Vorlagen' })).not.toBeInTheDocument());
+    expect(deleted).toHaveBeenCalledOnce();
   });
 });
 
