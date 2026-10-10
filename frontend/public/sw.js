@@ -30,11 +30,20 @@ const storeSharedFiles = async (request) => {
   return Response.redirect('/fotos/', 303);
 };
 
+const readPayload = (data) => {
+  try {
+    const payload = data ? data.json() : null;
+    return payload && typeof payload === 'object' ? payload : {};
+  } catch {
+    return {};
+  }
+};
+
+// Every push must show a notification, else Safari revokes the subscription.
 self.addEventListener('push', (event) => {
-  const { title, body, url, tag } = event.data ? event.data.json() : {};
-  if (!title) return;
-  event.waitUntil(self.registration.showNotification(title, {
-    body,
+  const { title, body, url, tag } = readPayload(event.data);
+  event.waitUntil(self.registration.showNotification(title || 'ShareFrame', {
+    body: body || 'Schau mal wieder bei ShareFrame vorbei.',
     tag,
     icon: '/web-app-manifest-192x192.png',
     badge: '/favicon-96x96.png',
