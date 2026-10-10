@@ -28,6 +28,7 @@ dependencies = [
     "markdown>=3.10.3",
     "pywebpush>=2.5.0",
     "celery-types>=0.26.0",
+    "django-inline-actions>=3.0.0",
 ]
 
 # Django capped below 6.1: django-celery-beat and django-prometheus both

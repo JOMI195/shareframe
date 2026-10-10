@@ -775,6 +775,18 @@ wheels = [
 ]
 
 [[package]]
+name = "django-inline-actions"
+version = "3.0.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "django" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/eb/92/a66b753969b10985e91a8b5b9d08c75a7312fda4fa18a13e716789edacce/django_inline_actions-3.0.0.tar.gz", hash = "sha256:a6848e7640c60d46d4afadeb18a131fb5ca73303c5b3fe6bac6fa99af0a1e4fb", size = 660533, upload-time = "2026-09-14T22:16:19.297Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/be/eb/5d568121466528453afd3d59eba3a49be67b698d70a3012aabce375e80f4/django_inline_actions-3.0.0-py3-none-any.whl", hash = "sha256:77e030f7049cec7461873f4f09e5515bb196a7d4f094934eb39b70f8ac494ce2", size = 12764, upload-time = "2026-09-14T22:16:17.929Z" },
+]
+
+[[package]]
 name = "django-otp"
 version = "1.7.2"
 source = { registry = "https://pypi.org/simple" }
@@ -2060,6 +2072,7 @@ dependencies = [
     { name = "django-celery-beat" },
     { name = "django-celery-results" },
     { name = "django-cors-headers" },
+    { name = "django-inline-actions" },
     { name = "django-otp" },
     { name = "django-prometheus" },
     { name = "django-redis" },
@@ -2101,6 +2114,7 @@ requires-dist = [
     { name = "django-celery-beat", specifier = ">=2.9.0" },
     { name = "django-celery-results", specifier = ">=2.6.0" },
     { name = "django-cors-headers", specifier = ">=4.9.0" },
+    { name = "django-inline-actions", specifier = ">=3.0.0" },
     { name = "django-otp", specifier = ">=1.7.2" },
     { name = "django-prometheus", specifier = ">=2.5.0" },
     { name = "django-redis", specifier = ">=7.0.0" },
