@@ -16,7 +16,7 @@ type SliceState = {
     consentExpiry: number | null;
   };
   navigation: { bottomNavigation: { open: boolean } };
-  pwa: { installPromptDismissed: boolean };
+  pwa: { installPromptDismissed: boolean; pushPromptDismissed: boolean };
 };
 
 const initialState: SliceState = {
@@ -26,7 +26,7 @@ const initialState: SliceState = {
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
   },
   navigation: { bottomNavigation: { open: false } },
-  pwa: { installPromptDismissed: false }
+  pwa: { installPromptDismissed: false, pushPromptDismissed: false }
 };
 
 const settingsSlice = createSlice({
@@ -77,6 +77,12 @@ const settingsSlice = createSlice({
     },
     installPromptDismissed: (state) => {
       state.pwa.installPromptDismissed = true;
+    },
+    pushPromptDismissed: (state) => {
+      state.pwa.pushPromptDismissed = true;
+    },
+    pushPromptReset: (state) => {
+      state.pwa.pushPromptDismissed = false;
     }
   },
 });
@@ -109,7 +115,9 @@ export const {
   allCookiesDeclined,
   bottomNavigationOpened,
   bottomNavigationClosed,
-  installPromptDismissed
+  installPromptDismissed,
+  pushPromptDismissed,
+  pushPromptReset
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;

@@ -7,7 +7,7 @@ const migration11 = (state: RootState): RootState => {
       ...state.ui,
       settings: {
         ...state.ui.settings,
-        pwa: { installPromptDismissed: false },
+        pwa: { ...state.ui.settings.pwa, installPromptDismissed: false },
       },
     },
   };

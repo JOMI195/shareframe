@@ -26,7 +26,7 @@ describe('initial state', () => {
       design: { colorTheme: 'system' },
       cookies: { analyticsCookies: false, consentExpiry: null },
       navigation: { bottomNavigation: { open: false } },
-      pwa: { installPromptDismissed: false },
+      pwa: { installPromptDismissed: false, pushPromptDismissed: false },
     });
   });
 
@@ -92,5 +92,15 @@ describe('bottom navigation', () => {
 
     expect(reducer(base, bottomNavigationOpened()).navigation.bottomNavigation.open).toBe(true);
     expect(reducer(base, bottomNavigationClosed()).navigation.bottomNavigation.open).toBe(false);
+  });
+});
+
+describe('push prompt', () => {
+  it('is dismissed and reset', async () => {
+    const { default: reducer, pushPromptDismissed, pushPromptReset } = await loadSlice();
+    const dismissed = reducer(reducer(undefined, { type: '@@init' }), pushPromptDismissed());
+
+    expect(dismissed.pwa.pushPromptDismissed).toBe(true);
+    expect(reducer(dismissed, pushPromptReset()).pwa.pushPromptDismissed).toBe(false);
   });
 });
