@@ -9,12 +9,13 @@ interface ImageUploadProps {
     removeImage: (index: number) => void;
     handleNext: () => void;
     handleBack: () => void;
+    showCloseButton: boolean;
     imagePreviews: { [id: string]: string };
     previewErrors: { [id: string]: string };
     markPreviewBroken: (id: string, reason: string) => void;
 }
 
-const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, removeImage, handleNext, handleBack, imagePreviews, previewErrors, markPreviewBroken }) => {
+const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, removeImage, handleNext, handleBack, showCloseButton, imagePreviews, previewErrors, markPreviewBroken }) => {
     return (
         <Box sx={{ mt: 2 }}>
             <ImageUploadForm
@@ -44,22 +45,24 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ imageStatuses, addImages, rem
                         Weiter zum Zuschneiden
                     </Button>
                 </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 6
-                    }}
-                    sx={{
-                        order: { xs: 2, md: 1 }
-                    }}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={handleBack}
-                    >
-                        Abbrechen
-                    </Button>
-                </Grid>
+                {showCloseButton && (
+                    <Grid
+                        size={{
+                            xs: 12,
+                            md: 6
+                        }}
+                        sx={{
+                            order: { xs: 2, md: 1 }
+                        }}>
+                        <Button
+                            fullWidth
+                            variant="outlined"
+                            onClick={handleBack}
+                        >
+                            Abbrechen
+                        </Button>
+                    </Grid>
+                )}
             </Grid>
         </Box>
     );

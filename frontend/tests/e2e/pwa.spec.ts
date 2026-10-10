@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { Page } from '@playwright/test';
 import { alice } from '../support/e2e/credentials';
-import { dismissChangelogDialog, expect, signIn, test } from '../support/e2e/fixtures';
+import { expect, signIn, test } from '../support/e2e/fixtures';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 const IPHONE_UA =
@@ -56,7 +56,9 @@ test.describe('share target', () => {
     expect(await page.evaluate(() => caches.has('share-target'))).toBe(false);
 
     await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
-    await page.getByRole('button', { name: 'Zuschneiden & Hochladen' }).click();
+    await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
+    await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
+    await page.getByRole('button', { name: 'Hochladen' }).click();
 
     await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
     await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
@@ -73,7 +75,8 @@ test.describe('share target', () => {
     await page.getByRole('button', { name: 'anmelden' }).click();
 
     await expect(page).toHaveURL(/\/fotos\/$/);
-    await dismissChangelogDialog(page);
+    // The changelog and the upload dialog open in either order, and whichever comes second
+    // hides the other from the accessibility tree. Nothing is clicked here, so it may stay.
     await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
   });
 });

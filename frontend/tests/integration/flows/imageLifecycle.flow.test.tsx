@@ -27,6 +27,8 @@ vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
   getCroppedImg: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
 }));
 
+vi.mock('@/main/images/dialogs/upload/imageText/useLoadedImage', () => import('@tests/mocks/loadedImage'));
+
 const library = makeImages(3);
 
 const openLibrary = async (images = library) => {
@@ -85,7 +87,9 @@ describe('photo library', () => {
     );
     await user.click(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' }));
     await screen.findByTestId('cropper');
-    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & Hochladen' }));
+    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
     expect(await screen.findByText('4 Fotos')).toBeInTheDocument();
   });

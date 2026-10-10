@@ -12,22 +12,17 @@ import {
     Typography,
     useMediaQuery,
     useTheme,
-    FormControlLabel,
-    Checkbox,
     Alert
 } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CropIcon from '@mui/icons-material/Crop';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { Area } from 'react-easy-crop';
+import { Area, Point } from 'react-easy-crop';
 import Cropper from './cropper/cropper';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../uploadDialog';
 import ImagePreviewThumb, { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
 
-const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
-    ? +import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
-    : 24;
 interface ImageCroppingProps {
     imageStatuses: ImageStatus[];
     currentImageIndex: number | null;
@@ -35,18 +30,21 @@ interface ImageCroppingProps {
     removeImage: (index: number) => void;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     croppedAreaPixels: Area;
+    crop: Point;
+    setCrop: React.Dispatch<React.SetStateAction<Point>>;
+    zoom: number;
+    setZoom: React.Dispatch<React.SetStateAction<number>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
-    handleCropAndUpload: (index: number) => Promise<void>;
+    handleCrop: () => Promise<void>;
     handleDialogClose: () => void;
+    showCloseButton: boolean;
     handleBack: () => void;
     allImagesUploaded: boolean;
     sending: boolean;
     imagePreviews: { [id: string]: string };
     previewErrors: { [id: string]: string };
     markPreviewBroken: (id: string, reason: string) => void;
-    autoDeleteAfterPeriod: boolean;
-    setAutoDeleteAfterPeriod: (value: boolean) => void;
 }
 
 const ImageCropping: React.FC<ImageCroppingProps> = ({
@@ -56,18 +54,21 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     removeImage,
     setCroppedAreaPixels,
     croppedAreaPixels,
+    crop,
+    setCrop,
+    zoom,
+    setZoom,
     rotation,
     setRotation,
-    handleCropAndUpload,
+    handleCrop,
     handleDialogClose,
+    showCloseButton,
     handleBack,
     allImagesUploaded,
     sending,
     imagePreviews,
     previewErrors,
-    markPreviewBroken,
-    autoDeleteAfterPeriod,
-    setAutoDeleteAfterPeriod
+    markPreviewBroken
 }) => {
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
@@ -166,6 +167,10 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         {currentImage && imagePreviews[currentImage.id] && !previewErrors[currentImage.id] && (
                             <Cropper
                                 src={imagePreviews[currentImage.id]}
+                                crop={crop}
+                                setCrop={setCrop}
+                                zoom={zoom}
+                                setZoom={setZoom}
                                 setCroppedAreaPixels={setCroppedAreaPixels}
                                 rotation={rotation}
                                 setRotation={setRotation}
@@ -188,32 +193,7 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                 </Grid>
             </Grid>
 
-            {/* Auto-Delete Option */}
-            <Box sx={{ mt: 3 }}>
-                <FormControlLabel
-                    control={
-                        <Checkbox
-                            checked={autoDeleteAfterPeriod}
-                            onChange={(e) => setAutoDeleteAfterPeriod(e.target.checked)}
-                            color="primary"
-                        />
-                    }
-                    label={
-                        <Box>
-                            <Typography variant="body1">
-                                Kurze Verwendungszeit aktivieren
-                            </Typography>
-                            <Typography variant="body2" sx={{
-                                color: "text.secondary"
-                            }}>
-                                Das Bild muss innerhalb von {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Stunden an deine Freunde gesendet werden und wird anschließend automatisch gelöscht. Gesendete Bilder werden trotz der Löschung weiterhin bis zum Ablauf normal angezeigt.
-                            </Typography>
-                        </Box>
-                    }
-                />
-            </Box>
-
-            <Grid container spacing={2} sx={{ mt: { xs: 0, md: 2 }, alignItems: "center" }}>
+            <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>
                 {currentImage && (
                     <Grid
                         size={{
@@ -227,9 +207,9 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                             variant="contained"
                             fullWidth
                             disabled={sending || croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1}
-                            onClick={() => handleCropAndUpload(currentImageIndex!)}
+                            onClick={handleCrop}
                         >
-                            Zuschneiden & Hochladen
+                            Zuschneiden & weiter
                         </Button>
                     </Grid>
                 )}
@@ -281,7 +261,7 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         </Button>
                     </Grid>
                 )}
-                {!allImagesUploaded && (
+                {!allImagesUploaded && showCloseButton && (
                     <Grid
                         size={{
                             xs: 12,

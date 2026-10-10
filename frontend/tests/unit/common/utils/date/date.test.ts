@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDate, formatDateOnly } from '@/common/utils/date/date';
+import { formatDate, formatDateNumeric, formatDateOnly } from '@/common/utils/date/date';
 
 const ISO = '2026-03-05T14:07:09Z';
 
@@ -21,6 +21,16 @@ describe('formatDateOnly', () => {
   // a bad timestamp from the API therefore crashes the rendering component.
   it('throws on unparseable input', () => {
     expect(() => formatDateOnly('nope')).toThrow(RangeError);
+  });
+});
+
+describe('formatDateNumeric', () => {
+  it('formats German numeric dates with leading zeros', () => {
+    expect(formatDateNumeric(ISO)).toBe('05.03.2026');
+  });
+
+  it('honours an explicit locale', () => {
+    expect(formatDateNumeric(ISO, 'en-US')).toBe('03/05/2026');
   });
 });
 

@@ -32,7 +32,7 @@ test.describe('photo lifecycle', () => {
     await expect(page.getByRole('heading', { name: /\d+ Fotos?/ })).toBeVisible({ timeout: 30_000 });
     const before = await photoCount(page);
 
-    await test.step('upload', async () => {
+    await test.step('select and crop', async () => {
       await page.getByRole('button', { name: 'Foto hinzufügen' }).click();
       await expect(page.getByRole('heading', { name: 'Fotos hierher ziehen' })).toBeVisible();
 
@@ -40,7 +40,38 @@ test.describe('photo lifecycle', () => {
       await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
 
       await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
-      await page.getByRole('button', { name: 'Zuschneiden & Hochladen' }).click();
+      await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
+    });
+
+    // jsdom has no canvas, so this is the only place the konva editor and its export really run.
+    await test.step('add texts', async () => {
+      const selectedText = page.getByRole('group', { name: 'Ausgewählter Text' });
+      const canvas = page.getByLabel('Text-Editor').locator('canvas');
+
+      await page.getByRole('button', { name: 'Text hinzufügen' }).click();
+      await expect(selectedText.getByRole('textbox', { name: 'Text' })).toHaveValue('Text');
+      await selectedText.getByRole('textbox', { name: 'Text' }).fill('Beispieltext');
+
+      // A new text sits in the middle of the photo, the corners stay empty.
+      await canvas.click({ position: { x: 5, y: 5 } });
+      await expect(selectedText).toBeHidden();
+      await canvas.click();
+      await expect(selectedText.getByRole('textbox', { name: 'Text' })).toHaveValue('Beispieltext');
+
+      await page.getByRole('button', { name: 'Datum hinzufügen' }).click();
+      await expect(selectedText.getByRole('textbox', { name: 'Text' })).toHaveValue(/^\d{2}\.\d{2}\.\d{4}$/);
+      await selectedText.getByRole('button', { name: 'Weiß' }).click();
+      await selectedText.getByRole('button', { name: 'Hintergrund' }).click();
+      await expect(selectedText.getByRole('button', { name: 'Hintergrund' })).toHaveAttribute('aria-pressed', 'true');
+
+      await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
+      const preview = page.getByRole('img', { name: 'Vorschau von upload-fixture.jpg' });
+      await expect(preview).toBeVisible();
+      await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+    });
+
+    await test.step('upload', async () => {
+      await page.getByRole('button', { name: 'Hochladen' }).click();
 
       // The dialog closes itself once every selected photo has been uploaded.
       await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
