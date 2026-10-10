@@ -12,10 +12,6 @@ const Impressum = () => {
             </Typography>
             <Typography variant="body1" gutterBottom>
                 Johannes Middelberg<br />
-                c/o Block Services<br />
-                Stuttgarter Str. 106<br />
-                70736 Fellbach<br />
-                DE - Deutschland<br />
                 E-Mail: <Link href="mailto:info@shareframe.de">info@shareframe.de</Link><br />
             </Typography>
 
