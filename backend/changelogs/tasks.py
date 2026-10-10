@@ -1,39 +1,31 @@
 import logging
-import os
 
-from django.conf import settings
-
-from appEmail.tasks import send_django_mail_with_logo
 from config.celery import celery
+from notifications.choices import NotificationKind
+from notifications.dispatch import notify, preview
+from user_core.models import User
 
-from .email import render_email_html
 from .models import Changelog
+from .notification import build_message
 
 logger = logging.getLogger(__name__)
 
 
 @celery.task
-def send_changelog_email(changelog_id: int, emails: list[str]) -> None:
+def notify_changelog(changelog_id: int) -> int:
     changelog = Changelog.objects.get(pk=changelog_id)
-    content_html, images = render_email_html(changelog)
-    context = {
-        "subject": f"ShareFrame - {changelog.title}",
-        "title": changelog.title,
-        "date": changelog.date.strftime("%d.%m.%Y"),
-        "content_html": content_html,
-        "changelogs_link": os.environ.get("FRONTEND_BASE_URL")
-        + settings.FRONTEND_CHANGELOGS_URL,
-    }
-
-    # One mail per user so recipients never see each other's addresses.
-    for email in emails:
+    message = build_message(changelog)
+    notified = 0
+    for user in changelog.recipients().select_related("account"):
         try:
-            send_django_mail_with_logo(
-                template_name="changelogs/changelog_email.html",
-                context=dict(context),
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                to_emails=[email],
-                images=images,
-            )
+            notified += bool(notify(user.account, NotificationKind.CHANGELOG, message))
         except Exception:
-            logger.exception("Changelog %s email to %s failed", changelog_id, email)
+            logger.exception("Changelog %s to user %s failed", changelog_id, user.pk)
+    return notified
+
+
+@celery.task
+def send_changelog_test(changelog_id: int, user_id: int) -> list[str]:
+    changelog = Changelog.objects.get(pk=changelog_id)
+    account = User.objects.get(pk=user_id).account
+    return preview(account, NotificationKind.CHANGELOG, build_message(changelog))

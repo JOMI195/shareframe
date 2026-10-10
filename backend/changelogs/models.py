@@ -34,7 +34,7 @@ class Changelog(models.Model):
         related_name="changelogs",
     )
     is_published = models.BooleanField(default=True)
-    email_sent_at = models.DateTimeField(null=True, blank=True)
+    notified_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

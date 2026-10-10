@@ -1,13 +1,13 @@
-from django.conf import settings
 from django.contrib import admin, messages
-from django.contrib.admin import helpers
-from django.template.response import TemplateResponse
-from django.utils import timezone
+from django.db import transaction
 from django.utils.html import format_html
+
+from notifications.channels.email import preview_address
 
 from .forms import ChangelogAdminForm
 from .models import Changelog, ChangelogImage
-from .tasks import send_changelog_email
+from .publish import notify_when_published
+from .tasks import send_changelog_test
 
 
 class ChangelogImageInline(admin.StackedInline):
@@ -27,12 +27,12 @@ class ChangelogAdmin(admin.ModelAdmin):
         "title",
         "is_published",
         "updated_at",
-        "email_sent_at",
+        "notified_at",
         "group_list",
     )
     list_filter = ("date", "is_published", "groups")
     search_fields = ("title",)
-    readonly_fields = ("created_at", "updated_at", "email_sent_at")
+    readonly_fields = ("created_at", "updated_at", "notified_at")
     filter_horizontal = ("groups",)
     fieldsets = (
         (
@@ -55,11 +55,11 @@ class ChangelogAdmin(admin.ModelAdmin):
         ),
         (
             "Timestamps",
-            {"fields": ("created_at", "updated_at", "email_sent_at")},
+            {"fields": ("created_at", "updated_at", "notified_at")},
         ),
     )
     inlines = [ChangelogImageInline]
-    actions = ["send_test_email", "send_email_to_group_members"]
+    actions = ["send_test_to_me"]
 
     def group_list(self, obj):
         groups = obj.groups.all()
@@ -72,62 +72,37 @@ class ChangelogAdmin(admin.ModelAdmin):
 
     group_list.short_description = "Groups"
 
-    @admin.action(description="Send test email to me")
-    def send_test_email(self, request, queryset):
-        to_email = (
-            settings.ADMIN_NOTIFICATION_EMAIL
-            if getattr(request.user, "is_admin", False)
-            else request.user.email
-        )
-        for changelog in queryset:
-            send_changelog_email.delay(changelog.id, [to_email])
-        self.message_user(request, f"Test email queued for {to_email}.")
+    def save_related(self, request, form, formsets, change):
+        super().save_related(request, form, formsets, change)
+        changelog = form.instance
+        # After commit: groups and images are saved by then.
+        transaction.on_commit(lambda: self._notify_when_published(request, changelog))
 
-    @admin.action(description="Send email to group members")
-    def send_email_to_group_members(self, request, queryset):
-        sendable, skipped = [], []
-        for changelog in queryset:
-            count = changelog.recipients().count()
-            if changelog.email_sent_at:
-                skipped.append(
-                    (
-                        changelog,
-                        f"already sent on {changelog.email_sent_at:%d.%m.%Y %H:%M}",
-                    )
-                )
-            elif not changelog.is_published:
-                skipped.append((changelog, "not published"))
-            elif not count:
-                skipped.append((changelog, "no recipients"))
-            else:
-                sendable.append((changelog, count))
-
-        if sendable and "apply" not in request.POST:
-            return TemplateResponse(
-                request,
-                "admin/changelogs/confirm_send_email.html",
-                {
-                    **self.admin_site.each_context(request),
-                    "title": "Send changelog email",
-                    "opts": self.model._meta,
-                    "sendable": sendable,
-                    "skipped": skipped,
-                    "action_checkbox_name": helpers.ACTION_CHECKBOX_NAME,
-                },
-            )
-
-        for changelog, reason in skipped:
-            self.message_user(
-                request, f'"{changelog}" skipped: {reason}.', messages.WARNING
-            )
-
-        for changelog, _ in sendable:
-            emails = list(changelog.recipients().values_list("email", flat=True))
-            send_changelog_email.delay(changelog.id, emails)
-            changelog.email_sent_at = timezone.now()
-            changelog.save(update_fields=["email_sent_at"])
+    def _notify_when_published(self, request, changelog):
+        changelog.refresh_from_db()
+        reason = notify_when_published(changelog)
+        if reason is None:
             self.message_user(
                 request,
-                f'"{changelog}" queued for {len(emails)} recipients.',
+                f'"{changelog}" published: notifications queued for '
+                f"{changelog.recipients().count()} recipients.",
                 messages.SUCCESS,
             )
+        elif reason != "not due":
+            self.message_user(
+                request,
+                f'"{changelog}" published but not sent: {reason}. '
+                "Save it again once this is fixed.",
+                messages.WARNING,
+            )
+
+    @admin.action(description="Send test to me (mail and push)")
+    def send_test_to_me(self, request, queryset):
+        for changelog in queryset:
+            send_changelog_test.delay(changelog.id, request.user.id)
+        devices = request.user.account.push_subscriptions.count()
+        self.message_user(
+            request,
+            f"Test queued: mail to {preview_address(request.user)}, "
+            f"push to {devices} subscribed device{'s' if devices != 1 else ''}.",
+        )
