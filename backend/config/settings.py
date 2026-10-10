@@ -88,6 +88,7 @@ INSTALLED_APPS = [
     "django_otp",
     "django_otp.plugins.otp_totp",
     "django_prometheus",
+    "inline_actions",
     # APPS
     "frames",
     "frame_updates",
