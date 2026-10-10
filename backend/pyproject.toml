@@ -26,6 +26,8 @@ dependencies = [
     "Levenshtein>=0.27.4",
     "semver>=3.0.4",
     "markdown>=3.10.3",
+    "pywebpush>=2.5.0",
+    "celery-types>=0.26.0",
 ]
 
 # Django capped below 6.1: django-celery-beat and django-prometheus both
