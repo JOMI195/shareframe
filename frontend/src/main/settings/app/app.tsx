@@ -10,16 +10,19 @@ const App = () => {
     const tabs = [
         {
             label: "Darstellung",
+            id: "appearance",
             icon: <PaletteIcon />,
             content: <Appearance />
         },
         {
             label: "Privatspähre",
+            id: "privacy",
             icon: <PolicyIcon />,
             content: <Privacy />
         },
         {
             label: "App",
+            id: "app",
             icon: <InstallMobileIcon />,
             content: <Install />
         },

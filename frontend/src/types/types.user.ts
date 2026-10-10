@@ -15,9 +15,28 @@ export const isICoreUser = (obj: unknown): obj is ICoreUser => {
     );
 }
 
+export type NotificationKind = 'inactivity_reminder' | 'changelog';
+
+export type NotificationChannel = 'push' | 'email';
+
+export interface INotificationChannelSetting {
+    channel: NotificationChannel;
+    enabled: boolean;
+}
+
+export interface INotificationKindSettings {
+    kind: NotificationKind;
+    enabled: boolean;
+    channels: INotificationChannelSetting[];
+}
+
+export type INotificationKindPatch = Pick<INotificationKindSettings, 'kind'>
+    & Partial<Pick<INotificationKindSettings, 'enabled' | 'channels'>>;
+
 export interface IUserAccount {
     friendship_user_searchable: boolean;
     friendship_user_search_code: string;
+    notification_preferences: INotificationKindSettings[];
 }
 
 export interface IUser extends ICoreUser {
@@ -26,7 +45,7 @@ export interface IUser extends ICoreUser {
 
 export interface IPatchUserForm {
     username: string;
-    account: IUserAccount;
+    account: Pick<IUserAccount, 'friendship_user_searchable' | 'friendship_user_search_code'>;
 }
 
 export interface ISetUserPasswortForm {

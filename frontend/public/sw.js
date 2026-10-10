@@ -29,3 +29,29 @@ const storeSharedFiles = async (request) => {
 
   return Response.redirect('/fotos/', 303);
 };
+
+self.addEventListener('push', (event) => {
+  const { title, body, url, tag } = event.data ? event.data.json() : {};
+  if (!title) return;
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    tag,
+    icon: '/web-app-manifest-192x192.png',
+    badge: '/favicon-96x96.png',
+    data: { url: url || '/' },
+  }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const target = new URL(event.notification.data.url, self.location.origin).href;
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const open = windows.find((client) => client.url.startsWith(self.location.origin));
+    if (open) {
+      await open.focus();
+      return open.navigate(target);
+    }
+    return self.clients.openWindow(target);
+  })());
+});

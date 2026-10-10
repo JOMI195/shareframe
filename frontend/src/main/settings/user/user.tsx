@@ -13,6 +13,8 @@ import { useEffect } from "react";
 import { loadMyUserProfile } from "@/store/entities/authentication/authentication.actions";
 import Delete from "./delete/delete";
 import DeleteIcon from '@mui/icons-material/Delete';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import Notifications from "./notifications/notifications";
 
 const UserSettings = () => {
   const dispatch = useAppDispatch();
@@ -24,6 +26,7 @@ const UserSettings = () => {
   const tabs = [
     {
       label: "Profil",
+      id: "profile",
       icon: <PersonIcon />,
       content: (
         <Grid container spacing={2}>
@@ -37,12 +40,20 @@ const UserSettings = () => {
       ),
     },
     {
+      label: "Mitteilungen",
+      id: "notifications",
+      icon: <NotificationsIcon />,
+      content: <Notifications />,
+    },
+    {
       label: "Passwort",
+      id: "password",
       icon: <KeyIcon />,
       content: <Security />,
     },
     {
       label: "Löschen",
+      id: "delete",
       icon: <DeleteIcon />,
       content: <Delete />,
     },
