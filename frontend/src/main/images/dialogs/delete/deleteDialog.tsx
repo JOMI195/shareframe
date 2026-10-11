@@ -64,7 +64,7 @@ const ImageDeleteDialog = () => {
             )}
             <DialogTitle>{`Ausgewählte${imagesToDelete.length === 1 ? "s" : ""} Foto${imagesToDelete.length > 1 ? "s" : ""} wirklich löschen?`}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden</Typography>
+                <Typography sx={{ mb: 3 }}>{`Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen und nicht mehr gesendet.`}</Typography>
                 <Grid
                     container
                     spacing={2}
