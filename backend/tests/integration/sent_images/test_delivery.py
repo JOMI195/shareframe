@@ -1,6 +1,7 @@
 import pytest
 from django.utils import timezone
 
+from images.models import Image
 from sent_images.delivery import deliver_scheduled_sent_image
 from sent_images.models import SentImage, SentImageStatus
 from tests.support.factories import (
@@ -54,6 +55,12 @@ def test_pushes_after_commit(scheduled, django_capture_on_commit_callbacks):
         deliver_scheduled_sent_image(scheduled.id, early=False)
 
     assert len(callbacks) == 1
+
+
+def test_an_image_auto_deleted_meanwhile_is_still_delivered(scheduled):
+    Image.objects.filter(pk=scheduled.image_id).update(markedAsDeleted=True)
+
+    assert deliver_scheduled_sent_image(scheduled.id, early=False) is not None
 
 
 def test_an_already_sent_one_is_left_alone():

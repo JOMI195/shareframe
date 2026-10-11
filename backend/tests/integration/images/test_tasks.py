@@ -46,9 +46,9 @@ class TestMarkExpired:
         image.refresh_from_db()
         assert not image.markedAsDeleted
 
-    def test_waits_while_a_send_is_still_scheduled(self, settings):
+    def test_marks_an_image_on_time_and_keeps_its_scheduled_send(self, settings):
         image = ImageFactory(auto_delete_after_period=True)
-        SentImageFactory(sender=image.user, image=image, scheduled=True)
+        scheduled = SentImageFactory(sender=image.user, image=image, scheduled=True)
         later = timezone.now() + timezone.timedelta(
             hours=settings.IMAGES_AUTO_DELETE_INTERVAL_HOURS, minutes=1
         )
@@ -57,7 +57,8 @@ class TestMarkExpired:
             mark_expired_images_to_be_deleted()
 
         image.refresh_from_db()
-        assert not image.markedAsDeleted
+        assert image.markedAsDeleted
+        assert SentImage.objects.filter(pk=scheduled.pk).exists()
 
 
 class TestDeleteMarked:
@@ -77,6 +78,14 @@ class TestDeleteMarked:
             image=image,
             expires_at=timezone.now() + timezone.timedelta(days=1),
         )
+
+        delete_marked_as_deleted_images_without_sent_images()
+
+        assert Image.objects.filter(id=image.id).exists()
+
+    def test_keeps_a_marked_image_with_a_scheduled_send(self):
+        image = ImageFactory(markedAsDeleted=True)
+        SentImageFactory(sender=image.user, image=image, scheduled=True)
 
         delete_marked_as_deleted_images_without_sent_images()
 
