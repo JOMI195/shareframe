@@ -8,7 +8,7 @@ from images.tasks import (
     mark_expired_images_to_be_deleted,
 )
 from sent_images.models import SentImage
-from tests.support.factories import ImageFactory, UserFactory
+from tests.support.factories import ImageFactory, SentImageFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -36,6 +36,19 @@ class TestMarkExpired:
 
     def test_leaves_an_image_without_the_flag_alone(self, settings):
         image = ImageFactory(auto_delete_after_period=False)
+        later = timezone.now() + timezone.timedelta(
+            hours=settings.IMAGES_AUTO_DELETE_INTERVAL_HOURS, minutes=1
+        )
+
+        with freeze_time(later):
+            mark_expired_images_to_be_deleted()
+
+        image.refresh_from_db()
+        assert not image.markedAsDeleted
+
+    def test_waits_while_a_send_is_still_scheduled(self, settings):
+        image = ImageFactory(auto_delete_after_period=True)
+        SentImageFactory(sender=image.user, image=image, scheduled=True)
         later = timezone.now() + timezone.timedelta(
             hours=settings.IMAGES_AUTO_DELETE_INTERVAL_HOURS, minutes=1
         )

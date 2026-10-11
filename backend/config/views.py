@@ -64,13 +64,17 @@ class MediaAccessView(APIView):
             return True
 
         # Check if the image was sent to/from this user
-        sentImage_exists = SentImage.objects.filter(
-            (
-                (Q(sender=user) & Q(reciever=owner))
-                | (Q(sender=owner) & Q(reciever=user))
+        sentImage_exists = (
+            SentImage.objects.sent()
+            .filter(
+                (
+                    (Q(sender=user) & Q(reciever=owner))
+                    | (Q(sender=owner) & Q(reciever=user))
+                )
+                & Q(image=image)
             )
-            & Q(image=image)
-        ).exists()
+            .exists()
+        )
 
         return sentImage_exists
 

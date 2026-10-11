@@ -1,11 +1,11 @@
 import os
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
-from django.utils.timezone import make_aware, now
+from django.utils.timezone import now
 from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -21,6 +21,8 @@ from config.throttles import (
 from friendships.models import Friendship
 from images.models import Image
 from securePayload.securePayload import SecurePayload
+from sent_images.models import SentImage, SentImageStatus
+from sent_images.serializers import SentImagesRetrieveSerializer
 from user_core.models import User
 
 from .auth import (
@@ -31,6 +33,18 @@ from .auth import (
 from .consumers import FrameWebSocketConsumer
 from .models import Frame, FrameToken
 from .serializers import FrameRetrieveSerializer
+
+
+def _parse_future_unix_timestamp(value) -> datetime | None:
+    if not value:
+        return None
+    try:
+        parsed = datetime.fromtimestamp(float(value), tz=UTC)
+    except (ValueError, OverflowError) as e:
+        raise ValueError("Invalid Unix timestamp provided.") from e
+    if parsed <= now():
+        raise ValueError("The provided timestamp must be in the future.")
+    return parsed
 
 
 class FramesViewSet(viewsets.ModelViewSet):
@@ -186,6 +200,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         reciever_username = request.data.get("reciever_username")
         image_id = request.data.get("image_id")
         expiry_unix_timestamp = request.data.get("expiry_unix_timestamp")
+        scheduled_unix_timestamp = request.data.get("scheduled_unix_timestamp")
         user = request.user
 
         if not reciever_username:
@@ -200,24 +215,29 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        if expiry_unix_timestamp:
-            try:
-                naive_datetime = datetime.fromtimestamp(float(expiry_unix_timestamp))
-                expiry_datetime = make_aware(naive_datetime)
+        try:
+            expiry_datetime = _parse_future_unix_timestamp(expiry_unix_timestamp)
+            scheduled_for = _parse_future_unix_timestamp(scheduled_unix_timestamp)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-                if expiry_datetime <= now():
-                    return Response(
-                        {"error": "The provided timestamp must be in the future."},
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
-            except (ValueError, OverflowError):
+        if expiry_datetime is None:
+            expiry_unix_timestamp = None
+
+        if scheduled_for is not None:
+            max_scheduled_for = now() + timedelta(
+                days=settings.SENT_IMAGE_MAX_SCHEDULE_DAYS
+            )
+            if scheduled_for > max_scheduled_for:
                 return Response(
-                    {"error": "Invalid Unix timestamp provided."},
+                    {"error": "The scheduled time is too far in the future."},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-        else:
-            expiry_unix_timestamp = None
-            expiry_datetime = None
+            if expiry_datetime is not None and expiry_datetime <= scheduled_for:
+                return Response(
+                    {"error": "The expiry must be after the scheduled time."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         try:
             image = Image.objects.get(id=image_id, user=user, markedAsDeleted=False)
@@ -253,6 +273,20 @@ class FramesViewSet(viewsets.ModelViewSet):
                     {"error": not_found_error_message},
                     status=status.HTTP_404_NOT_FOUND,
                 )
+
+        if scheduled_for is not None:
+            sent_image = SentImage.objects.create(
+                sender=user,
+                reciever=reciever,
+                image=image,
+                status=SentImageStatus.SCHEDULED,
+                scheduled_for=scheduled_for,
+                expires_at=expiry_datetime,
+            )
+            return Response(
+                SentImagesRetrieveSerializer(sent_image).data,
+                status=status.HTTP_201_CREATED,
+            )
 
         try:
             async_to_sync(FrameWebSocketConsumer.send_picture_to_user_frames)(

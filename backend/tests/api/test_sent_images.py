@@ -3,9 +3,9 @@ from types import SimpleNamespace
 import pytest
 from django.utils import timezone
 
-from sent_images.models import SentImage
+from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
-from tests.support.factories import SentImageFactory, UserFactory
+from tests.support.factories import FriendshipFactory, SentImageFactory, UserFactory
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -114,6 +114,15 @@ class TestDeactivate:
         sent.refresh_from_db()
         assert sent.expires_at < timezone.now()
 
+    def test_a_scheduled_entry_cannot_be_deactivated(self, world):
+        scheduled = SentImageFactory(sender=world.user, scheduled=True)
+
+        response = world.client.post(
+            f"{URL}{scheduled.pk}/deactivate-sent-image/", {}, format="json"
+        )
+
+        assert response.status_code == 404
+
     def test_someone_elses_entry_cannot_be_deactivated(self, world):
         theirs = SentImageFactory()
 
@@ -131,3 +140,68 @@ class TestDeactivate:
         )
 
         assert response.status_code == 200
+
+
+class TestCancelScheduled:
+    @pytest.fixture
+    def world(self, client_as):
+        me = UserFactory(is_active=True)
+        return SimpleNamespace(client=client_as(me), user=me)
+
+    def cancel(self, world, sent):
+        return world.client.post(f"{URL}{sent.pk}/cancel-scheduled/", {}, format="json")
+
+    def test_the_sender_cancels_it(self, world):
+        scheduled = SentImageFactory(sender=world.user, scheduled=True)
+
+        assert self.cancel(world, scheduled).status_code == 204
+        assert not SentImage.objects.filter(pk=scheduled.pk).exists()
+
+    def test_the_receiver_cannot_cancel_it(self, world):
+        scheduled = SentImageFactory(reciever=world.user, scheduled=True)
+
+        assert self.cancel(world, scheduled).status_code == 404
+        assert SentImage.objects.filter(pk=scheduled.pk).exists()
+
+    def test_a_delivered_entry_cannot_be_cancelled(self, world):
+        sent = SentImageFactory(sender=world.user)
+
+        assert self.cancel(world, sent).status_code == 404
+
+
+# async_to_sync reaches the ORM on its own connection, so the data must be committed.
+@pytest.mark.django_db(transaction=True)
+class TestSendNow:
+    @pytest.fixture
+    def world(self, client_as):
+        me = UserFactory(is_active=True)
+        friend = UserFactory(is_active=True)
+        FriendshipFactory(sender=me, reciever=friend, status="accepted")
+        return SimpleNamespace(client=client_as(me), user=me, friend=friend)
+
+    def send_now(self, world, sent):
+        return world.client.post(f"{URL}{sent.pk}/send-now/", {}, format="json")
+
+    def test_the_sender_sends_it_now(self, world):
+        scheduled = SentImageFactory(
+            sender=world.user, reciever=world.friend, scheduled=True
+        )
+
+        response = self.send_now(world, scheduled)
+
+        assert response.status_code == 200
+        assert response.data["status"] == SentImageStatus.SENT
+        scheduled.refresh_from_db()
+        assert scheduled.status == SentImageStatus.SENT
+
+    def test_the_receiver_cannot_send_it(self, world):
+        scheduled = SentImageFactory(
+            sender=world.friend, reciever=world.user, scheduled=True
+        )
+
+        assert self.send_now(world, scheduled).status_code == 404
+
+    def test_a_delivered_entry_is_not_sent_again(self, world):
+        sent = SentImageFactory(sender=world.user, reciever=world.friend)
+
+        assert self.send_now(world, sent).status_code == 404

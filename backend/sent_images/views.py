@@ -11,7 +11,8 @@ from rest_framework.response import Response
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 from frames.consumers import FrameWebSocketConsumer
 
-from .models import SentImage
+from .delivery import deliver_scheduled_sent_image
+from .models import SentImage, SentImageStatus
 from .serializers import (
     SentImagesRetrieveSerializer,
 )
@@ -33,7 +34,8 @@ class SentImagesViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         queryset = self.queryset.filter(
-            Q(sender=self.request.user) | Q(reciever=self.request.user)
+            Q(sender=self.request.user)
+            | (Q(reciever=self.request.user) & Q(status=SentImageStatus.SENT))
         )
 
         # Apply filters from query parameters
@@ -42,11 +44,12 @@ class SentImagesViewSet(viewsets.ModelViewSet):
         sender_filter = self.request.query_params.get("sender", "")
         receiver_filter = self.request.query_params.get("receiver", "")
 
-        # Status filter (active/expired)
         if status_filter == "active":
-            queryset = queryset.filter(expires_at__gt=timezone.now())
+            queryset = queryset.sent().filter(expires_at__gt=timezone.now())
         elif status_filter == "expired":
-            queryset = queryset.filter(expires_at__lte=timezone.now())
+            queryset = queryset.sent().filter(expires_at__lte=timezone.now())
+        elif status_filter == "scheduled":
+            queryset = queryset.scheduled()
 
         # Shipping filter (sent to you / sent by you)
         if shipping_filter == "sentToYou":
@@ -82,7 +85,7 @@ class SentImagesViewSet(viewsets.ModelViewSet):
                 description="Filter by image status",
                 required=False,
                 type=str,
-                enum=["all", "active", "expired"],
+                enum=["all", "active", "expired", "scheduled"],
             ),
             OpenApiParameter(
                 name="shipping",
@@ -152,7 +155,7 @@ class SentImagesViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="deactivate-sent-image")
     def deactivate_sent_image(self, request, pk=None):
         try:
-            sent_image = self.get_queryset().get(pk=pk)
+            sent_image = self.get_queryset().sent().get(pk=pk)
 
             sent_image.expires_at = timezone.now() - timezone.timedelta(seconds=60)
             sent_image.save()
@@ -176,3 +179,33 @@ class SentImagesViewSet(viewsets.ModelViewSet):
                 {"detail": f"An error occurred while deactivating the image.{e}"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
+
+    def _own_scheduled(self, pk):
+        return SentImage.objects.scheduled().filter(pk=pk, sender=self.request.user)
+
+    @extend_schema(request=None, responses={204: None})
+    @action(detail=True, methods=["POST"], url_path="cancel-scheduled")
+    def cancel_scheduled(self, request, pk=None):
+        deleted, _ = self._own_scheduled(pk).delete()
+        if not deleted:
+            return Response(
+                {"detail": "Scheduled sent image not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @extend_schema(request=None, responses={200: SentImagesRetrieveSerializer})
+    @action(detail=True, methods=["POST"], url_path="send-now")
+    def send_now(self, request, pk=None):
+        sent_image_id = self._own_scheduled(pk).values_list("id", flat=True).first()
+        sent_image = (
+            deliver_scheduled_sent_image(sent_image_id, early=True)
+            if sent_image_id is not None
+            else None
+        )
+        if sent_image is None:
+            return Response(
+                {"detail": "Scheduled sent image not found."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+        return Response(self.get_serializer(sent_image).data)
