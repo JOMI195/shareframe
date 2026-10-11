@@ -1,5 +1,8 @@
+import path from 'node:path';
 import { dave, erin, mallory } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
+
+const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 
 const openUserSettings = async (page: import('@playwright/test').Page, tab: string) => {
   await page.goto('/settings/user/');
@@ -32,6 +35,24 @@ test.describe('personal information', () => {
     await page.reload();
     await page.getByRole('tab', { name: 'Profil' }).click();
     await expect(page.getByLabel('Nutzername')).toHaveValue('erin_umbenannt');
+  });
+
+  test('replaces and removes the profile picture', async ({ page }) => {
+    await signIn(page, erin);
+    await openUserSettings(page, 'Profil');
+
+    const avatar = page.getByRole('tabpanel').locator('img');
+    await expect(avatar).toHaveAttribute('src', /^blob:/, { timeout: 30_000 });
+    const seeded = await avatar.getAttribute('src');
+
+    await page.getByLabel('Profilbild auswählen').setInputFiles(FIXTURE);
+    await expect(avatar).not.toHaveAttribute('src', seeded!, { timeout: 30_000 });
+    await expect(avatar).toHaveAttribute('src', /^blob:/);
+
+    await page.getByRole('button', { name: 'Entfernen' }).click();
+    await page.getByRole('button', { name: 'Entfernen bestätigen' }).click();
+    await expect(page.getByRole('button', { name: 'Entfernen' })).toBeHidden({ timeout: 30_000 });
+    await expect(avatar).toBeHidden();
   });
 
   test('stops accepting friend requests', async ({ page }) => {

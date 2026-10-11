@@ -24,7 +24,7 @@ compose files bind-mount it into the backend container.
 
 | File | Fields |
 |---|---|
-| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable`, optional `joined_days_ago` |
+| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable`, optional `joined_days_ago`, optional `avatar_file` (under `assets/avatars/`) |
 | `frame-groups.json` | `name` (unique), `description` |
 | `frames.json` | `name`, `seed_b64`, `private_serial_number`, `owner_username` (or `null`), `groups[]`, `version`, `local_ip_address` |
 | `images.json` | `display_name`, `owner_username`, `file_name` (under `assets/images/`), `auto_delete_after_period` |
@@ -35,8 +35,9 @@ compose files bind-mount it into the backend container.
 | `notifications.json` | `username`, `kind`, `channel`, `sent_days_ago` |
 | `user-stats.json` | `username`, `images_uploaded`, `images_sent`, `images_received` |
 
-`assets/images/` holds small PNGs, `assets/changelogs/` the markdown bodies and
-`assets/changelogs/images/` the pictures they embed.
+`assets/images/` holds small PNGs, `assets/avatars/` the profile pictures,
+`assets/changelogs/` the markdown bodies and `assets/changelogs/images/` the
+pictures they embed.
 
 ## Invariants
 
@@ -55,6 +56,8 @@ compose files bind-mount it into the backend container.
   switched off and is enabled by hand in the admin under Channel settings.
 - **Every changelog image must be placed in its body** as `::tag::`, otherwise
   `seed_changelogs` fails. That placeholder is where the picture is shown.
+- **Profile pictures are only set when the account has none**, so a picture
+  changed by hand survives a re-seed. They go through the same crop as an upload.
 - **Sent images are keyed on (sender, receiver, image)**, so a given pair may not
   share the same photo twice.
 - `sent_days_ago` is applied after creation, so existing rows are back-dated too.
@@ -78,6 +81,10 @@ Every password carries a digit on purpose: the change-password form validates th
 
 - **6 users** — alice (main), bob, carol, dave, erin, and one that is not
   searchable, so the friend-code lookup has a negative case.
+- **Profile pictures** for alice, bob, carol and erin. dave and mallory have
+  none, so the initials fallback shows (dave's request to alice), and dave and
+  carol share nothing, so dave may not load carol's picture. erin's is not
+  square, so seeding exercises the crop.
 - **3 frame groups**, so changelog filtering per group is visible.
 - **5 frames** — alice owns two, bob and carol one each, and one is unowned so the
   register dialog has something to claim.
@@ -109,4 +116,4 @@ python -c "import base64, os; print(base64.b64encode(os.urandom(32)).decode())"
 ```
 
 To add a photo, drop a small PNG into `assets/images/` and reference its file
-name. Keep the assets tiny — they are committed.
+name. Profile pictures work the same way with `assets/avatars/` and `avatar_file`. Keep the assets tiny — they are committed.

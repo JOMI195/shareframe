@@ -17,7 +17,7 @@ from .serializers import (
 
 
 class FriendshipViewSet(viewsets.ModelViewSet):
-    queryset = Friendship.objects.all()
+    queryset = Friendship.objects.select_related("sender__account", "reciever__account")
     http_method_names = ["get", "post", "delete", "head", "options"]
     permission_classes = [IsAuthenticated]
     throttle_classes = [BurstRateThrottle, SustainedRateThrottle]

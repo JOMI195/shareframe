@@ -83,6 +83,17 @@ describe('activity list', () => {
       await screen.findByText('Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden'),
     ).toBeInTheDocument();
   });
+
+  it('shows the pictures of sender and receiver next to their names', async () => {
+    await openActivity([
+      { ...received, sender_avatar: '/media/avatars/bob.jpg', reciever_avatar: null },
+      { ...sentByMe, sender_avatar: null, reciever_avatar: null },
+    ]);
+
+    expect(await screen.findByRole('img', { name: 'bob', hidden: true })).toBeInTheDocument();
+    expect(screen.queryByRole('img', { name: 'carol', hidden: true })).not.toBeInTheDocument();
+    expect(screen.getByText('C')).toBeInTheDocument();
+  });
 });
 
 describe('server side filters', () => {

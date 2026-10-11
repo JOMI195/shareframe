@@ -14,6 +14,7 @@ from friendships.models import Friendship
 from images.management.commands.create_image_sizes import IMAGE_SIZES
 from images.models import Image, ImageSize
 from sent_images.models import SentImage, SentImageStatus
+from user_accounts.avatars import set_avatar
 from user_accounts.models import Account
 from user_core.models import User
 
@@ -49,6 +50,7 @@ class Command(BaseCommand):
 
         seed_data = self._load_seed_data()
         self._validate_seed_assets(seed_data["images"])
+        self._validate_avatar_assets(seed_data["users"])
         self._ensure_image_sizes()
 
         summary = {
@@ -56,6 +58,7 @@ class Command(BaseCommand):
             "users_updated": 0,
             "accounts_created": 0,
             "accounts_updated": 0,
+            "avatars_set": 0,
             "groups_created": 0,
             "groups_updated": 0,
             "frames_created": 0,
@@ -98,6 +101,10 @@ class Command(BaseCommand):
     def _seed_assets_dir(self):
         return self._seed_data_dir / "assets" / "images"
 
+    @property
+    def _seed_avatars_dir(self):
+        return self._seed_data_dir / "assets" / "avatars"
+
     def _load_seed_data(self):
         return {
             section: self._load_section(file_name)
@@ -129,6 +136,18 @@ class Command(BaseCommand):
         if missing:
             raise CommandError(
                 "Seed image assets are missing:\n- " + "\n- ".join(missing)
+            )
+
+    def _validate_avatar_assets(self, user_specs):
+        missing = [
+            str(self._seed_avatars_dir / spec["avatar_file"])
+            for spec in user_specs
+            if "avatar_file" in spec
+            and not (self._seed_avatars_dir / spec["avatar_file"]).exists()
+        ]
+        if missing:
+            raise CommandError(
+                "Seed avatar assets are missing:\n- " + "\n- ".join(missing)
             )
 
     def _ensure_image_sizes(self):
@@ -189,6 +208,11 @@ class Command(BaseCommand):
                 account.friendship_user_searchable = searchable
                 account.save(update_fields=["friendship_user_searchable"])
                 summary["accounts_updated"] += 1
+
+            if "avatar_file" in spec and not account.avatar:
+                with open(self._seed_avatars_dir / spec["avatar_file"], "rb") as f:
+                    set_avatar(account, f)
+                summary["avatars_set"] += 1
 
             users[spec["username"]] = user
         return users

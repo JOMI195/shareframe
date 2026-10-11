@@ -10,6 +10,7 @@ from django.contrib.auth.models import (
 from django.db import models, transaction
 from django.utils import timezone
 
+from user_accounts.avatars import clear_avatar
 from user_accounts.models import Account
 from user_stats.models import UserStats
 
@@ -128,6 +129,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if hasattr(self, "account"):
             self.account.friendship_user_searchable = False
             self.account.save()
+            clear_avatar(self.account)
 
         UserStats.objects.filter(user=self).update(user=None)
 

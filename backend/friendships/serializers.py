@@ -1,11 +1,15 @@
 from rest_framework import serializers
 
+from user_accounts.avatars import avatar_url
+
 from .models import Friendship
 
 
 class FriendshipRetrieveSerializer(serializers.ModelSerializer):
     sender = serializers.SerializerMethodField()
     reciever = serializers.SerializerMethodField()
+    sender_avatar = serializers.SerializerMethodField()
+    reciever_avatar = serializers.SerializerMethodField()
 
     def get_sender(self, obj):
         sender = obj.sender.username
@@ -15,9 +19,24 @@ class FriendshipRetrieveSerializer(serializers.ModelSerializer):
         reciever = obj.reciever.username
         return reciever
 
+    def get_sender_avatar(self, obj):
+        return avatar_url(obj.sender)
+
+    def get_reciever_avatar(self, obj):
+        return avatar_url(obj.reciever)
+
     class Meta:
         model = Friendship
-        fields = ["id", "sender", "reciever", "status", "created_at", "updated_at"]
+        fields = [
+            "id",
+            "sender",
+            "reciever",
+            "sender_avatar",
+            "reciever_avatar",
+            "status",
+            "created_at",
+            "updated_at",
+        ]
 
 
 class FriendshipCreateSerializer(serializers.ModelSerializer):

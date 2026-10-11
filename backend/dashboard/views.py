@@ -12,6 +12,7 @@ from config.throttles import BurstRateThrottle, SustainedRateThrottle
 from frames.models import Frame
 from images.models import Image
 from sent_images.models import SentImage
+from user_accounts.avatars import avatar_url
 
 
 class DashboardAPIViewSet(viewsets.ViewSet):
@@ -55,6 +56,7 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                     "id": latest_image_obj.id,
                     "expires_at": latest_image_obj.expires_at.isoformat(),
                     "sender": latest_image_obj.sender.username,
+                    "sender_avatar": avatar_url(latest_image_obj.sender),
                     "image_name": (
                         getattr(latest_image_obj.image, "name", "Unknown")
                         if hasattr(latest_image_obj, "image")

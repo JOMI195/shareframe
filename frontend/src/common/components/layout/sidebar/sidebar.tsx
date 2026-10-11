@@ -8,7 +8,6 @@ import {
     Box,
     ClickAwayListener,
     useTheme,
-    Avatar,
     useMediaQuery,
     Typography,
     Link,
@@ -23,6 +22,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import { Link as RouterLink, useLocation } from 'react-router';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
+import UserAvatar from '@/common/components/userAvatar';
 import { getAppSettingsUrl, getSettingsUrl, getUserSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
 import { sidebarMenuItems } from '@/assets/sidebarMenu/sideBarMenu';
 import { IAppBarMenuItem } from '@/types';
@@ -68,17 +68,7 @@ const Sidebar: React.FC = () => {
     const sidebarBottomItems = [
         {
             name: "Account",
-            icon: (
-                <Avatar
-                    sx={{
-                        width: 25,
-                        height: 25,
-                    }}
-                    alt="Account"
-                >
-                    {`${user.me.username.slice(0, 1).toUpperCase()}`}
-                </Avatar>
-            ),
+            icon: <UserAvatar username={user.me.username} url={user.me.account?.avatar} size={25} />,
             url: getSettingsUrl() + getUserSettingsUrl()
         },
         { name: 'Einstellungen', icon: <SettingsIcon />, url: getSettingsUrl() + getAppSettingsUrl() },

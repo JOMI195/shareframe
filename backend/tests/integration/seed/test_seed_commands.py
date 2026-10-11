@@ -1,6 +1,9 @@
+import io
+
 import pytest
 from django.core.management import call_command
 from django.utils import timezone
+from PIL import Image as PILImage
 
 from changelogs.models import Changelog, ChangelogImage
 from frames.models import Frame, FrameGroup
@@ -9,7 +12,9 @@ from images.models import Image, ImageSize
 from notifications.models import Notification
 from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
-from user_accounts.models import NotificationPreference
+from tests.support.helpers.images import image_bytes
+from user_accounts.avatars import AVATAR_SIZE, set_avatar
+from user_accounts.models import Account, NotificationPreference
 from user_core.models import User
 from user_stats.models import UserStats
 
@@ -54,8 +59,13 @@ def test_image_sizes_exist():
     }
 
 
+def _avatars():
+    return set(Account.objects.exclude(avatar="").values_list("avatar", flat=True))
+
+
 def test_seeding_again_changes_nothing():
     before = _counts()
+    avatars_before = _avatars()
 
     call_command("create_image_sizes", verbosity=0)
     call_command("seed_dev_data", verbosity=0)
@@ -64,6 +74,7 @@ def test_seeding_again_changes_nothing():
     call_command("seed_user_stats", verbosity=0)
 
     assert _counts() == before
+    assert _avatars() == avatars_before
 
 
 def test_a_friendship_that_moved_on_is_not_seeded_twice():
@@ -147,3 +158,25 @@ def test_zeroed_user_stats_get_the_seeded_counts():
 
     stats = UserStats.objects.get(user__username=seed.ALICE)
     assert stats.images_sent == seed.user_stats()[seed.ALICE]["images_sent"]
+
+
+def test_seeded_avatars_are_applied():
+    with_avatar = seed.avatar_files()
+
+    for user in User.objects.filter(username__startswith="seed_"):
+        avatar = user.account.avatar
+        assert bool(avatar) == (user.username in with_avatar), user.username
+        if avatar:
+            with PILImage.open(avatar.path) as image:
+                assert image.size == (AVATAR_SIZE, AVATAR_SIZE)
+
+
+def test_reseeding_keeps_a_replaced_avatar():
+    account = User.objects.get(username=seed.ALICE).account
+    set_avatar(account, io.BytesIO(image_bytes()))
+    replaced = account.avatar.name
+
+    call_command("seed_dev_data", verbosity=0)
+
+    account.refresh_from_db()
+    assert account.avatar.name == replaced

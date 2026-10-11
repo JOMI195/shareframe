@@ -4,21 +4,24 @@
     "email": "seed.alice@shareframe.local",
     "password": "seed-alice-dev-pass1",
     "friendship_code": "SEEDA001",
-    "friendship_user_searchable": true
+    "friendship_user_searchable": true,
+    "avatar_file": "seed-avatar-circle.png"
   },
   {
     "username": "seed_bob",
     "email": "seed.bob@shareframe.local",
     "password": "seed-bob-dev-pass1",
     "friendship_code": "SEEDB001",
-    "friendship_user_searchable": true
+    "friendship_user_searchable": true,
+    "avatar_file": "seed-avatar-triangle.png"
   },
   {
     "username": "seed_carol",
     "email": "seed.carol@shareframe.local",
     "password": "seed-carol-dev-pass1",
     "friendship_code": "SEEDC001",
-    "friendship_user_searchable": true
+    "friendship_user_searchable": true,
+    "avatar_file": "seed-avatar-stripes.png"
   },
   {
     "username": "seed_dave",
@@ -34,7 +37,8 @@
     "password": "seed-erin-dev-pass1",
     "friendship_code": "SEEDE001",
     "friendship_user_searchable": true,
-    "joined_days_ago": 40
+    "joined_days_ago": 40,
+    "avatar_file": "seed-avatar-squares.png"
   },
   {
     "username": "seed_mallory",

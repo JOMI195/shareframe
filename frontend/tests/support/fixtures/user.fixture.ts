@@ -8,6 +8,7 @@ export const makeUser = (over: Partial<IUser> = {}): IUser => ({
     friendship_user_searchable: true,
     friendship_user_search_code: 'ABCD1234',
     notification_preferences: [],
+    avatar: '/media/avatars/alice.jpg',
   },
   ...over,
 });
@@ -22,5 +23,6 @@ export const otherUser = makeUser({
     friendship_user_searchable: true,
     friendship_user_search_code: 'EFGH5678',
     notification_preferences: [],
+    avatar: null,
   },
 });

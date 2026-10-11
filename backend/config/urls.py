@@ -15,6 +15,7 @@ from authentication.jwt import (
 from metrics.views import business_metrics_view, metrics_view
 
 from .views import (
+    AvatarAccessView,
     ChangelogsAccessView,
     FrameUpdatesAccessView,
     MediaAccessView,
@@ -53,6 +54,7 @@ urlpatterns = [
     path("api/", include("changelogs.urls")),
     path("api/", include("dashboard.urls")),
     path("api/", include("notifications.urls")),
+    path("api/", include("user_accounts.urls")),
 ]
 
 if not bool(settings.DEBUG):
@@ -61,6 +63,13 @@ if not bool(settings.DEBUG):
             r"^api/media/private/(?P<path>.*)$",
             MediaAccessView.as_view(),
             name="media",
+        )
+    )
+    urlpatterns.append(
+        re_path(
+            r"^api/media/avatars/(?P<path>.*)$",
+            AvatarAccessView.as_view(),
+            name="avatars-media",
         )
     )
     urlpatterns.append(

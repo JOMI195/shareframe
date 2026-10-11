@@ -23,6 +23,10 @@ class AccountManager(models.Manager):
         return account
 
 
+def avatar_upload_path(instance, filename):
+    return f"avatars/{uuid.uuid4().hex}.jpg"
+
+
 class Account(models.Model):
     user = models.OneToOneField(
         settings.AUTH_USER_MODEL,
@@ -32,6 +36,7 @@ class Account(models.Model):
     )
     friendship_user_searchable = models.BooleanField(default=True)
     friendship_user_search_code = models.CharField(max_length=100, unique=True)
+    avatar = models.ImageField(upload_to=avatar_upload_path, blank=True)
 
     objects = AccountManager()
 

@@ -1,4 +1,4 @@
-import { carol, dave, mallory } from '../support/e2e/credentials';
+import { bob, carol, dave, mallory } from '../support/e2e/credentials';
 import { expect, test } from '../support/e2e/fixtures';
 
 const requestsTab = (page: import('@playwright/test').Page) =>
@@ -28,6 +28,14 @@ test.describe('friendships', () => {
     });
     await page.getByRole('tab', { name: 'Freunde' }).click();
     await expect(page.getByText(dave.username)).toBeVisible();
+  });
+
+  test('shows a friend with their profile picture', async ({ signedInPage: page }) => {
+    await openFriendships(page);
+
+    const friend = page.locator('.MuiCard-root', { hasText: bob.username });
+    // The avatar is aria-hidden: the name next to it is what gets announced.
+    await expect(friend.locator('img')).toHaveAttribute('src', /^blob:/, { timeout: 30_000 });
   });
 
   test('refuses a friend code that is not searchable', async ({ signedInPage: page }) => {

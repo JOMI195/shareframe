@@ -24,6 +24,7 @@ import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs } fro
 import { getApi } from "@/store/entities/images/images.slice";
 import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
+import UserAvatar from "@/common/components/userAvatar";
 import CloseIcon from '@mui/icons-material/Close';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
@@ -65,12 +66,15 @@ const SendImageToUserFrameDialog = () => {
     const [isSendingInProgress, setIsSendingInProgress] = useState(false);
     const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
-    const availableReceivers = [
+    const receiverAvatars = new Map<string, string | null | undefined>([
         ...friendships
             .filter(friendship => friendship.status === "accepted")
-            .map(friendship => friendship.sender !== user.me.username ? friendship.sender : friendship.reciever),
-        user.me.username
-    ];
+            .map((friendship): [string, string | null | undefined] => friendship.sender !== user.me.username
+                ? [friendship.sender, friendship.sender_avatar]
+                : [friendship.reciever, friendship.reciever_avatar]),
+        [user.me.username, user.me.account?.avatar]
+    ]);
+    const availableReceivers = [...receiverAvatars.keys()];
 
     const handleDialogClose = () => {
         if (!isSendingInProgress) {
@@ -192,6 +196,7 @@ const SendImageToUserFrameDialog = () => {
                                 {selected.map((value) => (
                                     <Chip
                                         key={value}
+                                        avatar={<UserAvatar username={value} url={receiverAvatars.get(value)} size={18} />}
                                         label={getReceiverDisplayName(value)}
                                         size="small"
                                     />
@@ -211,6 +216,12 @@ const SendImageToUserFrameDialog = () => {
                                         : theme.typography.fontWeightMedium,
                                 }}
                             >
+                                <UserAvatar
+                                    username={receiver}
+                                    url={receiverAvatars.get(receiver)}
+                                    size={24}
+                                    sx={{ mr: 1.5 }}
+                                />
                                 {getReceiverDisplayName(receiver)}
                             </MenuItem>
                         ))}

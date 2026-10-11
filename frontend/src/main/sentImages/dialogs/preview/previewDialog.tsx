@@ -1,4 +1,4 @@
-import { Box, useTheme, Typography, Stack, ListItemAvatar, Avatar, ListItemText, Grid, useMediaQuery } from "@mui/material";
+import { Box, useTheme, Typography, Stack, ListItemAvatar, ListItemText, Grid, useMediaQuery } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openDeactivateSendImageFrameDialog, openScheduledSentImageDialog, ScheduledSentImageAction } from "@/store/ui/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -14,6 +14,7 @@ import { closePreviewSentImageDialog, getDialogs } from "@/store/ui/sentImages/s
 import { getVariant } from "@/common/utils/images";
 import { formatDuration, getActiveDurationMs, getSentImageState } from "../../sentImageStatus";
 import SentImageStatusLabel from "../../sentImageStatusLabel";
+import UserAvatar from "@/common/components/userAvatar";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -107,17 +108,13 @@ const ImagePreviewDialog = () => {
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Typography sx={{ mb: 0.5 }} color="GrayText">Sender</Typography>
-                                <Stack direction="row" spacing={-3}>
+                                <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
                                     <ListItemAvatar>
-                                        <Avatar
-                                            sx={{
-                                                width: 24,
-                                                height: 24,
-                                                fontSize: 17
-                                            }}
-                                        >
-                                            {selectedImage.sender?.toUpperCase().slice(0, 1)}
-                                        </Avatar>
+                                        <UserAvatar
+                                            username={selectedImage.sender}
+                                            url={selectedImage.sender_avatar}
+                                            size={36}
+                                        />
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={selectedImage.sender}
@@ -133,17 +130,13 @@ const ImagePreviewDialog = () => {
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
                                 <Typography sx={{ mb: 0.5 }} color="GrayText">Empfänger</Typography>
-                                <Stack direction="row" spacing={-3}>
+                                <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
                                     <ListItemAvatar>
-                                        <Avatar
-                                            sx={{
-                                                width: 24,
-                                                height: 24,
-                                                fontSize: 17
-                                            }}
-                                        >
-                                            {selectedImage.reciever?.toUpperCase().slice(0, 1)}
-                                        </Avatar>
+                                        <UserAvatar
+                                            username={selectedImage.reciever}
+                                            url={selectedImage.reciever_avatar}
+                                            size={36}
+                                        />
                                     </ListItemAvatar>
                                     <ListItemText
                                         primary={selectedImage.reciever}
