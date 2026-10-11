@@ -31,7 +31,7 @@ class DashboardAPIViewSet(viewsets.ViewSet):
             now = timezone.now()
 
             # Get base queryset for current user
-            user_queryset = SentImage.objects.filter(
+            user_queryset = SentImage.objects.sent().filter(
                 Q(sender=current_user) | Q(reciever=current_user)
             )
 

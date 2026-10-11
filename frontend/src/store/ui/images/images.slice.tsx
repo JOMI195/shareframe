@@ -1,8 +1,10 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
-import { IImage } from "@/types";
+import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
+import { IImage, ISentImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+
+export type ScheduledSentImageAction = 'sendNow' | 'cancel';
 
 type SliceState = {
   dialogs: {
@@ -14,6 +16,7 @@ type SliceState = {
     },
     sendToFrame: { open: boolean, imagesToSend: IImage[] },
     deactivate: { open: boolean, sentImageId: number | null },
+    scheduledAction: { open: boolean, sentImageId: number | null, action: ScheduledSentImageAction | null },
     selection: { open: boolean, selectedImages: IImage[] },
   };
   snackbar: {
@@ -32,12 +35,22 @@ const initialState: SliceState = {
     },
     sendToFrame: { open: false, imagesToSend: [] },
     deactivate: { open: false, sentImageId: null },
+    scheduledAction: { open: false, sentImageId: null, action: null },
     selection: { open: false, selectedImages: [] },
   },
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
     loading: { open: false, message: "", },
   },
+};
+
+const showLoading = (sliceState: SliceState, message: string) => {
+  sliceState.snackbar.loading = { open: true, message };
+};
+
+const showAlert = (sliceState: SliceState, message: string, severity: AlertColor) => {
+  sliceState.snackbar.alert = { open: true, message, severity };
+  sliceState.snackbar.loading = { open: false, message: "" };
 };
 
 const imagesSlice = createSlice({
@@ -176,10 +189,12 @@ const imagesSlice = createSlice({
           message: "Fotos an Bilderrahmen der Empfänger schicken",
         };
       })
-      .addCase(sendImageToUserFrameFulfilled, (sliceState) => {
+      .addCase(sendImageToUserFrameFulfilled, (sliceState, action: { payload?: Partial<ISentImage> }) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Fotos an Bilderrahmen der Empfänger schicken erfolgreich",
+          message: action.payload?.status === "scheduled"
+            ? "Versand an Bilderrahmen der Empfänger geplant"
+            : "Fotos an Bilderrahmen der Empfänger schicken erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -226,6 +241,24 @@ const imagesSlice = createSlice({
           message: "",
         };
       })
+      .addCase(cancelScheduledSentImagePending, (sliceState) => {
+        showLoading(sliceState, "Geplantes Senden abbrechen");
+      })
+      .addCase(cancelScheduledSentImageFulfilled, (sliceState) => {
+        showAlert(sliceState, "Geplantes Senden abgebrochen", "success");
+      })
+      .addCase(cancelScheduledSentImageFailed, (sliceState) => {
+        showAlert(sliceState, "Geplantes Senden abbrechen fehlgeschlagen", "error");
+      })
+      .addCase(sendScheduledSentImageNowPending, (sliceState) => {
+        showLoading(sliceState, "Foto sofort senden");
+      })
+      .addCase(sendScheduledSentImageNowFulfilled, (sliceState) => {
+        showAlert(sliceState, "Foto gesendet", "success");
+      })
+      .addCase(sendScheduledSentImageNowFailed, (sliceState) => {
+        showAlert(sliceState, "Foto sofort senden fehlgeschlagen", "error");
+      })
   },
   reducers: {
     createImageDialogOpened: (sliceState) => {
@@ -267,6 +300,13 @@ const imagesSlice = createSlice({
     deactivateSendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.deactivate.open = false;
       sliceState.dialogs.deactivate.sentImageId = null;
+    },
+    scheduledSentImageDialogOpened: (sliceState, action: PayloadAction<{ sentImageId: number, action: ScheduledSentImageAction }>) => {
+      sliceState.dialogs.scheduledAction = { open: true, ...action.payload };
+    },
+    scheduledSentImageDialogClosed: (sliceState) => {
+      sliceState.dialogs.scheduledAction.open = false;
+      sliceState.dialogs.scheduledAction.sentImageId = null;
     },
     selectionDialogOpened: (sliceState) => {
       sliceState.dialogs.selection.selectedImages = [];
@@ -361,6 +401,15 @@ export const closeDeactivateSendImageFrameDialog = () => ({
   type: deactivateSendImageToUserFrameDialogClosed.type,
 });
 
+export const openScheduledSentImageDialog = (payload: { sentImageId: number, action: ScheduledSentImageAction }) => ({
+  type: scheduledSentImageDialogOpened.type,
+  payload
+});
+
+export const closeScheduledSentImageDialog = () => ({
+  type: scheduledSentImageDialogClosed.type,
+});
+
 export const openSelectionDialog = () => ({
   type: selectionDialogOpened.type,
 });
@@ -412,6 +461,8 @@ export const {
   sendImageToUserFrameDialogOpened,
   deactivateSendImageToUserFrameDialogClosed,
   deactivateSendImageToUserFrameDialogOpened,
+  scheduledSentImageDialogClosed,
+  scheduledSentImageDialogOpened,
   selectionDialogOpened,
   selectionDialogClosed,
   imageSelected

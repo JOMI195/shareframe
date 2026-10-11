@@ -123,7 +123,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_missing_sent_images(self, frame_user: User, sent_image_ids: list[int]):
         missing_images = list(
-            SentImage.objects.filter(
+            SentImage.objects.sent()
+            .filter(
                 reciever=frame_user,
                 expires_at__gt=timezone.now(),  # Only get non-expired images
             )
@@ -138,17 +139,19 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
     @database_sync_to_async
     def get_existing_sent_image_ids(self, frame_user: User, sent_image_ids: list[int]):
         return set(
-            SentImage.objects.filter(
+            SentImage.objects.sent()
+            .filter(
                 reciever=frame_user,
                 id__in=sent_image_ids,
                 expires_at__gt=timezone.now(),
-            ).values_list("id", flat=True)
+            )
+            .values_list("id", flat=True)
         )
 
     @database_sync_to_async
     def get_sent_image(self, frame_user: User, sent_image_id: int):
         try:
-            return SentImage.objects.get(reciever=frame_user, id=sent_image_id)
+            return SentImage.objects.sent().get(reciever=frame_user, id=sent_image_id)
         except SentImage.DoesNotExist:
             logger.debug(
                 f"SentImage with ID {sent_image_id} not found for user {frame_user.username}"

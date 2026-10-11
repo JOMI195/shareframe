@@ -562,3 +562,4 @@ VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "")
 #### Sent_Images
 # Number of days after expiration before deleting sent images
 SENT_IMAGE_DELETE_DAYS = 14  # days
+SENT_IMAGE_MAX_SCHEDULE_DAYS = 30  # days

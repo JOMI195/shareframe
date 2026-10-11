@@ -118,6 +118,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                             <MenuItem value="all">Alle Fotos</MenuItem>
                             <MenuItem value="active">Aktive</MenuItem>
                             <MenuItem value="expired">Abgelaufene</MenuItem>
+                            <MenuItem value="scheduled">Geplante</MenuItem>
                         </Select>
                     </FormControl>
                 </Grid>

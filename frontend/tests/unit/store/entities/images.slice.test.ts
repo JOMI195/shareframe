@@ -3,6 +3,7 @@ import reducer, {
   createImageFailed,
   createImageFulfilled,
   createImagePending,
+  cancelScheduledSentImageFulfilled,
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
   deactivateSentImagePending,
@@ -20,6 +21,7 @@ import reducer, {
   imagesRequested,
   sendImageToUserFrameFailed,
   sendImageToUserFrameFulfilled,
+  sendScheduledSentImageNowFulfilled,
   sendImageToUserFramePending,
   sentImagesFiltersSet,
   sentImagesPageSet,
@@ -155,8 +157,8 @@ describe('deactivateSentImageFulfilled', () => {
   const sent = makeSentImage({ id: 1, sent_at: '2026-01-01T00:00:00Z' });
   const base = () => ({ ...initial(), sentImagesPaginated: makePage([sent]) });
 
-  it('replaces the entry matching sent_at', () => {
-    const updated = makeSentImage({ id: 1, sent_at: sent.sent_at, expires_at: '2026-01-01T00:00:00Z' });
+  it('replaces the entry matching the id', () => {
+    const updated = makeSentImage({ id: 1, expires_at: '2026-01-01T00:00:00Z' });
 
     const state = reducer(base(), deactivateSentImageFulfilled(updated));
 
@@ -165,9 +167,37 @@ describe('deactivateSentImageFulfilled', () => {
 
   // This one DOES guard index !== -1, unlike the delete reducers above.
   it('leaves the list unchanged when nothing matches', () => {
-    const state = reducer(base(), deactivateSentImageFulfilled(makeSentImage({ sent_at: '2099-01-01T00:00:00Z' })));
+    const state = reducer(base(), deactivateSentImageFulfilled(makeSentImage({ id: 9 })));
 
     expect(state.sentImagesPaginated.results).toEqual([sent]);
+  });
+});
+
+describe('sendScheduledSentImageNowFulfilled', () => {
+  it('replaces the scheduled entry with the sent one', () => {
+    const scheduled = makeSentImage({ id: 1, status: 'scheduled' });
+    const base = { ...initial(), sentImagesPaginated: makePage([scheduled]) };
+
+    const state = reducer(base, sendScheduledSentImageNowFulfilled(makeSentImage({ id: 1, status: 'sent' })));
+
+    expect(state.sentImagesPaginated.results[0].status).toBe('sent');
+  });
+});
+
+describe('cancelScheduledSentImageFulfilled', () => {
+  const a = makeSentImage({ id: 1, status: 'scheduled' });
+  const b = makeSentImage({ id: 2 });
+  const base = () => ({ ...initial(), sentImagesPaginated: makePage([a, b], { count: 2 }) });
+
+  it('removes the entry and decrements the count', () => {
+    const state = reducer(base(), cancelScheduledSentImageFulfilled(1));
+
+    expect(state.sentImagesPaginated.results.map((i) => i.id)).toEqual([2]);
+    expect(state.sentImagesPaginated.count).toBe(1);
+  });
+
+  it('keeps the count when nothing matches', () => {
+    expect(reducer(base(), cancelScheduledSentImageFulfilled(9)).sentImagesPaginated.count).toBe(2);
   });
 });
 

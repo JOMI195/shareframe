@@ -39,6 +39,10 @@ beat_schedule = {
         "task": "images.tasks.mark_expired_images_to_be_deleted",
         "schedule": timedelta(minutes=15),
     },
+    "deliver-due-scheduled-sent-images-every-minute": {
+        "task": "sent_images.tasks.deliver_due_scheduled_sent_images",
+        "schedule": timedelta(minutes=1),
+    },
     "flush-expired-tokens-every-24-hours": {
         "task": "authentication.tasks.flush_expired_tokens",
         "schedule": crontab(minute=0, hour=3),

@@ -1,9 +1,12 @@
 import pytest
 from django.utils import timezone
 
-from sent_images.models import SentImage
-from sent_images.tasks import delete_long_expired_sent_images
-from tests.support.factories import SentImageFactory
+from sent_images.models import SentImage, SentImageStatus
+from sent_images.tasks import (
+    delete_long_expired_sent_images,
+    deliver_due_scheduled_sent_images,
+)
+from tests.support.factories import FriendshipFactory, SentImageFactory, UserFactory
 
 pytestmark = pytest.mark.django_db
 
@@ -50,3 +53,32 @@ def test_reports_how_many_it_deleted(settings):
         delete_long_expired_sent_images()
         == f"Deleted {expected} long expired sent images."
     )
+
+
+class TestDeliverDue:
+    @pytest.fixture
+    def friends(self):
+        sender = UserFactory()
+        reciever = UserFactory()
+        FriendshipFactory(sender=sender, reciever=reciever, status="accepted")
+        return {"sender": sender, "reciever": reciever}
+
+    def test_delivers_a_due_send(self, friends):
+        due = SentImageFactory(
+            **friends,
+            scheduled=True,
+            scheduled_for=timezone.now() - timezone.timedelta(minutes=1),
+        )
+
+        deliver_due_scheduled_sent_images()
+
+        due.refresh_from_db()
+        assert due.status == SentImageStatus.SENT
+
+    def test_leaves_a_future_send_scheduled(self, friends):
+        future = SentImageFactory(**friends, scheduled=True)
+
+        deliver_due_scheduled_sent_images()
+
+        future.refresh_from_db()
+        assert future.status == SentImageStatus.SCHEDULED

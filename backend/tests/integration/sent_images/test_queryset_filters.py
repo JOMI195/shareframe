@@ -57,6 +57,33 @@ def test_status_all_shows_both(me, other):
     assert len(results(me, status="all")) == 2
 
 
+def test_the_sender_sees_a_scheduled_send(me, other):
+    scheduled = SentImageFactory(sender=me, reciever=other, scheduled=True)
+
+    assert results(me) == [scheduled]
+
+
+def test_the_receiver_does_not_see_a_scheduled_send(me, other):
+    SentImageFactory(sender=other, reciever=me, scheduled=True)
+
+    assert results(me) == []
+
+
+def test_status_scheduled_shows_only_scheduled(me, other):
+    SentImageFactory(sender=me, reciever=other)
+    SentImageFactory(sender=me, reciever=other, expired=True)
+    scheduled = SentImageFactory(sender=me, reciever=other, scheduled=True)
+
+    assert results(me, status="scheduled") == [scheduled]
+
+
+def test_status_active_hides_scheduled(me, other):
+    active = SentImageFactory(sender=me, reciever=other)
+    SentImageFactory(sender=me, reciever=other, scheduled=True)
+
+    assert results(me, status="active") == [active]
+
+
 def test_shipping_sent_to_you(me, other):
     received = SentImageFactory(sender=other, reciever=me)
     SentImageFactory(sender=me, reciever=other)

@@ -1,8 +1,9 @@
 import pytest
 
 from images.models import Image
+from sent_images.models import SentImage
 from tests.support import seed
-from tests.support.factories import ImageFactory
+from tests.support.factories import ImageFactory, SentImageFactory
 from tests.support.helpers.images import upload_file, upload_with_checksum
 from user_core.models import User
 
@@ -167,6 +168,17 @@ class TestDestroy:
         alice.delete(f"{URL}{image.pk}/")
 
         assert alice.delete(f"{URL}{image.pk}/").status_code == 404
+
+    def test_deleting_cancels_its_scheduled_sends_only(self, alice):
+        me = User.objects.get(username=seed.ALICE)
+        image = ImageFactory(user=me)
+        scheduled = SentImageFactory(sender=me, image=image, scheduled=True)
+        delivered = SentImageFactory(sender=me, image=image)
+
+        alice.delete(f"{URL}{image.pk}/")
+
+        assert not SentImage.objects.filter(pk=scheduled.pk).exists()
+        assert SentImage.objects.filter(pk=delivered.pk).exists()
 
 
 @pytest.mark.parametrize("method", ["put", "patch"])

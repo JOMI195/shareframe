@@ -35,7 +35,7 @@ export interface ISentImagesPaginated {
     results: ISentImage[];
 };
 
-export type StatusFilter = 'all' | 'active' | 'expired';
+export type StatusFilter = 'all' | 'active' | 'expired' | 'scheduled';
 export type ShippingFilter = 'all' | 'sentToYou' | 'sentByYou';
 export interface ISentImagesFilters {
     status: StatusFilter;
@@ -73,11 +73,15 @@ export interface IImageValidationResponse {
     errors: string[];
 }
 
+export type SentImageStatus = 'scheduled' | 'sent';
+
 export interface ISentImage {
     id: number;
     sender: string;
     reciever: string;
     image: IImage;
+    status: SentImageStatus;
+    scheduled_for: string | null;
     sent_at: string;
     expires_at: string;
 }

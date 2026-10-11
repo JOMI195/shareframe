@@ -5,6 +5,7 @@ import pytest
 
 from frames.models import Frame
 from securePayload.securePayload import SecurePayload
+from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
 from tests.support.factories import (
     FrameTokenFactory,
@@ -253,6 +254,57 @@ class TestSendImage:
         )
 
         assert response.status_code == 200
+
+    def test_a_scheduled_send_is_stored_not_pushed(self, world):
+        scheduled_at = int(time.time()) + 3600
+
+        response = self.send(
+            world,
+            reciever_username=world.friend.username,
+            image_id=world.image.id,
+            scheduled_unix_timestamp=scheduled_at,
+            expiry_unix_timestamp=scheduled_at + 3600,
+        )
+
+        assert response.status_code == 201
+        assert response.data["status"] == SentImageStatus.SCHEDULED
+        sent = SentImage.objects.get(pk=response.data["id"])
+        assert int(sent.scheduled_for.timestamp()) == scheduled_at
+
+    def test_a_schedule_in_the_past_is_rejected(self, world):
+        response = self.send(
+            world,
+            reciever_username=world.friend.username,
+            image_id=world.image.id,
+            scheduled_unix_timestamp=int(time.time()) - 60,
+        )
+
+        assert response.status_code == 400
+
+    def test_a_schedule_too_far_ahead_is_rejected(self, world, settings):
+        too_far = time.time() + (settings.SENT_IMAGE_MAX_SCHEDULE_DAYS + 1) * 86400
+
+        response = self.send(
+            world,
+            reciever_username=world.friend.username,
+            image_id=world.image.id,
+            scheduled_unix_timestamp=int(too_far),
+        )
+
+        assert response.status_code == 400
+
+    def test_an_expiry_before_the_schedule_is_rejected(self, world):
+        scheduled_at = int(time.time()) + 3600
+
+        response = self.send(
+            world,
+            reciever_username=world.friend.username,
+            image_id=world.image.id,
+            scheduled_unix_timestamp=scheduled_at,
+            expiry_unix_timestamp=scheduled_at - 60,
+        )
+
+        assert response.status_code == 400
 
 
 class TestObtainToken:

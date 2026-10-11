@@ -1,13 +1,13 @@
 {
   "uid": "shareframe-logs",
   "title": "Backend",
-  "description": "Django, Celery and websocket logs from Loki, filterable by logger and level.",
+  "description": "Django, Celery and websocket logs from Loki, filterable by logger and level, plus sent image counts from Prometheus.",
   "tags": [
     "shareframe"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 9,
+  "version": 10,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",
@@ -399,6 +399,176 @@
     },
     {
       "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "id": 105,
+      "title": "Sent images by state",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "description": "Delivered and scheduled sent images; total is both together.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_total",
+          "legendFormat": "sent"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_scheduled",
+          "legendFormat": "scheduled"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_total + shareframe_sent_images_scheduled",
+          "legendFormat": "total"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "decimals": 0,
+          "min": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "id": 106,
+      "title": "Sent images by activity",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "description": "Delivered sent images split into still shown on the frames and expired or deactivated.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_total",
+          "legendFormat": "total"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_total - shareframe_sent_images_expired",
+          "legendFormat": "active"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_sent_images_expired",
+          "legendFormat": "not active"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
       "title": "Backend log lines/s by level",
       "datasource": {
         "type": "loki",
@@ -408,7 +578,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 12
       },
       "fieldConfig": {
         "defaults": {
@@ -534,7 +704,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 12
       },
       "fieldConfig": {
         "defaults": {
@@ -661,7 +831,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 11
+        "y": 19
       },
       "options": {
         "showTime": true,

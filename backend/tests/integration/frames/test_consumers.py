@@ -220,6 +220,36 @@ class TestMissingImages:
         assert [p["sent_image_id"] for p in pictures] == [sent.id]
         await communicator.disconnect()
 
+    async def test_a_scheduled_image_is_not_pushed_early(self):
+        frame = await make_frame()
+        await make_sent_image(frame, scheduled=True)
+        communicator, _, _ = await connect(await make_token(frame))
+
+        await communicator.send_to(
+            text_data=json.dumps({"type": "check_missing_images", "sent_image_ids": []})
+        )
+
+        assert await payloads_of(communicator, "picture") == []
+        await communicator.disconnect()
+
+    async def test_sending_a_scheduled_image_now_reaches_the_frame(self):
+        from sent_images.delivery import deliver_scheduled_sent_image
+
+        frame = await make_frame()
+        scheduled = await make_sent_image(frame, scheduled=True, sender=frame.user)
+        communicator, _, _ = await connect(await make_token(frame))
+        # The connection row is saved after accept; a round trip waits for it.
+        await communicator.send_to(text_data=json.dumps({"type": "ping"}))
+        await communicator.receive_from()
+
+        await database_sync_to_async(deliver_scheduled_sent_image)(
+            scheduled.id, early=True
+        )
+
+        pictures = await payloads_of(communicator, "picture")
+        assert [p["sent_image_id"] for p in pictures] == [scheduled.id]
+        await communicator.disconnect()
+
 
 class TestExpiryCheck:
     async def test_an_expired_image_is_cleared(self):

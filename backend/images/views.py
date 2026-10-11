@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
+from sent_images.models import SentImage
 
 from .models import Image, TextPreset
 from .serializers import (
@@ -134,6 +135,7 @@ class ImagesViewSet(ModelViewSet):
         # dont delete images directly, instead mark them as deleted
         element.markedAsDeleted = True
         element.save(update_fields_only=True)
+        SentImage.objects.scheduled().filter(image=element).delete()
 
         logger.info(f"Image {element.id} marked as deleted")
         serializer = ImageRetrieveSerializer(element)

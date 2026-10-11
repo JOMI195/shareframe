@@ -7,7 +7,7 @@ import { signedInState } from '@tests/helpers/preloadedState';
 import { makeImage, makePage, makeSentImage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withSentImages } from '@tests/mocks';
-import { clickSpeedDialAction, speedDialAction } from '@tests/helpers/speedDial';
+import { clickSpeedDialAction } from '@tests/helpers/speedDial';
 
 const ME = seedUser.username;
 
@@ -25,6 +25,16 @@ const sentByMe = makeSentImage({
   reciever: 'carol',
   image: makeImage({ id: 12, name: 'an-carol.jpg' }),
   expires_at: '2000-01-01T10:00:00Z',
+});
+
+const scheduled = makeSentImage({
+  id: 3,
+  sender: ME,
+  reciever: 'carol',
+  image: makeImage({ id: 13, name: 'geplant.jpg' }),
+  status: 'scheduled',
+  scheduled_for: '2099-01-01T10:00:00Z',
+  expires_at: '2099-01-02T10:00:00Z',
 });
 
 const openActivity = async (sentImages = [received, sentByMe]) => {
@@ -102,6 +112,15 @@ describe('server side filters', () => {
     await waitFor(() => expect(urls[urls.length - 1]).toContain('shipping=sentByYou'));
   });
 
+  it('narrows the query to scheduled photos', async () => {
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    await chooseOption(user, 'Status Filter', 'Geplante');
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('status=scheduled'));
+  });
+
   // "Alle Fotos" is a sentinel, not a value the backend understands.
   it('leaves the sentinel out of the query again', async () => {
     const { user } = await openActivity();
@@ -134,12 +153,75 @@ describe('deactivating a shared photo', () => {
     await waitFor(() => expect(calls).toEqual(['deactivate']));
   });
 
-  it('cannot deactivate a photo that already expired', async () => {
+  it('offers no actions menu for a photo that already expired', async () => {
     const { user } = await openActivity([sentByMe]);
 
     await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+
+    expect(await screen.findByRole('button', { name: 'Foto herunterladen' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Aktionen' })).not.toBeInTheDocument();
+  });
+});
+
+describe('a scheduled photo', () => {
+  const openScheduled = async () => {
+    const view = await openActivity([scheduled]);
+    await view.user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    return view;
+  };
+
+  it('shows how long it will be displayed', async () => {
+    await openScheduled();
+
+    expect(await screen.findByText('Anzeigedauer')).toBeInTheDocument();
+    expect(screen.getByText('1 Tag')).toBeInTheDocument();
+  });
+
+  it('is labelled as scheduled', async () => {
+    await openActivity([scheduled]);
+
+    expect(screen.getByText('Geplant')).toBeInTheDocument();
+  });
+
+  it('can be sent right away', async () => {
+    const calls: string[] = [];
+    server.use(
+      mswHttp.post(apiUrl(imageEndpoints.getSentImagesSendNowUrl(scheduled.id)), () => {
+        calls.push('send-now');
+        return HttpResponse.json({ ...scheduled, status: 'sent', scheduled_for: null });
+      }),
+    );
+    const { user } = await openScheduled();
+
+    await clickSpeedDialAction(user, 'Vorzeitig, sofort senden');
+    expect(calls).toEqual([]);
+    await user.click(await screen.findByRole('button', { name: 'Sofort senden bestätigen' }));
+
+    await waitFor(() => expect(calls).toEqual(['send-now']));
+  });
+
+  it('is removed from the list once it is not sent', async () => {
+    const calls: string[] = [];
+    server.use(
+      mswHttp.post(apiUrl(imageEndpoints.getSentImagesCancelScheduledUrl(scheduled.id)), () => {
+        calls.push('cancel');
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+    const { user } = await openScheduled();
+
+    await clickSpeedDialAction(user, 'Geplantes Senden abbrechen');
+    await user.click(await screen.findByRole('button', { name: 'Senden abbrechen bestätigen' }));
+
+    await waitFor(() => expect(calls).toEqual(['cancel']));
+    await waitFor(() => expect(document.querySelectorAll('.MuiImageListItem-root')).toHaveLength(0));
+  });
+
+  it('offers no deactivation', async () => {
+    const { user } = await openScheduled();
     await user.hover(await screen.findByRole('button', { name: 'Aktionen' }));
 
-    await waitFor(() => expect(speedDialAction('Foto deaktivieren')).toBeDisabled());
+    await screen.findByText('Geplantes Senden abbrechen');
+    expect(screen.queryByText('Foto deaktivieren')).not.toBeInTheDocument();
   });
 });

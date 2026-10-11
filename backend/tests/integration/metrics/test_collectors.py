@@ -52,6 +52,16 @@ class TestBusinessCollector:
 
         assert values["shareframe_images_storage_bytes"] > originals
 
+    def test_storage_bytes_include_images_marked_for_deletion(self):
+        before = gauges(ShareframeBusinessCollector())[
+            "shareframe_images_storage_bytes"
+        ]
+        image = ImageFactory(markedAsDeleted=True)
+
+        after = gauges(ShareframeBusinessCollector())["shareframe_images_storage_bytes"]
+
+        assert after > before + image.size
+
     def test_counts_live_users(self):
         values = gauges(ShareframeBusinessCollector())
 
@@ -73,7 +83,9 @@ class TestBusinessCollector:
 
         values = gauges(ShareframeBusinessCollector())
 
-        assert values["shareframe_sent_images_total"] == SentImage.objects.count()
+        assert (
+            values["shareframe_sent_images_total"] == SentImage.objects.sent().count()
+        )
         assert values["shareframe_sent_images_expired"] >= 1
 
     def test_a_broken_query_does_not_raise(self, monkeypatch):
@@ -85,6 +97,21 @@ class TestBusinessCollector:
         )
 
         assert list(ShareframeBusinessCollector().collect()) == []
+
+    def test_counts_scheduled_sent_images_apart_from_delivered_ones(self):
+        before = gauges(ShareframeBusinessCollector())
+        SentImageFactory(scheduled=True)
+
+        after = gauges(ShareframeBusinessCollector())
+
+        assert (
+            after["shareframe_sent_images_scheduled"]
+            == SentImage.objects.scheduled().count()
+        )
+        assert (
+            after["shareframe_sent_images_total"]
+            == before["shareframe_sent_images_total"]
+        )
 
 
 class TestFrameCollector:

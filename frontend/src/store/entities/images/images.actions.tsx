@@ -125,7 +125,8 @@ export const setSentImagesFilters = (filters: {
 export const sendImageToUserFrames = (
   reciever_username: string,
   image_id: number,
-  expiry_unix_timestamp: string
+  expiry_unix_timestamp: string,
+  scheduled_unix_timestamp?: number
 ) =>
   apiRequest({
     url: FramesEndpoints.getSentImageToFrameUrl(),
@@ -136,7 +137,8 @@ export const sendImageToUserFrames = (
     data: {
       "reciever_username": reciever_username,
       "image_id": image_id,
-      "expiry_unix_timestamp": expiry_unix_timestamp
+      "expiry_unix_timestamp": expiry_unix_timestamp,
+      ...(scheduled_unix_timestamp !== undefined && { "scheduled_unix_timestamp": scheduled_unix_timestamp })
     }
   });
 
@@ -203,4 +205,23 @@ export const deleteTextPreset = (presetId: number) =>
     onSuccess: ImagesSlice.deleteTextPresetFulfilled.type,
     onSuccessPayload: presetId,
     onError: ImagesSlice.deleteTextPresetFailed.type,
+  });
+
+export const cancelScheduledSentImage = (sentImageId: number) =>
+  apiRequest({
+    url: ImagesEndpoints.getSentImagesCancelScheduledUrl(sentImageId),
+    method: "post",
+    onStart: ImagesSlice.cancelScheduledSentImagePending.type,
+    onSuccess: ImagesSlice.cancelScheduledSentImageFulfilled.type,
+    onError: ImagesSlice.cancelScheduledSentImageFailed.type,
+    onSuccessPayload: sentImageId,
+  });
+
+export const sendScheduledSentImageNow = (sentImageId: number) =>
+  apiRequest({
+    url: ImagesEndpoints.getSentImagesSendNowUrl(sentImageId),
+    method: "post",
+    onStart: ImagesSlice.sendScheduledSentImageNowPending.type,
+    onSuccess: ImagesSlice.sendScheduledSentImageNowFulfilled.type,
+    onError: ImagesSlice.sendScheduledSentImageNowFailed.type,
   });

@@ -28,7 +28,7 @@ compose files bind-mount it into the backend container.
 | `frames.json` | `name`, `seed_b64`, `private_serial_number`, `owner_username` (or `null`), `groups[]`, `version`, `local_ip_address` |
 | `images.json` | `display_name`, `owner_username`, `file_name` (under `assets/images/`), `auto_delete_after_period` |
 | `friendships.json` | `sender`, `reciever`, `status` (`pending` / `accepted` / `rejected`) |
-| `sent-images.json` | `sender`, `reciever`, `image_display_name`, `sent_days_ago`, and either `expires_in_days` or an absolute `expires_at` |
+| `sent-images.json` | `sender`, `reciever`, `image_display_name`, `sent_days_ago`, either `expires_in_days` or an absolute `expires_at`, optional `scheduled_in_days` |
 | `changelogs.json` | `title`, `date`, `is_published`, `groups[]`, `content_file_name` (under `assets/changelogs/`), optional `images[]` of `tag`, `description`, `file_name` (under `assets/changelogs/images/`) |
 | `notification-preferences.json` | `username`, `kind`, `channel`, `enabled` |
 | `notifications.json` | `username`, `kind`, `channel`, `sent_days_ago` |
@@ -52,10 +52,12 @@ compose files bind-mount it into the backend container.
   `seed_changelogs` fails. That placeholder is where the picture is shown.
 - **Sent images are keyed on (sender, receiver, image)**, so a given pair may not
   share the same photo twice.
-- `sent_days_ago` is applied after creation because `sent_at` is `auto_now_add`.
+- `sent_days_ago` is applied after creation, so existing rows are back-dated too.
   Relative dates keep the dashboard's weekly-activity chart populated no matter
   when the seed runs. `joined_days_ago` and the notification `sent_days_ago` work
   the same way, but `joined_days_ago` is only applied when the user is created.
+- **A scheduled sent image** has `scheduled_in_days`, and its `expires_in_days`
+  counts from that time. Once the beat task delivers it, re-seeding leaves it sent.
 - Referenced usernames, group names, image display names and asset files must all
   exist; the command fails loudly if they do not.
 
@@ -78,8 +80,9 @@ Every password carries a digit on purpose: the change-password form validates th
   of 10 and exercises pagination.
 - **6 friendships** — three accepted, one pending *to* alice (so the request badge
   is non-zero), one pending from alice, one rejected.
-- **9 sent images** — received, sent, to alice's own frames, active and expired,
-  spread over the last week.
+- **12 sent images** — received, sent, to alice's own frames, active and expired,
+  spread over the last week. Three are still scheduled, two by alice and one
+  from bob to carol that alice never sees.
 - **5 changelogs** — dates spread, one unpublished, groups split. One carries a
   picture and one carries two, so the in-app dialog and the changelog email show images.
 - **Inactivity reminder** — once the admin enables a channel, `seed_dave` is due

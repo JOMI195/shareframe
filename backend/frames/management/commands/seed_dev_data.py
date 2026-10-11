@@ -13,7 +13,7 @@ from frames.models import Frame, FrameGroup
 from friendships.models import Friendship
 from images.management.commands.create_image_sizes import IMAGE_SIZES
 from images.models import Image, ImageSize
-from sent_images.models import SentImage
+from sent_images.models import SentImage, SentImageStatus
 from user_accounts.models import Account
 from user_core.models import User
 
@@ -401,15 +401,17 @@ class Command(BaseCommand):
                 sender=users[spec["sender"]],
                 reciever=users[spec["reciever"]],
                 image=images[spec["image_display_name"]],
-                defaults={"expires_at": self._resolve_expiry(spec)},
+                defaults=self._sent_image_defaults(spec),
             )
             if created:
                 summary["sent_images_created"] += 1
 
-            # sent_at is auto_now_add, so back-dating needs a direct update.
+            # Existing rows are back-dated too, so the update is separate from defaults.
             sent_days_ago = spec.get("sent_days_ago")
             if sent_days_ago is not None:
-                sent_at = self._now() - timedelta(days=sent_days_ago)
+                sent_at = min(
+                    self._now() - timedelta(days=sent_days_ago), datetime.now(tz=UTC)
+                )
                 if sent_image.sent_at != sent_at:
                     SentImage.objects.filter(pk=sent_image.pk).update(sent_at=sent_at)
                     summary["sent_images_backdated"] += 1
@@ -417,9 +419,19 @@ class Command(BaseCommand):
     def _now(self):
         return datetime.now(tz=UTC).replace(hour=12, minute=0, second=0, microsecond=0)
 
-    def _resolve_expiry(self, spec):
+    def _sent_image_defaults(self, spec):
+        if "scheduled_in_days" not in spec:
+            return {"expires_at": self._resolve_expiry(spec, self._now())}
+        scheduled_for = self._now() + timedelta(days=spec["scheduled_in_days"])
+        return {
+            "status": SentImageStatus.SCHEDULED,
+            "scheduled_for": scheduled_for,
+            "expires_at": self._resolve_expiry(spec, scheduled_for),
+        }
+
+    def _resolve_expiry(self, spec, starts_at):
         if "expires_in_days" in spec:
-            return self._now() + timedelta(days=spec["expires_in_days"])
+            return starts_at + timedelta(days=spec["expires_in_days"])
         return self._parse_expiry(spec["expires_at"])
 
     def _parse_expiry(self, iso_value):

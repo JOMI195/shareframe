@@ -1,7 +1,7 @@
 import logging
 
 from config.celery import celery
-from sent_images.models import SentImage
+from sent_images.models import SentImage, SentImageStatus
 
 from .models import Image
 
@@ -38,7 +38,7 @@ def mark_expired_images_to_be_deleted():
     # Get all images that are marked for auto-deletion but not yet deleted
     images_to_check = Image.objects.filter(
         auto_delete_after_period=True, markedAsDeleted=False
-    )
+    ).exclude(sent_image__status=SentImageStatus.SCHEDULED)
 
     logger.info(f"Found {images_to_check.count()} images to check for auto-deletion")
 

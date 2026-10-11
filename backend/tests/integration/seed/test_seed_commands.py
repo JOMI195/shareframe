@@ -7,7 +7,7 @@ from frames.models import Frame, FrameGroup
 from friendships.models import Friendship
 from images.models import Image, ImageSize
 from notifications.models import Notification
-from sent_images.models import SentImage
+from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
 from user_accounts.models import NotificationPreference
 from user_core.models import User
@@ -73,6 +73,21 @@ def test_a_friendship_that_moved_on_is_not_seeded_twice():
     assert _counts() == before
     friendship.refresh_from_db()
     assert friendship.status == "accepted"
+
+
+def test_scheduled_sent_images_are_seeded_as_scheduled():
+    specs = [s for s in seed.sent_images() if "scheduled_in_days" in s]
+
+    for spec in specs:
+        sent_image = SentImage.objects.get(
+            sender__username=spec["sender"],
+            reciever__username=spec["reciever"],
+            image__display_name=spec["image_display_name"],
+        )
+        assert sent_image.status == SentImageStatus.SCHEDULED
+        assert sent_image.scheduled_for > timezone.now()
+        assert sent_image.expires_at > sent_image.scheduled_for
+    assert specs
 
 
 def test_seeded_reminders_are_backdated():

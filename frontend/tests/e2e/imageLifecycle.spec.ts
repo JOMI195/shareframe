@@ -26,7 +26,7 @@ const runSpeedDialAction = async (page: import('@playwright/test').Page, label: 
  * send-image, and the soft delete. The stack is fresh and seeded per run.
  */
 test.describe('photo lifecycle', () => {
-  test('uploads, sends, deactivates and deletes a photo', async ({ signedInPage: page }) => {
+  test('uploads, sends, deactivates, schedules and deletes a photo', async ({ signedInPage: page }) => {
     await page.goto('/fotos/');
     await expect(page).toHaveTitle('Fotos – ShareFrame');
     await expect(page.getByRole('heading', { name: /\d+ Fotos?/ })).toBeVisible({ timeout: 30_000 });
@@ -122,6 +122,32 @@ test.describe('photo lifecycle', () => {
       await expect(page.getByRole('button', { name: 'Deaktivieren bestätigen' })).toBeHidden({
         timeout: 30_000,
       });
+    });
+
+    await test.step('schedule it and send it right away', async () => {
+      await page.goto('/fotos/');
+      await enterSelectionMode(page);
+      await page.locator('img[src^="blob:"]').first().click();
+      await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
+
+      await page.getByRole('dialog').getByRole('combobox').first().click();
+      await page.getByRole('option', { name: 'seed_bob' }).click();
+      await page.keyboard.press('Escape');
+      await page.getByRole('switch', { name: 'Zu einem späteren Zeitpunkt senden' }).check();
+      await page.getByRole('button', { name: /an 1 Empfänger planen/ }).click();
+      await expect(page.getByRole('button', { name: /an 1 Empfänger planen/ })).toBeHidden({
+        timeout: 30_000,
+      });
+
+      await page.goto('/aktivitaeten/');
+      const newest = page.locator('.MuiImageListItem-root').first();
+      await expect(newest.getByText('Geplant')).toBeVisible({ timeout: 30_000 });
+
+      await newest.click();
+      await runSpeedDialAction(page, 'Vorzeitig, sofort senden');
+      await page.getByRole('button', { name: 'Sofort senden bestätigen' }).click();
+
+      await expect(newest.getByText('Aktiv')).toBeVisible({ timeout: 30_000 });
     });
 
     await test.step('delete it', async () => {

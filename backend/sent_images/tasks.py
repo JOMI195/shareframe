@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from config.celery import celery
 
+from .delivery import deliver_scheduled_sent_image
 from .models import SentImage
 
 
@@ -17,3 +18,13 @@ def delete_long_expired_sent_images():
     count = expired_images.count()
     expired_images.delete()
     return f"Deleted {count} long expired sent images."
+
+
+@celery.task
+def deliver_due_scheduled_sent_images():
+    due_ids = list(SentImage.objects.due().values_list("id", flat=True))
+    delivered = sum(
+        deliver_scheduled_sent_image(sent_image_id, early=False) is not None
+        for sent_image_id in due_ids
+    )
+    return f"Delivered {delivered} of {len(due_ids)} due scheduled sent images."

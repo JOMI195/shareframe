@@ -7,7 +7,7 @@
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 8,
+  "version": 9,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",
@@ -1069,8 +1069,8 @@
         "overrides": [
           {
             "matcher": {
-              "id": "byName",
-              "options": "images"
+              "id": "byRegexp",
+              "options": "images on disk|marked for deletion"
             },
             "properties": [
               {
@@ -1117,11 +1117,20 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "shareframe_images_total",
-          "legendFormat": "images"
+          "expr": "shareframe_images_total + shareframe_images_marked_deleted_total",
+          "legendFormat": "images on disk"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_images_marked_deleted_total",
+          "legendFormat": "marked for deletion"
         }
       ],
-      "description": "Stored image bytes and count; the main driver of disk growth.",
+      "description": "Bytes and image count on disk, including images marked for deletion until they are removed; the main driver of disk growth.",
       "id": 4
     },
     {

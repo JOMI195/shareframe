@@ -17,6 +17,12 @@ export const imageHandlers = [
   http.post(apiUrl(images.getSentImagesDeactivateUrl(pathParam('sentImageId'))), ({ params }) =>
     HttpResponse.json(makeSentImage({ id: Number(params.sentImageId), expires_at: '2000-01-01T00:00:00Z' })),
   ),
+  http.post(apiUrl(images.getSentImagesCancelScheduledUrl(pathParam('sentImageId'))), () =>
+    new HttpResponse(null, { status: 204 }),
+  ),
+  http.post(apiUrl(images.getSentImagesSendNowUrl(pathParam('sentImageId'))), ({ params }) =>
+    HttpResponse.json(makeSentImage({ id: Number(params.sentImageId) })),
+  ),
 
   http.get(apiUrl(images.getTextPresetsUrl()), () => HttpResponse.json([])),
   http.post(apiUrl(images.getTextPresetsUrl()), async ({ request }) =>

@@ -61,5 +61,29 @@
     "image_display_name": "alice_city",
     "sent_days_ago": 6,
     "expires_in_days": 2
+  },
+  {
+    "sender": "seed_alice",
+    "reciever": "seed_bob",
+    "image_display_name": "alice_ocean",
+    "sent_days_ago": 1,
+    "scheduled_in_days": 2,
+    "expires_in_days": 7
+  },
+  {
+    "sender": "seed_alice",
+    "reciever": "seed_carol",
+    "image_display_name": "alice_sunrise",
+    "sent_days_ago": 1,
+    "scheduled_in_days": 1,
+    "expires_in_days": 1
+  },
+  {
+    "sender": "seed_bob",
+    "reciever": "seed_carol",
+    "image_display_name": "bob_street",
+    "sent_days_ago": 1,
+    "scheduled_in_days": 3,
+    "expires_in_days": 5
   }
 ]

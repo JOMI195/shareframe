@@ -20,4 +20,13 @@ class SentImagesRetrieveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = SentImage
-        fields = ["id", "sender", "reciever", "image", "sent_at", "expires_at"]
+        fields = [
+            "id",
+            "sender",
+            "reciever",
+            "image",
+            "status",
+            "scheduled_for",
+            "sent_at",
+            "expires_at",
+        ]
