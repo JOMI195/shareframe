@@ -1,4 +1,5 @@
 import path from 'node:path';
+import type Konva from 'konva';
 import { expect, test } from '../support/e2e/fixtures';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
@@ -6,6 +7,43 @@ const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-
 const photoCount = async (page: import('@playwright/test').Page) => {
   const text = await page.getByRole('heading', { name: /\d+ Fotos?/ }).innerText();
   return Number(text.match(/\d+/)?.[0] ?? 0);
+};
+
+const textEditorState = (page: import('@playwright/test').Page) =>
+  page.evaluate(() => {
+    const stage = (window as unknown as { Konva: typeof Konva }).Konva.stages[0];
+    const safe = stage.findOne('.safe-area')!;
+    const transformer = stage.findOne('Transformer') as Konva.Transformer;
+    const selected = transformer.nodes()[0] as Konva.Label;
+    return {
+      safe: safe.getClientRect(),
+      text: selected.getClientRect(),
+      lines: (selected.getText() as unknown as { textArr: unknown[] }).textArr.length,
+      widthHandle: transformer.findOne('.middle-right')!.getAbsolutePosition(),
+    };
+  });
+
+// The dialog scrolls smoothly when its content changes, so the canvas has to settle under the pointer first.
+const dragOnCanvas = async (
+  page: import('@playwright/test').Page,
+  canvas: import('@playwright/test').Locator,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+) => {
+  await canvas.scrollIntoViewIfNeeded();
+  await expect
+    .poll(() =>
+      canvas.evaluate((element, point) => {
+        const rect = element.getBoundingClientRect();
+        return document.elementFromPoint(rect.x + point.x, rect.y + point.y) === element;
+      }, from),
+    )
+    .toBe(true);
+  const box = (await canvas.boundingBox())!;
+  await page.mouse.move(box.x + from.x, box.y + from.y);
+  await page.mouse.down();
+  await page.mouse.move(box.x + to.x, box.y + to.y, { steps: 10 });
+  await page.mouse.up();
 };
 
 const enterSelectionMode = async (page: import('@playwright/test').Page) => {
@@ -79,7 +117,34 @@ test.describe('photo lifecycle', () => {
       await expect(presets).toBeHidden();
     });
 
+    await test.step('keep texts inside the passepartout and wrap them', async () => {
+      const selectedText = page.getByRole('group', { name: 'Ausgewählter Text' });
+      const canvas = page.getByLabel('Text-Editor').locator('canvas');
+      // The whole photo has to fit on screen to drag a text into its corner.
+      await page.setViewportSize({ width: 1280, height: 1100 });
+      const start = await textEditorState(page);
+
+      await dragOnCanvas(page, canvas, { x: start.text.x + start.text.width / 2, y: start.text.y + start.text.height / 2 }, { x: 1, y: 1 });
+
+      const dragged = await textEditorState(page);
+      expect(dragged.text.x).toBeLessThan(start.text.x);
+      expect(dragged.text.x).toBeGreaterThanOrEqual(dragged.safe.x - 1);
+      expect(dragged.text.y).toBeGreaterThanOrEqual(dragged.safe.y - 1);
+
+      await selectedText.getByRole('textbox', { name: 'Text' }).fill('Ein langer Text, der nicht in eine einzige Zeile des Rahmens passt');
+      await expect.poll(async () => (await textEditorState(page)).lines).toBeGreaterThan(1);
+      const wrapped = await textEditorState(page);
+      expect(wrapped.text.x).toBeGreaterThanOrEqual(wrapped.safe.x - 1);
+      expect(wrapped.text.x + wrapped.text.width).toBeLessThanOrEqual(wrapped.safe.x + wrapped.safe.width + 1);
+
+      await dragOnCanvas(page, canvas, wrapped.widthHandle, { x: wrapped.widthHandle.x - 80, y: wrapped.widthHandle.y });
+      await expect.poll(async () => (await textEditorState(page)).text.width).toBeLessThan(wrapped.text.width);
+      await selectedText.getByRole('button', { name: 'Automatisch umbrechen' }).click();
+      await expect(selectedText.getByRole('button', { name: 'Automatisch umbrechen' })).toBeHidden();
+    });
+
     await test.step('preview', async () => {
+      await page.setViewportSize({ width: 1280, height: 720 });
       await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
       const preview = page.getByRole('img', { name: 'Vorschau von upload-fixture.jpg' });
       await expect(preview).toBeVisible();

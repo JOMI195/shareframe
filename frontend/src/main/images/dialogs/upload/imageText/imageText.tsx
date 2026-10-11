@@ -7,6 +7,7 @@ import { getTextPresets } from '@/store/entities/images/images.slice';
 import { createTextPreset, deleteTextPreset, fetchTextPresets } from '@/store/entities/images/images.actions';
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
+import PassepartoutHint from '../passepartoutHint';
 import TextEditor from './textEditor';
 import TextToolbar from './textToolbar';
 import { exportStageToBlob } from './exportImage';
@@ -127,6 +128,7 @@ const ImageText: React.FC<ImageTextProps> = ({
                 onSavePreset={(overlay) => image && dispatch(createTextPreset(overlayToPreset(overlay, image.width, image.height)))}
                 onDeletePreset={(preset) => dispatch(deleteTextPreset(preset.id))}
             />
+            {ready && <PassepartoutHint withTextArea />}
 
             <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>
                 <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 3 } }}>

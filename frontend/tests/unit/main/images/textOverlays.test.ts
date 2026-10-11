@@ -1,19 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyTransform,
+  applyWidthTransform,
+  boxCenter,
+  clampCenter,
   createDateOverlay,
   createTextOverlay,
   DEFAULT_TEXT,
+  fitsSafeArea,
+  maxWrapWidth,
   oppositeColor,
   overlayFromPreset,
   overlayToPreset,
+  rotatedHalfExtents,
+  wrapWidth,
 } from '@/main/images/dialogs/upload/imageText/textOverlays';
 
 describe('createTextOverlay', () => {
   it('starts as the default text in the image center', () => {
     const overlay = createTextOverlay(800, 480, 0);
 
-    expect(overlay).toMatchObject({ text: DEFAULT_TEXT, color: 'black', background: false, x: 400, y: 240, rotation: 0, fontSize: 60 });
+    expect(overlay).toMatchObject({ text: DEFAULT_TEXT, color: 'black', background: false, x: 400, y: 240, rotation: 0, fontSize: 60, width: null });
   });
 
   it('scales the font with the image height', () => {
@@ -48,6 +55,10 @@ describe('applyTransform', () => {
     expect(next).toMatchObject({ x: 10, y: 20, rotation: 45, fontSize: 90 });
   });
 
+  it('scales a set line width with the font', () => {
+    expect(applyTransform({ ...overlay, width: 200 }, { x: 0, y: 0, rotation: 0, scale: 1.5 }).width).toBe(300);
+  });
+
   it('never shrinks a text below a readable size', () => {
     expect(applyTransform(overlay, { x: 0, y: 0, rotation: 0, scale: 0.01 }).fontSize).toBe(8);
   });
@@ -61,6 +72,75 @@ describe('applyTransform', () => {
       bold: true,
       font: 'serif',
     });
+  });
+});
+
+describe('applyWidthTransform', () => {
+  const overlay = createTextOverlay(800, 480, 0);
+
+  it('sets the line width and keeps the font size', () => {
+    expect(applyWidthTransform(overlay, { x: 10, y: 20, width: 300 })).toMatchObject({ x: 10, y: 20, width: 300, fontSize: 60 });
+  });
+
+  it('keeps at least one font size of width', () => {
+    expect(applyWidthTransform(overlay, { x: 0, y: 0, width: 5 }).width).toBe(60);
+  });
+});
+
+describe('safe area', () => {
+  const safe = { x: 50, y: 20, width: 700, height: 440 };
+  const size = { width: 200, height: 100 };
+
+  it('swaps the extents of a quarter turn', () => {
+    const half = rotatedHalfExtents(size, 90);
+
+    expect(half.x).toBeCloseTo(50);
+    expect(half.y).toBeCloseTo(100);
+  });
+
+  it('keeps a text inside the safe area untouched', () => {
+    expect(clampCenter({ x: 400, y: 240 }, size, 0, safe)).toEqual({ x: 400, y: 240 });
+  });
+
+  it('pushes a text out of the passepartout', () => {
+    expect(clampCenter({ x: 0, y: 480 }, size, 0, safe)).toEqual({ x: 150, y: 410 });
+  });
+
+  it('uses the turned size of a rotated text', () => {
+    const center = clampCenter({ x: 0, y: 0 }, size, 90, safe);
+
+    expect(center.x).toBeCloseTo(100);
+    expect(center.y).toBeCloseTo(120);
+  });
+
+  it('centers a text that is larger than the safe area', () => {
+    expect(clampCenter({ x: 0, y: 0 }, { width: 900, height: 100 }, 0, safe).x).toBe(400);
+  });
+
+  it('tells whether a text fits', () => {
+    expect(fitsSafeArea({ x: 400, y: 240 }, size, 0, safe)).toBe(true);
+    expect(fitsSafeArea({ x: 100, y: 240 }, size, 0, safe)).toBe(false);
+  });
+
+  it('allows the full safe width for straight text', () => {
+    expect(maxWrapWidth(0, safe)).toBeCloseTo(700);
+    expect(maxWrapWidth(90, safe)).toBeCloseTo(440);
+  });
+
+  it('wraps only when the text is wider than its limit', () => {
+    const overlay = createTextOverlay(800, 480, 0);
+
+    expect(wrapWidth(overlay, 300, safe)).toBe(300);
+    expect(wrapWidth(overlay, 1000, safe)).toBeCloseTo(700);
+    expect(wrapWidth({ ...overlay, width: 250 }, 300, safe)).toBe(250);
+    expect(wrapWidth({ ...overlay, width: 900 }, 1000, safe)).toBeCloseTo(700);
+  });
+
+  it('finds the center of a rotated transformer box', () => {
+    const center = boxCenter({ x: 100, y: 100, width: 200, height: 100, rotation: Math.PI / 2 });
+
+    expect(center.x).toBeCloseTo(50);
+    expect(center.y).toBeCloseTo(200);
   });
 });
 
@@ -80,8 +160,15 @@ describe('text presets', () => {
   it('stores position and size relative to the photo', () => {
     expect(overlayToPreset(overlay, 800, 480)).toEqual({
       text: 'Vorlage', x: 0.25, y: 0.75, rotation: 30, font_size: 0.1,
-      color: 'white', background: true, font: 'serif', bold: true,
+      color: 'white', background: true, font: 'serif', bold: true, width: null,
     });
+  });
+
+  it('stores a set line width relative to the photo width', () => {
+    const preset = overlayToPreset({ ...overlay, width: 200 }, 800, 480);
+
+    expect(preset.width).toBe(0.25);
+    expect(overlayFromPreset(preset, 1600, 960).width).toBe(400);
   });
 
   it('lands at the same spot and style on a photo of another resolution', () => {

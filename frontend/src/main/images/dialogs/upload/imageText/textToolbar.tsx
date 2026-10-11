@@ -19,6 +19,7 @@ import FormatBoldIcon from '@mui/icons-material/FormatBold';
 import FormatColorFillIcon from '@mui/icons-material/FormatColorFill';
 import BookmarkAddIcon from '@mui/icons-material/BookmarkAdd';
 import CancelIcon from '@mui/icons-material/Cancel';
+import WrapTextIcon from '@mui/icons-material/WrapText';
 import { ITextPreset } from '@/types';
 import DeletePresetDialog from './deletePresetDialog';
 import { FONTS, TextColor, TextFont, TextOverlay } from './textOverlays';
@@ -216,6 +217,19 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
                             <FormatBoldIcon />
                         </ToggleButton>
                     </Row>
+                    {selected.width !== null && (
+                        <Box sx={rowSx}>
+                            <Button
+                                startIcon={<WrapTextIcon />}
+                                size="small"
+                                fullWidth
+                                sx={{ bgcolor: 'background.paper', color: 'text.primary' }}
+                                onClick={() => onChange({ ...selected, width: null })}
+                            >
+                                Automatisch umbrechen
+                            </Button>
+                        </Box>
+                    )}
                     <Box sx={twoColumnsSx}>
                         <Button
                             startIcon={<BookmarkAddIcon />}

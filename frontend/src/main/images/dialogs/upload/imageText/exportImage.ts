@@ -4,8 +4,8 @@ export const exportStageToBlob = async (stage: Konva.Stage | null, outputWidth: 
     if (!stage || stage.width() < 1) {
         throw new Error('Der Text-Editor ist noch nicht bereit. Bitte erneut versuchen.');
     }
-    const transformers = stage.find('Transformer');
-    transformers.forEach((transformer) => transformer.hide());
+    const editorOnly = stage.find('Transformer, .editor-only');
+    editorOnly.forEach((node) => node.hide());
     try {
         return await stage.toBlob({
             mimeType: 'image/jpeg',
@@ -13,6 +13,6 @@ export const exportStageToBlob = async (stage: Konva.Stage | null, outputWidth: 
             pixelRatio: outputWidth / stage.width(),
         });
     } finally {
-        transformers.forEach((transformer) => transformer.show());
+        editorOnly.forEach((node) => node.show());
     }
 };

@@ -3,6 +3,7 @@ import EasyCropper, { Area, Point } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
 import { FRAME_ASPECT_RATIO } from '../../frameAspectBox';
+import { passepartoutBackground, passepartoutShade } from '../../passepartout';
 
 const ZOOM_FACTOR = 0.05;
 const MOVE_STEP = 5;
@@ -49,6 +50,7 @@ const Cropper: React.FC<CropperProps> = ({
         return `
           .reactEasyCrop_CropArea {
             border: 2px solid ${borderColor} !important;
+            background: ${passepartoutBackground(passepartoutShade(theme.palette.mode))};
           }
           .reactEasyCrop_CropAreaGrid::before {
             border-left: 1px solid ${gridColor} !important;
