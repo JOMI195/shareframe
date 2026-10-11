@@ -79,7 +79,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        return self.queryset.filter(user=self.request.user, is_active=True)
 
     @extend_schema(
         responses={200: FrameRetrieveSerializer(many=True)},
@@ -94,7 +94,7 @@ class FramesViewSet(viewsets.ModelViewSet):
     )
     def retrieve(self, request, *args, **kwargs):
         try:
-            element = Frame.objects.get(pk=self.kwargs["pk"], user=request.user)
+            element = self.get_queryset().get(pk=self.kwargs["pk"])
         except Frame.DoesNotExist:
             return Response(
                 {"detail": "Frame not found or you don't have permissions to view it."},
@@ -138,7 +138,9 @@ class FramesViewSet(viewsets.ModelViewSet):
         error_mess = "Frame not found because of invalid serial number or already registered to a user."
 
         try:
-            frame = Frame.objects.get(public_serial_number=public_serial_number)
+            frame = Frame.objects.get(
+                public_serial_number=public_serial_number, is_active=True
+            )
         except Frame.DoesNotExist:
             return Response(
                 {"error": error_mess},
@@ -175,7 +177,9 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         try:
             frame = Frame.objects.get(
-                public_serial_number=public_serial_number, user=request.user
+                public_serial_number=public_serial_number,
+                user=request.user,
+                is_active=True,
             )
         except Frame.DoesNotExist:
             return Response(

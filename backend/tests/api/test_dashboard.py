@@ -87,6 +87,13 @@ def test_lists_the_users_frames(alice, alice_user):
     )
 
 
+def test_an_inactive_frame_is_not_listed(alice, alice_user):
+    inactive = Frame.objects.filter(user=alice_user).first()
+    Frame.objects.filter(pk=inactive.pk).update(is_active=False)
+
+    assert inactive.id not in {frame["id"] for frame in alice.get(URL).data["frames"]}
+
+
 def test_a_frame_that_never_connected_reports_no_last_seen(alice, alice_user):
     Frame.objects.filter(user=alice_user).update(last_seen=None)
 
