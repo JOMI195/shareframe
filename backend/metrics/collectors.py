@@ -10,9 +10,7 @@ logger = logging.getLogger("default")
 
 def _variant_bytes(variant_model, storage):
     total = 0
-    names = variant_model.objects.filter(
-        parent_image__markedAsDeleted=False
-    ).values_list("file", flat=True)
+    names = variant_model.objects.values_list("file", flat=True)
     for name in names:
         try:
             total += storage.size(name)
@@ -59,8 +57,11 @@ class ShareframeBusinessCollector:
         )
         yield _gauge(
             "shareframe_images_storage_bytes",
-            "Bytes held by stored images: originals plus every generated variant",
-            (stored.get("size") or 0) + _variant_bytes(ImageVariant, default_storage),
+            "Bytes on disk for all images, including ones marked for deletion: "
+            "originals plus every generated variant",
+            (stored.get("size") or 0)
+            + (marked.get("size") or 0)
+            + _variant_bytes(ImageVariant, default_storage),
         )
         yield _gauge(
             "shareframe_images_marked_deleted_total",
@@ -74,11 +75,16 @@ class ShareframeBusinessCollector:
             User.objects.filter(is_deleted=False).count(),
         )
 
-        sent = SentImage.objects.aggregate(
+        sent = SentImage.objects.sent().aggregate(
             total=Count("id"), expired=Count("id", filter=Q(expires_at__lt=now))
         )
         yield _gauge(
-            "shareframe_sent_images_total", "Sent image records", sent["total"]
+            "shareframe_sent_images_total", "Delivered sent images", sent["total"]
+        )
+        yield _gauge(
+            "shareframe_sent_images_scheduled",
+            "Sent images waiting for their scheduled time",
+            SentImage.objects.scheduled().count(),
         )
         yield _gauge(
             "shareframe_sent_images_expired",
