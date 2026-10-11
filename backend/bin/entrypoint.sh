@@ -6,6 +6,9 @@ python manage.py migrate
 echo "Creating missing notification preferences..."
 python manage.py create_notification_preferences
 
+echo "Creating missing user stats..."
+python manage.py init_user_stats
+
 
 # echo "Translating content..."
 # django-admin makemessages
@@ -31,6 +34,7 @@ if [ -n "$PRODUCTION" ]; then
     python manage.py seed_dev_data
     python manage.py seed_changelogs
     python manage.py seed_notifications
+    python manage.py seed_user_stats
   fi
 else
   echo "PRODUCTION is not set, skipping adding fixtures."
