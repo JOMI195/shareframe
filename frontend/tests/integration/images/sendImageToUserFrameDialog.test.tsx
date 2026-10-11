@@ -62,11 +62,9 @@ describe('SendImageToUserFrameDialog', () => {
     await user.click(receiverSelect());
 
     const options = within(await screen.findByRole('listbox')).getAllByRole('option');
-    expect(options.map((option) => option.textContent)).toEqual([
-      'bob',
-      'carol',
-      'deine eigenen Bilderrahmen',
-    ]);
+    const names = ['bob', 'carol', 'deine eigenen Bilderrahmen'];
+    expect(options).toHaveLength(names.length);
+    names.forEach((name, i) => expect(options[i]).toHaveAccessibleName(name));
   });
 
   it('leaves out people whose request is still pending', async () => {

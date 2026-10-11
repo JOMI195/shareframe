@@ -159,6 +159,28 @@ export const updateMyUserData = (user: IPatchUserForm
     data: user,
   });
 
+export const uploadMyAvatar = (avatar: File) =>
+  apiRequest({
+    url: authEndpoints.getMyAvatarUrl(),
+    onStart: userSlice.userUpdatePending.type,
+    onSuccess: userSlice.userUpdateFulfilled.type,
+    onError: userSlice.userUpdateRejected.type,
+    method: "put",
+    data: { avatar: avatar },
+    headers: {
+      'content-type': 'multipart/form-data'
+    },
+  });
+
+export const deleteMyAvatar = () =>
+  apiRequest({
+    url: authEndpoints.getMyAvatarUrl(),
+    onStart: userSlice.userUpdatePending.type,
+    onSuccess: userSlice.userUpdateFulfilled.type,
+    onError: userSlice.userUpdateRejected.type,
+    method: "delete",
+  });
+
 export const updateMyNotificationPreferences = (preferences: INotificationKindPatch[]) =>
   apiRequest({
     url: authEndpoints.getMyUserDataUrl(),

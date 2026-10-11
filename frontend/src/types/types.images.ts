@@ -79,6 +79,8 @@ export interface ISentImage {
     id: number;
     sender: string;
     reciever: string;
+    sender_avatar?: string | null;
+    reciever_avatar?: string | null;
     image: IImage;
     status: SentImageStatus;
     scheduled_for: string | null;

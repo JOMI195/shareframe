@@ -2,6 +2,8 @@ export interface IFriendship {
     id: number;
     sender: string;
     reciever: string;
+    sender_avatar?: string | null;
+    reciever_avatar?: string | null;
     status: "pending" | "rejected" | "accepted";
     created_at: string;
     updated_at: string;

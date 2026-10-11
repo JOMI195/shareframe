@@ -161,7 +161,7 @@ test.describe('photo lifecycle', () => {
 
     await test.step('send it to a friend', async () => {
       await enterSelectionMode(page);
-      await page.locator('img[src^="blob:"]').first().click();
+      await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
 
       // Neither select in this dialog exposes an accessible name; receivers come first.
@@ -192,7 +192,7 @@ test.describe('photo lifecycle', () => {
     await test.step('schedule it and send it right away', async () => {
       await page.goto('/fotos/');
       await enterSelectionMode(page);
-      await page.locator('img[src^="blob:"]').first().click();
+      await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
 
       await page.getByRole('dialog').getByRole('combobox').first().click();
@@ -220,7 +220,7 @@ test.describe('photo lifecycle', () => {
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
 
       await enterSelectionMode(page);
-      await page.locator('img[src^="blob:"]').first().click();
+      await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');
       await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
 

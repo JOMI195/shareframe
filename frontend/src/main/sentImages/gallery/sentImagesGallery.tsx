@@ -21,7 +21,6 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import SendIcon from '@mui/icons-material/Send';
-import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
@@ -32,6 +31,7 @@ import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entiti
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import { getSentImageState } from "../sentImageStatus";
 import SentImageStatusLabel from "../sentImageStatusLabel";
+import UserAvatar from "@/common/components/userAvatar";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -103,6 +103,12 @@ const SentImagesGallery = () => {
                         alignItems: "center"
                     }}>
                     <SendIcon sx={{ fontSize: '1rem' }} />
+                    <UserAvatar
+                        username={sentImage.sender}
+                        url={sentImage.sender_avatar}
+                        size={28}
+                        sx={{ ml: 1, flexShrink: 0 }}
+                    />
                     <Typography
                         noWrap
                         component="span"
@@ -120,7 +126,14 @@ const SentImagesGallery = () => {
                         display: "flex",
                         alignItems: "center"
                     }}>
-                    <PanoramaIcon sx={{ fontSize: '1rem' }} />
+                    {/* Takes the icon's width so the receiver stays aligned with the sender row. */}
+                    <Box sx={{ width: '1rem', flexShrink: 0 }} />
+                    <UserAvatar
+                        username={sentImage.reciever}
+                        url={sentImage.reciever_avatar}
+                        size={28}
+                        sx={{ ml: 1, flexShrink: 0 }}
+                    />
                     <Typography
                         noWrap
                         component="span"

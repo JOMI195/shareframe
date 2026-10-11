@@ -7,6 +7,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.translation import gettext_lazy as _
 from inline_actions.admin import InlineActionsModelAdminMixin
 
+from user_accounts.avatars import clear_avatar
 from user_accounts.models import Account
 from utils.admin import RowAction, confirm_page
 
@@ -18,7 +19,7 @@ from .models import User
 class AccountInline(admin.TabularInline):
     model = Account
     list_display = ["friendship_user_searchable", "friendship_user_search_code"]
-    readonly_fields = ("friendship_user_search_code",)
+    readonly_fields = ("friendship_user_search_code", "avatar")
     extra = 0
     max_num = 1
 
@@ -133,6 +134,7 @@ class UserAdmin(InlineActionsModelAdminMixin, BaseUserAdmin):
         if hasattr(obj, "account"):
             obj.account.friendship_user_searchable = False
             obj.account.save()
+            clear_avatar(obj.account)
 
         obj.save()
 

@@ -37,6 +37,7 @@ export interface IUserAccount {
     friendship_user_searchable: boolean;
     friendship_user_search_code: string;
     notification_preferences: INotificationKindSettings[];
+    avatar?: string | null;
 }
 
 export interface IUser extends ICoreUser {

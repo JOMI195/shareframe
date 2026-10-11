@@ -8,7 +8,6 @@ import {
     Pagination,
     Stack,
     Skeleton,
-    Avatar,
     Grid,
     CardActions,
     Tooltip,
@@ -23,6 +22,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
 import DataNotFound from "@/common/components/dataNotFound";
+import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const ITEMS_PER_PAGE = 6;
@@ -116,10 +116,11 @@ const FriendshipRequestsGallery: React.FC = () => {
     const renderFriendRequestCard = (friendship: IFriendship) => {
         const isMyRequest = friendship.sender === user.me.username;
 
-        const friend =
-            friendship.sender !== user.me.username
-                ? friendship.sender
-                : friendship.reciever;
+        const fromThem = friendship.sender !== user.me.username;
+
+        const friend = fromThem ? friendship.sender : friendship.reciever;
+
+        const friendAvatar = fromThem ? friendship.sender_avatar : friendship.reciever_avatar;
 
         return (
             <Card>
@@ -132,9 +133,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                         p: 2,
                     }}
                 >
-                    <Avatar sx={{ width: 56, height: 56 }} alt={friend}>
-                        {friend.charAt(0).toUpperCase()}
-                    </Avatar>
+                    <UserAvatar username={friend} url={friendAvatar} size={80} />
                     <Typography variant="h6" sx={{ mt: 1 }}>
                         {friend}
                     </Typography>

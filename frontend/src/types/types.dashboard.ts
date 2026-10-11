@@ -2,6 +2,7 @@ export interface ILatestExpiringImage {
     id: number;
     expires_at: string;
     sender: string;
+    sender_avatar?: string | null;
     image_name: string;
 }
 

@@ -20,8 +20,10 @@ from config.throttles import (
 from frame_updates.models import Release
 from frames.auth import FrameTokenAuthentication
 from frames.models import Frame
+from friendships.models import Friendship
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
+from user_accounts.models import Account
 
 
 class MediaAccessView(APIView):
@@ -104,6 +106,37 @@ class MediaAccessView(APIView):
                     return True
 
         return False
+
+
+class AvatarAccessView(APIView):
+    permission_classes = [IsAuthenticated]
+    throttle_classes = [MediaBurstRateThrottle, MediaSustainedRateThrottle]
+
+    def get(self, request, path: str):
+        user = request.user
+        account = (
+            Account.objects.filter(avatar=f"avatars/{path}")
+            .select_related("user")
+            .first()
+        )
+
+        if account is None or not self._may_see(user, account.user):
+            raise PermissionDenied("Media not found or not authorized to access.")
+
+        response = Response(status=200)
+        response["X-Accel-Redirect"] = "/api/media/protected/avatars/" + path
+        return response
+
+    def _may_see(self, user, owner):
+        if user.is_staff or user == owner:
+            return True
+        between = (Q(sender=user) & Q(reciever=owner)) | (
+            Q(sender=owner) & Q(reciever=user)
+        )
+        return (
+            Friendship.objects.filter(between).exists()
+            or SentImage.objects.filter(between).exists()
+        )
 
 
 class FrameUpdatesAccessView(APIView):

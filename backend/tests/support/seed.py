@@ -85,3 +85,11 @@ def user_stats():
 
 def assets_dir():
     return settings.SEED_DATA_DIR / "assets"
+
+
+def avatar_files():
+    return {
+        entry["username"]: entry["avatar_file"]
+        for entry in _load("users")
+        if "avatar_file" in entry
+    }

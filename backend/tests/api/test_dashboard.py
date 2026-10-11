@@ -58,6 +58,7 @@ def test_reports_the_latest_expiring_image(alice, alice_user):
 
     assert payload["id"] == latest.pk
     assert payload["sender"] == latest.sender.username
+    assert payload["sender_avatar"] is None
 
 
 def test_the_latest_expiring_image_may_be_absent(bob):

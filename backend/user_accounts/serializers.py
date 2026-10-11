@@ -1,8 +1,12 @@
+import os
+
+from django.conf import settings
 from rest_framework import serializers
 
 from notifications.choices import NotificationChannel, NotificationKind
 from notifications.models import ChannelSetting
 
+from .avatars import avatar_url
 from .models import Account, NotificationKindPreference, NotificationPreference
 
 
@@ -71,7 +75,14 @@ class NotificationPreferencesField(serializers.Field):
         return {"notification_preferences": serializer.validated_data}
 
 
-class AccountRetrieveSerializer(serializers.ModelSerializer):
+class AccountAvatarMixin(serializers.Serializer):
+    avatar = serializers.SerializerMethodField()
+
+    def get_avatar(self, account):
+        return avatar_url(account.user)
+
+
+class AccountRetrieveSerializer(AccountAvatarMixin, serializers.ModelSerializer):
     notification_preferences = NotificationPreferencesField(read_only=True)
 
     class Meta:
@@ -80,10 +91,11 @@ class AccountRetrieveSerializer(serializers.ModelSerializer):
             "friendship_user_searchable",
             "friendship_user_search_code",
             "notification_preferences",
+            "avatar",
         ]
 
 
-class AccountUpdateSerializer(serializers.ModelSerializer):
+class AccountUpdateSerializer(AccountAvatarMixin, serializers.ModelSerializer):
     notification_preferences = NotificationPreferencesField(required=False)
 
     class Meta:
@@ -92,6 +104,7 @@ class AccountUpdateSerializer(serializers.ModelSerializer):
             "friendship_user_searchable",
             "friendship_user_search_code",
             "notification_preferences",
+            "avatar",
         ]
         read_only_fields = ("friendship_user_search_code",)
 
@@ -111,3 +124,15 @@ class AccountUpdateSerializer(serializers.ModelSerializer):
                     defaults={"enabled": channel["enabled"]},
                 )
         return super().update(instance, validated_data)
+
+
+class AvatarUploadSerializer(serializers.Serializer):
+    avatar = serializers.FileField()
+
+    def validate_avatar(self, file):
+        extension = os.path.splitext(file.name)[1][1:].lower()
+        if extension not in settings.IMAGES_ALLOWED_FORMATS:
+            raise serializers.ValidationError("The file format is invalid")
+        if file.size > settings.AVATAR_MAX_FILE_SIZE:
+            raise serializers.ValidationError("The file size is too large")
+        return file

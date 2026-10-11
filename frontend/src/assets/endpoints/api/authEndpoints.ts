@@ -14,6 +14,8 @@ export const getUserItemUrl = (userId: number) => `auth/users/${userId}/`
 
 export const getMyUserDataUrl = () => `auth/users/me/`
 
+export const getMyAvatarUrl = () => `accounts/me/avatar/`
+
 export const getUserActivationUrl = () => `auth/users/activation/`
 
 export const getUserActivationResendUrl = () => `auth/users/resend_activation/`

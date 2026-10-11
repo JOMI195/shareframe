@@ -5,6 +5,7 @@ import { Button, Grid } from "@mui/material";
 import { Link } from "react-router";
 import { getAuthenticationUrl, getSignOutUrl } from "@/assets/endpoints/app/authEndpoints";
 import Profile from "./profile/profile";
+import ProfileAvatar from "./avatar/avatar";
 import Security from "./password/password";
 import Email from "./email/email";
 import Settings from "@/common/components/settings/settings";
@@ -30,6 +31,9 @@ const UserSettings = () => {
       icon: <PersonIcon />,
       content: (
         <Grid container spacing={2}>
+          <Grid size={12}>
+            <ProfileAvatar />
+          </Grid>
           <Grid size={12}>
             <Email />
           </Grid>

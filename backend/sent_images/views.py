@@ -25,7 +25,9 @@ class SentImagesPagination(PageNumberPagination):
 
 
 class SentImagesViewSet(viewsets.ModelViewSet):
-    queryset = SentImage.objects.all().order_by("-sent_at")
+    queryset = SentImage.objects.select_related(
+        "sender__account", "reciever__account"
+    ).order_by("-sent_at")
     http_method_names = ["get", "post", "head", "options"]
     permission_classes = [IsAuthenticated]
     serializer_class = SentImagesRetrieveSerializer

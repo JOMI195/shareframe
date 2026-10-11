@@ -5,6 +5,8 @@ export const makeSentImage = (over: Partial<ISentImage> = {}): ISentImage => ({
   id: 1,
   sender: 'alice',
   reciever: 'bob',
+  sender_avatar: '/media/avatars/alice.jpg',
+  reciever_avatar: null,
   image: makeImage(),
   status: 'sent',
   scheduled_for: null,
