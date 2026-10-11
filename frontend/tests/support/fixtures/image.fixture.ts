@@ -58,6 +58,7 @@ export const makeTextPreset = (over: Partial<ITextPreset> = {}): ITextPreset => 
   background: false,
   font: 'sans',
   bold: false,
+  width: null,
   created_at: '2026-01-01T10:00:00Z',
   ...over,
 });

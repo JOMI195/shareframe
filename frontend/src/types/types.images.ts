@@ -97,6 +97,8 @@ export interface ITextPresetDraft {
     background: boolean;
     font: 'sans' | 'serif' | 'handwritten';
     bold: boolean;
+    // line width relative to the image width, null wraps only at the passepartout
+    width: number | null;
 }
 
 export interface ITextPreset extends ITextPresetDraft {

@@ -340,7 +340,7 @@ describe('UploadDialog text presets', () => {
     expect(within(await presetsGroup()).getByRole('button', { name: /^Text/ })).toBeInTheDocument();
     expect(saved).toEqual({
       text: 'Text', x: 0.5, y: 0.5, rotation: 0, font_size: 0.125,
-      color: 'white', background: false, font: 'sans', bold: true,
+      color: 'white', background: false, font: 'sans', bold: true, width: null,
     });
   });
 
@@ -363,6 +363,25 @@ describe('UploadDialog text presets', () => {
     expect(within(selected).getByRole('textbox', { name: 'Text' })).toHaveValue('Gespeichert');
     expect(within(selected).getByRole('button', { name: 'Weiß' })).toHaveAttribute('aria-pressed', 'true');
     expect(within(selected).getByRole('button', { name: 'Fett' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('wraps a text with its own line width automatically again on request', async () => {
+    servePresets([makeTextPreset({ text: 'Schmal', width: 0.3 })]);
+    const { user } = await goToText();
+    await user.click(within(await presetsGroup()).getByRole('button', { name: /^Schmal/ }));
+    const selected = screen.getByRole('group', { name: 'Ausgewählter Text' });
+
+    await user.click(within(selected).getByRole('button', { name: 'Automatisch umbrechen' }));
+
+    expect(within(selected).queryByRole('button', { name: 'Automatisch umbrechen' })).not.toBeInTheDocument();
+  });
+
+  it('offers automatic wrapping only for a text with its own line width', async () => {
+    const { user } = await goToText();
+
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+
+    expect(screen.queryByRole('button', { name: 'Automatisch umbrechen' })).not.toBeInTheDocument();
   });
 
   it('deletes a preset only after confirming', async () => {
