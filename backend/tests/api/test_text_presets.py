@@ -20,6 +20,7 @@ PAYLOAD = {
     "background": True,
     "font": "serif",
     "bold": True,
+    "width": 0.5,
 }
 
 
@@ -51,6 +52,14 @@ class TestCreate:
         assert {key: response.data[key] for key in PAYLOAD} == PAYLOAD
         assert TextPreset.objects.get(pk=response.data["id"]).user == owner(seed.ALICE)
 
+    def test_wraps_only_at_the_passepartout_without_a_width(self, alice):
+        payload = {key: value for key, value in PAYLOAD.items() if key != "width"}
+
+        response = alice.post(URL, payload, format="json")
+
+        assert response.status_code == 201
+        assert response.data["width"] is None
+
     @pytest.mark.parametrize(
         "field, value",
         [
@@ -62,6 +71,8 @@ class TestCreate:
             ("text", "  "),
             ("color", "red"),
             ("font", "comic"),
+            ("width", 0),
+            ("width", 1.5),
         ],
     )
     def test_rejects_invalid_values(self, alice, field, value):

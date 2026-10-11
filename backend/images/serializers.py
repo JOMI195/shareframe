@@ -173,6 +173,7 @@ class TextPresetSerializer(serializers.ModelSerializer):
             "background",
             "font",
             "bold",
+            "width",
             "created_at",
         )
         read_only_fields = ("id", "created_at")
@@ -181,11 +182,17 @@ class TextPresetSerializer(serializers.ModelSerializer):
             "y": {"min_value": 0, "max_value": 1},
             "rotation": {"min_value": -360, "max_value": 360},
             "font_size": {"max_value": 1},
+            "width": {"max_value": 1},
         }
 
     def validate_font_size(self, value):
         if value <= 0:
             raise ValidationError("Font size must be greater than 0.")
+        return value
+
+    def validate_width(self, value):
+        if value is not None and value <= 0:
+            raise ValidationError("Width must be greater than 0.")
         return value
 
     def validate(self, attrs):

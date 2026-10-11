@@ -349,6 +349,8 @@ class TextPreset(models.Model):
     background = models.BooleanField(default=False)
     font = models.CharField(max_length=20, choices=Font.choices)
     bold = models.BooleanField(default=False)
+    # Line width relative to the image width, null wraps only at the passepartout.
+    width = models.FloatField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
