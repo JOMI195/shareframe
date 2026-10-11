@@ -39,6 +39,7 @@ def seed_corpus():
     call_command("seed_dev_data", verbosity=0)
     call_command("seed_changelogs", verbosity=0)
     call_command("seed_notifications", verbosity=0)
+    call_command("seed_user_stats", verbosity=0)
 
 
 def _start_test_database():

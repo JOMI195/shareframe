@@ -11,6 +11,7 @@ from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
 from user_accounts.models import NotificationPreference
 from user_core.models import User
+from user_stats.models import UserStats
 
 pytestmark = pytest.mark.django_db
 
@@ -26,6 +27,7 @@ def _counts():
         "changelogs": Changelog.objects.count(),
         "changelog_images": ChangelogImage.objects.count(),
         "notifications": Notification.objects.count(),
+        "user_stats": UserStats.objects.count(),
     }
 
 
@@ -40,6 +42,7 @@ def test_corpus_matches_seed_data():
         "changelogs": len(seed.changelogs()),
         "changelog_images": sum(len(c.get("images", [])) for c in seed.changelogs()),
         "notifications": len(seed.notifications()),
+        "user_stats": len(seed.user_stats()),
     }
 
 
@@ -58,6 +61,7 @@ def test_seeding_again_changes_nothing():
     call_command("seed_dev_data", verbosity=0)
     call_command("seed_changelogs", verbosity=0)
     call_command("seed_notifications", verbosity=0)
+    call_command("seed_user_stats", verbosity=0)
 
     assert _counts() == before
 
@@ -115,3 +119,31 @@ def test_seeded_notification_preferences_are_applied():
             )
             is spec["enabled"]
         )
+
+
+def test_seeded_user_stats_are_applied():
+    for username, spec in seed.user_stats().items():
+        stats = UserStats.objects.get(user__username=username)
+        for field in UserStats.COUNTERS:
+            assert getattr(stats, field) == spec[field]
+
+
+def test_reseeding_keeps_live_user_stats():
+    stats = UserStats.objects.get(user__username=seed.ALICE)
+    UserStats.objects.filter(pk=stats.pk).update(images_sent=999)
+
+    call_command("seed_user_stats", verbosity=0)
+
+    stats.refresh_from_db()
+    assert stats.images_sent == 999
+
+
+def test_zeroed_user_stats_get_the_seeded_counts():
+    UserStats.objects.filter(user__username=seed.ALICE).update(
+        images_uploaded=0, images_sent=0, images_received=0
+    )
+
+    call_command("seed_user_stats", verbosity=0)
+
+    stats = UserStats.objects.get(user__username=seed.ALICE)
+    assert stats.images_sent == seed.user_stats()[seed.ALICE]["images_sent"]

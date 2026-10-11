@@ -3,13 +3,14 @@
 Deterministic data for the local stacks and the frontend e2e run. One file per
 entity, all plain JSON arrays.
 
-Loaded by three management commands, which the backend entrypoint runs whenever
+Loaded by four management commands, which the backend entrypoint runs whenever
 `PRODUCTION` is not `True`:
 
 ```bash
 python manage.py seed_dev_data     # users, groups, frames, images, friendships, sent images
 python manage.py seed_changelogs   # changelogs (needs the frame groups to exist)
 python manage.py seed_notifications  # notification opt-outs and history (needs the users to exist)
+python manage.py seed_user_stats     # lifetime usage counters (needs the users to exist)
 ```
 
 All are idempotent — re-running changes nothing — and all refuse to run against
@@ -32,6 +33,7 @@ compose files bind-mount it into the backend container.
 | `changelogs.json` | `title`, `date`, `is_published`, `groups[]`, `content_file_name` (under `assets/changelogs/`), optional `images[]` of `tag`, `description`, `file_name` (under `assets/changelogs/images/`) |
 | `notification-preferences.json` | `username`, `kind`, `channel`, `enabled` |
 | `notifications.json` | `username`, `kind`, `channel`, `sent_days_ago` |
+| `user-stats.json` | `username`, `images_uploaded`, `images_sent`, `images_received` |
 
 `assets/images/` holds small PNGs, `assets/changelogs/` the markdown bodies and
 `assets/changelogs/images/` the pictures they embed.
@@ -46,6 +48,9 @@ compose files bind-mount it into the backend container.
   `seed_changelogs`.
 - **Notification accounts must already exist** — run `seed_dev_data` before
   `seed_notifications`.
+- **User stats only fill rows that are still all zero.** The entrypoint's
+  `init_user_stats` creates zeroed rows first, and a row with live counts is
+  never reset.
 - **Notification channels are never seeded.** Every kind and channel starts
   switched off and is enabled by hand in the admin under Channel settings.
 - **Every changelog image must be placed in its body** as `::tag::`, otherwise
@@ -85,6 +90,10 @@ Every password carries a digit on purpose: the change-password form validates th
   from bob to carol that alice never sees.
 - **5 changelogs** — dates spread, one unpublished, groups split. One carries a
   picture and one carries two, so the in-app dialog and the changelog email show images.
+- **Lifetime counters** for everyone except dave. They are higher than the
+  seeded images and sends because deleted photos and expired sends still
+  count. `seed_mallory` has a row too, so the admin shows an unlinked one
+  once the e2e run deletes her.
 - **Inactivity reminder** — once the admin enables a channel, `seed_dave` is due
   (joined a month ago, never sent), `seed_erin` is skipped (already reminded in
   this stretch) and everyone else sent recently or just joined. `seed_alice` has an old

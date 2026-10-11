@@ -1,0 +1,32 @@
+[
+  {
+    "username": "seed_alice",
+    "images_uploaded": 41,
+    "images_sent": 27,
+    "images_received": 19
+  },
+  {
+    "username": "seed_bob",
+    "images_uploaded": 9,
+    "images_sent": 6,
+    "images_received": 8
+  },
+  {
+    "username": "seed_carol",
+    "images_uploaded": 5,
+    "images_sent": 4,
+    "images_received": 3
+  },
+  {
+    "username": "seed_erin",
+    "images_uploaded": 2,
+    "images_sent": 1,
+    "images_received": 0
+  },
+  {
+    "username": "seed_mallory",
+    "images_uploaded": 1,
+    "images_sent": 0,
+    "images_received": 0
+  }
+]

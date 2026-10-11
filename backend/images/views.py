@@ -12,6 +12,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 from sent_images.models import SentImage
+from user_stats.counters import bump
 
 from .models import Image, TextPreset
 from .serializers import (
@@ -105,6 +106,7 @@ class ImagesViewSet(ModelViewSet):
         serializer = self.get_serializer(data=request_data_updated)
         serializer.is_valid(raise_exception=True)
         element = serializer.save()
+        bump(request.user, "images_uploaded")
         serializer = ImageRetrieveSerializer(element)
 
         logger.info(f"Image ID {element.id} successfully created")

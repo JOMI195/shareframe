@@ -6,6 +6,7 @@ from tests.support import seed
 from tests.support.factories import ImageFactory, SentImageFactory
 from tests.support.helpers.images import upload_file, upload_with_checksum
 from user_core.models import User
+from user_stats.models import UserStats
 
 pytestmark = pytest.mark.django_db
 
@@ -82,6 +83,23 @@ class TestCreate:
         response = upload(alice)
 
         assert Image.objects.get(pk=response.data["id"]).user.username == seed.ALICE
+
+    def test_the_upload_is_counted(self, alice):
+        before = seed.user_stats()[seed.ALICE]["images_uploaded"]
+
+        upload(alice)
+
+        stats = UserStats.objects.get(user__username=seed.ALICE)
+        assert stats.images_uploaded == before + 1
+
+    def test_a_rejected_upload_is_not_counted(self, alice, settings):
+        settings.IMAGES_MAX_IMAGES_NUMBER = len(seed.images_of(seed.ALICE))
+        before = seed.user_stats()[seed.ALICE]["images_uploaded"]
+
+        upload(alice)
+
+        stats = UserStats.objects.get(user__username=seed.ALICE)
+        assert stats.images_uploaded == before
 
     def test_the_auto_delete_flag_is_honoured(self, alice):
         response = upload(alice, auto_delete_after_period="true")
