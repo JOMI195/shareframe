@@ -69,7 +69,7 @@ services:
 
   redis:
     container_name: redis-test
-    image: redis:6.2-alpine
+    image: redis:8.2-alpine
     command: redis-server --save "" --appendonly no --loglevel warning
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
