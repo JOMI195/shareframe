@@ -78,7 +78,7 @@ services:
   redis:
     logging: *default-logging
     container_name: redis-dev
-    image: redis:6.2-alpine
+    image: redis:8.2-alpine
     restart: unless-stopped
     command: redis-server  --appendonly yes  --appendfsync everysec  --save 60 1  --loglevel notice  --maxmemory 512mb  --maxmemory-policy allkeys-lru
     ports:
