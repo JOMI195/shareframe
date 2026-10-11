@@ -41,6 +41,12 @@ def spare_entry():
     return seed.unowned_frame()
 
 
+@pytest.fixture
+def inactive_alice_frame(alice_frame):
+    Frame.objects.filter(pk=alice_frame.pk).update(is_active=False)
+    return alice_frame
+
+
 def test_requires_authentication(client):
     assert client.get(URL).status_code == 401
 
@@ -62,6 +68,14 @@ class TestListAndRetrieve:
         theirs = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
 
         assert alice.get(f"{URL}{theirs.pk}/").status_code == 400
+
+    def test_an_inactive_frame_is_not_listed(self, alice, inactive_alice_frame):
+        ids = {frame["id"] for frame in alice.get(URL).data}
+
+        assert inactive_alice_frame.pk not in ids
+
+    def test_an_inactive_frame_is_not_retrieved(self, alice, inactive_alice_frame):
+        assert alice.get(f"{URL}{inactive_alice_frame.pk}/").status_code == 400
 
 
 @pytest.mark.parametrize(
@@ -117,6 +131,17 @@ class TestRegister:
 
         assert len(serial.split("-")) == 4
 
+    def test_an_inactive_frame_is_not_found(self, alice, spare_entry):
+        serial = serial_for(spare_entry["seed_b64"])
+        Frame.objects.filter(public_serial_number=serial).update(is_active=False)
+
+        response = alice.post(
+            f"{URL}register-user/", {"public_serial_number": serial}, format="json"
+        )
+
+        assert response.status_code == 404
+        assert Frame.objects.get(public_serial_number=serial).user is None
+
 
 class TestUnregister:
     def test_hands_an_own_frame_back(self, alice, alice_frame):
@@ -147,6 +172,17 @@ class TestUnregister:
         assert response.status_code == 404
         theirs.refresh_from_db()
         assert theirs.user is not None
+
+    def test_an_inactive_frame_cannot_be_released(self, alice, inactive_alice_frame):
+        response = alice.post(
+            f"{URL}unregister-user/",
+            {"public_serial_number": inactive_alice_frame.public_serial_number},
+            format="json",
+        )
+
+        assert response.status_code == 404
+        inactive_alice_frame.refresh_from_db()
+        assert inactive_alice_frame.user is not None
 
 
 # async_to_sync reaches the ORM on its own connection, so the data must be committed.
@@ -416,6 +452,13 @@ class TestOTP:
             ).status_code
             == 404
         )
+
+    def test_an_inactive_frame_gives_no_otp(self, alice, inactive_alice_frame):
+        response = alice.post(
+            f"{URL}{inactive_alice_frame.pk}/obtain-frame-otp/", {}, format="json"
+        )
+
+        assert response.status_code == 404
 
     def test_the_frame_verifies_the_code(self, client, alice_frame):
         code = alice_frame.generate_otp()

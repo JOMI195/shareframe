@@ -118,7 +118,7 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                 )
 
             # 4. Frames information
-            user_frames = Frame.objects.filter(user=current_user)
+            user_frames = Frame.objects.filter(user=current_user, is_active=True)
             frames_data = []
             for frame in user_frames:
                 frames_data.append(
