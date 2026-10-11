@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from frames.consumers import FrameWebSocketConsumer
 from friendships.models import Friendship
+from user_stats.counters import record_send
 
 from .models import SentImage, SentImageStatus
 
@@ -52,6 +53,7 @@ def deliver_scheduled_sent_image(
         sent_image.status = SentImageStatus.SENT
         sent_image.sent_at = now
         sent_image.save(update_fields=["status", "sent_at", "expires_at"])
+        record_send(sent_image.sender, sent_image.reciever)
 
         transaction.on_commit(lambda: _push(sent_image))
 

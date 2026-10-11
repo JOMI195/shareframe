@@ -79,5 +79,9 @@ def notifications():
     return _load("notifications")
 
 
+def user_stats():
+    return {entry["username"]: entry for entry in _load("user-stats")}
+
+
 def assets_dir():
     return settings.SEED_DATA_DIR / "assets"

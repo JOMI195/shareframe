@@ -11,6 +11,7 @@ from django.db import models, transaction
 from django.utils import timezone
 
 from user_accounts.models import Account
+from user_stats.models import UserStats
 
 from .choices import RANDOM_USERNAMES
 from .validation import is_username_allowed
@@ -127,5 +128,7 @@ class User(AbstractBaseUser, PermissionsMixin):
         if hasattr(self, "account"):
             self.account.friendship_user_searchable = False
             self.account.save()
+
+        UserStats.objects.filter(user=self).update(user=None)
 
         self.save()

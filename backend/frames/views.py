@@ -24,6 +24,7 @@ from securePayload.securePayload import SecurePayload
 from sent_images.models import SentImage, SentImageStatus
 from sent_images.serializers import SentImagesRetrieveSerializer
 from user_core.models import User
+from user_stats.counters import record_send
 
 from .auth import (
     FrameHTTPAuthentication,
@@ -307,6 +308,7 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 
+        record_send(user, reciever)
         return Response(
             {"message": "Image sent successful."}, status=status.HTTP_200_OK
         )

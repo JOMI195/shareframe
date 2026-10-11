@@ -19,6 +19,7 @@ from tests.support.helpers.frames import (
     signature_headers,
     token_headers,
 )
+from user_stats.models import UserStats
 
 pytestmark = pytest.mark.django_db
 
@@ -216,6 +217,21 @@ class TestSendImage:
 
         assert response.status_code == 200
 
+    def test_the_send_is_counted_for_both_sides(self, world):
+        self.send(
+            world, reciever_username=world.friend.username, image_id=world.image.id
+        )
+
+        assert UserStats.objects.get(user=world.sender).images_sent == 1
+        assert UserStats.objects.get(user=world.friend).images_received == 1
+
+    def test_a_refused_send_is_not_counted(self, world):
+        self.send(
+            world, reciever_username=world.stranger.username, image_id=world.image.id
+        )
+
+        assert not UserStats.objects.filter(user=world.sender).exists()
+
     def test_sends_to_your_own_frames(self, world):
         response = self.send(
             world, reciever_username=world.sender.username, image_id=world.image.id
@@ -306,6 +322,7 @@ class TestSendImage:
         assert response.data["status"] == SentImageStatus.SCHEDULED
         sent = SentImage.objects.get(pk=response.data["id"])
         assert int(sent.scheduled_for.timestamp()) == scheduled_at
+        assert not UserStats.objects.filter(user=world.sender).exists()
 
     def test_a_schedule_in_the_past_is_rejected(self, world):
         response = self.send(

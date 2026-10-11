@@ -103,6 +103,7 @@ INSTALLED_APPS = [
     "dashboard",
     "metrics",
     "notifications",
+    "user_stats",
 ]
 
 # Upload size limits. App endpoints (/api/...) get a smaller total-request cap

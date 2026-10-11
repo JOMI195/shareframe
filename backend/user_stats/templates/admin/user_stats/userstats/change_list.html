@@ -1,0 +1,17 @@
+{% extends "admin/change_list.html" %}
+
+{% block content %}
+  {% if totals %}
+    <div class="module" style="margin-bottom: 20px;">
+      <h2>Totals</h2>
+      <table>
+        <tbody>
+          {% for label, value in totals %}
+            <tr><th scope="row">{{ label|capfirst }}</th><td>{{ value }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% endif %}
+  {{ block.super }}
+{% endblock %}
