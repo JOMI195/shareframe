@@ -24,15 +24,21 @@ if [ ! -f "$ENV_FILE" ]; then
 fi
 
 # Generate the build version
-BUILD_DATE=$(date -u +"%Y-%m-%d")
-if command -v uuidgen > /dev/null; then
-  # Linux/macOS
-  BUILD_UUID=$(uuidgen | tr '[:upper:]' '[:lower:]' | awk -F'-' '{print substr($1,1,8)}')
+if GIT_SHA=$(git rev-parse --short=8 HEAD 2>/dev/null); then
+  BUILD_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%d)
+  git diff --quiet HEAD 2>/dev/null || GIT_SHA="${GIT_SHA}-dirty"
+  BUILD_VERSION="${BUILD_DATE}-${GIT_SHA}"
 else
-  # Windows
-  BUILD_UUID=$(powershell -Command "[guid]::NewGuid().ToString().Substring(0,8)" | tr '[:upper:]' '[:lower:]')
+  BUILD_DATE=$(date -u +"%Y-%m-%d")
+  if command -v uuidgen > /dev/null; then
+    # Linux/macOS
+    BUILD_UUID=$(uuidgen | tr '[:upper:]' '[:lower:]' | awk -F'-' '{print substr($1,1,8)}')
+  else
+    # Windows
+    BUILD_UUID=$(powershell -Command "[guid]::NewGuid().ToString().Substring(0,8)" | tr '[:upper:]' '[:lower:]')
+  fi
+  BUILD_VERSION="${BUILD_DATE}-${BUILD_UUID}"
 fi
-BUILD_VERSION="${BUILD_DATE}-${BUILD_UUID}"
 
 # Export the build versions into the environment
 export APP_BUILD_VERSION="$BUILD_VERSION"
