@@ -10,6 +10,10 @@ export const hasSharedFiles = async () => {
   return (await cache.keys()).length > 0;
 };
 
+export const clearSharedFiles = async () => {
+  if (await sharedCacheExists()) await caches.delete(SHARE_CACHE);
+};
+
 // Stale entries are dropped so a later login on a shared device does not pick them up.
 export const takeSharedFiles = async (): Promise<File[]> => {
   if (!(await sharedCacheExists())) return [];
