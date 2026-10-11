@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { IImagesPaginated, ISentImagesFilters, ISentImagesPaginated, ITextPreset } from "@/types";
+import { IImagesPaginated, ISentImage, ISentImagesFilters, ISentImagesPaginated, ITextPreset } from "@/types";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { signedOut } from "@/store/entities/authentication/authentication.slice";
 
@@ -54,6 +54,15 @@ const initialState: SliceState = {
     loaded: false,
     saving: false,
   },
+};
+
+const replaceSentImage = (sliceState: SliceState, updatedImage: ISentImage) => {
+  const index = sliceState.sentImagesPaginated.results.findIndex(
+    (image) => image.id === updatedImage.id
+  );
+  if (index !== -1) {
+    sliceState.sentImagesPaginated.results[index] = updatedImage;
+  }
 };
 
 const resetApiState = (sliceState: SliceState) => {
@@ -158,17 +167,34 @@ const imagesSlice = createSlice({
     deactivateSentImagePending: (sliceState) => {
       sliceState.api.loading = true;
     },
-    deactivateSentImageFulfilled: (sliceState, action) => {
-      const updatedImage = action.payload;
-      const index = sliceState.sentImagesPaginated.results.findIndex(
-        (image) => image.sent_at === updatedImage.sent_at
-      );
-      if (index !== -1) {
-        sliceState.sentImagesPaginated.results[index] = updatedImage;
-      }
+    deactivateSentImageFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
+      replaceSentImage(sliceState, action.payload);
       resetApiState(sliceState);
     },
     deactivateSentImageFailed: (sliceState) => {
+      resetApiState(sliceState);
+    },
+    cancelScheduledSentImagePending: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    cancelScheduledSentImageFulfilled: (sliceState, action: PayloadAction<number>) => {
+      const sentImages = sliceState.sentImagesPaginated;
+      const remaining = sentImages.results.filter((image) => image.id !== action.payload);
+      sentImages.count -= sentImages.results.length - remaining.length;
+      sentImages.results = remaining;
+      resetApiState(sliceState);
+    },
+    cancelScheduledSentImageFailed: (sliceState) => {
+      resetApiState(sliceState);
+    },
+    sendScheduledSentImageNowPending: (sliceState) => {
+      sliceState.api.loading = true;
+    },
+    sendScheduledSentImageNowFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
+      replaceSentImage(sliceState, action.payload);
+      resetApiState(sliceState);
+    },
+    sendScheduledSentImageNowFailed: (sliceState) => {
       resetApiState(sliceState);
     },
     textPresetsReceived: (sliceState, action: PayloadAction<ITextPreset[]>) => {
@@ -227,6 +253,12 @@ export const {
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
   deactivateSentImagePending,
+  cancelScheduledSentImagePending,
+  cancelScheduledSentImageFulfilled,
+  cancelScheduledSentImageFailed,
+  sendScheduledSentImageNowPending,
+  sendScheduledSentImageNowFulfilled,
+  sendScheduledSentImageNowFailed,
   textPresetsReceived,
   textPresetsRequestFailed,
   createTextPresetPending,

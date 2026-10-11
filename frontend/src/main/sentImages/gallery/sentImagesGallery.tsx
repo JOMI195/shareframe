@@ -20,8 +20,6 @@ import {
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import SendIcon from '@mui/icons-material/Send';
 import PanoramaIcon from '@mui/icons-material/Panorama';
 import { ISentImage, ISentImagesFilters } from "@/types";
@@ -32,6 +30,8 @@ import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friend
 import DataNotFound from "@/common/components/dataNotFound";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { getSentImageState } from "../sentImageStatus";
+import SentImageStatusLabel from "../sentImageStatusLabel";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -66,14 +66,6 @@ const SentImagesGallery = () => {
 
     const handleImageClick = (sentImage: ISentImage) => {
         dispatch(openPreviewSentImageDialog({ sentImage: sentImage }));
-    };
-
-    const getStatusIcon = (isExpired: boolean) => {
-        return isExpired ? (
-            <VisibilityOffIcon sx={{ color: theme.palette.error.main, fontSize: '1rem' }} />
-        ) : (
-            <VisibilityIcon sx={{ color: theme.palette.success.main, fontSize: '1rem' }} />
-        );
     };
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
@@ -212,8 +204,7 @@ const SentImagesGallery = () => {
             {showSkeleton ? renderLoadingSkeleton() : sentImagesPaginated.results.length !== 0 ? (
                 <ImageList cols={cols} gap={8}>
                     {sentImagesPaginated.results.map((sentImage) => {
-                        const expiryDate = new Date(sentImage.expires_at);
-                        const isExpired = expiryDate < new Date();
+                        const state = getSentImageState(sentImage);
 
                         const shouldHide = hideToYouFilter &&
                             (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username);
@@ -242,13 +233,10 @@ const SentImagesGallery = () => {
                                     }
                                     subtitle={
                                         <Box sx={{ display: 'flex', flexDirection: "column", justifyContent: 'center', mt: 2 }}>
-                                            {formatGermanDateTime(new Date(sentImage.sent_at))}
-                                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                                {getStatusIcon(isExpired)}
-                                                <Typography variant="caption">
-                                                    {isExpired ? 'Abgelaufen' : 'Aktiv'}
-                                                </Typography>
-                                            </Box>
+                                            {formatGermanDateTime(new Date(
+                                                state === 'scheduled' && sentImage.scheduled_for ? sentImage.scheduled_for : sentImage.sent_at
+                                            ))}
+                                            <SentImageStatusLabel state={state} variant="caption" />
                                         </Box>
                                     }
                                 />

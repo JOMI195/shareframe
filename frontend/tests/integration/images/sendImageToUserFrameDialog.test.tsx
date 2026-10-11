@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import SendImageToUserFrameDialog from '@/main/images/dialogs/sendImageToUserFrame/sendImageToUserFrameDialog';
 import * as frameEndpoints from '@/assets/endpoints/api/framesEndpoints';
@@ -28,6 +28,10 @@ const render = (images = [photo]) =>
 
 // Neither MUI Select exposes an accessible name here; the receivers come first.
 const receiverSelect = () => screen.getAllByRole('combobox')[0];
+
+// The picker edits sections; its hidden input takes a whole date string like autofill does.
+const sendTimeInput = () =>
+  screen.getByRole('group', { name: 'Sendezeitpunkt' }).parentElement!.querySelector('input')!;
 
 const recordSends = () => {
   const bodies: Record<string, unknown>[] = [];
@@ -107,6 +111,47 @@ describe('SendImageToUserFrameDialog', () => {
     await waitFor(() => expect(bodies).toHaveLength(1));
     // The default is 24 hours.
     expect(bodies[0].expiry_unix_timestamp).toBe(String(Date.UTC(2026, 0, 2, 12) / 1000));
+    expect(bodies[0]).not.toHaveProperty('scheduled_unix_timestamp');
+  });
+
+  it('schedules the send and counts the expiry from the chosen time', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+    const bodies = recordSends();
+    const { user } = render();
+
+    await chooseReceivers(user, 'bob');
+    await user.click(screen.getByRole('switch', { name: 'Zu einem späteren Zeitpunkt senden' }));
+    fireEvent.change(sendTimeInput(), { target: { value: '03.01.2026 09:30' } });
+    await user.click(screen.getByRole('button', { name: /an 1 Empfänger planen/ }));
+
+    await waitFor(() => expect(bodies).toHaveLength(1));
+    expect(bodies[0].scheduled_unix_timestamp).toBe(Date.UTC(2026, 0, 3, 9, 30) / 1000);
+    expect(bodies[0].expiry_unix_timestamp).toBe(String(Date.UTC(2026, 0, 4, 9, 30) / 1000));
+  });
+
+  it('shows the send time in German format with a 24 hour clock', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+    const { user } = render();
+
+    await user.click(screen.getByRole('switch', { name: 'Zu einem späteren Zeitpunkt senden' }));
+
+    expect(sendTimeInput()).toHaveValue('01.01.2026 14:00');
+    expect(screen.getByText(/Höchstens 30 Tage im Voraus/)).toBeInTheDocument();
+  });
+
+  it('cannot schedule a send in the past', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.setSystemTime(new Date('2026-01-01T12:00:00Z'));
+    const { user } = render();
+
+    await chooseReceivers(user, 'bob');
+    await user.click(screen.getByRole('switch', { name: 'Zu einem späteren Zeitpunkt senden' }));
+    fireEvent.change(sendTimeInput(), { target: { value: '31.12.2025 12:00' } });
+
+    expect(screen.getByText('Der Zeitpunkt muss in der Zukunft liegen')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /an 1 Empfänger planen/ })).toBeDisabled();
   });
 
   // The dialog used to close before its own requests resolved.

@@ -6,6 +6,8 @@ export const makeSentImage = (over: Partial<ISentImage> = {}): ISentImage => ({
   sender: 'alice',
   reciever: 'bob',
   image: makeImage(),
+  status: 'sent',
+  scheduled_for: null,
   sent_at: '2026-01-01T10:00:00Z',
   expires_at: '2026-01-08T10:00:00Z',
   ...over,

@@ -29,6 +29,8 @@ import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import ExpirationSelector from './expirationSelector';
 import { DEFAULT_EXPIRATION_HOURS, expirationTimestamp } from './expiration';
+import ScheduleSelector from './scheduleSelector';
+import { defaultScheduleDate, scheduleError, toUnixSeconds } from './schedule';
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -57,6 +59,9 @@ const SendImageToUserFrameDialog = () => {
 
     const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
     const [expirationHours, setExpirationHours] = useState<number>(DEFAULT_EXPIRATION_HOURS);
+    const [isScheduled, setIsScheduled] = useState(false);
+    const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
+    const [scheduledError, setScheduledError] = useState<string | null>(null);
     const [isSendingInProgress, setIsSendingInProgress] = useState(false);
     const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
@@ -72,7 +77,18 @@ const SendImageToUserFrameDialog = () => {
             dispatch(closeSendImageToUserFrameDialog());
             setSelectedReceiverUsernames([]);
             setExpirationHours(DEFAULT_EXPIRATION_HOURS);
+            handleScheduleEnabledChange(false);
         }
+    };
+
+    const handleScheduleEnabledChange = (enabled: boolean) => {
+        setIsScheduled(enabled);
+        handleScheduledAtChange(enabled ? defaultScheduleDate() : null, enabled);
+    };
+
+    const handleScheduledAtChange = (value: Date | null, enabled: boolean = isScheduled) => {
+        setScheduledAt(value);
+        setScheduledError(enabled ? scheduleError(value) : null);
     };
 
     const handleReceiverSelectionChange = (event: SelectChangeEvent<typeof selectedReceiverUsernames>) => {
@@ -86,10 +102,19 @@ const SendImageToUserFrameDialog = () => {
             return;
         }
 
+        if (isScheduled) {
+            const error = scheduleError(scheduledAt);
+            if (error) {
+                setScheduledError(error);
+                return;
+            }
+        }
+        const sendAt = isScheduled ? scheduledAt : null;
+
         setIsSendingInProgress(true);
 
         try {
-            const expiresAt = expirationTimestamp(expirationHours);
+            const expiresAt = expirationTimestamp(expirationHours, sendAt?.getTime());
 
             await Promise.all(
                 imagesToSend.flatMap(imageToSend =>
@@ -98,7 +123,8 @@ const SendImageToUserFrameDialog = () => {
                             receiverUsername,
                             imageToSend.id,
                             // TODO: sent as number
-                            expiresAt.toString()
+                            expiresAt.toString(),
+                            sendAt ? toUnixSeconds(sendAt) : undefined
                         ))
                     )
                 )
@@ -191,6 +217,15 @@ const SendImageToUserFrameDialog = () => {
                     </Select>
                 </FormControl>
 
+                <ScheduleSelector
+                    enabled={isScheduled}
+                    value={scheduledAt}
+                    error={scheduledError}
+                    onEnabledChange={handleScheduleEnabledChange}
+                    onChange={(value) => handleScheduledAtChange(value)}
+                    disabled={isSendingInProgress}
+                />
+
                 <ExpirationSelector
                     expirationHours={expirationHours}
                     onExpirationHoursChange={setExpirationHours}
@@ -230,13 +265,13 @@ const SendImageToUserFrameDialog = () => {
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
-                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress}
+                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null}
                             variant="contained"
                             fullWidth
                         >
                             {isSendingInProgress
                                 ? `Sende ${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger...`
-                                : `${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger senden`
+                                : `${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger ${isScheduled ? "planen" : "senden"}`
                             }
                         </Button>
                     </Grid>
