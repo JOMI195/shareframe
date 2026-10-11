@@ -11,6 +11,7 @@ const FrameAspectBox: React.FC<{ children?: React.ReactNode }> = ({ children }) 
     return (
         <Box
             sx={{
+                position: 'relative',
                 width: '100%',
                 aspectRatio: FRAME_ASPECT_RATIO,
                 display: 'flex',

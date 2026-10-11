@@ -19,6 +19,7 @@ import CropIcon from '@mui/icons-material/Crop';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { Area, Point } from 'react-easy-crop';
 import Cropper from './cropper/cropper';
+import PassepartoutHint from '../passepartoutHint';
 import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
 import { ImageStatus } from '../uploadDialog';
 import ImagePreviewThumb, { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
@@ -163,7 +164,7 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                         xs: 12,
                         md: 7
                     }}>
-                    <Box sx={{ maxHeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Box sx={{ maxHeight: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         {currentImage && imagePreviews[currentImage.id] && !previewErrors[currentImage.id] && (
                             <Cropper
                                 src={imagePreviews[currentImage.id]}
@@ -177,6 +178,7 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
                                 onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
                             />
                         )}
+                        {currentImage && !previewErrors[currentImage.id] && <PassepartoutHint />}
                         {currentImage && previewErrors[currentImage.id] && (
                             <Alert severity="error" sx={{ width: '100%' }}>
                                 {`${currentImage.file.name}: ${previewErrors[currentImage.id]}`}

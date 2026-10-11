@@ -1,8 +1,11 @@
 import React from 'react';
 import { Box, Button, Grid, Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import AutoDeleteOption from '../autoDeleteOption';
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
+import { passepartoutBackground, passepartoutShade } from '../passepartout';
+import PassepartoutHint from '../passepartoutHint';
 
 interface ImagePreviewProps {
     finalImage: BlobImage;
@@ -27,6 +30,8 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     autoDeleteAfterPeriod,
     setAutoDeleteAfterPeriod,
 }) => {
+    const theme = useTheme();
+
     return (
         <Box sx={{ my: 2 }}>
             <Typography variant="h6" sx={{ mb: 1 }}>
@@ -39,7 +44,17 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                     alt={`Vorschau von ${fileName}`}
                     sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
                 />
+                <Box
+                    aria-hidden
+                    sx={{
+                        position: 'absolute',
+                        inset: 0,
+                        pointerEvents: 'none',
+                        background: passepartoutBackground(passepartoutShade(theme.palette.mode)),
+                    }}
+                />
             </FrameAspectBox>
+            <PassepartoutHint />
 
             <AutoDeleteOption checked={autoDeleteAfterPeriod} onChange={setAutoDeleteAfterPeriod} />
 
