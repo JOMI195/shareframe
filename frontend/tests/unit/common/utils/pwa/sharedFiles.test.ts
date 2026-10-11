@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { hasSharedFiles, takeSharedFiles } from '@/common/utils/pwa/sharedFiles';
+import { clearSharedFiles, hasSharedFiles, takeSharedFiles } from '@/common/utils/pwa/sharedFiles';
 import { clearSharedFilesStub, stubSharedFiles } from '@tests/helpers/sharedFiles';
 
 afterEach(() => clearSharedFilesStub());
@@ -38,5 +38,19 @@ describe('takeSharedFiles', () => {
     ]);
 
     expect((await takeSharedFiles()).map((file) => file.name)).toEqual(['new.jpg']);
+  });
+});
+
+describe('clearSharedFiles', () => {
+  it('drops a pending share', async () => {
+    stubSharedFiles([{ name: 'a.jpg' }]);
+
+    await clearSharedFiles();
+
+    expect(await hasSharedFiles()).toBe(false);
+  });
+
+  it('does nothing without Cache Storage', async () => {
+    await expect(clearSharedFiles()).resolves.toBeUndefined();
   });
 });

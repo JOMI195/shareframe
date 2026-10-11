@@ -9,6 +9,7 @@ import {
 } from "@/store/entities/authentication/authentication.actions";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { unsubscribePush } from "@/common/utils/pwa/push";
+import { clearSharedFiles } from "@/common/utils/pwa/sharedFiles";
 import { pushPromptReset } from "@/store/ui/settings/settings.slice";
 
 export default function SignOut() {
@@ -19,6 +20,7 @@ export default function SignOut() {
     // Before the logout, while the DELETE is still authenticated.
     await unsubscribePush().catch(() => undefined);
     dispatch(pushPromptReset());
+    await clearSharedFiles().catch(() => undefined);
     // Awaited, else the route change cancels the request.
     await dispatch(signOutUser());
     navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
