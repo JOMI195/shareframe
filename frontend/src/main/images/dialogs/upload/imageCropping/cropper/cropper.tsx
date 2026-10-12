@@ -150,8 +150,7 @@ const Cropper: React.FC<CropperProps> = ({
                     <Navigation
                         zoom={zoom}
                         onZoom={onZoom}
-                        rotation={rotation}
-                        onRotation={onRotation}
+                        rotation={{ rotation, onRotation, ROTATION_DEGREE, MIN_ROTATION, MAX_ROTATION }}
                         onMove={onMove}
                         onCenter={onCenter}
                         onCropperReset={onCropperReset}
@@ -159,9 +158,6 @@ const Cropper: React.FC<CropperProps> = ({
                         ZOOM_FACTOR={ZOOM_FACTOR}
                         MIN_ZOOM={MIN_ZOOM}
                         MAX_ZOOM={MAX_ZOOM}
-                        ROTATION_DEGREE={ROTATION_DEGREE}
-                        MIN_ROTATION={MIN_ROTATION}
-                        MAX_ROTATION={MAX_ROTATION}
                     />
                 </>
             )}
