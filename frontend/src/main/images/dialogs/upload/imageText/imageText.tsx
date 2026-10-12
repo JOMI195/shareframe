@@ -11,6 +11,7 @@ import PassepartoutHint from '../passepartoutHint';
 import TextEditor from './textEditor';
 import TextToolbar from './textToolbar';
 import { exportStageToBlob } from './exportImage';
+import { MAX_OUTPUT_SIDE } from '../outputSize';
 import { loadFonts } from './fonts';
 import { useLoadedImage } from './useLoadedImage';
 import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, TextOverlay } from './textOverlays';
@@ -82,7 +83,8 @@ const ImageText: React.FC<ImageTextProps> = ({
         }
         setExporting(true);
         try {
-            handleTextDone(await exportStageToBlob(stageRef.current, image.width));
+            // Texts are vectors, so a zoomed-in crop must not cap their resolution at the crop's pixels.
+            handleTextDone(await exportStageToBlob(stageRef.current, Math.max(image.width, MAX_OUTPUT_SIDE)));
         } catch (exportError) {
             dispatch(openImagesAlertSnackbar({
                 message: exportError instanceof Error ? exportError.message : 'Text konnte nicht eingefügt werden',
