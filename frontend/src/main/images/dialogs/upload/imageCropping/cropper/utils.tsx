@@ -1,5 +1,6 @@
+import { MAX_OUTPUT_SIDE } from '../../outputSize';
+
 // Mobile Safari refuses to allocate canvases beyond these bounds and silently yields a blank one.
-const MAX_OUTPUT_SIDE = 1600;
 const MAX_OUTPUT_AREA = 16 * 1024 * 1024;
 
 export function getRadianAngle(degreeValue: number) {
@@ -33,7 +34,7 @@ export const getCroppedImg = (
     flip = { horizontal: false, vertical: false }
 ): Promise<Blob> => {
     return new Promise((resolve, reject) => {
-        if (croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1) {
+        if (!(croppedAreaPixels.width >= 1 && croppedAreaPixels.height >= 1)) {
             reject(new Error('Der Zuschnitt ist noch nicht bereit. Bitte erneut versuchen.'));
             return;
         }

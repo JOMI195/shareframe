@@ -38,4 +38,11 @@ describe('getCroppedImg', () => {
       'Der Zuschnitt ist noch nicht bereit. Bitte erneut versuchen.',
     );
   });
+
+  it('rejects a crop measured before the cropper had a size', async () => {
+    const file = new File(['x'], 'photo.jpg', { type: 'image/jpeg' });
+    await expect(getCroppedImg(file, { width: NaN, height: NaN, x: 0, y: 0 })).rejects.toThrow(
+      'Der Zuschnitt ist noch nicht bereit. Bitte erneut versuchen.',
+    );
+  });
 });
