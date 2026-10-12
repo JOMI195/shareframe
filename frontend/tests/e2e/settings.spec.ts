@@ -37,7 +37,7 @@ test.describe('personal information', () => {
     await expect(page.getByLabel('Nutzername')).toHaveValue('erin_umbenannt');
   });
 
-  test('replaces and removes the profile picture', async ({ page }) => {
+  test('crops, replaces and removes the profile picture', async ({ page }) => {
     await signIn(page, erin);
     await openUserSettings(page, 'Profil');
 
@@ -46,6 +46,46 @@ test.describe('personal information', () => {
     const seeded = await avatar.getAttribute('src');
 
     await page.getByLabel('Profilbild auswählen').setInputFiles(FIXTURE);
+    const dialog = page.getByRole('dialog', { name: 'Profilbild zuschneiden' });
+    const zoom = dialog.getByRole('slider', { name: 'Zoom' });
+    await expect(dialog.locator('img')).toBeVisible();
+
+    await dialog.getByRole('button', { name: 'Vergrößern' }).click();
+    await dialog.getByRole('button', { name: 'Nach rechts verschieben' }).click();
+    await dialog.getByRole('button', { name: 'Reset' }).click();
+    await expect(zoom).toHaveAttribute('aria-valuenow', '1');
+
+    for (let i = 0; i < 5; i++) await dialog.getByRole('button', { name: 'Vergrößern' }).click();
+    await expect(zoom).toHaveAttribute('aria-valuenow', '1.5');
+    await dialog.getByRole('button', { name: 'Nach unten verschieben' }).click();
+    const box = (await dialog.locator('img').boundingBox())!;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + box.width / 2 - 40, box.y + box.height / 2, { steps: 5 });
+    await page.mouse.up();
+
+    let request: import('@playwright/test').Request | undefined;
+    await page.route('**/accounts/me/avatar/', (route) => {
+      if (route.request().method() === 'PUT') request = route.request();
+      return route.continue();
+    });
+    await dialog.getByRole('button', { name: 'Übernehmen' }).click();
+    await expect(dialog).toBeHidden();
+    await expect.poll(() => request).toBeDefined();
+
+    // The fixture is 800x600, so a square smaller than its height proves the crop and zoom were applied.
+    const uploaded = await page.evaluate(
+      async ({ body, contentType }) => {
+        const bytes = Uint8Array.from(atob(body), (c) => c.charCodeAt(0));
+        const form = await new Response(bytes, { headers: { 'content-type': contentType } }).formData();
+        const bitmap = await createImageBitmap(form.get('avatar') as File);
+        return { width: bitmap.width, height: bitmap.height };
+      },
+      { body: request!.postDataBuffer()!.toString('base64'), contentType: (await request!.allHeaders())['content-type'] },
+    );
+    expect(uploaded.width).toBe(uploaded.height);
+    expect(uploaded.width).toBeLessThan(600);
+
     await expect(avatar).not.toHaveAttribute('src', seeded!, { timeout: 30_000 });
     await expect(avatar).toHaveAttribute('src', /^blob:/);
 

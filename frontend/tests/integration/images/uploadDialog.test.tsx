@@ -472,6 +472,15 @@ describe('UploadDialog preview and upload step', () => {
     expect(file.name).toBe('urlaub.jpg');
   });
 
+  it('renders the texts at full output size even when the crop is smaller', async () => {
+    const { user } = await goToText();
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
+
+    await waitFor(() => expect(exportStageToBlob).toHaveBeenCalledOnce());
+    expect(vi.mocked(exportStageToBlob).mock.calls[0][1]).toBe(1600);
+  });
+
   it('goes back to the text step with the texts kept', async () => {
     const { user } = await goToText();
     await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));

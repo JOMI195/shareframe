@@ -2,25 +2,29 @@ import { Box, Button, Stack } from "@mui/material";
 import PhotoCameraIcon from "@mui/icons-material/PhotoCamera";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { ChangeEvent, useRef, useState } from "react";
-import { useAppDispatch, useAppSelector } from "@/store";
+import { useAppSelector } from "@/store";
 import { getApi, getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
-import { uploadMyAvatar } from "@/store/entities/authentication/authentication.actions";
 import { IUser } from "@/types";
 import UserAvatar from "@/common/components/userAvatar";
 import DeleteAvatarDialog from "./deleteAvatarDialog";
+import CropAvatarDialog from "./cropAvatarDialog";
 
 const ProfileAvatar = () => {
-    const dispatch = useAppDispatch();
     const me: IUser = useAppSelector(getMyUserDetails);
     const getAuthApi = useAppSelector(getApi);
     const inputRef = useRef<HTMLInputElement>(null);
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [pickedFile, setPickedFile] = useState<File | null>(null);
+    const [cropKey, setCropKey] = useState(0);
 
     const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         // Cleared so picking the same file again still fires onChange.
         event.target.value = "";
-        if (file) dispatch(uploadMyAvatar(file));
+        if (file) {
+            setCropKey((key) => key + 1);
+            setPickedFile(file);
+        }
     };
 
     return (
@@ -56,6 +60,7 @@ const ProfileAvatar = () => {
                 )}
             </Box>
             <DeleteAvatarDialog open={deleteDialogOpen} onClose={() => setDeleteDialogOpen(false)} />
+            <CropAvatarDialog key={cropKey} file={pickedFile} onClose={() => setPickedFile(null)} />
         </Stack>
     );
 };
