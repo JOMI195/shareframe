@@ -11,6 +11,7 @@ import { server } from '@tests/mocks/server';
 import { uploadImage } from '@/store/entities/images/images.actions';
 import type { ITextPreset } from '@/types';
 import { exportStageToBlob } from '@/main/images/dialogs/upload/imageText/exportImage';
+import { renderEpaper } from '@/main/images/epaper/renderEpaper';
 
 // jsdom has no layout, so react-easy-crop never reports a crop area, and no
 // canvas, so the real getCroppedImg cannot run. Both are unit-tested separately.
@@ -44,6 +45,12 @@ vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
 vi.mock('@/main/images/dialogs/upload/imageText/useLoadedImage', () => import('@tests/mocks/loadedImage'));
 vi.mock('@/main/images/dialogs/upload/imageText/exportImage', () => ({
   exportStageToBlob: vi.fn(async () => new Blob(['with-text'], { type: 'image/jpeg' })),
+}));
+
+// No canvas in jsdom either; the dithering is unit-tested.
+const epaperBlob = new Blob(['epaper'], { type: 'image/png' });
+vi.mock('@/main/images/epaper/renderEpaper', () => ({
+  renderEpaper: vi.fn(async () => epaperBlob),
 }));
 
 // The request payload itself is covered by the action unit tests; what matters
@@ -141,6 +148,11 @@ const goToPreview = async (photos?: File[]) => {
   await view.user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
   await screen.findByRole('button', { name: 'Hochladen' });
   return view;
+};
+
+const objectUrlOf = (blob: Blob) => {
+  const { calls, results } = vi.mocked(URL.createObjectURL).mock;
+  return results[calls.findIndex(([arg]) => arg === blob)]?.value;
 };
 
 const textField = () => screen.getByRole('textbox', { name: 'Text' });
@@ -416,6 +428,26 @@ describe('UploadDialog preview and upload step', () => {
 
     expect(screen.getByRole('img', { name: 'Vorschau von urlaub.jpg' })).toBeInTheDocument();
   });
+
+  it('shows the photo as the e-paper frame renders it and uploads the original anyway', async () => {
+    acceptUploads();
+    const { user } = await goToPreview();
+    const preview = () => screen.getByRole('img', { name: 'Vorschau von urlaub.jpg' });
+    const originalSrc = preview().getAttribute('src');
+
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+
+    await waitFor(() => expect(preview()).toHaveAttribute('src', objectUrlOf(epaperBlob)));
+    expect(await vi.mocked(renderEpaper).mock.calls[0][0].text()).toBe('cropped');
+
+    await user.click(screen.getByRole('button', { name: 'Original' }));
+    expect(preview()).toHaveAttribute('src', originalSrc);
+
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+    await user.click(screen.getByRole('button', { name: 'Hochladen' }));
+    expect(await (await uploadedFile()).text()).toBe('cropped');
+  });
+
 
   it('uploads the photo and closes once everything is done', async () => {
     const uploads: Request[] = [];
