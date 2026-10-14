@@ -1,7 +1,6 @@
-import { Box, Typography, useMediaQuery, useTheme, Chip, Grid } from "@mui/material";
+import { Box, Typography, Chip, Grid } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog, selectImage } from "@/store/ui/images/images.slice";
-import AuthenticatedImage from "@/common/components/authenticatedImage";
 import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -10,7 +9,7 @@ import { downloadImage } from "@/store/entities/images/images.actions";
 import ShareframeMainDialog from "@/common/components/shareframeMainDialog";
 import { DialogAction } from "@/types";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
-import { getVariant } from "@/common/utils/images";
+import PreviewImage from "./previewImage";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
@@ -18,13 +17,10 @@ const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_D
     : 24;
 
 const ImagePreviewDialog = () => {
-    const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const dialog = useAppSelector(getDialogs).preview;
     const selectedImage = dialog.selectedImage;
-
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const getDeletionTime = (createdAt: string) => {
         const createdDate = new Date(createdAt);
@@ -153,14 +149,7 @@ const ImagePreviewDialog = () => {
                     </Grid>
                 )}
 
-                {selectedImage && (
-                    <AuthenticatedImage
-                        url={`${MEDIA_BASE_URL}${isSmallScreen ? getVariant(selectedImage, "medium")?.url : getVariant(selectedImage, "large")?.url}`}
-                        alt={selectedImage?.name}
-                        style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
-                        aspectRatio={selectedImage.height ? selectedImage.width / selectedImage.height : undefined}
-                    />
-                )}
+                {selectedImage && <PreviewImage key={selectedImage.id} image={selectedImage} />}
 
             </Box>
         </ShareframeMainDialog>

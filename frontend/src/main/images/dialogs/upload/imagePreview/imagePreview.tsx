@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Box, Button, Grid, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import AutoDeleteOption from '../autoDeleteOption';
@@ -6,6 +6,8 @@ import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
 import { passepartoutBackground, passepartoutShade } from '../passepartout';
 import PassepartoutHint from '../passepartoutHint';
+import EpaperToggle, { EpaperView } from '@/main/images/epaper/epaperToggle';
+import { useEpaperPreview } from '@/main/images/epaper/useEpaperPreview';
 
 interface ImagePreviewProps {
     finalImage: BlobImage;
@@ -31,16 +33,21 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     setAutoDeleteAfterPeriod,
 }) => {
     const theme = useTheme();
+    const [view, setView] = useState<EpaperView>('original');
+    const epaperUrl = useEpaperPreview(finalImage.blob, view === 'epaper');
 
     return (
         <Box sx={{ my: 2 }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-                {fileName}
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, mb: 1 }}>
+                <Typography variant="h6">
+                    {fileName}
+                </Typography>
+                <EpaperToggle value={view} onChange={setView} />
+            </Box>
             <FrameAspectBox>
                 <Box
                     component="img"
-                    src={finalImage.url}
+                    src={epaperUrl ?? finalImage.url}
                     alt={`Vorschau von ${fileName}`}
                     sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
                 />
