@@ -25,6 +25,7 @@ const CLAMP_TOLERANCE = 0.5;
 // Konva subtracts the padding again before wrapping, rounding noise must not break a line that fits.
 const WRAP_TOLERANCE = 0.5;
 const EDITOR_ONLY = 'editor-only';
+export const PHOTO = 'photo';
 
 const textStyle = (overlay: Pick<TextOverlay, 'text' | 'fontSize' | 'font' | 'bold'>) => ({
     text: overlay.text,
@@ -180,6 +181,8 @@ const Passepartout: React.FC<{ image: HTMLImageElement; safe: Bounds; scale: num
 
 interface TextEditorProps {
     image: HTMLImageElement;
+    // Replaces the photo under the stage; an img, since a scaled canvas turns a dither into noise.
+    backdrop?: { url: string; alt: string } | null;
     overlays: TextOverlay[];
     selectedId: string | null;
     onSelect: (id: string | null) => void;
@@ -190,6 +193,7 @@ interface TextEditorProps {
 
 const TextEditor: React.FC<TextEditorProps> = ({
     image,
+    backdrop,
     overlays,
     selectedId,
     onSelect,
@@ -272,11 +276,19 @@ const TextEditor: React.FC<TextEditorProps> = ({
             style={{
                 width: '100%',
                 aspectRatio: `${image.width} / ${image.height}`,
+                position: 'relative',
                 outline: 'none',
                 backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
                 touchAction: 'none',
             }}
         >
+            {backdrop && (
+                <img
+                    src={backdrop.url}
+                    alt={backdrop.alt}
+                    style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+                />
+            )}
             {displayWidth > 0 && (
                 <Stage
                     ref={stageRef}
@@ -288,7 +300,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                     onTouchStart={deselectOnEmpty}
                 >
                     <Layer>
-                        <KonvaImage image={image} listening={false} />
+                        <KonvaImage image={image} name={PHOTO} visible={!backdrop} listening={false} />
                         <Passepartout image={image} safe={safe} scale={scale} />
                         {overlays.map((overlay) => (
                             <OverlayText

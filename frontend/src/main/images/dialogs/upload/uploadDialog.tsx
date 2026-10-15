@@ -31,11 +31,14 @@ import { Area, Point } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
 import ImageUpload from './imageUpload/imageUpload'
 import ImageCropping from './imageCropping/imageCropping'
+import ImageAdjust from './imageAdjust/imageAdjust'
+import { Adjustment, NEUTRAL_ADJUSTMENT } from './imageAdjust/adjust'
 import { takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
 import ImagePreview from './imagePreview/imagePreview'
 import FrameAspectBox from './frameAspectBox'
 import { useBlobImage } from './useBlobImage'
 import type { TextOverlay } from './imageText/textOverlays'
+import type { EpaperView } from '@/main/images/epaper/epaperToggle'
 
 const ImageText = lazy(() => import('./imageText/imageText'))
 
@@ -64,7 +67,7 @@ export interface ImageStatus {
   croppedFile?: File;
 }
 
-const steps = ['Fotos auswählen', 'Fotos zuschneiden', 'Text hinzufügen', 'Vorschau und hochladen']
+const steps = ['Fotos auswählen', 'Fotos zuschneiden', 'Foto anpassen', 'Text hinzufügen', 'Vorschau und hochladen']
 // Collapsing and expanding steps end together, so nothing shifts after the scroll.
 const STEP_TRANSITION_MS = 300
 
@@ -96,8 +99,11 @@ const UploadDialog: React.FC = () => {
   const [zoom, setZoom] = useState(CROPPER_PROPS_INITIAL_STATE.zoom)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
   const [croppedImage, replaceCroppedImage] = useBlobImage()
+  const [adjustment, setAdjustment] = useState<Adjustment>(NEUTRAL_ADJUSTMENT)
+  const [adjustedImage, replaceAdjustedImage] = useBlobImage()
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
   const [finalImage, replaceFinalImage] = useBlobImage()
+  const [epaperView, setEpaperView] = useState<EpaperView>('original')
 
   const open = useAppSelector(getDialogs).create.open
 
@@ -160,9 +166,12 @@ const UploadDialog: React.FC = () => {
     setZoom(CROPPER_PROPS_INITIAL_STATE.zoom)
     setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
     replaceCroppedImage(null)
+    setAdjustment(NEUTRAL_ADJUSTMENT)
+    replaceAdjustedImage(null)
     setTextOverlays([])
     replaceFinalImage(null)
-  }, [replaceCroppedImage, replaceFinalImage])
+    setEpaperView('original')
+  }, [replaceCroppedImage, replaceAdjustedImage, replaceFinalImage])
 
   const handleNext = () => {
     if (activeStep === 0 && imageStatuses.length === 0) {
@@ -344,14 +353,24 @@ const UploadDialog: React.FC = () => {
     setActiveStep(1)
   }
 
+  const handleAdjustDone = (blob: Blob) => {
+    replaceAdjustedImage(blob)
+    setActiveStep(3)
+  }
+
+  const handleBackToAdjust = () => {
+    replaceAdjustedImage(null)
+    setActiveStep(2)
+  }
+
   const handleTextDone = (blob: Blob) => {
     replaceFinalImage(blob)
-    setActiveStep(3)
+    setActiveStep(4)
   }
 
   const handleBackToText = () => {
     replaceFinalImage(null)
-    setActiveStep(2)
+    setActiveStep(3)
   }
 
   const handleUpload = async (blob: Blob) => {
@@ -447,6 +466,9 @@ const UploadDialog: React.FC = () => {
     }
   }, [activeStep, imageStatuses, currentImageIndex, selectImageForCropping, setCurrentImageIndex]);
 
+  // Collapsed steps stay mounted; only the open one renders the e-paper view.
+  const viewOf = (step: number): EpaperView => (activeStep === step ? epaperView : 'original')
+
   const totalImages = imageStatuses.length;
   const uploadedImagesCount = imageStatuses.filter(status => status.status === 'uploaded').length;
   const allImagesUploaded = totalImages > 0 && uploadedImagesCount === totalImages;
@@ -538,24 +560,42 @@ const UploadDialog: React.FC = () => {
                       />
                     )}
                     {index === 2 && croppedImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
+                      <ImageAdjust
+                        showCloseButton={matches}
+                        croppedImage={croppedImage}
+                        fileName={imageStatuses[currentImageIndex].file.name}
+                        adjustment={adjustment}
+                        view={viewOf(2)}
+                        onViewChange={setEpaperView}
+                        setAdjustment={setAdjustment}
+                        handleAdjustDone={handleAdjustDone}
+                        handleBackToCrop={handleBackToCrop}
+                        handleDialogClose={handleDialogClose}
+                      />
+                    )}
+                    {index === 3 && adjustedImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
                       <Suspense fallback={<Box sx={{ my: 2 }}><FrameAspectBox /></Box>}>
                         <ImageText
                           showCloseButton={matches}
-                          key={croppedImage.url}
-                          croppedImage={croppedImage}
+                          key={adjustedImage.url}
+                          photo={adjustedImage}
+                          view={viewOf(3)}
+                          onViewChange={setEpaperView}
                           fileName={imageStatuses[currentImageIndex].file.name}
                           overlays={textOverlays}
                           setOverlays={setTextOverlays}
                           handleTextDone={handleTextDone}
-                          handleBackToCrop={handleBackToCrop}
+                          handleBackToAdjust={handleBackToAdjust}
                           handleDialogClose={handleDialogClose}
                         />
                       </Suspense>
                     )}
-                    {index === 3 && finalImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
+                    {index === 4 && finalImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
                       <ImagePreview
                         showCloseButton={matches}
                         finalImage={finalImage}
+                        view={viewOf(4)}
+                        onViewChange={setEpaperView}
                         fileName={imageStatuses[currentImageIndex].file.name}
                         handleUpload={handleUpload}
                         handleBackToText={handleBackToText}

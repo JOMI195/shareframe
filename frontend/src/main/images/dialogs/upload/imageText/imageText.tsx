@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type Konva from 'konva';
-import { Alert, Box, Button, Grid, Typography } from '@mui/material';
+import { Alert, Box, Button, Grid } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
 import { getTextPresets } from '@/store/entities/images/images.slice';
@@ -8,6 +8,9 @@ import { createTextPreset, deleteTextPreset, fetchTextPresets } from '@/store/en
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
 import PassepartoutHint from '../passepartoutHint';
+import StepHeader from '../stepHeader';
+import { EpaperView } from '@/main/images/epaper/epaperToggle';
+import { useEpaperPreview } from '@/main/images/epaper/useEpaperPreview';
 import TextEditor from './textEditor';
 import TextToolbar from './textToolbar';
 import { exportStageToBlob } from './exportImage';
@@ -17,29 +20,34 @@ import { useLoadedImage } from './useLoadedImage';
 import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, TextOverlay } from './textOverlays';
 
 interface ImageTextProps {
-    croppedImage: BlobImage;
+    view: EpaperView;
+    onViewChange: (view: EpaperView) => void;
+    photo: BlobImage;
     fileName: string;
     overlays: TextOverlay[];
     setOverlays: React.Dispatch<React.SetStateAction<TextOverlay[]>>;
     handleTextDone: (blob: Blob) => void;
-    handleBackToCrop: () => void;
+    handleBackToAdjust: () => void;
     handleDialogClose: () => void;
     showCloseButton: boolean;
 }
 
 const ImageText: React.FC<ImageTextProps> = ({
-    croppedImage,
+    view,
+    onViewChange,
+    photo,
     fileName,
     overlays,
     setOverlays,
     handleTextDone,
-    handleBackToCrop,
+    handleBackToAdjust,
     handleDialogClose,
     showCloseButton,
 }) => {
     const dispatch = useAppDispatch();
     const stageRef = useRef<Konva.Stage>(null);
-    const { image, error } = useLoadedImage(croppedImage.url);
+    const { image, error } = useLoadedImage(photo.url);
+    const epaperUrl = useEpaperPreview(photo.blob, view === 'epaper');
     const [fontsReady, setFontsReady] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [exporting, setExporting] = useState(false);
@@ -78,7 +86,7 @@ const ImageText: React.FC<ImageTextProps> = ({
     const onNext = async () => {
         if (!image) return;
         if (overlays.length === 0) {
-            handleTextDone(croppedImage.blob);
+            handleTextDone(photo.blob);
             return;
         }
         setExporting(true);
@@ -97,9 +105,7 @@ const ImageText: React.FC<ImageTextProps> = ({
 
     return (
         <Box sx={{ my: 2 }}>
-            <Typography variant="h6" sx={{ mb: 1 }}>
-                {fileName}
-            </Typography>
+            <StepHeader fileName={fileName} view={view} onViewChange={onViewChange} />
             {error && (
                 <Alert severity="error">Das zugeschnittene Foto konnte nicht geladen werden.</Alert>
             )}
@@ -107,6 +113,7 @@ const ImageText: React.FC<ImageTextProps> = ({
             {ready && (
                 <TextEditor
                     image={image}
+                    backdrop={view === 'epaper' && epaperUrl ? { url: epaperUrl, alt: `E-Paper-Vorschau von ${fileName}` } : null}
                     overlays={overlays}
                     selectedId={selectedId}
                     onSelect={setSelectedId}
@@ -144,8 +151,8 @@ const ImageText: React.FC<ImageTextProps> = ({
                     </Button>
                 </Grid>
                 <Grid size={{ xs: 12, md: 3 }} sx={{ order: { xs: 2, md: 2 } }}>
-                    <Button fullWidth variant="outlined" onClick={handleBackToCrop}>
-                        Zurück zum Zuschneiden
+                    <Button fullWidth variant="outlined" onClick={handleBackToAdjust}>
+                        Zurück zum Anpassen
                     </Button>
                 </Grid>
                 {showCloseButton && (

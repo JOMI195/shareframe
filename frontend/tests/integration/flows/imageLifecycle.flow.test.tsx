@@ -88,6 +88,7 @@ describe('photo library', () => {
     await user.click(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' }));
     await screen.findByTestId('cropper');
     await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
     // The text step is lazy and pulls in konva, which on a busy run outlasts the default wait.
     await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }, { timeout: 5_000 }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));

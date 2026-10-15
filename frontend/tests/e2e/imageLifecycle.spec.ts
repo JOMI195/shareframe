@@ -58,6 +58,15 @@ const runSpeedDialAction = async (page: import('@playwright/test').Page, label: 
   await page.locator('.MuiSpeedDialAction-staticTooltip', { hasText: label }).locator('button').click();
 };
 
+// Real canvas only here: the panel image is 800 px wide and pure black and white.
+const isEpaperImage = (image: import('@playwright/test').Locator) =>
+  image.evaluate((img: HTMLImageElement) => {
+    if (img.naturalWidth !== 800) return false;
+    const context = Object.assign(document.createElement('canvas'), { width: 800, height: 480 }).getContext('2d')!;
+    context.drawImage(img, 0, 0);
+    return context.getImageData(0, 0, 800, 480).data.every((value) => value === 0 || value === 255);
+  });
+
 /**
  * The one flow that has to touch the real backend: multipart upload with a
  * server side SHA-256 check, variant generation, the friendship rule on
@@ -79,6 +88,20 @@ test.describe('photo lifecycle', () => {
 
       await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
       await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
+    });
+
+    await test.step('raise the contrast and check it on e-paper', async () => {
+      const contrast = page.getByRole('slider', { name: 'Kontrast' });
+      const preview = page.getByRole('img', { name: 'Vorschau von upload-fixture.jpg' });
+
+      await contrast.focus();
+      await page.keyboard.press('PageUp');
+      await expect(contrast).toHaveValue('10');
+
+      await page.getByRole('button', { name: 'E-Paper' }).click();
+      await expect.poll(() => isEpaperImage(preview)).toBe(true);
+      // The choice carries over, so the texts below are edited in the e-paper view.
+      await page.getByRole('button', { name: 'Weiter zum Text' }).click();
     });
 
     // jsdom has no canvas, so this is the only place the konva editor and its export really run.
@@ -145,10 +168,23 @@ test.describe('photo lifecycle', () => {
 
     await test.step('preview', async () => {
       await page.setViewportSize({ width: 1280, height: 720 });
+      await expect.poll(() => isEpaperImage(page.getByRole('img', { name: 'E-Paper-Vorschau von upload-fixture.jpg' }))).toBe(true);
+
+      // Exported from the e-paper view, where the stage hides its photo; the export still has it.
       await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
       const preview = page.getByRole('img', { name: 'Vorschau von upload-fixture.jpg' });
-      await expect(preview).toBeVisible();
-      await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0);
+      await expect.poll(() => isEpaperImage(preview)).toBe(true);
+      await expect(page.getByRole('button', { name: 'Weiter zur Vorschau' })).toBeHidden();
+      await page.getByRole('button', { name: 'Original' }).click();
+      await expect.poll(() => preview.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(800);
+      const cornerBlueness = () =>
+        preview.evaluate((img: HTMLImageElement) => {
+          const context = Object.assign(document.createElement('canvas'), { width: 1, height: 1 }).getContext('2d')!;
+          context.drawImage(img, 0, 0, 1, 1, 0, 0, 1, 1);
+          const [red, , blue] = context.getImageData(0, 0, 1, 1).data;
+          return blue - red;
+        });
+      await expect.poll(cornerBlueness).toBeGreaterThan(50);
     });
 
     await test.step('upload', async () => {

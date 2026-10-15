@@ -91,6 +91,9 @@ let objectUrlCounter = 0;
 URL.createObjectURL = vi.fn(() => `blob:mock/${++objectUrlCounter}`);
 URL.revokeObjectURL = vi.fn();
 
+// No canvas package: callers see what a browser refusing a 2D context gives them.
+HTMLCanvasElement.prototype.getContext = (() => null) as HTMLCanvasElement['getContext'];
+
 Element.prototype.scrollIntoView = vi.fn();
 window.scrollTo = vi.fn();
 
