@@ -1,7 +1,6 @@
-import { Box, useTheme, Typography, Stack, ListItemAvatar, ListItemText, Grid, useMediaQuery } from "@mui/material";
+import { Box, Typography, Stack, ListItemAvatar, ListItemText, Grid } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openDeactivateSendImageFrameDialog, openScheduledSentImageDialog, ScheduledSentImageAction } from "@/store/ui/images/images.slice";
-import AuthenticatedImage from "@/common/components/authenticatedImage";
 import HideImageIcon from '@mui/icons-material/HideImage';
 import DownloadIcon from '@mui/icons-material/Download';
 import SendIcon from '@mui/icons-material/Send';
@@ -11,7 +10,7 @@ import { downloadImage } from "@/store/entities/images/images.actions";
 import ShareframeMainDialog from "@/common/components/shareframeMainDialog";
 import { DialogAction } from "@/types";
 import { closePreviewSentImageDialog, getDialogs } from "@/store/ui/sentImages/sentImages.slice";
-import { getVariant } from "@/common/utils/images";
+import PreviewImage from "@/main/images/dialogs/preview/previewImage";
 import { formatDuration, getActiveDurationMs, getSentImageState } from "../../sentImageStatus";
 import SentImageStatusLabel from "../../sentImageStatusLabel";
 import UserAvatar from "@/common/components/userAvatar";
@@ -19,7 +18,6 @@ import UserAvatar from "@/common/components/userAvatar";
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
 const ImagePreviewDialog = () => {
-    const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const dialog = useAppSelector(getDialogs).preview;
@@ -27,8 +25,6 @@ const ImagePreviewDialog = () => {
     const state = selectedImage ? getSentImageState(selectedImage) : 'expired';
     const isScheduled = state === 'scheduled';
     const activeDurationMs = selectedImage ? getActiveDurationMs(selectedImage) : null;
-
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const handleCloseImagePreview = () => {
         dispatch(closePreviewSentImageDialog());
@@ -191,14 +187,7 @@ const ImagePreviewDialog = () => {
                         </Grid>
                     </Grid>
                 )}
-                {selectedImage && (
-                    <AuthenticatedImage
-                        url={`${MEDIA_BASE_URL}${isSmallScreen ? getVariant(selectedImage.image, "medium")?.url : getVariant(selectedImage.image, "large")?.url}`}
-                        alt={selectedImage.image.name}
-                        style={{ maxWidth: "100%", maxHeight: "60vh", borderRadius: 8 }}
-                        aspectRatio={selectedImage.image.height ? selectedImage.image.width / selectedImage.image.height : undefined}
-                    />
-                )}
+                {selectedImage && <PreviewImage key={selectedImage.id} image={selectedImage.image} />}
 
             </Box>
         </ShareframeMainDialog>

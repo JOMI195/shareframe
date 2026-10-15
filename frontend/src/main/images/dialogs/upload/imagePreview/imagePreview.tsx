@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
-import { Box, Button, Grid, Typography } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import React from 'react';
+import { Box, Button, Grid } from '@mui/material';
 import AutoDeleteOption from '../autoDeleteOption';
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
-import { passepartoutBackground, passepartoutShade } from '../passepartout';
+import PassepartoutOverlay from '../passepartoutOverlay';
 import PassepartoutHint from '../passepartoutHint';
-import EpaperToggle, { EpaperView } from '@/main/images/epaper/epaperToggle';
+import StepHeader from '../stepHeader';
+import { EpaperView } from '@/main/images/epaper/epaperToggle';
 import { useEpaperPreview } from '@/main/images/epaper/useEpaperPreview';
 
 interface ImagePreviewProps {
+    view: EpaperView;
+    onViewChange: (view: EpaperView) => void;
     finalImage: BlobImage;
     fileName: string;
     handleUpload: (blob: Blob) => Promise<void>;
@@ -22,6 +24,8 @@ interface ImagePreviewProps {
 }
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({
+    view,
+    onViewChange,
     finalImage,
     fileName,
     handleUpload,
@@ -32,18 +36,11 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
     autoDeleteAfterPeriod,
     setAutoDeleteAfterPeriod,
 }) => {
-    const theme = useTheme();
-    const [view, setView] = useState<EpaperView>('original');
     const epaperUrl = useEpaperPreview(finalImage.blob, view === 'epaper');
 
     return (
         <Box sx={{ my: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, mb: 1 }}>
-                <Typography variant="h6">
-                    {fileName}
-                </Typography>
-                <EpaperToggle value={view} onChange={setView} />
-            </Box>
+            <StepHeader fileName={fileName} view={view} onViewChange={onViewChange} />
             <FrameAspectBox>
                 <Box
                     component="img"
@@ -51,15 +48,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                     alt={`Vorschau von ${fileName}`}
                     sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'contain' }}
                 />
-                <Box
-                    aria-hidden
-                    sx={{
-                        position: 'absolute',
-                        inset: 0,
-                        pointerEvents: 'none',
-                        background: passepartoutBackground(passepartoutShade(theme.palette.mode)),
-                    }}
-                />
+                <PassepartoutOverlay />
             </FrameAspectBox>
             <PassepartoutHint />
 

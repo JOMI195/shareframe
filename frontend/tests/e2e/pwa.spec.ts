@@ -57,6 +57,7 @@ test.describe('share target', () => {
 
     await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
     await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
+    await page.getByRole('button', { name: 'Weiter zum Text' }).click();
     await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
     await page.getByRole('button', { name: 'Hochladen' }).click();
 

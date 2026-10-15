@@ -1,5 +1,5 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import UploadDialog from '@/main/images/dialogs/upload/uploadDialog';
 import * as imageEndpoints from '@/assets/endpoints/api/imagesEndpoints';
@@ -12,6 +12,8 @@ import { uploadImage } from '@/store/entities/images/images.actions';
 import type { ITextPreset } from '@/types';
 import { exportStageToBlob } from '@/main/images/dialogs/upload/imageText/exportImage';
 import { renderEpaper } from '@/main/images/epaper/renderEpaper';
+import { pixelsToBlob } from '@/common/utils/canvas/pixels';
+import { adjustImage } from '@/main/images/dialogs/upload/imageAdjust/adjustImage';
 
 // jsdom has no layout, so react-easy-crop never reports a crop area, and no
 // canvas, so the real getCroppedImg cannot run. Both are unit-tested separately.
@@ -47,10 +49,21 @@ vi.mock('@/main/images/dialogs/upload/imageText/exportImage', () => ({
   exportStageToBlob: vi.fn(async () => new Blob(['with-text'], { type: 'image/jpeg' })),
 }));
 
-// No canvas in jsdom either; the dithering is unit-tested.
+// No canvas in jsdom either; the dithering and the adjustment math are unit-tested.
 const epaperBlob = new Blob(['epaper'], { type: 'image/png' });
 vi.mock('@/main/images/epaper/renderEpaper', () => ({
   renderEpaper: vi.fn(async () => epaperBlob),
+}));
+vi.mock('@/main/images/dialogs/upload/imageAdjust/adjustImage', () => ({
+  adjustImage: vi.fn(async () => new Blob(['adjusted'], { type: 'image/jpeg' })),
+}));
+vi.mock('@/common/utils/canvas/pixels', () => ({
+  readPixels: (_source: unknown, width: number, height: number) => ({
+    data: new Uint8ClampedArray(width * height * 4).fill(100),
+    width,
+    height,
+  }),
+  pixelsToBlob: vi.fn(async () => new Blob(['preview'], { type: 'image/png' })),
 }));
 
 // The request payload itself is covered by the action unit tests; what matters
@@ -136,23 +149,36 @@ const goToCropping = async (photos = [photo('urlaub.jpg')]) => {
   return view;
 };
 
-const goToText = async (photos?: File[]) => {
+// A collapsing step stays accessible until its transition ends, and the later steps repeat its controls.
+const leftStep = (nextButton: string) =>
+  waitFor(() => expect(screen.queryByRole('button', { name: nextButton })).not.toBeInTheDocument());
+
+const goToAdjust = async (photos?: File[]) => {
   const view = await goToCropping(photos);
   await view.user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+  await screen.findByRole('button', { name: 'Weiter zum Text' });
+  return view;
+};
+
+const goToText = async (photos?: File[]) => {
+  const view = await goToAdjust(photos);
+  await view.user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
   await screen.findByRole('button', { name: 'Weiter zur Vorschau' });
+  await leftStep('Weiter zum Text');
   return view;
 };
 
 const goToPreview = async (photos?: File[]) => {
   const view = await goToText(photos);
   await view.user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
-  await screen.findByRole('button', { name: 'Hochladen' });
+  await leftStep('Weiter zur Vorschau');
   return view;
 };
 
 const objectUrlOf = (blob: Blob) => {
   const { calls, results } = vi.mocked(URL.createObjectURL).mock;
-  return results[calls.findIndex(([arg]) => arg === blob)]?.value;
+  const index = calls.map(([arg]) => arg).lastIndexOf(blob);
+  return results[index]?.value;
 };
 
 const textField = () => screen.getByRole('textbox', { name: 'Text' });
@@ -223,6 +249,9 @@ describe('UploadDialog step navigation', () => {
     await waitFor(() => expect(scrolledToTop('Fotos zuschneiden')).toBe(true));
 
     await user.click(screen.getByRole('button', { name: 'Zuschneiden & weiter' }));
+    await waitFor(() => expect(scrolledToTop('Foto anpassen')).toBe(true));
+
+    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
     await waitFor(() => expect(scrolledToTop('Text hinzufügen')).toBe(true));
 
     await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
@@ -232,7 +261,7 @@ describe('UploadDialog step navigation', () => {
 });
 
 describe('UploadDialog crop step', () => {
-  it('keeps the crop when coming back from the text step', async () => {
+  it('keeps the crop when coming back from the adjust step', async () => {
     const { user } = await goToCropping();
     await user.click(screen.getByRole('button', { name: 'Ausschnitt verschieben' }));
     await user.click(screen.getByRole('button', { name: 'Zuschneiden & weiter' }));
@@ -240,6 +269,100 @@ describe('UploadDialog crop step', () => {
     await user.click(await screen.findByRole('button', { name: 'Zurück zum Zuschneiden' }));
 
     expect(await screen.findByTestId('cropper')).toHaveAttribute('data-crop', JSON.stringify({ x: 5, y: 7 }));
+  });
+});
+
+describe('UploadDialog adjust step', () => {
+  const painted = () => vi.mocked(pixelsToBlob).mock.lastCall![0];
+  const slider = (name: string) => screen.getByRole('slider', { name });
+  const move = (name: string, value: number) => fireEvent.change(slider(name), { target: { value } });
+
+  it('repaints the preview as the contrast changes', async () => {
+    await goToAdjust();
+    await waitFor(() => expect(painted().data[0]).toBe(100));
+
+    move('Kontrast', 50);
+
+    await waitFor(() => expect(painted().data[0]).toBeLessThan(100));
+  });
+
+  it('shows the adjusted photo as the e-paper frame renders it', async () => {
+    const { user } = await goToAdjust();
+
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+
+    await waitFor(() => expect(painted().width).toBe(800));
+    expect(painted().data.every((value) => value === 0 || value === 255)).toBe(true);
+  });
+
+  it('keeps the e-paper view through the following steps', async () => {
+    const { user } = await goToAdjust();
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+
+    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
+    await leftStep('Weiter zum Text');
+    expect(screen.getByRole('button', { name: 'E-Paper' })).toHaveAttribute('aria-pressed', 'true');
+    expect(await screen.findByRole('img', { name: 'E-Paper-Vorschau von urlaub.jpg' })).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
+    await leftStep('Weiter zur Vorschau');
+    expect(screen.getByRole('button', { name: 'E-Paper' })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() =>
+      expect(screen.getByRole('img', { name: 'Vorschau von urlaub.jpg' })).toHaveAttribute('src', objectUrlOf(epaperBlob)),
+    );
+  });
+
+  it('starts the next photo in the original view', async () => {
+    acceptUploads();
+    const { user } = await goToAdjust([photo('a.jpg'), photo('b.jpg', 2)]);
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
+
+    expect(await screen.findByText('Fotos: 1/2 hochgeladen')).toBeInTheDocument();
+    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    await screen.findByRole('button', { name: 'Weiter zum Text' });
+    await leftStep('Hochladen');
+
+    expect(screen.getByRole('button', { name: 'Original' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('uploads the adjusted photo', async () => {
+    acceptUploads();
+    const { user } = await goToAdjust();
+    move('Helligkeit', 30);
+
+    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
+
+    expect(await (await uploadedFile()).text()).toBe('adjusted');
+    const [source, adjustment] = vi.mocked(adjustImage).mock.calls[0];
+    expect(await source.text()).toBe('cropped');
+    expect(adjustment).toEqual({ brightness: 30, contrast: 0 });
+  });
+
+  it('keeps the values when coming back from the text step', async () => {
+    const { user } = await goToAdjust();
+    move('Kontrast', 40);
+
+    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
+    await user.click(await screen.findByRole('button', { name: 'Zurück zum Anpassen' }));
+
+    expect(await screen.findByRole('slider', { name: 'Kontrast' })).toHaveValue('40');
+  });
+
+  it('resets both values at once', async () => {
+    const { user } = await goToAdjust();
+    move('Helligkeit', -20);
+    move('Kontrast', 40);
+
+    await user.click(screen.getByRole('button', { name: 'Zurücksetzen' }));
+
+    expect(slider('Helligkeit')).toHaveValue('0');
+    expect(slider('Kontrast')).toHaveValue('0');
+    expect(screen.getByRole('button', { name: 'Zurücksetzen' })).toBeDisabled();
   });
 });
 
@@ -313,14 +436,29 @@ describe('UploadDialog text step', () => {
     expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument();
   });
 
-  it('keeps the texts when going back to cropping and on again', async () => {
+  it('shows the photo as the e-paper frame renders it behind the editable texts', async () => {
+    const { user } = await goToText();
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+
+    await user.click(screen.getByRole('button', { name: 'E-Paper' }));
+
+    expect(await screen.findByRole('img', { name: 'E-Paper-Vorschau von urlaub.jpg' })).toHaveAttribute('src', objectUrlOf(epaperBlob));
+    expect(await vi.mocked(renderEpaper).mock.lastCall![0].text()).toBe('cropped');
+    expect(exportStageToBlob).not.toHaveBeenCalled();
+    expect(textField()).toHaveValue('Text');
+
+    await user.click(screen.getByRole('button', { name: 'Original' }));
+    expect(screen.queryByRole('img', { name: 'E-Paper-Vorschau von urlaub.jpg' })).not.toBeInTheDocument();
+  });
+
+  it('keeps the texts when going back to adjusting and on again', async () => {
     const { user } = await goToText();
     await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
     await user.clear(textField());
     await user.type(textField(), 'Bleibt');
 
-    await user.click(screen.getByRole('button', { name: 'Zurück zum Zuschneiden' }));
-    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    await user.click(screen.getByRole('button', { name: 'Zurück zum Anpassen' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
 
     expect(await screen.findByRole('button', { name: 'Bleibt' })).toBeInTheDocument();
   });
@@ -550,6 +688,7 @@ describe('UploadDialog preview and upload step', () => {
 
     expect(await screen.findByText('Fotos: 1/2 hochgeladen')).toBeInTheDocument();
     await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
     await screen.findByRole('button', { name: 'Weiter zur Vorschau' });
     expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument();
     expect(store.getState().ui.images.dialogs.create.open).toBe(true);
