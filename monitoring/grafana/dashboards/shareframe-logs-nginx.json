@@ -4650,7 +4650,7 @@
           "showDebug": false
         },
         "basemap": {
-          "type": "default",
+          "type": "osm-standard",
           "name": "Basemap",
           "config": {}
         },
