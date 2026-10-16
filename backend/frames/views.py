@@ -1,8 +1,12 @@
+import json
+import logging
 import os
+import zlib
 from datetime import UTC, datetime, timedelta
 
 from asgiref.sync import async_to_sync
 from django.conf import settings
+from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
@@ -25,6 +29,7 @@ from sent_images.models import SentImage, SentImageStatus
 from sent_images.serializers import SentImagesRetrieveSerializer
 from user_core.models import User
 from user_stats.counters import record_send
+from utils.request_logging.decorators import no_logging
 
 from .auth import (
     FrameHTTPAuthentication,
@@ -32,8 +37,13 @@ from .auth import (
     FrameTokenAuthentication,
 )
 from .consumers import FrameWebSocketConsumer
-from .models import Frame, FrameToken
+from .models import Frame, FrameCommand, FrameDiagnostics, FrameToken
 from .serializers import FrameRetrieveSerializer
+
+telemetry_logger = logging.getLogger("frames.telemetry")
+
+DIAGNOSTICS_MAX_UPLOAD_BYTES = 256 * 1024
+DIAGNOSTICS_MAX_TEXT_BYTES = 4 * 1024 * 1024
 
 
 def _parse_future_unix_timestamp(value) -> datetime | None:
@@ -562,4 +572,88 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         frame.save(update_fields=["local_ip_address", "version", "last_seen"])
 
+        # One line per device event so Grafana can list them without unpacking the body.
+        for event in request.data.get("events") or []:
+            if isinstance(event, dict):
+                telemetry_logger.info(
+                    json.dumps(
+                        {
+                            "kind": "event",
+                            "serial_number": frame.public_serial_number,
+                            **{
+                                key: event.get(key)
+                                for key in ("seq", "time", "source", "message")
+                            },
+                        }
+                    )
+                )
+
         return Response({"message": "Recieved heartbeat."}, status=status.HTTP_200_OK)
+
+    @no_logging(log_body=False, silent=True)
+    @action(
+        detail=False,
+        methods=["POST"],
+        authentication_classes=[FrameTokenAuthentication],
+        permission_classes=[IsAuthenticated],
+        throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
+        url_path="frame-diagnostics",
+    )
+    def frame_diagnostics(self, request):
+        frame: Frame = request.auth
+        body = request.body
+
+        if len(body) > DIAGNOSTICS_MAX_UPLOAD_BYTES:
+            return Response(
+                {"error": "Diagnostics package too large."},
+                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            )
+
+        trigger = request.query_params.get("trigger")
+        if trigger not in FrameDiagnostics.Trigger.values:
+            return Response(
+                {"error": "Unknown trigger."}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        command = None
+        command_id = request.query_params.get("command_id", "")
+        if command_id.isdigit():
+            command = FrameCommand.objects.filter(pk=command_id, frame=frame).first()
+
+        # Bounded inflate: the upload cap says nothing about the unpacked size.
+        inflater = zlib.decompressobj(wbits=31)
+        try:
+            text = inflater.decompress(body, DIAGNOSTICS_MAX_TEXT_BYTES)
+        except zlib.error:
+            return Response(
+                {"error": "Not a gzip package."}, status=status.HTTP_400_BAD_REQUEST
+            )
+        if inflater.unconsumed_tail:
+            return Response(
+                {"error": "Diagnostics package too large."},
+                status=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            )
+        if not inflater.eof:
+            return Response(
+                {"error": "Truncated gzip package."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        diagnostics = FrameDiagnostics(
+            frame=frame, command=command, trigger=trigger, size=len(body)
+        )
+        diagnostics.file.save("diagnostics.gz", ContentFile(body), save=True)
+
+        for line in text.decode("utf-8", "replace").splitlines():
+            telemetry_logger.info(
+                json.dumps(
+                    {
+                        "kind": "diagnostics",
+                        "serial_number": frame.public_serial_number,
+                        "diagnostics_id": diagnostics.pk,
+                        "line": line,
+                    }
+                )
+            )
+
+        return Response({"id": diagnostics.pk}, status=status.HTTP_201_CREATED)

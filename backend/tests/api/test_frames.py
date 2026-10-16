@@ -1,13 +1,16 @@
+import gzip
+import json
 import time
 from types import SimpleNamespace
 
 import pytest
 
-from frames.models import Frame
+from frames.models import Frame, FrameCommand, FrameDiagnostics
 from securePayload.securePayload import SecurePayload
 from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
 from tests.support.factories import (
+    FrameFactory,
     FrameTokenFactory,
     FriendshipFactory,
     ImageFactory,
@@ -587,6 +590,39 @@ class TestHeartbeat:
 
         assert response.status_code == 400
 
+    def test_each_event_is_logged_with_the_frame_serial(
+        self, client, alice_frame, caplog
+    ):
+        token = FrameTokenFactory(frame=alice_frame)
+        event = {
+            "seq": 7,
+            "time": "2026-10-16T10:00:00",
+            "source": "crash",
+            "message": "shareframe-display signal 11",
+        }
+
+        with caplog.at_level("INFO", logger="frames.telemetry"):
+            response = client.post(
+                self.url(),
+                {
+                    "local_ip_address": "192.168.9.9",
+                    "version": "8.0.0",
+                    "events": [event, "junk"],
+                },
+                format="json",
+                headers=token_headers(token.access_token),
+            )
+
+        assert response.status_code == 200
+        lines = [r.getMessage() for r in caplog.records if r.name == "frames.telemetry"]
+        assert [json.loads(line) for line in lines] == [
+            {
+                "kind": "event",
+                "serial_number": alice_frame.public_serial_number,
+                **event,
+            }
+        ]
+
     def test_a_frame_token_is_required(self, client):
         response = client.post(
             self.url(),
@@ -594,4 +630,98 @@ class TestHeartbeat:
             format="json",
         )
 
+        assert response.status_code == 403
+
+
+class TestDiagnosticsUpload:
+    def url(self, query="?trigger=owner"):
+        return f"{URL}frame-diagnostics/{query}"
+
+    def post(self, client, frame, body, query="?trigger=owner"):
+        token = getattr(frame, "frame_token", None) or FrameTokenFactory(frame=frame)
+        return client.post(
+            self.url(query),
+            body,
+            content_type="application/gzip",
+            headers=token_headers(token.access_token),
+        )
+
+    def test_stores_the_package_and_logs_its_lines(self, client, alice_frame, caplog):
+        package = gzip.compress(b"===== events =====\n1 t [boot] ok\n")
+
+        with caplog.at_level("INFO", logger="frames.telemetry"):
+            response = self.post(client, alice_frame, package)
+
+        assert response.status_code == 201
+        diagnostics = FrameDiagnostics.objects.get(pk=response.json()["id"])
+        assert diagnostics.frame == alice_frame
+        assert diagnostics.trigger == "owner"
+        assert diagnostics.file.read() == package
+        lines = [
+            json.loads(r.getMessage())
+            for r in caplog.records
+            if r.name == "frames.telemetry"
+        ]
+        assert [line["line"] for line in lines] == [
+            "===== events =====",
+            "1 t [boot] ok",
+        ]
+        assert {line["serial_number"] for line in lines} == {
+            alice_frame.public_serial_number
+        }
+
+    def test_links_the_command_of_the_same_frame_only(self, client, alice_frame):
+        own = FrameCommand.objects.create(
+            frame=alice_frame,
+            command="reboot",
+            tier="safe",
+            expires_at=alice_frame.registered_at,
+        )
+        other = FrameCommand.objects.create(
+            frame=FrameFactory(),
+            command="reboot",
+            tier="safe",
+            expires_at=alice_frame.registered_at,
+        )
+        package = gzip.compress(b"x")
+
+        first = self.post(
+            client, alice_frame, package, f"?trigger=pre-reboot&command_id={own.pk}"
+        )
+        second = self.post(
+            client, alice_frame, package, f"?trigger=admin&command_id={other.pk}"
+        )
+
+        assert FrameDiagnostics.objects.get(pk=first.json()["id"]).command == own
+        assert FrameDiagnostics.objects.get(pk=second.json()["id"]).command is None
+
+    def test_rejects_an_unknown_trigger(self, client, alice_frame):
+        response = self.post(client, alice_frame, gzip.compress(b"x"), "?trigger=cron")
+        assert response.status_code == 400
+
+    def test_rejects_non_gzip_and_truncated_packages(self, client, alice_frame):
+        assert self.post(client, alice_frame, b"plain text").status_code == 400
+        assert (
+            self.post(client, alice_frame, gzip.compress(b"x" * 1000)[:-10]).status_code
+            == 400
+        )
+        assert not FrameDiagnostics.objects.exists()
+
+    def test_rejects_a_zip_bomb(self, client, alice_frame):
+        bomb = gzip.compress(b"\0" * (5 * 1024 * 1024))
+        assert len(bomb) < 256 * 1024
+
+        response = self.post(client, alice_frame, bomb)
+
+        assert response.status_code == 413
+        assert not FrameDiagnostics.objects.exists()
+
+    def test_rejects_an_oversized_upload(self, client, alice_frame):
+        response = self.post(client, alice_frame, b"\0" * (256 * 1024 + 1))
+        assert response.status_code == 413
+
+    def test_a_frame_token_is_required(self, client):
+        response = client.post(
+            self.url(), gzip.compress(b"x"), content_type="application/gzip"
+        )
         assert response.status_code == 403

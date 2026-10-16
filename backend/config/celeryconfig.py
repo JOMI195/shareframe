@@ -51,6 +51,14 @@ beat_schedule = {
         "task": "frames.tasks.close_and_delete_long_inactive_frame_websocket_connections",
         "schedule": timedelta(minutes=15),
     },
+    "expire-unanswered-frame-commands-every-minute": {
+        "task": "frames.tasks.expire_unanswered_frame_commands",
+        "schedule": timedelta(minutes=1),
+    },
+    "delete-old-frame-diagnostics-every-24-hours": {
+        "task": "frames.tasks.delete_old_frame_diagnostics",
+        "schedule": crontab(minute=0, hour=4),
+    },
     "send-inactivity-reminders-every-24-hours": {
         "task": "notifications.tasks.send_inactivity_reminders",
         "schedule": crontab(minute=0, hour=18),

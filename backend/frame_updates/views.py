@@ -15,6 +15,22 @@ from .serializers import (
 )
 
 
+def ordered_releases_for(frame: Frame | None = None):
+    """Active releases visible to the frame's groups, newest first."""
+    releases = Release.objects.filter(is_active=True)
+
+    if frame:
+        frame_groups = frame.groups.all()
+        if frame_groups.exists():
+            releases = releases.filter(groups__in=frame_groups).distinct()
+        else:
+            releases = Release.objects.none()
+
+    return sorted(
+        releases, key=lambda r: semver.VersionInfo.parse(r.version), reverse=True
+    )
+
+
 class UpdateAPIViewSet(viewsets.ViewSet):
     authentication_classes = [FrameTokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -25,19 +41,7 @@ class UpdateAPIViewSet(viewsets.ViewSet):
         return getattr(request, "auth", None)
 
     def _get_ordered_releases(self, frame: Frame | None = None):
-        """Get releases filtered by frame's groups"""
-        releases = Release.objects.filter(is_active=True)
-
-        if frame:
-            frame_groups = frame.groups.all()
-            if frame_groups.exists():
-                releases = releases.filter(groups__in=frame_groups).distinct()
-            else:
-                releases = Release.objects.none()
-
-        return sorted(
-            releases, key=lambda r: semver.VersionInfo.parse(r.version), reverse=True
-        )
+        return ordered_releases_for(frame)
 
     def list_versions(self, request):
         frame = self._get_frame_from_request(request)

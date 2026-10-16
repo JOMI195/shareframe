@@ -13,6 +13,7 @@ from sent_images.models import SentImage
 from user_core.models import User
 
 from .close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
+from .commands import record_result
 from .models import FrameWebsocketConnection
 
 logger = logging.getLogger("websockets.frames")
@@ -333,6 +334,17 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         frame_id = frame.id if frame else "unknown"
         logger.debug(f"Received heartbeat from frame {frame_id}")
 
+    async def handle_command_result(self, message):
+        frame = self.scope.get("frame")
+        applied = await database_sync_to_async(record_result)(frame, message)
+        logger.info(
+            f"Command #{message.get('id')} result '{message.get('status')}' from frame "
+            f"{frame.id if frame else 'unknown'}{'' if applied else ' (ignored)'}"
+        )
+
+    async def send_command(self, event):
+        await self.send(text_data=event["data"])
+
     async def handle_ping(self, message):
         timestamp = message.get("timestamp")
         logger.debug(f"Received ping with timestamp {timestamp}")
@@ -491,6 +503,8 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 await self.handle_check_user_frame_images_expiry(message)
             elif message_type == "check_missing_images":
                 await self.handle_check_user_frame_missing_images(message)
+            elif message_type == "command_result":
+                await self.handle_command_result(message)
             # TODO delete when all frames updated with typo fix
             elif message_type == "check_mssing_images":
                 await self.handle_check_user_frame_missing_images(message)
