@@ -61,17 +61,16 @@ def test_the_response_says_how_long_to_wait(board, download_url, throttled):
     assert "Retry-After" in response
 
 
-def test_two_frames_of_one_owner_share_the_download_budget(
+def test_each_frame_of_one_owner_has_its_own_download_budget(
     client, board, download_url, throttled
 ):
-    """The download throttle is a UserRateThrottle, so it keys on the owner."""
     for _ in range(DOWNLOAD_LIMIT + 1):
         board.get(download_url)
     sibling = Frame.objects.get(private_serial_number="SEED-PRIVATE-0004")
 
     response = board_for(client, sibling).get(download_url)
 
-    assert response.status_code == 429
+    assert response.status_code == 200
 
 
 def test_another_owner_has_their_own_budget(client, board, download_url, throttled):

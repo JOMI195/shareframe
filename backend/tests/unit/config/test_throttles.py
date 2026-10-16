@@ -6,6 +6,8 @@ from config.throttles import (
     BurstRateThrottle,
     FrameBurstRateThrottle,
     FrameSustainedRateThrottle,
+    FrameUpdatesBurstRateThrottle,
+    FrameUpdatesSustainedRateThrottle,
     SustainedRateThrottle,
 )
 
@@ -46,6 +48,18 @@ def test_the_two_frame_scopes_do_not_collide():
     sustained = FrameSustainedRateThrottle().get_cache_key(request, None)
 
     assert burst != sustained
+
+
+def test_the_download_throttles_key_on_the_frame():
+    request = request_with(SimpleNamespace(pk=7))
+
+    for throttle in (
+        FrameUpdatesBurstRateThrottle(),
+        FrameUpdatesSustainedRateThrottle(),
+    ):
+        key = throttle.get_cache_key(request, None)
+        assert key.endswith("7")
+        assert throttle.scope in key
 
 
 def test_the_user_scopes_are_declared():

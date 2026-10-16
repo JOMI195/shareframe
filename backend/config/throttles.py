@@ -27,14 +27,6 @@ class MediaSustainedRateThrottle(UserRateThrottle):
     scope = "media_sustained"
 
 
-class FrameUpdatesBurstRateThrottle(UserRateThrottle):
-    scope = "frame_updates_burst"
-
-
-class FrameUpdatesSustainedRateThrottle(UserRateThrottle):
-    scope = "frame_updates_sustained"
-
-
 class ChangelogsBurstRateThrottle(UserRateThrottle):
     scope = "changelogs_burst"
 
@@ -78,3 +70,11 @@ class FrameBurstRateThrottle(_FrameScopedThrottle):
 
 class FrameSustainedRateThrottle(_FrameScopedThrottle):
     scope = "frame_sustained"
+
+
+class FrameUpdatesBurstRateThrottle(_FrameScopedThrottle):
+    scope = "frame_updates_burst"
+
+
+class FrameUpdatesSustainedRateThrottle(_FrameScopedThrottle):
+    scope = "frame_updates_sustained"
