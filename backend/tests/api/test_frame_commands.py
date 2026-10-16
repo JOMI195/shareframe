@@ -185,6 +185,17 @@ def test_diagnostics_download_goes_through_nginx(admin_client, settings):
     assert "attachment" in response["Content-Disposition"]
 
 
+def test_frame_change_page_renders_diagnostics_inline(admin_client):
+    frame = FrameFactory()
+    diagnostics = FrameDiagnostics(frame=frame, trigger="admin", size=3)
+    diagnostics.file.save("diagnostics.gz", ContentFile(b"abc"))
+
+    response = admin_client.get(f"/api/admin/frames/frame/{frame.pk}/change/")
+
+    assert response.status_code == 200
+    assert f"/framediagnostics/{diagnostics.pk}/download/" in response.content.decode()
+
+
 def test_diagnostics_download_needs_admin_rights():
     frame = FrameFactory()
     diagnostics = FrameDiagnostics.objects.create(
