@@ -7,6 +7,8 @@ import uuid
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
 
 
@@ -199,3 +201,81 @@ class FrameWebsocketConnection(models.Model):
 
     def __str__(self):
         return f"Connection for frame {self.frame_id}"
+
+
+class FrameCommand(models.Model):
+    """Remote command sent to one frame from the admin. The table is the audit trail."""
+
+    class Status(models.TextChoices):
+        SENT = "sent"
+        ACCEPTED = "accepted"
+        REJECTED = "rejected"
+        DONE = "done"
+        FAILED = "failed"
+        EXPIRED = "expired"
+
+    frame = models.ForeignKey(Frame, on_delete=models.CASCADE, related_name="commands")
+    command = models.CharField(max_length=50)
+    arg = models.CharField(max_length=50, blank=True)
+    tier = models.CharField(max_length=10)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.SENT
+    )
+    reason = models.TextField(blank=True)
+    result = models.JSONField(null=True, blank=True)
+    requested_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    expires_at = models.DateTimeField()
+
+    class Meta:
+        ordering = ("-created_at",)
+        permissions = (
+            ("send_frame_command", "Can send read and safe remote commands to frames"),
+            ("send_risky_frame_command", "Can send risky remote commands to frames"),
+        )
+
+    def __str__(self):
+        return f"#{self.pk} {self.command} {self.arg} → {self.frame_id} ({self.status})".replace(
+            "  ", " "
+        )
+
+
+def frame_diagnostics_upload_path(instance, filename):
+    return f"frame-diagnostics/{instance.frame.public_serial_number}/{uuid.uuid4()}.gz"
+
+
+class FrameDiagnostics(models.Model):
+    class Trigger(models.TextChoices):
+        OWNER = "owner"
+        ADMIN = "admin"
+        PRE_REBOOT = "pre-reboot"
+
+    frame = models.ForeignKey(
+        Frame, on_delete=models.CASCADE, related_name="diagnostics"
+    )
+    command = models.ForeignKey(
+        FrameCommand,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="diagnostics",
+    )
+    trigger = models.CharField(max_length=20, choices=Trigger.choices)
+    file = models.FileField(upload_to=frame_diagnostics_upload_path)
+    size = models.PositiveIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-created_at",)
+        verbose_name_plural = "frame diagnostics"
+
+    def __str__(self):
+        return f"Diagnostics {self.frame_id} {self.created_at:%Y-%m-%d %H:%M} ({self.trigger})"
+
+
+@receiver(post_delete, sender=FrameDiagnostics)
+def delete_frame_diagnostics_file(sender, instance, **kwargs):
+    instance.file.delete(save=False)

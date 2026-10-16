@@ -9,7 +9,8 @@ from django.utils import timezone
 
 from config.celery import celery
 
-from .models import Frame, FrameWebsocketConnection
+from .commands import expire_stale_commands
+from .models import Frame, FrameDiagnostics, FrameWebsocketConnection
 
 logger = logging.getLogger("celery.frames")
 
@@ -55,3 +56,22 @@ def close_and_delete_long_inactive_frame_websocket_connections():
 
     logger.info(f"Closed and deleted {deleted_count} inactive connections")
     return f"Closed and deleted {deleted_count} long inactive connections."
+
+
+@celery.task
+def expire_unanswered_frame_commands():
+    expired = expire_stale_commands()
+    if expired:
+        logger.info(f"Expired {expired} unanswered frame command(s)")
+    return f"Expired {expired} frame commands."
+
+
+@celery.task
+def delete_old_frame_diagnostics():
+    retention_days = getattr(settings, "FRAME_DIAGNOSTICS_RETENTION_DAYS", 30)
+    old = FrameDiagnostics.objects.filter(
+        created_at__lt=timezone.now() - timedelta(days=retention_days)
+    )
+    count, _ = old.delete()
+    logger.info(f"Deleted {count} frame diagnostics older than {retention_days} days")
+    return f"Deleted {count} frame diagnostics."

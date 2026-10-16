@@ -3,10 +3,11 @@ import json
 import pytest
 from channels.db import database_sync_to_async
 from channels.testing import WebsocketCommunicator
+from django.utils import timezone
 
 from config.asgi import application
 from frames.close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
-from frames.models import Frame, FrameWebsocketConnection
+from frames.models import Frame, FrameCommand, FrameWebsocketConnection
 from tests.support.factories import FrameFactory, FrameTokenFactory, UserFactory
 
 # The consumer reaches the ORM from another thread, so its writes must commit.
@@ -346,3 +347,38 @@ class TestExpiryCheck:
 
         assert await communicator.receive_nothing(timeout=0.4)
         await communicator.disconnect()
+
+
+@database_sync_to_async
+def make_command(frame):
+    return FrameCommand.objects.create(
+        frame=frame, command="reboot", tier="safe", expires_at=timezone.now()
+    )
+
+
+@database_sync_to_async
+def command_status(cmd):
+    cmd.refresh_from_db()
+    return cmd.status, cmd.reason
+
+
+async def test_a_command_result_updates_the_command():
+    frame = await make_frame()
+    cmd = await make_command(frame)
+    communicator, connected, _ = await connect(await make_token(frame))
+    assert connected
+
+    await communicator.send_to(
+        text_data=json.dumps(
+            {
+                "type": "command_result",
+                "id": cmd.pk,
+                "status": "rejected",
+                "reason": "display refreshing",
+            }
+        )
+    )
+    await communicator.receive_nothing(timeout=0.5)
+
+    assert await command_status(cmd) == ("rejected", "display refreshing")
+    await communicator.disconnect()

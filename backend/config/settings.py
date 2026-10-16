@@ -304,6 +304,11 @@ LOGGING = {
             "level": DJANGO_LOG_LEVEL,
             "propagate": False,
         },
+        "frames.telemetry": {
+            "handlers": ["application-file", "console"],
+            "level": DJANGO_LOG_LEVEL,
+            "propagate": False,
+        },
         # admin audit
         "admin.audit": {
             "handlers": ["admin-audit-file", "console"],

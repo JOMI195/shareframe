@@ -1,0 +1,44 @@
+{% extends "admin/base_site.html" %}
+{% load admin_urls %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<p><strong>{{ frame }}</strong> (version {{ frame.version }}) &mdash; tier <strong>{{ tier }}</strong></p>
+<p>{{ warning }}</p>
+{% if release %}
+<p>Target release: <strong>{{ release.version }}</strong> ({{ release.criticality }})</p>
+{% elif command == "update_install" %}
+<p>No active release is visible to this frame's groups; the frame will reject the command.</p>
+{% endif %}
+<p>The frame checks its own state first and rejects the command while an update runs, the display
+refreshes too long, the boot slot is unconfirmed, or it rebooted in the last 30 minutes.
+Diagnostics are captured before any reboot.</p>
+
+<form method="post">{% csrf_token %}
+    <input type="hidden" name="{{ action_checkbox_name }}" value="{{ frame.pk }}">
+    <input type="hidden" name="action" value="{{ action }}">
+    <input type="hidden" name="apply" value="yes">
+    {% if services %}
+    <p><label for="arg">Service</label>
+        <select name="arg" id="arg">
+            {% for service in services %}<option value="{{ service }}">{{ service }}</option>{% endfor %}
+        </select></p>
+    {% endif %}
+    {% if confirm_serial %}
+    <p><label for="confirm_serial">Type the frame serial to confirm</label>
+        <input type="text" name="confirm_serial" id="confirm_serial" autocomplete="off" size="40"></p>
+    {% endif %}
+    <div>
+        <input type="submit" value="Send command">
+        <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">No, take me back</a>
+    </div>
+</form>
+{% endblock %}
