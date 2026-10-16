@@ -117,3 +117,286 @@ groups:
                 - evaluator:
                     type: gt
                     params: [3]
+
+  # Only frames that are online and report trouble. Silence is never an alert:
+  # owners switch frames off, go on vacation or pull the plug.
+  - orgId: 1
+    name: frames
+    folder: ShareFrame
+    interval: 1m
+    rules:
+      - uid: shareframe_frame_unhealthy
+        title: FrameUnhealthy
+        condition: C
+        for: 15m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Frame {{ $labels.serial_number }} reports health_state other than ok'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format unhealthy=`{{ if ne .health_state "ok" }}1{{ else }}0{{ end }}` | unwrap unhealthy [10m]) by (serial_number)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+      - uid: shareframe_frame_service_down
+        title: FrameServiceDown
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Frame {{ $labels.serial_number }} reports an app service not running'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running "false") (eq .display_running "false") (eq .update_running "false") (eq .websocket_running "false") }}1{{ else }}0{{ end }}` | unwrap service_down [10m]) by (serial_number)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+      - uid: shareframe_frame_reboot_loop
+        title: FrameRebootLoop
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Frame {{ $labels.serial_number }} booted 3+ times within an hour'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'max_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap boot_count [1h]) by (serial_number) - min_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap boot_count [1h]) by (serial_number)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
+      - uid: shareframe_frame_crashing
+        title: FrameCrashing
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Frame {{ $labels.serial_number }} had 3+ app crashes within an hour'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'max_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap crash_count [1h]) by (serial_number) - min_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap crash_count [1h]) by (serial_number)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 3600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
+      - uid: shareframe_frame_display_failed
+        title: FrameDisplayFailed
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Frame {{ $labels.serial_number }} display failed 3+ refreshes in a row'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format display_failed=`{{ if eq .display_health "failed" }}1{{ else }}0{{ end }}` | unwrap display_failed [10m]) by (serial_number)'
+              intervalMs: 60000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
