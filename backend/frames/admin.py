@@ -81,6 +81,8 @@ class FrameDiagnosticsInline(admin.TabularInline):
     verbose_name_plural = "Diagnostics"
 
     def download(self, obj):
+        if obj.pk is None:
+            return "-"
         return diagnostics_download_link(obj)
 
 
