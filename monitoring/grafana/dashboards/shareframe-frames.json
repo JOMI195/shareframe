@@ -1845,6 +1845,40 @@
                 "value": "left"
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Safe mode"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "off",
+                        "color": "green",
+                        "index": 0
+                      },
+                      "1": {
+                        "text": "on",
+                        "color": "red",
+                        "index": 1
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              }
+            ]
           }
         ]
       },
@@ -2058,6 +2092,14 @@
             "uid": "loki"
           },
           "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+        },
+        {
+          "refId": "X",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if .safe_mode }}1{{ else }}0{{ end }}` | label_format metric=\"Safe mode\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
         }
       ],
       "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it reported no telemetry in the range - legacy firmware sends only ip and version, so those rows are identity-only. Version, OS SHA, App SHA and Kernel are heartbeat stream labels carried through the join, reduced with lastNotNull: a frame that updated inside the range shows what it runs now. Grouping is by serial_number alone, and the range queries are collapsed to their newest bucket, so a frame cannot occupy more than one row. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
@@ -2257,6 +2299,12 @@
                   "lastNotNull"
                 ],
                 "operation": "aggregate"
+              },
+              "Safe mode": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
               }
             }
           }
@@ -2292,7 +2340,8 @@
               "version (lastNotNull)": "Version",
               "os_sha (lastNotNull)": "OS SHA",
               "app_sha (lastNotNull)": "App SHA",
-              "kernel (lastNotNull)": "Kernel"
+              "kernel (lastNotNull)": "Kernel",
+              "Safe mode (lastNotNull)": "Safe mode"
             },
             "indexByName": {
               "serial_number": 0,
@@ -2322,7 +2371,8 @@
               "version (lastNotNull)": 24,
               "os_sha (lastNotNull)": 25,
               "app_sha (lastNotNull)": 26,
-              "kernel (lastNotNull)": 27
+              "kernel (lastNotNull)": 27,
+              "Safe mode (lastNotNull)": 28
             }
           }
         }
@@ -3741,6 +3791,181 @@
       ]
     },
     {
+      "type": "timeseries",
+      "title": "Data written per day",
+      "id": 67,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "KiB the frame wrote to its /data partition (f2fs lifetime counter) over the trailing 24h. Catches write amplification before it wears out the SD card. A factory reset restarts the counter.",
+      "gridPos": {
+        "h": 7,
+        "w": 16,
+        "x": 0,
+        "y": 94
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kbytes",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "min": 0,
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 10,
+            "showPoints": "never",
+            "spanNulls": true
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "expr": "max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | data_written_kb != \"\" | unwrap data_written_kb [1d]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | data_written_kb != \"\" | unwrap data_written_kb [1d]) by (serial_number)",
+          "legendFormat": "{{serial_number}}"
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "SD card per frame",
+      "id": 68,
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Card identity from the SD controller (name, manufacturer and OEM id, manufacturing date) with the lifetime KiB written to /data, to tie card failures to a brand or batch.",
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 94
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "editorMode": "code",
+          "queryType": "instant",
+          "instant": true,
+          "legendFormat": "",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | sd_card != \"\" | data_written_kb != \"\" | unwrap data_written_kb [$__range]) by (serial_number, sd_card)"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "renameByName": {
+              "serial_number": "Frame",
+              "sd_card": "SD card",
+              "Value": "Written"
+            },
+            "indexByName": {
+              "serial_number": 0,
+              "sd_card": 1,
+              "Value": 2
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false,
+          "reducer": [
+            "sum"
+          ],
+          "countRows": false,
+          "fields": ""
+        },
+        "sortBy": [
+          {
+            "displayName": "Frame",
+            "desc": false
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "filterable": true,
+            "inspect": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Written"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "SD card"
+            },
+            "properties": [
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "type": "row",
       "title": "Display",
       "id": 51,
@@ -3749,7 +3974,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 94
+        "y": 101
       },
       "panels": []
     },
@@ -3765,7 +3990,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 95
+        "y": 102
       },
       "fieldConfig": {
         "defaults": {
@@ -3842,7 +4067,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 95
+        "y": 102
       },
       "fieldConfig": {
         "defaults": {
@@ -3928,7 +4153,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 109
       },
       "fieldConfig": {
         "defaults": {
@@ -4005,7 +4230,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 102
+        "y": 109
       },
       "fieldConfig": {
         "defaults": {
@@ -4079,7 +4304,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 109
+        "y": 116
       },
       "panels": []
     },
@@ -4095,7 +4320,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 110
+        "y": 117
       },
       "fieldConfig": {
         "defaults": {
@@ -4172,7 +4397,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 110
+        "y": 117
       },
       "fieldConfig": {
         "defaults": {
@@ -4249,7 +4474,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 110
+        "y": 117
       },
       "fieldConfig": {
         "defaults": {
@@ -4326,7 +4551,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 117
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
@@ -4439,7 +4664,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 117
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
@@ -4552,7 +4777,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 124
+        "y": 131
       },
       "fieldConfig": {
         "defaults": {
@@ -4710,7 +4935,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 124
+        "y": 131
       },
       "fieldConfig": {
         "defaults": {
@@ -4793,7 +5018,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 131
+        "y": 138
       },
       "panels": []
     },
@@ -4809,7 +5034,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 132
+        "y": 139
       },
       "options": {
         "showTime": true,
@@ -4842,7 +5067,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 144
+        "y": 151
       },
       "panels": []
     },
@@ -4858,7 +5083,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 145
+        "y": 152
       },
       "options": {
         "showTime": true,
