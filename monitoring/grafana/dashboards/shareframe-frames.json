@@ -3754,8 +3754,8 @@
       "panels": []
     },
     {
-      "type": "bargauge",
-      "title": "Image refreshes in range",
+      "type": "timeseries",
+      "title": "Image refreshes",
       "id": 52,
       "datasource": {
         "type": "loki",
@@ -3763,7 +3763,7 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
+        "w": 12,
         "x": 0,
         "y": 95
       },
@@ -3771,38 +3771,51 @@
         "defaults": {
           "unit": "short",
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
               }
             ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         },
-        "orientation": "horizontal",
-        "displayMode": "lcd",
-        "valueMode": "color",
-        "showUnfilled": true,
-        "minVizWidth": 8,
-        "minVizHeight": 16,
-        "maxVizHeight": 300,
-        "namePlacement": "auto",
-        "sizing": "auto"
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        }
       },
       "targets": [
         {
@@ -3811,15 +3824,15 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_image_refresh_total [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_image_refresh_total [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_image_refresh_total [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}}"
         }
       ],
-      "description": "Bild-Aktualisierungen (epd_image_refresh_total) added inside the time range."
+      "description": "Bild-Aktualisierungen (epd_image_refresh_total). Every step up is an image shown."
     },
     {
-      "type": "bargauge",
-      "title": "Display failures in range",
+      "type": "timeseries",
+      "title": "Display failures",
       "id": 53,
       "datasource": {
         "type": "loki",
@@ -3827,50 +3840,59 @@
       },
       "gridPos": {
         "h": 7,
-        "w": 8,
-        "x": 8,
+        "w": 12,
+        "x": 12,
         "y": 95
       },
       "fieldConfig": {
         "defaults": {
           "unit": "short",
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
           },
           "mappings": [],
           "thresholds": {
             "mode": "absolute",
             "steps": [
               {
-                "color": "green",
+                "color": "text",
                 "value": null
-              },
-              {
-                "color": "red",
-                "value": 1
               }
             ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
           }
         },
         "overrides": []
       },
       "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
         },
-        "orientation": "horizontal",
-        "displayMode": "lcd",
-        "valueMode": "color",
-        "showUnfilled": true,
-        "minVizWidth": 8,
-        "minVizHeight": 16,
-        "maxVizHeight": 300,
-        "namePlacement": "auto",
-        "sizing": "auto"
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "mean",
+            "max",
+            "lastNotNull"
+          ]
+        }
       },
       "targets": [
         {
@@ -3879,7 +3901,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_refresh_fail_total [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_refresh_fail_total [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_refresh_fail_total [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} refresh"
         },
         {
@@ -3888,86 +3910,11 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_poweron_fail_total [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_poweron_fail_total [$__range]) by (serial_number)",
+          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_poweron_fail_total [$__auto]) by (serial_number)",
           "legendFormat": "{{serial_number}} power-on"
         }
       ],
-      "description": "Failed panel refreshes and power-ons inside the time range."
-    },
-    {
-      "type": "bargauge",
-      "title": "Display wear",
-      "id": 54,
-      "datasource": {
-        "type": "loki",
-        "uid": "loki"
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 8,
-        "x": 16,
-        "y": 95
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "percent",
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "yellow",
-                "value": 50
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "min": 0,
-          "max": 100,
-          "decimals": 1
-        },
-        "overrides": []
-      },
-      "options": {
-        "reduceOptions": {
-          "values": false,
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": ""
-        },
-        "orientation": "horizontal",
-        "displayMode": "lcd",
-        "valueMode": "color",
-        "showUnfilled": true,
-        "minVizWidth": 8,
-        "minVizHeight": 16,
-        "maxVizHeight": 300,
-        "namePlacement": "auto",
-        "sizing": "auto"
-      },
-      "targets": [
-        {
-          "refId": "A",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_wear_percent [$__range]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
-        }
-      ],
-      "description": "Panel refreshes against the rated lifetime."
+      "description": "Failed panel refreshes and power-ons since first use. Every step up is a failure."
     },
     {
       "type": "timeseries",
@@ -4881,7 +4828,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"backend\", logger=\"frames.telemetry\"} |= `\"kind\": \"event\"` |= \"$search\" | json | serial_number=~\"$frame\" | line_format `{{.serial_number}}  {{.time}}  [{{.source}}] {{.message}}`"
+          "expr": "{job=\"backend\", logger=\"frames.telemetry\"} |= `\"kind\": \"event\"` |= \"$search\" | regexp ` - (?P<payload>\\{\"kind\".*\\})$` | line_format `{{.payload}}` | json | serial_number=~\"$frame\" | line_format `{{.serial_number}}  {{.time}}  [{{.source}}] {{.message}}`"
         }
       ],
       "description": "Persistent device event log shipped with each heartbeat: boots, crashes, OOM kills, updates, WiFi fallbacks, remote commands. Frame time, not ingest time."
