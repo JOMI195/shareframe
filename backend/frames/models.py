@@ -50,6 +50,9 @@ class Frame(models.Model):
     # Any sign of life from the frame itself: heartbeat, ws connect or ws message.
     last_seen = models.DateTimeField(null=True, blank=True)
     last_heartbeat = models.DateTimeField(null=True, blank=True)
+    last_update_check = models.DateTimeField(null=True, blank=True)
+    # Last release bundle download the frame was granted.
+    last_update_attempt = models.DateTimeField(null=True, blank=True)
 
     version = models.CharField(max_length=100, default="1.0.0")
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)

@@ -2,6 +2,7 @@ import os
 
 from django.conf import settings
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
@@ -178,6 +179,9 @@ class FrameUpdatesAccessView(APIView):
 
         if not file_access_granted:
             raise PermissionDenied("File not found or not authorized to access.")
+
+        frame.last_update_attempt = timezone.now()
+        frame.save(update_fields=["last_update_attempt"])
 
         response = Response(status=200)
         # nginx proxy_pass: /app/backend/mediafiles/frame-updates/

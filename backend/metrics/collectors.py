@@ -177,6 +177,16 @@ _FRAME_TIMESTAMPS = (
         "Last heartbeat from the frame",
     ),
     (
+        "shareframe_frame_last_update_check_timestamp_seconds",
+        "last_update_check",
+        "Last update check by the frame",
+    ),
+    (
+        "shareframe_frame_last_update_attempt_timestamp_seconds",
+        "last_update_attempt",
+        "Last release bundle download granted to the frame",
+    ),
+    (
         "shareframe_frame_last_connected_timestamp_seconds",
         "last_connected",
         "Last websocket connect",

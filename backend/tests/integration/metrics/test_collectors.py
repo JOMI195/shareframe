@@ -149,6 +149,22 @@ class TestFrameCollector:
 
         assert list(ShareframeFrameCollector().collect()) == []
 
+    def test_update_timestamps_are_exported_per_frame(self):
+        checked = timezone.now()
+        frame = FrameFactory(last_update_check=checked)
+
+        def values(name):
+            return [
+                s.value
+                for s in series(ShareframeFrameCollector(), name)
+                if s.labels["serial_number"] == frame.public_serial_number
+            ]
+
+        assert values("shareframe_frame_last_update_check_timestamp_seconds") == [
+            checked.timestamp()
+        ]
+        assert values("shareframe_frame_last_update_attempt_timestamp_seconds") == []
+
     def test_fresh_telemetry_is_exported_per_frame(self):
         frame = FrameFactory(
             last_heartbeat=timezone.now(), last_telemetry={"cpu_temp_celsius": 48.5}

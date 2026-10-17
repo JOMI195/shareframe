@@ -104,6 +104,13 @@ class TestLatest:
     def test_no_releases_is_a_404(self, board):
         assert board.get(LATEST_URL).status_code == 404
 
+    def test_a_check_is_recorded_even_without_a_release(self, board, frame):
+        board.get(LATEST_URL)
+
+        frame.refresh_from_db()
+        assert frame.last_update_check is not None
+        assert frame.last_update_attempt is None
+
 
 class TestGetVersion:
     def url(self, version):

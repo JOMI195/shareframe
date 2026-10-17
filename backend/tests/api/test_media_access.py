@@ -101,6 +101,18 @@ class TestFrameUpdatesMedia:
             "/api/media/protected/frame-updates/"
         )
 
+    def test_a_granted_download_records_the_update_attempt(self, client, frame):
+        release = ReleaseFactory(groups=[frame.groups.first()])
+        token = FrameTokenFactory(frame=frame)
+
+        client.get(
+            UPDATES + os.path.basename(release.file.name),
+            headers=token_headers(token.access_token),
+        )
+
+        frame.refresh_from_db()
+        assert frame.last_update_attempt is not None
+
     def test_a_release_for_another_group_is_refused(self, client, frame):
         release = ReleaseFactory(groups=[FrameGroupFactory()])
         token = FrameTokenFactory(frame=frame)
@@ -111,6 +123,8 @@ class TestFrameUpdatesMedia:
         )
 
         assert response.status_code == 403
+        frame.refresh_from_db()
+        assert frame.last_update_attempt is None
 
     def test_an_inactive_release_is_refused(self, client, frame):
         release = ReleaseFactory(groups=[frame.groups.first()], is_active=False)
