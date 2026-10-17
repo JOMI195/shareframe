@@ -162,6 +162,11 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus:ro
       - prometheus_data:/prometheus
+    healthcheck:
+      test: [ "CMD", "wget", "-qO-", "http://localhost:9090/-/ready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     networks:
       - monitoring_network
       - backend_network
@@ -200,8 +205,10 @@ services:
     ports:
       - "3001:3000"
     depends_on:
-      - prometheus
-      - loki
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_started
     networks:
       - monitoring_network
       - backend_network
