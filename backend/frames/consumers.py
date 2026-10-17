@@ -445,10 +445,6 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             raise e
 
     # ------------------------------
-    async def send(self, text_data=None, bytes_data=None, close=False):
-        await self.update_last_seen()
-        await super().send(text_data=text_data, bytes_data=bytes_data, close=close)
-
     async def connect(self):
         logger.debug("New connection attempt")
         frame = self.scope.get("frame")

@@ -1,7 +1,7 @@
 {
   "uid": "shareframe-frames",
   "title": "Frames",
-  "description": "Fleet telemetry from the frame heartbeat payloads in Loki, filterable per frame, release version and build sha.",
+  "description": "Fleet telemetry exported by the backend from each frame's latest heartbeat, filterable per frame, release version and build sha. Connectivity and events come from the logs.",
   "tags": [
     "shareframe"
   ],
@@ -53,15 +53,14 @@
         "name": "version",
         "label": "Version",
         "datasource": {
-          "type": "loki",
-          "uid": "loki"
+          "type": "prometheus",
+          "uid": "prometheus"
         },
-        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, version)",
+        "definition": "label_values(shareframe_frame_build_info, version)",
         "query": {
-          "label": "version",
-          "type": 1,
-          "stream": "{job=\"backend\", serial_number=~\".+\"}",
-          "refId": "LokiVariableQueryEditor-VariableQuery"
+          "qryType": 1,
+          "query": "label_values(shareframe_frame_build_info, version)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
         "multi": true,
@@ -86,15 +85,14 @@
         "name": "os_sha",
         "label": "OS SHA",
         "datasource": {
-          "type": "loki",
-          "uid": "loki"
+          "type": "prometheus",
+          "uid": "prometheus"
         },
-        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, os_sha)",
+        "definition": "label_values(shareframe_frame_build_info, os_sha)",
         "query": {
-          "label": "os_sha",
-          "type": 1,
-          "stream": "{job=\"backend\", serial_number=~\".+\"}",
-          "refId": "LokiVariableQueryEditor-VariableQuery"
+          "qryType": 1,
+          "query": "label_values(shareframe_frame_build_info, os_sha)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
         "multi": true,
@@ -119,15 +117,14 @@
         "name": "app_sha",
         "label": "App SHA",
         "datasource": {
-          "type": "loki",
-          "uid": "loki"
+          "type": "prometheus",
+          "uid": "prometheus"
         },
-        "definition": "label_values({job=\"backend\", serial_number=~\".+\"}, app_sha)",
+        "definition": "label_values(shareframe_frame_build_info, app_sha)",
         "query": {
-          "label": "app_sha",
-          "type": 1,
-          "stream": "{job=\"backend\", serial_number=~\".+\"}",
-          "refId": "LokiVariableQueryEditor-VariableQuery"
+          "qryType": 1,
+          "query": "label_values(shareframe_frame_build_info, app_sha)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
         },
         "refresh": 1,
         "multi": true,
@@ -199,8 +196,8 @@
       "title": "Avg CPU usage",
       "id": 3,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -254,10 +251,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__range]) by (serial_number))"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "avg(shareframe_frame_cpu_usage_percent and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ]
     },
@@ -266,8 +266,8 @@
       "title": "Avg RAM used",
       "id": 4,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -321,10 +321,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number))"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "avg((1 - shareframe_frame_ram_available_bytes / shareframe_frame_ram_total_bytes) * 100 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ]
     },
@@ -333,8 +336,8 @@
       "title": "Avg CPU temp",
       "id": 5,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 5,
@@ -392,10 +395,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number))"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "avg(shareframe_frame_cpu_temp_celsius and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ]
     },
@@ -469,8 +475,8 @@
       "title": "Frames reporting",
       "id": 6,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 6,
@@ -518,13 +524,16 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "count(count by (serial_number) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} [$__range])))"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "count(shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ],
-      "description": "Distinct frames that sent a telemetry heartbeat in the range."
+      "description": "Frames that sent a heartbeat within the last 15 minutes."
     },
     {
       "type": "stat",
@@ -593,7 +602,7 @@
           "expr": "count((time() - shareframe_frame_last_seen_timestamp_seconds{serial_number=~\"$frame\"}) > 900) or vector(0)"
         }
       ],
-      "description": "Registered frames whose Frame.last_seen is older than 15 minutes. The heartbeat interval is 5 minutes. Counts against the database roster, so it no longer depends on what happens to be in the log range."
+      "description": "Registered frames whose Frame.last_seen is older than 15 minutes. Heartbeats arrive every 5 minutes; websocket messages from the frame count too. Counts against the database roster, so it no longer depends on what happens to be in the log range."
     },
     {
       "type": "stat",
@@ -669,8 +678,8 @@
       "title": "Unhealthy",
       "id": 7,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 6,
@@ -722,21 +731,24 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "(count(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number)) - sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | unwrap healthy [$__range]) by (serial_number))) or vector(0)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "count(shareframe_frame_health{check=\"overall\", status!=\"ok\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}) or vector(0)"
         }
       ],
-      "description": "Frames whose most recent heartbeat reported health_state other than ok. health_state is not stored in the database, so this only covers frames that reported inside the range."
+      "description": "Frames whose latest heartbeat reports health_state other than ok."
     },
     {
       "type": "stat",
       "title": "Service down",
       "id": 8,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 6,
@@ -788,10 +800,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "sum(last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running \"false\") (eq .display_running \"false\") (eq .update_running \"false\") (eq .websocket_running \"false\") }}1{{ else }}0{{ end }}` | unwrap service_down [$__range]) by (serial_number)) or vector(0)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "count(count by (serial_number) (shareframe_frame_service_running{service=~\"websocket|display|dashboard|update\"} == 0 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})) or vector(0)"
         }
       ],
       "description": "Frames whose last heartbeat reported dashboard, display, update or websocket not running."
@@ -801,8 +816,8 @@
       "title": "Reboots in range",
       "id": 9,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 6,
@@ -854,13 +869,16 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "sum(max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__range]) by (serial_number))"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "sum(max_over_time(shareframe_frame_boot_count{serial_number=~\"$frame\"}[$__range]) - min_over_time(shareframe_frame_boot_count{serial_number=~\"$frame\"}[$__range])) or vector(0)"
         }
       ],
-      "description": "Fleet-wide boot_count increase over the range."
+      "description": "Sum over frames of how far boot_count advanced within the range."
     },
     {
       "type": "row",
@@ -1161,8 +1179,8 @@
       "title": "Latest telemetry per frame",
       "id": 31,
       "datasource": {
-        "type": "datasource",
-        "uid": "-- Mixed --"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 10,
@@ -1928,181 +1946,247 @@
         {
           "refId": "S",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format seen=`{{ unixEpochMillis __timestamp__ }}` | label_format metric=\"Last heartbeat\" | unwrap seen [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_last_heartbeat_timestamp_seconds * 1000) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Last heartbeat\", \"\", \"\")"
         },
         {
           "refId": "T",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format healthy=`{{ if eq .health_state \"ok\" }}1{{ else }}0{{ end }}` | label_format metric=\"Health\" | unwrap healthy [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (count by (serial_number) (shareframe_frame_health{check=\"overall\", status=\"ok\"}) or on (serial_number) 0 * count by (serial_number) (shareframe_frame_health{check=\"overall\"})) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Health\", \"\", \"\")"
         },
         {
           "refId": "U",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format slot=`{{ if eq .boot_slot \"A\" }}0{{ else }}1{{ end }}` | label_format metric=\"Boot slot\" | unwrap slot [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (0 * count by (serial_number) (shareframe_frame_build_info{boot_slot=\"A\"}) or on (serial_number) count by (serial_number) (shareframe_frame_build_info{boot_slot!=\"A\"})) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Boot slot\", \"\", \"\")"
         },
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU temp\" | unwrap cpu_temp_celsius [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_cpu_temp_celsius) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"CPU temp\", \"\", \"\")"
         },
         {
           "refId": "B",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU %\" | unwrap cpu_usage_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_cpu_usage_percent) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"CPU %\", \"\", \"\")"
         },
         {
           "refId": "C",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"CPU MHz\" | unwrap cpu_freq_mhz [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_cpu_freq_mhz) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"CPU MHz\", \"\", \"\")"
         },
         {
           "refId": "D",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | label_format metric=\"RAM %\" | unwrap ram_used_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) ((1 - shareframe_frame_ram_available_bytes / shareframe_frame_ram_total_bytes) * 100) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"RAM %\", \"\", \"\")"
         },
         {
           "refId": "E",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM free\" | unwrap ram_available_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_ram_available_bytes) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"RAM free\", \"\", \"\")"
         },
         {
           "refId": "F",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"RAM total\" | unwrap ram_total_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_ram_total_bytes) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"RAM total\", \"\", \"\")"
         },
         {
           "refId": "G",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | label_format metric=\"Disk %\" | unwrap storage_used_percent [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) ((1 - shareframe_frame_storage_data_free_bytes / shareframe_frame_storage_data_total_bytes) * 100) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Disk %\", \"\", \"\")"
         },
         {
           "refId": "H",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk free\" | unwrap storage_data_free_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_storage_data_free_bytes) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Disk free\", \"\", \"\")"
         },
         {
           "refId": "I",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Disk total\" | unwrap storage_data_total_bytes [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_storage_data_total_bytes) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Disk total\", \"\", \"\")"
         },
         {
           "refId": "J",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 1m\" | unwrap load_1 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_load_1) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Load 1m\", \"\", \"\")"
         },
         {
           "refId": "K",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 5m\" | unwrap load_5 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_load_5) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Load 5m\", \"\", \"\")"
         },
         {
           "refId": "L",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Load 15m\" | unwrap load_15 [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_load_15) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Load 15m\", \"\", \"\")"
         },
         {
           "refId": "M",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Uptime\" | unwrap uptime_seconds [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_uptime_seconds) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Uptime\", \"\", \"\")"
         },
         {
           "refId": "N",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format metric=\"Boots\" | unwrap boot_count [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_boot_count) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Boots\", \"\", \"\")"
         },
         {
           "refId": "O",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .dashboard_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Dashboard\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_service_running{service=\"dashboard\"}) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Dashboard\", \"\", \"\")"
         },
         {
           "refId": "P",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .display_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Display\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_service_running{service=\"display\"}) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Display\", \"\", \"\")"
         },
         {
           "refId": "Q",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .update_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Update\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_service_running{service=\"update\"}) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Update\", \"\", \"\")"
         },
         {
           "refId": "R",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if eq .websocket_running \"true\" }}1{{ else }}0{{ end }}` | label_format metric=\"Websocket\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_service_running{service=\"websocket\"}) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Websocket\", \"\", \"\")"
         },
         {
           "refId": "X",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format flag=`{{ if .safe_mode }}1{{ else }}0{{ end }}` | label_format metric=\"Safe mode\" | unwrap flag [$__range]) by (serial_number, metric, version, os_sha, app_sha, kernel)"
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_safe_mode) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Safe mode\", \"\", \"\")"
         }
       ],
-      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it reported no telemetry in the range - legacy firmware sends only ip and version, so those rows are identity-only. Version, OS SHA, App SHA and Kernel are heartbeat stream labels carried through the join, reduced with lastNotNull: a frame that updated inside the range shows what it runs now. Grouping is by serial_number alone, and the range queries are collapsed to their newest bucket, so a frame cannot occupy more than one row. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
+      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it is offline - telemetry columns stay empty then, because telemetry is only exported for frames that sent a heartbeat within the last 15 minutes. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -2800,8 +2884,8 @@
       "title": "Uptime",
       "id": 15,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -2862,11 +2946,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uptime_seconds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_uptime_seconds and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "A drop back to zero is a reboot."
@@ -2876,8 +2962,8 @@
       "title": "Boot count",
       "id": 16,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -2939,11 +3025,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap boot_count [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_boot_count and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Every step up is a boot."
@@ -2952,10 +3040,10 @@
       "id": 50,
       "type": "table",
       "title": "Build provenance per frame",
-      "description": "Every build seen in the range, straight off the heartbeat stream labels: the release semver plus the commits it was built from - os_sha from shareframe-hardware, app_sha from shareframe-board. A frame that updated mid-range shows one row per build, newest last, with the heartbeat count behind each. A -dirty suffix means that checkout had uncommitted changes at build time. For current-only values see Latest telemetry per frame.",
+      "description": "Release, OS and app commit plus kernel each frame reported in its latest heartbeat.",
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -2967,14 +3055,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "editorMode": "code",
-          "queryType": "instant",
           "instant": true,
+          "range": false,
           "legendFormat": "",
-          "expr": "count by (serial_number, version, os_sha, app_sha, kernel) (count_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} [$__range]))"
+          "expr": "max by (serial_number, version, os_sha, app_sha, kernel) (shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ],
       "transformations": [
@@ -3006,15 +3093,15 @@
           "id": "organize",
           "options": {
             "excludeByName": {
-              "Time": true
+              "Time": true,
+              "Value": true
             },
             "renameByName": {
               "serial_number": "Frame",
               "version": "Version",
               "os_sha": "OS SHA",
               "app_sha": "App SHA",
-              "kernel": "Kernel",
-              "Value": "Heartbeats"
+              "kernel": "Kernel"
             },
             "indexByName": {
               "serial_number": 0,
@@ -3155,8 +3242,8 @@
       "title": "CPU temperature by frame",
       "id": 18,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -3220,11 +3307,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__range]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_cpu_temp_celsius and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3233,8 +3322,8 @@
       "title": "RAM used by frame",
       "id": 19,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -3294,11 +3383,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__range]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{serial_number}}",
+          "expr": "(1 - shareframe_frame_ram_available_bytes / shareframe_frame_ram_total_bytes) * 100 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3307,8 +3398,8 @@
       "title": "CPU temperature",
       "id": 21,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -3377,11 +3468,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_temp_celsius [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_cpu_temp_celsius and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3390,8 +3483,8 @@
       "title": "CPU usage",
       "id": 22,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -3452,11 +3545,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap cpu_usage_percent [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_cpu_usage_percent and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3465,8 +3560,8 @@
       "title": "RAM used",
       "id": 23,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -3527,11 +3622,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format ram_used_percent=`{{ mulf (divf (subf (float64 .ram_total_bytes) (float64 .ram_available_bytes)) (float64 .ram_total_bytes)) 100 }}` | unwrap ram_used_percent [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "(1 - shareframe_frame_ram_available_bytes / shareframe_frame_ram_total_bytes) * 100 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3540,8 +3637,8 @@
       "title": "Load average",
       "id": 24,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 8,
@@ -3602,29 +3699,35 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_1 [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 1m"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} · 1m",
+          "expr": "shareframe_frame_load_1 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         },
         {
           "refId": "B",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_5 [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 5m"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} · 5m",
+          "expr": "shareframe_frame_load_5 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         },
         {
           "refId": "C",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "avg_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap load_15 [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} \u00b7 15m"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} · 15m",
+          "expr": "shareframe_frame_load_15 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3646,8 +3749,8 @@
       "title": "Data partition used",
       "id": 28,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -3707,11 +3810,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | label_format storage_used_percent=`{{ mulf (subf 1.0 (divf (float64 .storage_data_free_bytes) (float64 .storage_data_total_bytes))) 100 }}` | unwrap storage_used_percent [$__range]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": true,
+          "range": false,
+          "legendFormat": "{{serial_number}}",
+          "expr": "(1 - shareframe_frame_storage_data_free_bytes / shareframe_frame_storage_data_total_bytes) * 100 and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3720,8 +3825,8 @@
       "title": "Data partition free",
       "id": 29,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -3782,11 +3887,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap storage_data_free_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_storage_data_free_bytes and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3795,8 +3902,8 @@
       "title": "Data written per day",
       "id": 67,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "description": "KiB the frame wrote to its /data partition (f2fs lifetime counter) over the trailing 24h. Catches write amplification before it wears out the SD card. A factory reset restarts the counter.",
       "gridPos": {
@@ -3837,12 +3944,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "editorMode": "code",
-          "expr": "max_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | data_written_kb != \"\" | unwrap data_written_kb [1d]) by (serial_number) - min_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | data_written_kb != \"\" | unwrap data_written_kb [1d]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "(max_over_time(shareframe_frame_data_written_kb[1d]) - min_over_time(shareframe_frame_data_written_kb[1d])) and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ]
     },
@@ -3851,8 +3959,8 @@
       "title": "SD card per frame",
       "id": 68,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "description": "Card identity from the SD controller (name, manufacturer and OEM id, manufacturing date) with the lifetime KiB written to /data, to tie card failures to a brand or batch.",
       "gridPos": {
@@ -3865,14 +3973,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "editorMode": "code",
-          "queryType": "instant",
           "instant": true,
+          "range": false,
           "legendFormat": "",
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | sd_card != \"\" | data_written_kb != \"\" | unwrap data_written_kb [$__range]) by (serial_number, sd_card)"
+          "expr": "sum by (serial_number, sd_card) (shareframe_frame_data_written_kb * on (serial_number) group_left (sd_card) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
         }
       ],
       "transformations": [
@@ -3983,8 +4090,8 @@
       "title": "Image refreshes",
       "id": 52,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4046,22 +4153,24 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_image_refresh_total [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_display_epd_image_refresh_total and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
-      "description": "Bild-Aktualisierungen (epd_image_refresh_total). Every step up is an image shown."
+      "description": "Image refreshes since first use (epd_image_refresh_total). Every step up is an image shown."
     },
     {
       "type": "timeseries",
       "title": "Display failures",
       "id": 53,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4123,20 +4232,24 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_refresh_fail_total [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} refresh"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} refresh",
+          "expr": "shareframe_frame_display_epd_refresh_fail_total and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         },
         {
           "refId": "B",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_poweron_fail_total [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} power-on"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} power-on",
+          "expr": "shareframe_frame_display_epd_poweron_fail_total and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Failed panel refreshes and power-ons since first use. Every step up is a failure."
@@ -4146,8 +4259,8 @@
       "title": "Refresh duration",
       "id": 55,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4209,11 +4322,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_epd_last_refresh_ms [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_display_epd_last_refresh_ms and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Duration of the last panel refresh. Creeping up hints at a tired panel or BUSY-pin trouble."
@@ -4223,8 +4338,8 @@
       "title": "Consecutive display failures",
       "id": 56,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4286,11 +4401,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap display_consecutive_failures [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_display_consecutive_failures and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Failure streak; 3 or more means the display reports failed."
@@ -4313,8 +4430,8 @@
       "title": "App crashes",
       "id": 58,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4376,11 +4493,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap crash_count [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_crash_count and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Persistent count of app service crashes (non-zero exit or fatal signal)."
@@ -4390,8 +4509,8 @@
       "title": "Unclean resets",
       "id": 59,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4453,11 +4572,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap unclean_resets [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_unclean_resets and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Boots without a clean shutdown: power pulled, watchdog or panic. Pulling the plug is normal."
@@ -4467,8 +4588,8 @@
       "title": "WiFi signal",
       "id": 60,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4530,11 +4651,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap wlan_signal_dbm [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}}"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_wlan_signal_dbm and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "wlan0 signal strength."
@@ -4544,8 +4667,8 @@
       "title": "Heap per service",
       "id": 61,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4607,47 +4730,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_display_heap_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} display"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_dashboard_heap_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} dashboard"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_websocket_heap_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} websocket"
-        },
-        {
-          "refId": "D",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_heartbeat_heap_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} heartbeat"
-        },
-        {
-          "refId": "E",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_update_heap_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} update"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} {{service}}",
+          "expr": "shareframe_frame_process_heap_bytes and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "VmData per app service (heap + thread stacks). Steady growth across days = leak."
@@ -4657,8 +4746,8 @@
       "title": "RSS per service",
       "id": 62,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4720,47 +4809,13 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_display_rss_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} display"
-        },
-        {
-          "refId": "B",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_dashboard_rss_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} dashboard"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_websocket_rss_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} websocket"
-        },
-        {
-          "refId": "D",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_heartbeat_rss_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} heartbeat"
-        },
-        {
-          "refId": "E",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_update_rss_bytes [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} update"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} {{service}}",
+          "expr": "shareframe_frame_process_rss_bytes and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Resident memory per app service."
@@ -4770,8 +4825,8 @@
       "title": "Threads & fds per service",
       "id": 63,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4833,92 +4888,24 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_display_threads [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} display threads"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} {{service}} threads",
+          "expr": "shareframe_frame_process_threads and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         },
         {
           "refId": "B",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_dashboard_threads [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} dashboard threads"
-        },
-        {
-          "refId": "C",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_websocket_threads [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} websocket threads"
-        },
-        {
-          "refId": "D",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_heartbeat_threads [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} heartbeat threads"
-        },
-        {
-          "refId": "E",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_update_threads [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} update threads"
-        },
-        {
-          "refId": "F",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_display_fds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} display fds"
-        },
-        {
-          "refId": "G",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_dashboard_fds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} dashboard fds"
-        },
-        {
-          "refId": "H",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_websocket_fds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} websocket fds"
-        },
-        {
-          "refId": "I",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_heartbeat_fds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} heartbeat fds"
-        },
-        {
-          "refId": "J",
-          "datasource": {
-            "type": "loki",
-            "uid": "loki"
-          },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap proc_update_fds [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} update fds"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} {{service}} fds",
+          "expr": "shareframe_frame_process_fds and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Threads and open file descriptors per app service; growth = leak."
@@ -4928,8 +4915,8 @@
       "title": "Peaks this boot",
       "id": 64,
       "datasource": {
-        "type": "loki",
-        "uid": "loki"
+        "type": "prometheus",
+        "uid": "prometheus"
       },
       "gridPos": {
         "h": 7,
@@ -4991,20 +4978,24 @@
         {
           "refId": "A",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap temp_peak_celsius [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} temp peak"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} temp peak",
+          "expr": "shareframe_frame_temp_peak_celsius and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         },
         {
           "refId": "B",
           "datasource": {
-            "type": "loki",
-            "uid": "loki"
+            "type": "prometheus",
+            "uid": "prometheus"
           },
-          "expr": "last_over_time({job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json | unwrap uv_events [$__auto]) by (serial_number)",
-          "legendFormat": "{{serial_number}} under-voltage events"
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}} under-voltage events",
+          "expr": "shareframe_frame_uv_events and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
         }
       ],
       "description": "Highest CPU temperature since boot and under-voltage/throttle events counted since boot."

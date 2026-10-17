@@ -15,8 +15,13 @@ class MetricsConfig(AppConfig):
     name = "metrics"
 
     def ready(self):
-        from .collectors import ShareframeBusinessCollector, ShareframeFrameCollector
+        from .collectors import (
+            ShareframeBusinessCollector,
+            ShareframeCeleryCollector,
+            ShareframeFrameCollector,
+        )
         from .registry import BUSINESS_REGISTRY
 
         _register(REGISTRY, ShareframeFrameCollector())
+        _register(REGISTRY, ShareframeCeleryCollector())
         _register(BUSINESS_REGISTRY, ShareframeBusinessCollector())

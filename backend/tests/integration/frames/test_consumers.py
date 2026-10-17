@@ -1,7 +1,9 @@
 import json
+from datetime import timedelta
 
 import pytest
 from channels.db import database_sync_to_async
+from channels.layers import get_channel_layer
 from channels.testing import WebsocketCommunicator
 from django.utils import timezone
 
@@ -97,6 +99,28 @@ async def test_heartbeat_updates_last_seen():
     await communicator.receive_nothing(timeout=0.3)
 
     assert (await reload(frame)).last_seen is not None
+    await communicator.disconnect()
+
+
+async def test_pushing_to_the_frame_does_not_count_as_seeing_it():
+    """A push to a half-open socket would otherwise keep a dead frame online."""
+    frame = await make_frame()
+    communicator, _, _ = await connect(await make_token(frame))
+    await communicator.receive_nothing(timeout=0.3)
+    long_ago = timezone.now() - timedelta(hours=2)
+    await database_sync_to_async(Frame.objects.filter(pk=frame.pk).update)(
+        last_seen=long_ago
+    )
+    connection = await database_sync_to_async(FrameWebsocketConnection.objects.get)(
+        frame=frame
+    )
+
+    await get_channel_layer().send(
+        connection.channel_name, {"type": "send_command", "data": "{}"}
+    )
+    await communicator.receive_from()
+
+    assert (await reload(frame)).last_seen == long_ago
     await communicator.disconnect()
 
 

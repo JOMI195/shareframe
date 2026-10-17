@@ -505,7 +505,7 @@
     },
     {
       "type": "stat",
-      "title": "Images stored",
+      "title": "Database size",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -518,7 +518,7 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "short",
+          "unit": "bytes",
           "color": {
             "mode": "thresholds"
           },
@@ -559,10 +559,10 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "shareframe_images_total"
+          "expr": "shareframe_database_size_bytes"
         }
       ],
-      "description": "Images excluding soft-deleted ones. Drives the disk trend below.",
+      "description": "Size of the application database on disk.",
       "id": 106
     },
     {
