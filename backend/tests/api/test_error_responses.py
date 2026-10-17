@@ -36,3 +36,17 @@ def test_an_unhandled_exception_is_a_generic_json_500(client):
 
     assert response.status_code == 500
     assert response.json() == {"detail": "A server error occurred."}
+
+
+def test_a_browser_gets_json_not_the_browsable_api(client):
+    response = client.get("/api/frames/", HTTP_ACCEPT="text/html")
+
+    assert response["Content-Type"] == "application/json"
+    assert "Django REST framework" not in response.content.decode()
+
+
+def test_the_api_root_does_not_list_endpoints(client):
+    response = client.get("/api/", HTTP_ACCEPT="text/html")
+
+    assert response.status_code == 404
+    assert response.json() == {"detail": "Not found."}
