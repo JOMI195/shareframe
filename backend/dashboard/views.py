@@ -1,4 +1,5 @@
 import datetime
+import logging
 from datetime import timedelta
 
 from django.db.models import Q
@@ -13,6 +14,8 @@ from frames.models import Frame
 from images.models import Image
 from sent_images.models import SentImage
 from user_accounts.avatars import avatar_url
+
+logger = logging.getLogger("django.request")
 
 
 class DashboardAPIViewSet(viewsets.ViewSet):
@@ -146,10 +149,9 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                 }
             )
 
-        except Exception as e:
+        except Exception:
+            logger.exception("Dashboard stats failed")
             return Response(
-                {
-                    "detail": f"An error occurred while fetching dashboard stats: {str(e)}"
-                },
+                {"detail": "An error occurred while fetching dashboard stats."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

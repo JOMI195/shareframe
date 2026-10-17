@@ -22,6 +22,7 @@ def test_an_app_upload_over_the_limit_is_rejected(alice):
     response = post_claiming(alice, URL, settings.APP_UPLOAD_MAX_SIZE + 1)
 
     assert response.status_code == 413
+    assert response.json() == {"detail": "Request entity too large."}
 
 
 def test_the_admin_ceiling_is_higher_than_the_app_one(alice):
