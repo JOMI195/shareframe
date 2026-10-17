@@ -980,6 +980,30 @@
           "range": false,
           "format": "table",
           "legendFormat": ""
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (serial_number) (shareframe_frame_last_update_check_timestamp_seconds{serial_number=~\"$frame\"}) * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (serial_number) (shareframe_frame_last_update_attempt_timestamp_seconds{serial_number=~\"$frame\"}) * 1000",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
         }
       ],
       "transformations": [
@@ -1001,14 +1025,18 @@
               "Time 4": true,
               "Time 5": true,
               "Time 6": true,
-              "Value #A": true
+              "Value #A": true,
+              "Time 7": true,
+              "Time 8": true
             },
             "renameByName": {
               "Value #B": "Active",
               "Value #C": "Last seen",
               "Value #D": "Last connected",
               "Value #E": "Websocket",
-              "Value #F": "Registered"
+              "Value #F": "Registered",
+              "Value #G": "Last update check",
+              "Value #H": "Last update attempt"
             },
             "indexByName": {
               "serial_number": 0,
@@ -1017,8 +1045,10 @@
               "local_ip_address": 3,
               "Last seen": 4,
               "Last connected": 5,
-              "Websocket": 6,
-              "Registered": 7
+              "Last update check": 6,
+              "Last update attempt": 7,
+              "Websocket": 8,
+              "Registered": 9
             }
           }
         }
@@ -1083,6 +1113,30 @@
             "matcher": {
               "id": "byName",
               "options": "Last connected"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last update check"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dateTimeFromNow"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Last update attempt"
             },
             "properties": [
               {
