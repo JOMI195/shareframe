@@ -118,8 +118,540 @@ groups:
                     type: gt
                     params: [3]
 
-  # Only frames that are online and report trouble. Silence is never an alert:
-  # owners switch frames off, go on vacation or pull the plug.
+  - orgId: 1
+    name: platform
+    folder: ShareFrame
+    interval: 1m
+    rules:
+      - uid: shareframe_backend_metrics_down
+        title: BackendMetricsDown
+        condition: C
+        for: 2m
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Backend /metrics target is down'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'up{job="django"}'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+      - uid: shareframe_target_down
+        title: TargetDown
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Scrape target {{ $labels.job }} is down'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'up{job!="django"}'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [1]
+      - uid: shareframe_host_disk_almost_full
+        title: HostDiskAlmostFull
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Disk above 75% on {{ $labels.mountpoint }}'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: '(1 - (node_filesystem_avail_bytes{fstype=~"ext4|xfs|btrfs|zfs", mountpoint!~"/(run|var/lib/docker)(/.*)?"} / node_filesystem_size_bytes{fstype=~"ext4|xfs|btrfs|zfs", mountpoint!~"/(run|var/lib/docker)(/.*)?"})) * 100'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [75]
+      - uid: shareframe_host_memory_almost_full
+        title: HostMemoryAlmostFull
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Host memory above 90%'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: '(1 - node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes) * 100'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [90]
+      - uid: shareframe_backend_5xx
+        title: BackendServerErrors
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Backend answered more than 5 requests with 5xx in 10m'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'sum(increase(django_http_responses_total_by_status_total{status=~"5.."}[10m]))'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [5]
+      - uid: shareframe_api_latency_high
+        title: ApiLatencyHigh
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Backend p95 latency above 2s'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'histogram_quantile(0.95, sum by (le) (rate(django_http_requests_latency_seconds_by_view_method_bucket{view!~"prometheus-.*"}[10m])))'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [2]
+      - uid: shareframe_container_restart_loop
+        title: ContainerRestartLoop
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Container {{ $labels.container_name }} restarted more than 3x in 15m'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'resets(docker_container_status_uptime_ns[15m])'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [3]
+      - uid: shareframe_container_unhealthy
+        title: ContainerUnhealthy
+        condition: C
+        for: 5m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Container {{ $labels.container_name }} healthcheck is unhealthy'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'docker_container_health_state == 3'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
+  - orgId: 1
+    name: jobs
+    folder: ShareFrame
+    interval: 1m
+    rules:
+      - uid: shareframe_celery_task_failing
+        title: CeleryTaskFailing
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Celery task {{ $labels.task }} failed within the last hour'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'time() - shareframe_celery_task_last_failure_timestamp_seconds'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: lt
+                    params: [3600]
+      - uid: shareframe_scheduled_delivery_stalled
+        title: ScheduledDeliveryStalled
+        condition: C
+        for: 5m
+        noDataState: Alerting
+        execErrState: Error
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Scheduled image delivery has not succeeded for 10m (worker or beat down?)'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'time() - shareframe_celery_task_last_success_timestamp_seconds{task="sent_images.tasks.deliver_due_scheduled_sent_images"}'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [600]
+      - uid: shareframe_celery_queue_backlog
+        title: CeleryQueueBacklog
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'More than 50 Celery tasks waiting'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'shareframe_celery_queue_length'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [50]
+      - uid: shareframe_redis_evicting
+        title: RedisEvictingKeys
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Redis evicted keys; queued tasks or channel messages may be lost'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'increase(shareframe_redis_evicted_keys_total[15m])'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+      - uid: shareframe_redis_memory_high
+        title: RedisMemoryHigh
+        condition: C
+        for: 10m
+        noDataState: OK
+        execErrState: Error
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Redis above 85% of maxmemory'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 600
+              to: 0
+            datasourceUid: prometheus
+            model:
+              refId: A
+              datasource:
+                type: prometheus
+                uid: prometheus
+              editorMode: code
+              expr: 'shareframe_redis_used_memory_bytes / (shareframe_redis_maxmemory_bytes > 0) * 100'
+              instant: true
+              range: false
+              intervalMs: 15000
+              maxDataPoints: 43200
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: A
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [85]
+
+  # Telemetry is only exported for frames that heartbeat, so silence is never an
+  # alert: owners switch frames off, go on vacation or pull the plug.
   - orgId: 1
     name: frames
     folder: ShareFrame
@@ -130,44 +662,29 @@ groups:
         condition: C
         for: 15m
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         labels:
           severity: warning
         annotations:
-          summary: 'Frame {{ $labels.serial_number }} reports health_state other than ok'
+          summary: 'Frame {{ $labels.serial_number }} reports health {{ $labels.status }}'
         data:
           - refId: A
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: loki
+            datasourceUid: prometheus
             model:
               refId: A
               datasource:
-                type: loki
-                uid: loki
+                type: prometheus
+                uid: prometheus
               editorMode: code
-              queryType: range
-              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format unhealthy=`{{ if ne .health_state "ok" }}1{{ else }}0{{ end }}` | unwrap unhealthy [10m]) by (serial_number)'
-              intervalMs: 60000
+              expr: 'shareframe_frame_health{check="overall", status!="ok"}'
+              instant: true
+              range: false
+              intervalMs: 15000
               maxDataPoints: 43200
-          - refId: B
-            relativeTimeRange:
-              from: 600
-              to: 0
-            datasourceUid: __expr__
-            model:
-              refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
-              type: reduce
-              reducer: last
-              expression: A
           - refId: C
-            relativeTimeRange:
-              from: 600
-              to: 0
             datasourceUid: __expr__
             model:
               refId: C
@@ -175,7 +692,7 @@ groups:
                 type: __expr__
                 uid: __expr__
               type: threshold
-              expression: B
+              expression: A
               conditions:
                 - evaluator:
                     type: gt
@@ -185,44 +702,29 @@ groups:
         condition: C
         for: 10m
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         labels:
           severity: warning
         annotations:
-          summary: 'Frame {{ $labels.serial_number }} reports an app service not running'
+          summary: 'Frame {{ $labels.serial_number }}: service {{ $labels.service }} not running'
         data:
           - refId: A
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: loki
+            datasourceUid: prometheus
             model:
               refId: A
               datasource:
-                type: loki
-                uid: loki
+                type: prometheus
+                uid: prometheus
               editorMode: code
-              queryType: range
-              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format service_down=`{{ if or (eq .dashboard_running "false") (eq .display_running "false") (eq .update_running "false") (eq .websocket_running "false") }}1{{ else }}0{{ end }}` | unwrap service_down [10m]) by (serial_number)'
-              intervalMs: 60000
+              expr: 'shareframe_frame_service_running{service=~"websocket|display|dashboard|update"}'
+              instant: true
+              range: false
+              intervalMs: 15000
               maxDataPoints: 43200
-          - refId: B
-            relativeTimeRange:
-              from: 600
-              to: 0
-            datasourceUid: __expr__
-            model:
-              refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
-              type: reduce
-              reducer: last
-              expression: A
           - refId: C
-            relativeTimeRange:
-              from: 600
-              to: 0
             datasourceUid: __expr__
             model:
               refId: C
@@ -230,17 +732,17 @@ groups:
                 type: __expr__
                 uid: __expr__
               type: threshold
-              expression: B
+              expression: A
               conditions:
                 - evaluator:
-                    type: gt
-                    params: [0]
+                    type: lt
+                    params: [1]
       - uid: shareframe_frame_reboot_loop
         title: FrameRebootLoop
         condition: C
         for: 0s
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         labels:
           severity: warning
         annotations:
@@ -250,34 +752,19 @@ groups:
             relativeTimeRange:
               from: 3600
               to: 0
-            datasourceUid: loki
+            datasourceUid: prometheus
             model:
               refId: A
               datasource:
-                type: loki
-                uid: loki
+                type: prometheus
+                uid: prometheus
               editorMode: code
-              queryType: range
-              expr: 'max_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap boot_count [1h]) by (serial_number) - min_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap boot_count [1h]) by (serial_number)'
-              intervalMs: 60000
+              expr: 'max_over_time(shareframe_frame_boot_count[1h]) - min_over_time(shareframe_frame_boot_count[1h])'
+              instant: true
+              range: false
+              intervalMs: 15000
               maxDataPoints: 43200
-          - refId: B
-            relativeTimeRange:
-              from: 3600
-              to: 0
-            datasourceUid: __expr__
-            model:
-              refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
-              type: reduce
-              reducer: last
-              expression: A
           - refId: C
-            relativeTimeRange:
-              from: 3600
-              to: 0
             datasourceUid: __expr__
             model:
               refId: C
@@ -285,7 +772,7 @@ groups:
                 type: __expr__
                 uid: __expr__
               type: threshold
-              expression: B
+              expression: A
               conditions:
                 - evaluator:
                     type: gt
@@ -295,7 +782,7 @@ groups:
         condition: C
         for: 0s
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         labels:
           severity: warning
         annotations:
@@ -305,34 +792,19 @@ groups:
             relativeTimeRange:
               from: 3600
               to: 0
-            datasourceUid: loki
+            datasourceUid: prometheus
             model:
               refId: A
               datasource:
-                type: loki
-                uid: loki
+                type: prometheus
+                uid: prometheus
               editorMode: code
-              queryType: range
-              expr: 'max_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap crash_count [1h]) by (serial_number) - min_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | unwrap crash_count [1h]) by (serial_number)'
-              intervalMs: 60000
+              expr: 'max_over_time(shareframe_frame_crash_count[1h]) - min_over_time(shareframe_frame_crash_count[1h])'
+              instant: true
+              range: false
+              intervalMs: 15000
               maxDataPoints: 43200
-          - refId: B
-            relativeTimeRange:
-              from: 3600
-              to: 0
-            datasourceUid: __expr__
-            model:
-              refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
-              type: reduce
-              reducer: last
-              expression: A
           - refId: C
-            relativeTimeRange:
-              from: 3600
-              to: 0
             datasourceUid: __expr__
             model:
               refId: C
@@ -340,7 +812,7 @@ groups:
                 type: __expr__
                 uid: __expr__
               type: threshold
-              expression: B
+              expression: A
               conditions:
                 - evaluator:
                     type: gt
@@ -350,7 +822,7 @@ groups:
         condition: C
         for: 10m
         noDataState: OK
-        execErrState: OK
+        execErrState: Error
         labels:
           severity: warning
         annotations:
@@ -360,34 +832,19 @@ groups:
             relativeTimeRange:
               from: 600
               to: 0
-            datasourceUid: loki
+            datasourceUid: prometheus
             model:
               refId: A
               datasource:
-                type: loki
-                uid: loki
+                type: prometheus
+                uid: prometheus
               editorMode: code
-              queryType: range
-              expr: 'last_over_time({job="backend", serial_number=~".+"} | regexp `log - b''(?P<payload>\{.*\})''$` | line_format `{{.payload}}` | json | label_format display_failed=`{{ if eq .display_health "failed" }}1{{ else }}0{{ end }}` | unwrap display_failed [10m]) by (serial_number)'
-              intervalMs: 60000
+              expr: 'shareframe_frame_health{check="display", status="failed"}'
+              instant: true
+              range: false
+              intervalMs: 15000
               maxDataPoints: 43200
-          - refId: B
-            relativeTimeRange:
-              from: 600
-              to: 0
-            datasourceUid: __expr__
-            model:
-              refId: B
-              datasource:
-                type: __expr__
-                uid: __expr__
-              type: reduce
-              reducer: last
-              expression: A
           - refId: C
-            relativeTimeRange:
-              from: 600
-              to: 0
             datasourceUid: __expr__
             model:
               refId: C
@@ -395,7 +852,7 @@ groups:
                 type: __expr__
                 uid: __expr__
               type: threshold
-              expression: B
+              expression: A
               conditions:
                 - evaluator:
                     type: gt
