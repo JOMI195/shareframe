@@ -1,6 +1,5 @@
 from django.contrib.auth import get_user_model
 from djoser.views import UserViewSet as BaseUserViewSet
-from drf_spectacular.utils import extend_schema
 from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,9 +14,6 @@ class PasswordSerializer(serializers.Serializer):
 
 class CustomUserViewSet(BaseUserViewSet):
     @action(methods=["get", "patch", "put", "delete"], detail=False)
-    @extend_schema(
-        request=PasswordSerializer, responses={200: None, 204: None, 400: None}
-    )
     def me(self, request, *args, **kwargs):
         if request.method == "DELETE":
             serializer = PasswordSerializer(data=request.data)
@@ -42,10 +38,8 @@ class CustomUserViewSet(BaseUserViewSet):
 
         return super().me(request, *args, **kwargs)
 
-    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(exclude=True)
     def destroy(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

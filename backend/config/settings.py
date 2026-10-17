@@ -83,7 +83,6 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "rest_framework_simplejwt.token_blacklist",
     "djoser",
-    "drf_spectacular",
     "django_celery_results",
     "django_celery_beat",
     "django_otp",
@@ -402,9 +401,9 @@ AUTHENTICATION_BACKENDS = ("django.contrib.auth.backends.ModelBackend",)
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": ("authentication.auth.CookieJWTAuthentication",),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
     "EXCEPTION_HANDLER": "config.errors.exception_handler",
+    "DEFAULT_RENDERER_CLASSES": ["rest_framework.renderers.JSONRenderer"],
     # nginx overwrites X-Forwarded-For with the client address.
     "NUM_PROXIES": 1,
     # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
@@ -505,13 +504,6 @@ CHANNEL_LAYERS = {
             ],
         },
     }
-}
-
-SPECTACULAR_SETTINGS = {
-    "TITLE": "ShareFrame API",
-    "DESCRIPTION": "Endpoints and possible interactions with the API",
-    "VERSION": "1.0.0",
-    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"

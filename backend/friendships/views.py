@@ -1,5 +1,4 @@
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -36,17 +35,11 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             Q(sender=self.request.user) | Q(reciever=self.request.user)
         )
 
-    @extend_schema(
-        responses={200: FriendshipRetrieveSerializer(many=True)},
-    )
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @extend_schema(
-        responses={200: FriendshipRetrieveSerializer},
-    )
     def retrieve(self, request, *args, **kwargs):
         try:
             element = self.get_queryset().get(pk=self.kwargs["pk"])
@@ -61,14 +54,9 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(element)
         return Response(serializer.data)
 
-    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(
-        request=FriendshipDestroySerializer,
-        responses={200: FriendshipRetrieveSerializer},
-    )
     def destroy(self, request, *args, **kwargs):
         pk_to_delete = self.kwargs["pk"]
         try:
@@ -87,10 +75,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         element.delete()
         return Response(response_data)
 
-    @extend_schema(
-        request=FriendshipCreateSerializer,
-        responses={201: FriendshipRetrieveSerializer},
-    )
     @action(detail=False, methods=["POST"], url_path="send-request")
     def send_request(self, request):
         reciever_friendship_user_search_code = request.data.get(
@@ -148,9 +132,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(
-        responses={200: FriendshipRetrieveSerializer},
-    )
     @action(detail=True, methods=["POST"], url_path="accept-request")
     def accept_request(self, request, pk):
         try:
@@ -187,9 +168,6 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.data)
 
-    @extend_schema(
-        responses={200: FriendshipRetrieveSerializer},
-    )
     @action(detail=True, methods=["POST"], url_path="reject-request")
     def reject_request(self, request, pk=None):
         try:

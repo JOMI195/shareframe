@@ -1,7 +1,6 @@
 import logging
 
 from django.db import transaction
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
@@ -64,18 +63,12 @@ class ImagesViewSet(ModelViewSet):
             user=self.request.user, markedAsDeleted=False
         ).order_by("-created_at")
 
-    @extend_schema(
-        responses={200: ImageRetrieveSerializer(many=True)},
-    )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
         serializer = self.get_serializer(page, many=True)
         return self.get_paginated_response(serializer.data)
 
-    @extend_schema(
-        responses={200: ImageRetrieveSerializer},
-    )
     def retrieve(self, request, *args, **kwargs):
         try:
             element = Image.objects.get(
@@ -89,10 +82,6 @@ class ImagesViewSet(ModelViewSet):
         serializer = self.get_serializer(element)
         return Response(serializer.data)
 
-    @extend_schema(
-        request=ImageCreateSerializer,
-        responses={201: ImageRetrieveSerializer},
-    )
     @transaction.atomic
     def create(self, request, *args, **kwargs):
         logger.info(f"New image upload requested by user {request.user.id}")
@@ -112,10 +101,6 @@ class ImagesViewSet(ModelViewSet):
         logger.info(f"Image ID {element.id} successfully created")
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @extend_schema(
-        request=ImageDestroySerializer,
-        responses={200: ImageRetrieveSerializer},
-    )
     def destroy(self, request, *args, **kwargs):
         pk_to_delete = self.kwargs["pk"]
 

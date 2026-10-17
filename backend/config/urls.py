@@ -3,7 +3,6 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path, re_path
 from django_otp.admin import OTPAdminSite
-from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 from rest_framework_simplejwt.views import TokenVerifyView
 
 from authentication.jwt import (
@@ -95,9 +94,3 @@ if not bool(settings.DEBUG):
 if bool(settings.DEBUG):
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    urlpatterns.append(
-        path("api/schema/docs/", SpectacularAPIView.as_view(), name="schema")
-    )
-    urlpatterns.append(
-        path("api/schema/", SpectacularSwaggerView.as_view(url_name="schema"))
-    )

@@ -1,9 +1,9 @@
 from django.urls import include, path
-from rest_framework.routers import DefaultRouter
+from rest_framework.routers import SimpleRouter
 
 from .views import DashboardAPIViewSet
 
-router = DefaultRouter()
+router = SimpleRouter()
 router.register(r"dashboard", DashboardAPIViewSet, basename="dashboard")
 
 urlpatterns = [

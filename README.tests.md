@@ -94,8 +94,7 @@ and the tests cannot drift.
 `config/settings_test.py` swaps Redis, mail and Celery for in-memory equivalents and
 moves `MEDIA_ROOT` aside. Two consequences:
 
-- **`DEBUG=False` on purpose** — the media views are only mounted when it is false;
-  the trade is that `api/schema/` is not routed.
+- **`DEBUG=False` on purpose** — the media views are only mounted when it is false.
 - **Throttles are off.** The `throttled` fixture restores the real rates.
 
 ## The test stack
