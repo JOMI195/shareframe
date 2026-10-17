@@ -1,0 +1,13 @@
+400|Ungültige Anfrage|Bad request.
+403|Zugriff verweigert|You do not have permission to perform this action.
+404|Seite nicht gefunden|Not found.
+405|Methode nicht erlaubt|Method not allowed.
+408|Zeitüberschreitung der Anfrage|Request timeout.
+413|Die Datei ist zu groß|Request entity too large.
+414|Adresse zu lang|Request URI too long.
+416|Bereich nicht verfügbar|Requested range not satisfiable.
+429|Zu viele Anfragen, bitte kurz warten|Request was throttled.
+500|Interner Fehler|A server error occurred.
+502|Dienst vorübergehend nicht erreichbar|Service temporarily unavailable.
+503|Dienst vorübergehend nicht verfügbar|Service temporarily unavailable.
+504|Zeitüberschreitung|Service temporarily unavailable.

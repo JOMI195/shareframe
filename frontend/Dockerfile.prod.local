@@ -40,6 +40,12 @@ RUN apk add --no-cache libmaxminddb
 COPY --from=geoip2-builder /build/nginx-${NGINX_VERSION}/objs/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
 COPY ./nginx/GeoLite2-City.mmdb /usr/share/GeoIP-baseline/GeoLite2-City.mmdb
 COPY ./nginx/geo-block.conf /etc/nginx/geo-block.conf
+
+COPY ./nginx/errors /tmp/errors
+RUN sh /tmp/errors/render.sh /tmp/errors /usr/share/nginx/__errors /etc/nginx/errors \
+ && cp /tmp/errors/errors-upstream.conf /tmp/errors/errors-location.conf /etc/nginx/errors/ \
+ && rm -rf /tmp/errors
+
 COPY ./nginx/seed-geoip.sh /docker-entrypoint.d/98-seed-geoip.sh
 
 RUN apk add --no-cache logrotate
