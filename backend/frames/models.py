@@ -47,10 +47,14 @@ class Frame(models.Model):
 
     registered_at = models.DateTimeField(auto_now_add=True)
     last_connected = models.DateTimeField(null=True, blank=True)
+    # Any sign of life from the frame itself: heartbeat, ws connect or ws message.
     last_seen = models.DateTimeField(null=True, blank=True)
+    last_heartbeat = models.DateTimeField(null=True, blank=True)
 
     version = models.CharField(max_length=100, default="1.0.0")
     local_ip_address = models.GenericIPAddressField(null=True, blank=True)
+    # Latest heartbeat body, exported to Prometheus by metrics.collectors.
+    last_telemetry = models.JSONField(null=True, blank=True)
 
     def __str__(self):
         return self.public_serial_number

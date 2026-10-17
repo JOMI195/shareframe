@@ -565,6 +565,7 @@ class TestHeartbeat:
         assert alice_frame.local_ip_address == "192.168.9.9"
         assert alice_frame.version == "8.0.0"
         assert alice_frame.last_seen is not None
+        assert alice_frame.last_heartbeat == alice_frame.last_seen
 
     def test_the_ip_is_required(self, client, alice_frame):
         token = FrameTokenFactory(frame=alice_frame)
@@ -622,6 +623,25 @@ class TestHeartbeat:
                 **event,
             }
         ]
+
+    def test_keeps_the_body_without_events_as_telemetry(self, client, alice_frame):
+        token = FrameTokenFactory(frame=alice_frame)
+        body = {
+            "local_ip_address": "192.168.9.9",
+            "version": "8.0.0",
+            "cpu_temp_celsius": 47.2,
+            "display_running": True,
+        }
+
+        client.post(
+            self.url(),
+            {**body, "events": [{"seq": 1}]},
+            format="json",
+            headers=token_headers(token.access_token),
+        )
+
+        alice_frame.refresh_from_db()
+        assert alice_frame.last_telemetry == body
 
     def test_a_frame_token_is_required(self, client):
         response = client.post(

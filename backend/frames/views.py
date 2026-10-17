@@ -568,9 +568,20 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         frame.local_ip_address = local_ip_address
         frame.version = version
-        frame.last_seen = timezone.now()
+        frame.last_seen = frame.last_heartbeat = timezone.now()
+        frame.last_telemetry = {
+            key: value for key, value in request.data.items() if key != "events"
+        }
 
-        frame.save(update_fields=["local_ip_address", "version", "last_seen"])
+        frame.save(
+            update_fields=[
+                "local_ip_address",
+                "version",
+                "last_seen",
+                "last_heartbeat",
+                "last_telemetry",
+            ]
+        )
 
         # One line per device event so Grafana can list them without unpacking the body.
         for event in request.data.get("events") or []:

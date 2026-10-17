@@ -1,9 +1,17 @@
+from datetime import timedelta
+
 import pytest
+from django.utils import timezone
+from django_celery_results.models import TaskResult
 
 from images.models import Image
-from metrics.collectors import ShareframeBusinessCollector, ShareframeFrameCollector
+from metrics.collectors import (
+    ShareframeBusinessCollector,
+    ShareframeCeleryCollector,
+    ShareframeFrameCollector,
+)
 from sent_images.models import SentImage
-from tests.support.factories import ImageFactory, SentImageFactory
+from tests.support.factories import FrameFactory, ImageFactory, SentImageFactory
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -140,3 +148,133 @@ class TestFrameCollector:
         )
 
         assert list(ShareframeFrameCollector().collect()) == []
+
+    def test_fresh_telemetry_is_exported_per_frame(self):
+        frame = FrameFactory(
+            last_heartbeat=timezone.now(), last_telemetry={"cpu_temp_celsius": 48.5}
+        )
+
+        samples = series(
+            ShareframeFrameCollector(), "shareframe_frame_cpu_temp_celsius"
+        )
+
+        assert [
+            s.value
+            for s in samples
+            if s.labels["serial_number"] == frame.public_serial_number
+        ] == [48.5]
+
+    def test_a_silent_frame_exports_no_telemetry(self):
+        """Its last snapshot would otherwise read as a live, healthy frame."""
+        frame = FrameFactory(
+            last_heartbeat=timezone.now() - timedelta(hours=1),
+            last_telemetry={"cpu_temp_celsius": 48.5},
+        )
+
+        samples = series(
+            ShareframeFrameCollector(), "shareframe_frame_cpu_temp_celsius"
+        )
+
+        assert frame.public_serial_number not in {
+            s.labels["serial_number"] for s in samples
+        }
+
+    def test_websocket_traffic_does_not_refresh_telemetry(self):
+        """Only a heartbeat delivers telemetry, so only a heartbeat keeps it fresh."""
+        frame = FrameFactory(
+            last_seen=timezone.now(),
+            last_heartbeat=timezone.now() - timedelta(hours=1),
+            last_telemetry={"cpu_temp_celsius": 48.5},
+        )
+
+        samples = series(
+            ShareframeFrameCollector(), "shareframe_frame_cpu_temp_celsius"
+        )
+
+        assert frame.public_serial_number not in {
+            s.labels["serial_number"] for s in samples
+        }
+
+
+class TestUsageGauges:
+    def test_counts_uploads_of_the_last_day(self):
+        before = gauges(ShareframeBusinessCollector())["shareframe_images_uploaded_24h"]
+        ImageFactory()
+
+        after = gauges(ShareframeBusinessCollector())["shareframe_images_uploaded_24h"]
+
+        assert after == before + 1
+
+    def test_active_users_are_reported_per_window(self):
+        samples = series(ShareframeBusinessCollector(), "shareframe_users_active")
+
+        assert {s.labels["window"] for s in samples} == {"1d", "7d", "30d"}
+
+    def test_windows_nest(self):
+        User.objects.filter(username="seed_bob").update(last_login=timezone.now())
+
+        active = {
+            s.labels["window"]: s.value
+            for s in series(ShareframeBusinessCollector(), "shareframe_users_active")
+        }
+
+        assert 1 <= active["1d"] <= active["7d"] <= active["30d"]
+
+    def test_reports_the_database_size(self):
+        assert (
+            gauges(ShareframeBusinessCollector())["shareframe_database_size_bytes"] > 0
+        )
+
+
+class TestCeleryCollector:
+    @pytest.fixture(autouse=True)
+    def no_broker(self, monkeypatch):
+        monkeypatch.setattr(
+            ShareframeCeleryCollector, "_collect_broker", lambda self: iter(())
+        )
+
+    def result(self, status, **kwargs):
+        return TaskResult.objects.create(
+            task_id=f"{status}-{TaskResult.objects.count()}",
+            task_name="tests.task",
+            status=status,
+            date_done=timezone.now(),
+            **kwargs,
+        )
+
+    def samples(self, name):
+        return {
+            s.labels["task"]: s.value for s in series(ShareframeCeleryCollector(), name)
+        }
+
+    def test_reports_the_last_success_per_task(self):
+        done = self.result("SUCCESS")
+
+        samples = self.samples("shareframe_celery_task_last_success_timestamp_seconds")
+
+        assert samples["tests.task"] == pytest.approx(done.date_done.timestamp())
+
+    def test_counts_runs_and_failures_of_the_last_day(self):
+        self.result("SUCCESS")
+        self.result("FAILURE")
+        self.result("FAILURE")
+
+        assert self.samples("shareframe_celery_task_runs_24h")["tests.task"] == 3
+        assert self.samples("shareframe_celery_task_failures_24h")["tests.task"] == 2
+
+    def test_a_task_that_never_failed_has_no_failure_timestamp(self):
+        self.result("SUCCESS")
+
+        assert "tests.task" not in self.samples(
+            "shareframe_celery_task_last_failure_timestamp_seconds"
+        )
+
+    def test_a_broken_broker_keeps_the_task_metrics(self, monkeypatch):
+        def broken(self):
+            raise ConnectionError("redis down")
+            yield
+
+        monkeypatch.setattr(ShareframeCeleryCollector, "_collect_broker", broken)
+        self.result("SUCCESS")
+
+        assert "tests.task" in self.samples("shareframe_celery_task_runs_24h")

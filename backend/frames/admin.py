@@ -284,6 +284,7 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         "registered_at",
         "last_connected",
         "last_seen",
+        "last_heartbeat",
         "version",
         "local_ip_address",
     )
@@ -313,7 +314,12 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         (
             "Timestamps",
             {
-                "fields": ("registered_at", "last_connected", "last_seen"),
+                "fields": (
+                    "registered_at",
+                    "last_connected",
+                    "last_seen",
+                    "last_heartbeat",
+                ),
             },
         ),
         (
