@@ -223,7 +223,7 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
+        "w": 3,
         "x": 0,
         "y": 0
       },
@@ -286,8 +286,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 4,
+        "w": 3,
+        "x": 3,
         "y": 0
       },
       "fieldConfig": {
@@ -348,8 +348,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 8,
+        "w": 3,
+        "x": 6,
         "y": 0
       },
       "fieldConfig": {
@@ -419,8 +419,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 12,
+        "w": 3,
+        "x": 9,
         "y": 0
       },
       "fieldConfig": {
@@ -478,15 +478,15 @@
     },
     {
       "type": "stat",
-      "title": "p95 response time",
+      "title": "API p95",
       "datasource": {
         "type": "loki",
         "uid": "loki"
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 16,
+        "w": 3,
+        "x": 12,
         "y": 0
       },
       "fieldConfig": {
@@ -541,11 +541,153 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()"
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} |= `\"request_uri\": \"/api/` | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()"
         }
       ],
-      "description": "95th percentile of nginx request_time. Websocket upgrades (101) are excluded, they stay open for hours.",
+      "description": "95th percentile of nginx request_time for /api/ requests, as clients experience them.",
       "id": 105
+    },
+    {
+      "type": "stat",
+      "title": "API backend p95",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 15,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} |= `\"request_uri\": \"/api/` | regexp `\"upstream_response_time\": \"(?P<urt>[0-9.]+)\"` | urt != \"\" | unwrap urt [$__auto]) by ()"
+        }
+      ],
+      "description": "95th percentile of upstream_response_time for /api/: the share of the response time spent in the backend. Close to API p95 means the backend is the bottleneck, far below means network or client.",
+      "id": 111
+    },
+    {
+      "type": "stat",
+      "title": "Static p95",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 3,
+        "x": 18,
+        "y": 0
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 0.5
+              },
+              {
+                "color": "red",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 3
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} != `\"request_uri\": \"/api/` != `\"request_uri\": \"/ws/` | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()"
+        }
+      ],
+      "description": "95th percentile of nginx request_time for everything outside /api/ and /ws/: the frontend app and its assets.",
+      "id": 112
     },
     {
       "type": "stat",
@@ -556,8 +698,8 @@
       },
       "gridPos": {
         "h": 4,
-        "w": 4,
-        "x": 20,
+        "w": 3,
+        "x": 21,
         "y": 0
       },
       "fieldConfig": {
@@ -612,6 +754,90 @@
     },
     {
       "type": "timeseries",
+      "title": "p95 response time: API vs static",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "description": "Splits nginx response time by what was served. Static files are fast and would hide slow API calls in a combined percentile.",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 10,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "min": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "lastNotNull",
+            "max"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} |= `\"request_uri\": \"/api/` | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()",
+          "legendFormat": "API (total)"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} |= `\"request_uri\": \"/api/` | regexp `\"upstream_response_time\": \"(?P<urt>[0-9.]+)\"` | urt != \"\" | unwrap urt [$__auto]) by ()",
+          "legendFormat": "API (backend)"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "quantile_over_time(0.95, {job=\"nginx\", logtype=\"access\", server_name=~\"$vhost\", server_name!~\"$monvhost\", http_host=~\"$host\", status!=\"101\"} != `\"request_uri\": \"/api/` != `\"request_uri\": \"/ws/` | regexp `\"request_time\": \"(?P<rt>[0-9.]+)\"` | unwrap rt [$__auto]) by ()",
+          "legendFormat": "static"
+        }
+      ],
+      "id": 113,
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 4
+      }
+    },
+    {
+      "type": "timeseries",
       "title": "nginx requests/s by status",
       "datasource": {
         "type": "loki",
@@ -621,7 +847,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 4
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -763,7 +989,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 4
+        "y": 11
       },
       "fieldConfig": {
         "defaults": {
@@ -1704,7 +1930,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 12
+        "y": 19
       },
       "fieldConfig": {
         "defaults": {
@@ -1788,7 +2014,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 20
+        "y": 27
       },
       "fieldConfig": {
         "defaults": {
@@ -2710,7 +2936,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 12
+        "y": 19
       },
       "fieldConfig": {
         "defaults": {
@@ -2794,7 +3020,7 @@
         "h": 9,
         "w": 12,
         "x": 12,
-        "y": 29
+        "y": 36
       },
       "fieldConfig": {
         "defaults": {
@@ -3733,7 +3959,7 @@
         "h": 18,
         "w": 12,
         "x": 0,
-        "y": 20
+        "y": 27
       },
       "fieldConfig": {
         "defaults": {
@@ -4825,7 +5051,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 45
       },
       "options": {
         "showTime": true,
@@ -4861,7 +5087,7 @@
         "h": 11,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 57
       },
       "options": {
         "showTime": true,
