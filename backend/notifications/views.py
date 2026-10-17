@@ -1,6 +1,5 @@
 from django.conf import settings
 from django.core import signing
-from drf_spectacular.utils import extend_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -31,7 +30,6 @@ class PushKeyView(APIView):
 class PushSubscriptionView(APIView):
     permission_classes = [IsAuthenticated]
 
-    @extend_schema(request=PushSubscriptionSerializer, responses={204: None})
     def post(self, request):
         serializer = PushSubscriptionSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -47,7 +45,6 @@ class PushSubscriptionView(APIView):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(request=PushEndpointSerializer, responses={204: None})
     def delete(self, request):
         serializer = PushEndpointSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -63,7 +60,6 @@ class UnsubscribeView(APIView):
     authentication_classes = []
     throttle_classes = [UnsubscribeBurstRateThrottle, UnsubscribeSustainedRateThrottle]
 
-    @extend_schema(request=UnsubscribeSerializer, responses={204: None})
     def post(self, request):
         serializer = UnsubscribeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)

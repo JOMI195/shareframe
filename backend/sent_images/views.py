@@ -1,7 +1,6 @@
 from asgiref.sync import async_to_sync
 from django.db.models import Q
 from django.utils import timezone
-from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -79,46 +78,6 @@ class SentImagesViewSet(viewsets.ModelViewSet):
 
         return queryset
 
-    @extend_schema(
-        responses={200: SentImagesRetrieveSerializer(many=True)},
-        parameters=[
-            OpenApiParameter(
-                name="status",
-                description="Filter by image status",
-                required=False,
-                type=str,
-                enum=["all", "active", "expired", "scheduled"],
-            ),
-            OpenApiParameter(
-                name="shipping",
-                description="Filter by shipping direction",
-                required=False,
-                type=str,
-                enum=["all", "sentToYou", "sentByYou"],
-            ),
-            OpenApiParameter(
-                name="sender",
-                description='Filter by sender username (use "Du" for current user)',
-                required=False,
-                type=str,
-            ),
-            OpenApiParameter(
-                name="receiver",
-                description='Filter by receiver username (use "Du" for current user)',
-                required=False,
-                type=str,
-            ),
-            OpenApiParameter(
-                name="page", description="Page number", required=False, type=int
-            ),
-            OpenApiParameter(
-                name="page_size",
-                description="Number of items per page (max 50)",
-                required=False,
-                type=int,
-            ),
-        ],
-    )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         page = self.paginate_queryset(queryset)
@@ -130,9 +89,6 @@ class SentImagesViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @extend_schema(
-        responses={200: SentImagesRetrieveSerializer},
-    )
     def retrieve(self, request, *args, **kwargs):
         try:
             element = self.get_queryset().get(pk=self.kwargs["pk"])
@@ -147,13 +103,9 @@ class SentImagesViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(element)
         return Response(serializer.data)
 
-    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(
-        responses={200: SentImagesRetrieveSerializer},
-    )
     @action(detail=True, methods=["POST"], url_path="deactivate-sent-image")
     def deactivate_sent_image(self, request, pk=None):
         try:
@@ -185,7 +137,6 @@ class SentImagesViewSet(viewsets.ModelViewSet):
     def _own_scheduled(self, pk):
         return SentImage.objects.scheduled().filter(pk=pk, sender=self.request.user)
 
-    @extend_schema(request=None, responses={204: None})
     @action(detail=True, methods=["POST"], url_path="cancel-scheduled")
     def cancel_scheduled(self, request, pk=None):
         deleted, _ = self._own_scheduled(pk).delete()
@@ -196,7 +147,6 @@ class SentImagesViewSet(viewsets.ModelViewSet):
             )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(request=None, responses={200: SentImagesRetrieveSerializer})
     @action(detail=True, methods=["POST"], url_path="send-now")
     def send_now(self, request, pk=None):
         sent_image_id = self._own_scheduled(pk).values_list("id", flat=True).first()

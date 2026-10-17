@@ -1,5 +1,4 @@
 from django.db import models
-from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
@@ -49,28 +48,12 @@ class ChangelogViewSet(viewsets.GenericViewSet):
             return ChangelogIdSerializer
         return ChangelogsSerializer
 
-    @extend_schema(
-        summary="List all changelog IDs",
-        description="Returns only the IDs, dates, and titles of all published changelog entries",
-        responses={200: ChangelogIdSerializer(many=True)},
-    )
     @action(detail=False, methods=["get"], url_path="ids")
     def list_ids(self, request):
         queryset = self.get_queryset()
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @extend_schema(
-        summary="Get multiple changelog entries by IDs",
-        description="Returns changelog entries for the provided list of IDs",
-        request={
-            "application/json": {
-                "type": "object",
-                "properties": {"ids": {"type": "array", "items": {"type": "string"}}},
-            }
-        },
-        responses={200: ChangelogsSerializer(many=True)},
-    )
     @action(detail=False, methods=["post"], url_path="by-ids")
     def get_by_ids(self, request):
         ids = request.data.get("ids", [])

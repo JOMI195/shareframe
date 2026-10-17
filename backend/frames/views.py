@@ -10,7 +10,6 @@ from django.core.files.base import ContentFile
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
-from drf_spectacular.utils import extend_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -92,17 +91,11 @@ class FramesViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return self.queryset.filter(user=self.request.user, is_active=True)
 
-    @extend_schema(
-        responses={200: FrameRetrieveSerializer(many=True)},
-    )
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 
-    @extend_schema(
-        responses={200: FrameRetrieveSerializer},
-    )
     def retrieve(self, request, *args, **kwargs):
         try:
             element = self.get_queryset().get(pk=self.kwargs["pk"])
@@ -115,19 +108,15 @@ class FramesViewSet(viewsets.ModelViewSet):
         serializer = self.get_serializer(element)
         return Response(serializer.data)
 
-    @extend_schema(exclude=True)
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(exclude=True)
     def update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(exclude=True)
     def partial_update(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
-    @extend_schema(exclude=True)
     def destroy(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 

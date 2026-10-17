@@ -13,7 +13,6 @@ logs/
 # django assets
 **staticfiles/
 **mediafiles/
-schema.yml
 
 # Backup files # 
 *.bak 
