@@ -77,6 +77,19 @@ def test_unsafe_requests_need_the_csrf_header(alice):
     response = alice.patch(ME_URL, {"username": "nope"}, format="json")
 
     assert response.status_code == 403
+    assert response.json() == {"detail": "CSRF Failed: Request rejected."}
+
+
+def test_a_csrf_rejection_does_not_echo_the_origin(alice):
+    response = alice.patch(
+        ME_URL,
+        {"username": "nope"},
+        format="json",
+        headers={"origin": "https://evil.example"},
+    )
+
+    assert response.status_code == 403
+    assert "evil.example" not in response.content.decode()
 
 
 def test_refresh_rotates_and_blacklists_the_old_token(alice):

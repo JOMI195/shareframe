@@ -314,7 +314,7 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         except Exception:
             return Response(
-                {"error": "Error sending the image."},
+                {"detail": "Error sending the image."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
 

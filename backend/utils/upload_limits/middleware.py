@@ -1,7 +1,8 @@
 import logging
 
 from django.conf import settings
-from django.http import HttpResponse
+
+from config.errors import request_too_large
 
 logger = logging.getLogger("django.request")
 
@@ -34,5 +35,5 @@ class UploadSizeLimitMiddleware:
                     content_length,
                     limit,
                 )
-                return HttpResponse("Request entity too large", status=413)
+                return request_too_large()
         return self.get_response(request)

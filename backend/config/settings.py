@@ -62,6 +62,7 @@ AUTH_COOKIE_SECURE = PRODUCTION
 CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SECURE = PRODUCTION
+CSRF_FAILURE_VIEW = "config.errors.csrf_failure"
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_COOKIE_SECURE = PRODUCTION
 
@@ -403,6 +404,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
     "DEFAULT_METADATA_CLASS": "rest_framework.metadata.SimpleMetadata",
+    "EXCEPTION_HANDLER": "config.errors.exception_handler",
+    # nginx overwrites X-Forwarded-For with the client address.
+    "NUM_PROXIES": 1,
     # "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     # "PAGE_SIZE": 25,
     "DEFAULT_THROTTLE_CLASSES": [

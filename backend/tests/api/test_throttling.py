@@ -95,3 +95,22 @@ def test_the_image_limit_is_not_hit_by_ordinary_use(alice, throttled):
     codes = [alice.get(IMAGES_URL).status_code for _ in range(25)]
 
     assert set(codes) == {200}
+
+
+UNSUBSCRIBE_URL = "/api/notifications/unsubscribe/"
+# unsubscribe_burst, keyed on the client IP.
+UNSUBSCRIBE_LIMIT = 10
+
+
+def test_a_spoofed_forwarded_for_does_not_reset_the_ip_limit(client, throttled):
+    codes = [
+        client.post(
+            UNSUBSCRIBE_URL,
+            {},
+            format="json",
+            HTTP_X_FORWARDED_FOR=f"198.51.100.{i}, 203.0.113.5",
+        ).status_code
+        for i in range(UNSUBSCRIBE_LIMIT + 1)
+    ]
+
+    assert codes[-1] == 429

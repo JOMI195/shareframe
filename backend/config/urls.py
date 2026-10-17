@@ -29,6 +29,11 @@ admin.site.site_title = "Shareframe administration"
 admin.site.site_header = "Shareframe"
 admin.site.index_title = "Site administration"
 
+handler400 = "config.errors.bad_request"
+handler403 = "config.errors.permission_denied"
+handler404 = "config.errors.page_not_found"
+handler500 = "config.errors.server_error"
+
 urlpatterns = [
     # not exposed through nginx
     path("metrics", metrics_view, name="prometheus-metrics"),

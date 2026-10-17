@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import pytest
 from django.utils import timezone
 
@@ -20,6 +22,18 @@ def alice_user():
 
 def test_requires_authentication(client):
     assert client.get(URL).status_code == 401
+
+
+def test_a_failure_does_not_leak_the_exception(alice, monkeypatch):
+    def fail():
+        raise RuntimeError("internal detail")
+
+    monkeypatch.setattr("dashboard.views.timezone", SimpleNamespace(now=fail))
+
+    response = alice.get(URL)
+
+    assert response.status_code == 500
+    assert "internal detail" not in response.content.decode()
 
 
 def test_reports_the_three_sections(alice):
