@@ -3061,7 +3061,8 @@
           "instant": true,
           "range": false,
           "legendFormat": "",
-          "expr": "max by (serial_number, version, os_sha, app_sha, kernel) (shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+          "expr": "max by (serial_number, version, os_sha, app_sha, kernel) (shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})",
+          "format": "table"
         }
       ],
       "transformations": [
@@ -3979,7 +3980,8 @@
           "instant": true,
           "range": false,
           "legendFormat": "",
-          "expr": "sum by (serial_number, sd_card) (shareframe_frame_data_written_kb * on (serial_number) group_left (sd_card) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+          "expr": "sum by (serial_number, sd_card) (shareframe_frame_data_written_kb * on (serial_number) group_left (sd_card) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})",
+          "format": "table"
         }
       ],
       "transformations": [
