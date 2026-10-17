@@ -1,5 +1,6 @@
 import semver
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -52,6 +53,10 @@ class UpdateAPIViewSet(viewsets.ViewSet):
 
     def get_latest(self, request):
         frame = self._get_frame_from_request(request)
+        if frame:
+            frame.last_update_check = timezone.now()
+            frame.save(update_fields=["last_update_check"])
+
         ordered_releases = self._get_ordered_releases(frame)
         if not ordered_releases:
             return Response({"error": "No releases found"}, status=404)

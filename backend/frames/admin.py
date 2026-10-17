@@ -285,6 +285,8 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         "last_connected",
         "last_seen",
         "last_heartbeat",
+        "last_update_check",
+        "last_update_attempt",
         "version",
         "local_ip_address",
     )
@@ -319,6 +321,8 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
                     "last_connected",
                     "last_seen",
                     "last_heartbeat",
+                    "last_update_check",
+                    "last_update_attempt",
                 ),
             },
         ),
