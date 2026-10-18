@@ -233,6 +233,7 @@ _TELEMETRY_GAUGES = frozenset(
         "slot_trial",
         "wlan_connected",
         "wlan_signal_dbm",
+        "image_count",
     }
 )
 _SERVICES = frozenset({"websocket", "display", "dashboard", "update", "heartbeat"})

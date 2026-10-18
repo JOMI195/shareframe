@@ -26,10 +26,13 @@ class TestTelemetrySamples:
         }
 
     def test_allowlisted_numbers_become_gauges(self):
-        samples = self.samples({"cpu_temp_celsius": 51.5, "wlan_connected": True})
+        samples = self.samples(
+            {"cpu_temp_celsius": 51.5, "wlan_connected": True, "image_count": 12}
+        )
 
         assert samples[("shareframe_frame_cpu_temp_celsius", ())] == 51.5
         assert samples[("shareframe_frame_wlan_connected", ())] == 1
+        assert samples[("shareframe_frame_image_count", ())] == 12
 
     def test_unknown_keys_and_non_numbers_are_dropped(self):
         samples = self.samples(
