@@ -17,15 +17,17 @@ import {
 const MAX_AUTH_FAILURES = 2;
 let authFailureCount = 0;
 let isRefreshing = false;
-let refreshSubscribers: Array<() => void> = [];
+// Must always settle, else callers awaiting a queued request hang forever.
+let refreshSubscribers: Array<(error?: unknown) => void> = [];
 
-const subscribeTokenRefresh = (cb: () => void) => {
+const subscribeTokenRefresh = (cb: (error?: unknown) => void) => {
   refreshSubscribers.push(cb);
 };
 
-const onTokenRefreshed = () => {
-  refreshSubscribers.forEach(cb => cb());
+const settleRefreshSubscribers = (error?: unknown) => {
+  const subscribers = refreshSubscribers;
   refreshSubscribers = [];
+  subscribers.forEach(cb => cb(error));
 };
 
 const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
@@ -73,9 +75,10 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
         originalRequest._retry = true;
 
         if (isRefreshing) {
-          return new Promise((resolve) => {
-            subscribeTokenRefresh(() => {
-              resolve(axiosInstance(originalRequest));
+          return new Promise((resolve, reject) => {
+            subscribeTokenRefresh((refreshError) => {
+              if (refreshError) reject(refreshError);
+              else resolve(axiosInstance(originalRequest));
             });
           });
         }
@@ -87,7 +90,7 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
           await axiosInstance.post(getTokenRefreshUrl());
           dispatch(tokenRefreshFulfilled());
 
-          onTokenRefreshed();
+          settleRefreshSubscribers();
 
           isRefreshing = false;
           authFailureCount = 0;
@@ -95,7 +98,7 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
           return axiosInstance(originalRequest);
         } catch (refreshError) {
           isRefreshing = false;
-          refreshSubscribers = [];
+          settleRefreshSubscribers(refreshError);
           authFailureCount++;
 
           if (authFailureCount >= MAX_AUTH_FAILURES) {

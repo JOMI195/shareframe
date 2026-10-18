@@ -4,7 +4,7 @@ import {
   authenticateUser,
   loadMyUserProfile,
 } from "@/store/entities/authentication/authentication.actions";
-import { getApi } from "@/store/entities/authentication/authentication.slice";
+import { getApi, signedOut } from "@/store/entities/authentication/authentication.slice";
 import Typography from "@mui/material/Typography";
 import Link from "@mui/material/Link";
 import { Link as RouterLink } from "react-router";
@@ -29,6 +29,9 @@ import {
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getIn, useFormik } from "formik";
 import { Alert } from "@mui/material";
+import { areCookiesEnabled } from "@/common/utils/cookies";
+
+const COOKIES_BLOCKED_MESSAGE = "Dein Browser blockiert Cookies für ShareFrame. Für die Anmeldung werden ausschließlich technisch erforderliche Cookies verwendet, ohne sie ist kein Login möglich. Bitte erlaube Cookies für ShareFrame in den Browser-Einstellungen.";
 
 export default function SignIn() {
   const dispatch = useDispatch();
@@ -37,6 +40,7 @@ export default function SignIn() {
   const api = useAppSelector(getApi);
 
   const [errorMessage, setErrorMessage] = useState("");
+  const [cookiesBlocked, setCookiesBlocked] = useState(() => !areCookiesEnabled());
 
   useEffect(() => {
     let timer: NodeJS.Timeout | undefined;
@@ -55,7 +59,7 @@ export default function SignIn() {
   // onSubmit: watching the auth slice here would loop, since loadMyUserProfile
   // mutates the very slice the effect depends on.
   useEffect(() => {
-    if (localStorage.getItem("loggedIn") === "true") {
+    if (localStorage.getItem("loggedIn") === "true" && areCookiesEnabled()) {
       dispatch(loadMyUserProfile());
       navigate(getDashboardUrl());
     }
@@ -103,6 +107,12 @@ export default function SignIn() {
         return;
       }
       signInForm.resetForm();
+      // The server accepted the login, but without cookies the session is lost.
+      if (!areCookiesEnabled()) {
+        dispatch(signedOut());
+        setCookiesBlocked(true);
+        return;
+      }
       dispatch(loadMyUserProfile());
       navigate(getDashboardUrl());
     },
@@ -115,6 +125,11 @@ export default function SignIn() {
       }}>
         {"Anmelden"}
       </Typography>
+      {cookiesBlocked && (
+        <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
+          {COOKIES_BLOCKED_MESSAGE}
+        </Alert>
+      )}
       {errorMessage && (
         <Alert severity="error" sx={{ mt: 2, mb: 2 }}>
           {errorMessage}

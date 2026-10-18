@@ -1,9 +1,12 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { HttpResponse, http as mswHttp } from 'msw';
+import { HttpResponse, delay, http as mswHttp } from 'msw';
 import { Route, Routes } from 'react-router';
 import ProtectedRoute from '@/common/components/protectedRoute';
-import { getMyUserDataUrl } from '@/assets/endpoints/api/authEndpoints';
+import { getCsrfUrl, getMyUserDataUrl, getTokenRefreshUrl } from '@/assets/endpoints/api/authEndpoints';
+import axiosInstance from '@/services/api';
+import http from '@/services/httpService';
+import { setupStore } from '@/store/setupStore';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
 import { seedUser } from '@tests/fixtures';
@@ -110,4 +113,34 @@ describe('ProtectedRoute', () => {
 
     expect(await screen.findByText('Geheim')).toBeInTheDocument();
   });
+
+  // Seen on a cookieless browser: the profile request queues behind a refresh
+  // another request already started, and that refresh fails.
+  it('renders the outlet when the profile request waits on a failing refresh', async () => {
+    localStorage.setItem('loggedIn', 'true');
+    let refreshStarted!: () => void;
+    const refreshing = new Promise<void>((resolve) => (refreshStarted = resolve));
+    server.use(
+      mswHttp.get(apiUrl('frames/'), () => HttpResponse.json({ detail: 'expired' }, { status: 401 })),
+      mswHttp.get(apiUrl(getMyUserDataUrl()), () => HttpResponse.json({ detail: 'expired' }, { status: 401 })),
+      mswHttp.get(apiUrl(getCsrfUrl()), () => new HttpResponse(null, { status: 204 })),
+      mswHttp.post(apiUrl(getTokenRefreshUrl()), async () => {
+        refreshStarted();
+        await delay(100);
+        return HttpResponse.json({ detail: 'CSRF Failed: CSRF cookie not set.' }, { status: 403 });
+      }),
+    );
+
+    const store = setupStore(buildState());
+    http.apiSetup(store as never, { flush: vi.fn().mockResolvedValue(undefined) } as never);
+    const background = http.get('frames/').catch(() => undefined);
+    await refreshing;
+
+    renderWithProviders(<Guarded />, { route: '/geschuetzt/', store });
+
+    expect(await screen.findByText('Geheim')).toBeInTheDocument();
+    await background;
+  });
 });
+
+afterEach(() => axiosInstance.interceptors.response.clear());

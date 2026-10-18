@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { HttpResponse, http as mswHttp } from 'msw';
+import { HttpResponse, delay, http as mswHttp } from 'msw';
 import { server } from '@tests/mocks/server';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import {
@@ -76,6 +76,23 @@ describe('401 refresh flow', () => {
 
     expect(responses).toHaveLength(2);
     expect(calls.filter((c) => c === getTokenRefreshUrl())).toHaveLength(1);
+  });
+
+  it('rejects requests queued behind a failed refresh', async () => {
+    server.use(
+      mswHttp.all(apiUrl(PROTECTED), () => HttpResponse.json({ detail: 'expired' }, { status: 401 })),
+      mswHttp.post(apiUrl(getTokenRefreshUrl()), async () => {
+        await delay(50);
+        return HttpResponse.json({ detail: 'CSRF Failed: CSRF cookie not set.' }, { status: 403 });
+      }),
+      mswHttp.get(apiUrl(getCsrfUrl()), () => new HttpResponse(null, { status: 204 })),
+      mswHttp.post(apiUrl(getTokenLogoutUrl()), () => HttpResponse.json({})),
+    );
+
+    const { http } = await loadHttp();
+    const results = await Promise.allSettled([http.get(PROTECTED), http.get(PROTECTED)]);
+
+    expect(results.map((r) => r.status)).toEqual(['rejected', 'rejected']);
   });
 
   it('retries a request only once', async () => {
