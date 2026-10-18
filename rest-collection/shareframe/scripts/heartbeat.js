@@ -10,7 +10,7 @@ const BASE = {
   storage_data_total_bytes: 3900000000
 };
 
-/** Payload shape of Heartbeat::execute (board): identity, service health, sysinfo. */
+/** Payload shape of Heartbeat::execute (board): identity, service health, image count, sysinfo. */
 function buildHeartbeat({ frameId, localIp, version, osSha, appSha, uptimeSecs, overrides } = {}) {
   return {
     serial_number: frameId,
@@ -21,6 +21,7 @@ function buildHeartbeat({ frameId, localIp, version, osSha, appSha, uptimeSecs, 
     display_running: true,
     dashboard_running: true,
     update_running: true,
+    image_count: 12,
     health_state: BASE.health_state,
     uptime_seconds: uptimeSecs ?? Math.floor(process.uptime()) + 3600,
     boot_count: BASE.boot_count,
