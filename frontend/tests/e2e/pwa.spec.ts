@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { Page } from '@playwright/test';
 import { alice } from '../support/e2e/credentials';
@@ -24,7 +25,7 @@ const registerServiceWorker = (page: Page) =>
 
 // What Android does once a photo is shared to the installed app: it reads
 // share_target from the manifest and navigates there with a multipart POST.
-const shareFromGallery = async (page: Page) => {
+const shareFromGallery = async (page: Page, files: Parameters<Page['setInputFiles']>[1] = FIXTURE) => {
   const manifest = await (await page.request.get('/site.webmanifest')).json();
   const { action, method, enctype, params } = manifest.share_target;
 
@@ -37,7 +38,7 @@ const shareFromGallery = async (page: Page) => {
     document.body.append(form);
   }, { action, method, enctype, field: params.files[0].name });
 
-  await page.locator('#os-share input').setInputFiles(FIXTURE);
+  await page.locator('#os-share input').setInputFiles(files);
   await page.evaluate(() => (document.getElementById('os-share') as HTMLFormElement).submit());
 };
 
@@ -63,6 +64,31 @@ test.describe('share target', () => {
 
     await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
     await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
+  });
+
+  // Gallery apps do not always report an exact image type; the dialog checks the format.
+  test('a photo with an unusual type still reaches the upload dialog', async ({ signedInPage: page }) => {
+    await page.goto('/fotos/');
+    await registerServiceWorker(page);
+    await shareFromGallery(page, {
+      name: 'upload-fixture.jpg',
+      mimeType: 'application/octet-stream',
+      buffer: readFileSync(FIXTURE),
+    });
+
+    await expect(page).toHaveURL(/\/fotos\/$/);
+    await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
+  });
+
+  // Chrome on Android sometimes delivers the share without its files.
+  test('a share without files opens the upload dialog with a hint', async ({ signedInPage: page }) => {
+    await page.goto('/fotos/');
+    await registerServiceWorker(page);
+    await shareFromGallery(page, []);
+
+    await expect(page).toHaveURL(/\/fotos\/$/);
+    await expect(page.getByText('Das geteilte Foto ist nicht angekommen. Wähle es hier direkt aus.')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Fotos auswählen' })).toBeVisible();
   });
 
   test('a photo shared while signed out is waiting after the sign-in', async ({ page }) => {

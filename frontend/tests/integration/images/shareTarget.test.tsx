@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { Route, Routes } from 'react-router';
+import { Route, Routes, useLocation } from 'react-router';
 import UploadDialog from '@/main/images/dialogs/upload/uploadDialog';
 import ShareTargetRedirect from '@/common/components/pwa/shareTargetRedirect';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
@@ -27,6 +27,18 @@ describe('photos shared into the app', () => {
     expect(await screen.findByText('p14.jpg')).toBeInTheDocument();
     expect(screen.queryByText('p15.jpg')).not.toBeInTheDocument();
     expect(store.getState().ui.images.snackbar.alert.message).toMatch(/Maximum von 15/);
+  });
+
+  it('open the dialog with a warning when the browser dropped the shared photos', async () => {
+    const Search = () => <p data-testid="search">{useLocation().search}</p>;
+    const { store } = renderWithProviders(<><UploadDialog /><Search /></>, {
+      preloadedState: signedInState(),
+      route: '/fotos/?geteilt=leer',
+    });
+
+    await waitFor(() => expect(store.getState().ui.images.dialogs.create.open).toBe(true));
+    expect(store.getState().ui.images.snackbar.alert.message).toMatch(/nicht angekommen/);
+    expect(screen.getByTestId('search')).toBeEmptyDOMElement();
   });
 
   it('leave the dialog closed when nothing was shared', async () => {

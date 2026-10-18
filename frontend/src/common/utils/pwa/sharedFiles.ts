@@ -1,5 +1,7 @@
 // Must match public/sw.js.
 const SHARE_CACHE = 'share-target';
+export const SHARE_EMPTY_PARAM = 'geteilt';
+export const SHARE_EMPTY_VALUE = 'leer';
 const MAX_AGE_MS = 10 * 60 * 1000;
 
 const sharedCacheExists = async () => typeof caches !== 'undefined' && caches.has(SHARE_CACHE);
