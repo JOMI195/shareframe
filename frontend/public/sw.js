@@ -1,7 +1,7 @@
 const SHARE_PATH = '/teilen/';
 const SHARE_CACHE = 'share-target';
-// Upper bounds only; the upload dialog applies the real limits.
-const SHARE_TYPES = ['image/jpeg', 'image/png'];
+const SHARE_EMPTY_URL = '/fotos/?geteilt=leer';
+// Upper bounds only; the upload dialog checks the format.
 const SHARE_MAX_FILES = 20;
 const SHARE_MAX_BYTES = 25 * 1024 * 1024;
 
@@ -15,12 +15,20 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(storeSharedFiles(event.request));
 });
 
+const readSharedFiles = async (request) => {
+  try {
+    return (await request.formData()).getAll('images');
+  } catch {
+    return [];
+  }
+};
+
+// Some Chrome versions on Android deliver the share without its files.
 const storeSharedFiles = async (request) => {
-  const formData = await request.formData();
-  const files = formData.getAll('images')
-    .filter((file) => file instanceof File && SHARE_TYPES.includes(file.type) && file.size <= SHARE_MAX_BYTES)
+  const files = (await readSharedFiles(request))
+    .filter((file) => file instanceof File && file.size > 0 && file.size <= SHARE_MAX_BYTES)
     .slice(0, SHARE_MAX_FILES);
-  if (files.length === 0) return Response.redirect('/fotos/', 303);
+  if (files.length === 0) return Response.redirect(SHARE_EMPTY_URL, 303);
 
   await caches.delete(SHARE_CACHE);
   const cache = await caches.open(SHARE_CACHE);

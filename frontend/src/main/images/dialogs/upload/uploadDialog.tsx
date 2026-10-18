@@ -33,7 +33,8 @@ import ImageUpload from './imageUpload/imageUpload'
 import ImageCropping from './imageCropping/imageCropping'
 import ImageAdjust from './imageAdjust/imageAdjust'
 import { Adjustment, NEUTRAL_ADJUSTMENT } from './imageAdjust/adjust'
-import { takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
+import { SHARE_EMPTY_PARAM, SHARE_EMPTY_VALUE, takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
+import { useSearchParams } from 'react-router'
 import ImagePreview from './imagePreview/imagePreview'
 import FrameAspectBox from './frameAspectBox'
 import { useBlobImage } from './useBlobImage'
@@ -106,6 +107,7 @@ const UploadDialog: React.FC = () => {
   const [epaperView, setEpaperView] = useState<EpaperView>('original')
 
   const open = useAppSelector(getDialogs).create.open
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const contentRef = useRef<HTMLDivElement>(null)
   const stepRefs = useRef<(HTMLDivElement | null)[]>([])
@@ -239,6 +241,18 @@ const UploadDialog: React.FC = () => {
   }
 
   useEffect(() => {
+    if (searchParams.get(SHARE_EMPTY_PARAM) === SHARE_EMPTY_VALUE) {
+      setSearchParams((params) => {
+        params.delete(SHARE_EMPTY_PARAM);
+        return params;
+      }, { replace: true });
+      dispatch(openCreateImageDialog());
+      dispatch(openImagesAlertSnackbar({
+        message: 'Das geteilte Foto ist nicht angekommen. Wähle es hier direkt aus.',
+        severity: 'warning'
+      }));
+    }
+
     let cancelled = false;
     takeSharedFiles().then((files) => {
       if (cancelled || files.length === 0) return;
