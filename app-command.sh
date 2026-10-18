@@ -73,11 +73,11 @@ RESULT=$?
 
 # Editing a bind-mounted config never recreates its container, so reload them here.
 if [ $RESULT -eq 0 ] && [ "$CONTAINER_NAME" == "all" ] && [[ "$DOCKER_COMPOSE_COMMAND" == up* ]]; then
+  # a running Grafana alerts while Prometheus restarts
+  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" stop grafana
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" \
     restart prometheus promtail loki telegraf
-  # restart ignores health conditions; Grafana alerts on a not yet ready Prometheus
-  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d --wait prometheus
-  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" restart grafana
+  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d --wait grafana
 fi
 
 # Restore the original env file

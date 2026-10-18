@@ -230,6 +230,7 @@ services:
     depends_on:
       prometheus:
         condition: service_healthy
+        restart: true
       loki:
         condition: service_started
     networks:
