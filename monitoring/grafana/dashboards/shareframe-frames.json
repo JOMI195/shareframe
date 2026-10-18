@@ -1951,6 +1951,18 @@
                 }
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Images"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           }
         ]
       },
@@ -2128,6 +2140,17 @@
           "range": false,
           "legendFormat": "",
           "expr": "label_replace(sum by (serial_number) (shareframe_frame_storage_data_total_bytes) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Disk total\", \"\", \"\")"
+        },
+        {
+          "refId": "Y",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number) (shareframe_frame_image_count) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Images\", \"\", \"\")"
         },
         {
           "refId": "J",
@@ -2384,6 +2407,12 @@
                 ],
                 "operation": "aggregate"
               },
+              "Images": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
               "Load 1m": {
                 "aggregations": [
                   "lastNotNull"
@@ -2466,6 +2495,7 @@
               "Disk % (lastNotNull)": "Disk %",
               "Disk free (lastNotNull)": "Disk free",
               "Disk total (lastNotNull)": "Disk total",
+              "Images (lastNotNull)": "Images",
               "Load 1m (lastNotNull)": "Load 1m",
               "Load 5m (lastNotNull)": "Load 5m",
               "Load 15m (lastNotNull)": "Load 15m",
@@ -2497,20 +2527,21 @@
               "Disk % (lastNotNull)": 12,
               "Disk free (lastNotNull)": 13,
               "Disk total (lastNotNull)": 14,
-              "Load 1m (lastNotNull)": 15,
-              "Load 5m (lastNotNull)": 16,
-              "Load 15m (lastNotNull)": 17,
-              "Uptime (lastNotNull)": 18,
-              "Boots (lastNotNull)": 19,
-              "Dashboard (lastNotNull)": 20,
-              "Display (lastNotNull)": 21,
-              "Update (lastNotNull)": 22,
-              "Websocket (lastNotNull)": 23,
-              "version (lastNotNull)": 24,
-              "os_sha (lastNotNull)": 25,
-              "app_sha (lastNotNull)": 26,
-              "kernel (lastNotNull)": 27,
-              "Safe mode (lastNotNull)": 28
+              "Images (lastNotNull)": 15,
+              "Load 1m (lastNotNull)": 16,
+              "Load 5m (lastNotNull)": 17,
+              "Load 15m (lastNotNull)": 18,
+              "Uptime (lastNotNull)": 19,
+              "Boots (lastNotNull)": 20,
+              "Dashboard (lastNotNull)": 21,
+              "Display (lastNotNull)": 22,
+              "Update (lastNotNull)": 23,
+              "Websocket (lastNotNull)": 24,
+              "version (lastNotNull)": 25,
+              "os_sha (lastNotNull)": 26,
+              "app_sha (lastNotNull)": 27,
+              "kernel (lastNotNull)": 28,
+              "Safe mode (lastNotNull)": 29
             }
           }
         }
@@ -4469,6 +4500,86 @@
       "description": "Failure streak; 3 or more means the display reports failed."
     },
     {
+      "type": "timeseries",
+      "title": "Images on frame",
+      "id": 69,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 24,
+        "x": 0,
+        "y": 116
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": true,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": [
+            "min",
+            "max",
+            "lastNotNull"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{serial_number}}",
+          "expr": "shareframe_frame_image_count and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}"
+        }
+      ],
+      "description": "Pictures stored on the frame at each heartbeat (image_count)."
+    },
+    {
       "type": "row",
       "title": "Faults & memory",
       "id": 57,
@@ -4477,7 +4588,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 116
+        "y": 123
       },
       "panels": []
     },
@@ -4493,7 +4604,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 117
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
@@ -4572,7 +4683,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 117
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
@@ -4651,7 +4762,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 117
+        "y": 124
       },
       "fieldConfig": {
         "defaults": {
@@ -4730,7 +4841,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 124
+        "y": 131
       },
       "fieldConfig": {
         "defaults": {
@@ -4809,7 +4920,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 124
+        "y": 131
       },
       "fieldConfig": {
         "defaults": {
@@ -4888,7 +4999,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 131
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4978,7 +5089,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 131
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -5065,7 +5176,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 138
+        "y": 145
       },
       "panels": []
     },
@@ -5081,7 +5192,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 139
+        "y": 146
       },
       "options": {
         "showTime": true,
@@ -5114,7 +5225,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 151
+        "y": 158
       },
       "panels": []
     },
@@ -5130,7 +5241,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 152
+        "y": 159
       },
       "options": {
         "showTime": true,
