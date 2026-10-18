@@ -133,6 +133,30 @@ describe('SignIn form', () => {
   });
 });
 
+describe('SignIn with blocked cookies', () => {
+  const COOKIE_HINT = /technisch erforderliche Cookies/;
+
+  it('warns before the user signs in', () => {
+    vi.spyOn(navigator, 'cookieEnabled', 'get').mockReturnValue(false);
+    renderWithProviders(<Page />, { preloadedState: buildState() });
+
+    expect(screen.getByText(COOKIE_HINT)).toBeInTheDocument();
+  });
+
+  it('stays on the sign-in page after a successful login', async () => {
+    succeedingSignIn();
+    const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
+    vi.spyOn(navigator, 'cookieEnabled', 'get').mockReturnValue(false);
+
+    await fill(user);
+    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+
+    expect(await screen.findByText(COOKIE_HINT)).toBeInTheDocument();
+    expect(localStorage.getItem('loggedIn')).toBeNull();
+    expect(screen.queryByText('Startseite')).not.toBeInTheDocument();
+  });
+});
+
 describe('SignIn field adornments', () => {
   it('toggles password visibility', async () => {
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
