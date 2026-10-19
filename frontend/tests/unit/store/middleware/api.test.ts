@@ -137,6 +137,11 @@ describe('failed requests', () => {
 
   it.each([
     ['413 with an html body', HttpResponse.text('<html>too large</html>', { status: 413 }), 'Die Datei ist zu groß.'],
+    [
+      '429 with the DRF throttle detail',
+      HttpResponse.json({ detail: 'Request was throttled.' }, { status: 429 }),
+      'Zu viele Versuche. Bitte warte kurz.',
+    ],
     ['a detail field', HttpResponse.json({ detail: 'Kein Zugriff' }, { status: 403 }), 'Kein Zugriff'],
     ['a plain string body', HttpResponse.text('Kaputt', { status: 400 }), 'Kaputt'],
     [

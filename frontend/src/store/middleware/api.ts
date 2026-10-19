@@ -25,6 +25,10 @@ const getErrorMessage = (error: unknown): string => {
     return "Die Datei ist zu groß.";
   }
 
+  if (error.response?.status === 429) {
+    return "Zu viele Versuche. Bitte warte kurz.";
+  }
+
   const data = error.response?.data;
 
   if (typeof data === "string" && data.trim() && !data.trimStart().startsWith("<")) {
