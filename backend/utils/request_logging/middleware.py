@@ -1,5 +1,7 @@
+import json
 import logging
 import re
+from urllib.parse import parse_qsl, urlencode
 
 from django import VERSION as django_version
 from django.conf import settings
@@ -18,10 +20,36 @@ DEFAULT_COLORIZE = True
 DEFAULT_MAX_BODY_LENGTH = 50000  # log no more than 3k bytes of content
 IS_DJANGO_VERSION_GTE_3_2_0 = django_version >= (3, 2, 0, "final", 0)
 DEFAULT_SENSITIVE_HEADERS = (
-    ["Authorization", "Proxy-Authorization", "Frame-Access-Token"]
+    [
+        "Authorization",
+        "Proxy-Authorization",
+        "Frame-Access-Token",
+        "Cookie",
+        "X-Csrftoken",
+    ]
     if IS_DJANGO_VERSION_GTE_3_2_0
-    else ["HTTP_AUTHORIZATION", "HTTP_PROXY_AUTHORIZATION", "Frame-Access-Token"]
+    else [
+        "HTTP_AUTHORIZATION",
+        "HTTP_PROXY_AUTHORIZATION",
+        "Frame-Access-Token",
+        "HTTP_COOKIE",
+        "HTTP_X_CSRFTOKEN",
+    ]
 )
+# Substrings of body/query keys whose values are masked.
+SENSITIVE_BODY_KEYS = (
+    "password",
+    "token",
+    "secret",
+    "otp",
+    "refresh",
+    "access",
+    "auth",
+    "p256dh",
+    "code",
+)
+MASK = "*****"
+MULTIPART_NAME_REGEX = re.compile(r'\bname="([^"]*)"', re.I)
 SETTING_NAMES = {
     "log_level": "REQUEST_LOGGING_DATA_LOG_LEVEL",
     "http_4xx_log_level": "REQUEST_LOGGING_HTTP_4XX_LOG_LEVEL",
@@ -59,6 +87,56 @@ NO_RESPONSE_LOGGING_MSG = "No response logging for this endpoint"
 
 LOGGER_NAME = getattr(settings, "DJANGO_REQUEST_LOGGING_LOGGER_NAME", "django.request")
 request_logger = logging.getLogger(LOGGER_NAME)
+
+
+def _is_sensitive_key(key):
+    key = str(key).lower()
+    return any(part in key for part in SENSITIVE_BODY_KEYS)
+
+
+def _redact_pairs(pairs):
+    return [(k, MASK if _is_sensitive_key(k) else v) for k, v in pairs]
+
+
+def _redact_json(value):
+    if isinstance(value, dict):
+        return {
+            k: MASK if _is_sensitive_key(k) else _redact_json(v)
+            for k, v in value.items()
+        }
+    if isinstance(value, list):
+        return [_redact_json(v) for v in value]
+    return value
+
+
+def _redact_body(body, content_type):
+    if not body:
+        return body
+    content_type = content_type.lower()
+    if content_type.startswith("application/json"):
+        try:
+            return json.dumps(_redact_json(json.loads(body)))
+        except ValueError:
+            return "(unparseable body)"
+    if content_type.startswith("application/x-www-form-urlencoded"):
+        pairs = parse_qsl(body.decode(errors="replace"), keep_blank_values=True)
+        return urlencode(_redact_pairs(pairs), safe="*")
+    return body
+
+
+def _redact_multipart_part(part):
+    head, sep, _ = part.partition("\r\n\r\n")
+    match = MULTIPART_NAME_REGEX.search(head)
+    if sep and match and _is_sensitive_key(match.group(1)):
+        return f"{head}{sep}{MASK}\r\n"
+    return part
+
+
+def _safe_path(request):
+    pairs = parse_qsl(request.META.get("QUERY_STRING", ""), keep_blank_values=True)
+    if not any(_is_sensitive_key(k) for k, _ in pairs):
+        return request.get_full_path()
+    return f"{request.path}?{urlencode(_redact_pairs(pairs), safe='*')}"
 
 
 class Logger:
@@ -117,6 +195,7 @@ class LoggingMiddleware:
                     SETTING_NAMES["sensitive_headers"], self.sensitive_headers
                 )
             )
+        self.sensitive_headers = {h.lower() for h in self.sensitive_headers}
 
         for log_attr in ("log_level", "http_4xx_log_level"):
             level = getattr(self, log_attr)
@@ -231,7 +310,7 @@ class LoggingMiddleware:
         return response_logging, no_response_logging_msg
 
     def _skip_logging_request(self, request, reason):
-        method_path = f"{request.method} {request.get_full_path()}"
+        method_path = f"{request.method} {_safe_path(request)}"
         no_log_context = {
             "args": (),
             "kwargs": {"extra": {"no_logging": reason}},
@@ -243,7 +322,7 @@ class LoggingMiddleware:
         )
 
     def _log_request(self, request, response, cached_request_body):
-        method_path = f"{request.method} {request.get_full_path()}"
+        method_path = f"{request.method} {_safe_path(request)}"
         logging_context = self._get_logging_context(request, None)
 
         # Determine log level depending on response status
@@ -271,12 +350,12 @@ class LoggingMiddleware:
 
         if IS_DJANGO_VERSION_GTE_3_2_0:
             headers = {
-                k: v if k not in self.sensitive_headers else "*****"
+                k: v if k.lower() not in self.sensitive_headers else MASK
                 for k, v in request.headers.items()
             }
         else:
             headers = {
-                k: v if k not in self.sensitive_headers else "*****"
+                k: v if k.lower() not in self.sensitive_headers else MASK
                 for k, v in request.META.items()
                 if k.startswith("HTTP_")
             }
@@ -313,14 +392,14 @@ class LoggingMiddleware:
             else:
                 self.logger.log(
                     log_level,
-                    self._chunked_to_max(cached_request_body),
+                    self._chunked_to_max(
+                        _redact_body(cached_request_body, content_type)
+                    ),
                     logging_context,
                 )
 
     def process_response(self, request, response):
-        resp_log = (
-            f"{request.method} {request.get_full_path()} - {response.status_code}"
-        )
+        resp_log = f"{request.method} {_safe_path(request)} - {response.status_code}"
         skip_logging, because = self._should_log_route(request)
         if skip_logging:
             if because is not None:
@@ -392,6 +471,8 @@ class LoggingMiddleware:
                     and match.group(4) not in ("", "\r\n")
                 ):
                     part = match.expand(r"\1\2/\3\r\n\r\n(binary data)\r\n")
+            else:
+                part = _redact_multipart_part(part)
 
             if i != last:
                 part = part + multipart_boundary
