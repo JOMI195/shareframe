@@ -70,11 +70,19 @@ class TestPrivateMedia:
     def test_an_unknown_path_is_refused(self, alice):
         assert alice.get(PRIVATE + "images/nothing-here.png").status_code == 403
 
-    def test_staff_may_fetch_anything(self, client_as):
-        staff = UserFactory(is_active=True, is_staff=True)
+    def test_staff_get_no_access_to_other_users_images(self, client_as):
+        staff = UserFactory(is_active=True, is_staff=True, is_admin=True)
         theirs = Image.objects.filter(user__username=seed.BOB).first()
 
         response = client_as(staff).get(PRIVATE + media_path(theirs.image))
+
+        assert response.status_code == 403
+
+    def test_staff_may_fetch_an_image_sent_to_them(self, client_as):
+        staff = UserFactory(is_active=True, is_staff=True, is_admin=True)
+        sent = SentImageFactory(reciever=staff)
+
+        response = client_as(staff).get(PRIVATE + media_path(sent.image.image))
 
         assert response.status_code == 200
 
