@@ -40,14 +40,7 @@ class MediaAccessView(APIView):
         if not user.is_authenticated:
             raise PermissionDenied("Media not found or not authorized to access.")
 
-        access_granted = False
-
-        if user.is_staff:
-            access_granted = True
-        else:
-            access_granted = self._check_path_access(path, user)
-
-        if access_granted:
+        if self._check_path_access(path, user):
             response = Response(status=200)
             # nginx proxy_pass: /app/backend/mediafiles/private/
             response["X-Accel-Redirect"] = "/api/media/protected/private/" + path

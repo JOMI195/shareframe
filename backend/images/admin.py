@@ -6,8 +6,12 @@ from .models import Image, ImageSize, ImageVariant, TextPreset
 class ImageVariantInline(admin.TabularInline):
     model = ImageVariant
     extra = 0
-    readonly_fields = ("file",)
-    fields = ("image_size", "file")
+    readonly_fields = ("file_name",)
+    fields = ("image_size", "file_name")
+
+    @admin.display(description="File")
+    def file_name(self, obj):
+        return obj.file.name
 
 
 @admin.register(ImageSize)
@@ -40,12 +44,13 @@ class ImagesAdmin(admin.ModelAdmin):
         "width",
         "height",
         "format",
+        "image_file",
     )
     inlines = [ImageVariantInline]
     fieldsets = (
         (
             None,
-            {"fields": ("user", "name", "display_name", "image")},
+            {"fields": ("user", "name", "display_name", "image_file")},
         ),
         (
             "Lifecycle",
@@ -60,6 +65,18 @@ class ImagesAdmin(admin.ModelAdmin):
             {"fields": ("created_at",)},
         ),
     )
+
+    def get_fieldsets(self, request, obj=None):
+        if obj is not None:
+            return self.fieldsets
+        return (
+            (None, {"fields": ("user", "display_name", "image")}),
+            *self.fieldsets[1:2],
+        )
+
+    @admin.display(description="Image")
+    def image_file(self, obj):
+        return obj.image.name
 
     def dimensions(self, obj):
         """Display image dimensions"""
