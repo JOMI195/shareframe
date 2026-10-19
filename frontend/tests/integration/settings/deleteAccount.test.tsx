@@ -46,7 +46,7 @@ describe('delete account', () => {
     ).toBeVisible();
   });
 
-  it('sends the password and anonymises the account', async () => {
+  it('sends only the password', async () => {
     const bodies = recordDelete();
     const { user } = render();
 
@@ -55,7 +55,7 @@ describe('delete account', () => {
     await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
 
     await waitFor(() => expect(bodies).toHaveLength(1));
-    expect(bodies[0]).toEqual({ password: 'geheim123', anonymize: true });
+    expect(bodies[0]).toEqual({ password: 'geheim123' });
   });
 
   it('signs the user out afterwards', async () => {

@@ -135,17 +135,14 @@ export const loadMyUserProfile = () =>
     onError: userSlice.getUserDataRejected.type,
   });
 
-export const deleteMyUserProfile = (
-  password: string,
-  anonymize: boolean = true
-) =>
+export const deleteMyUserProfile = (password: string) =>
   apiRequest({
     url: authEndpoints.getMyUserDataUrl(),
     onStart: userSlice.userDeletePending.type,
     onSuccess: userSlice.userDeleteFulfilled.type,
     onError: userSlice.userDeleteRejected.type,
     method: "delete",
-    data: { password: password, anonymize: anonymize }
+    data: { password: password }
   });
 
 export const updateMyUserData = (user: IPatchUserForm
