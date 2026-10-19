@@ -9,6 +9,10 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from appEmail.tasks import send_django_mail_with_logo
+from utils.endpoint_request_cooldown import (
+    check_endpoint_request_cooldown,
+    set_endpoint_request_cooldown,
+)
 
 logger = logging.getLogger("admin.audit")
 
@@ -29,6 +33,15 @@ def _get_client_ip(request):
 
 def _is_admin_request(request):
     return request and request.path.startswith("/api/admin/")
+
+
+def _failed_login_mail_allowed(recipient_key):
+    cache_key = f"failed-login-mail:{recipient_key}"
+    cooldown = settings.FAILED_LOGIN_MAIL_COOLDOWN
+    allowed, _ = check_endpoint_request_cooldown(cache_key, cooldown)
+    if allowed:
+        set_endpoint_request_cooldown(cache_key, cooldown)
+    return allowed
 
 
 @receiver(user_logged_in)
@@ -63,6 +76,8 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
     logger.warning("Failed login attempt for '%s' from %s", attempted, ip)
 
     if _is_admin_request(request):
+        if not _failed_login_mail_allowed("admin"):
+            return
         send_django_mail_with_logo.delay(
             template_name="authentication/failed_login.html",
             context={
@@ -77,8 +92,8 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
         return
 
     # normal user: notify the owner only if the attempted email is a real account
-    user = User.objects.filter(email=attempted, is_deleted=False).first()
-    if not user:
+    user = User.objects.filter(email=attempted).first()
+    if not user or not _failed_login_mail_allowed(user.pk):
         return
 
     send_django_mail_with_logo.delay(

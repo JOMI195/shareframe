@@ -1,4 +1,5 @@
 import logging
+from collections import defaultdict
 
 from asgiref.sync import async_to_sync
 from django.db import transaction
@@ -6,6 +7,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from frames.consumers import FrameWebSocketConsumer
+from frames.models import FrameWebsocketConnection
 from friendships.models import Friendship
 from user_stats.counters import record_send
 
@@ -71,3 +73,21 @@ def _push(sent_image: SentImage):
         expiry_datetime=expires_at,
         sent_image_id=sent_image.id,
     )
+
+
+def clear_from_frames(sent_images):
+    """After commit, tell the receivers' frames to drop these sent images."""
+    ids_by_channel = defaultdict(list)
+    connections = FrameWebsocketConnection.objects.filter(
+        frame__is_active=True, frame__user__image_reciever__in=sent_images
+    ).values_list("channel_name", "frame__user__image_reciever")
+    for channel_name, sent_image_id in connections:
+        ids_by_channel[channel_name].append(sent_image_id)
+
+    def push():
+        for channel_name, sent_image_ids in ids_by_channel.items():
+            async_to_sync(
+                FrameWebSocketConsumer.send_clear_specific_images_to_channels
+            )([channel_name], sent_image_ids)
+
+    transaction.on_commit(push)

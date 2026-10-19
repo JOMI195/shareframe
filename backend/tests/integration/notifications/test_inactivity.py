@@ -79,14 +79,6 @@ def test_sending_again_starts_a_new_stretch():
     assert is_due(account)
 
 
-def test_a_deleted_user_is_not_due():
-    account = make_account()
-    account.user.is_deleted = True
-    account.user.save()
-
-    assert not is_due(account)
-
-
 def test_the_task_mails_and_logs_due_accounts(enable):
     enable(NotificationChannel.EMAIL)
     account = make_account()

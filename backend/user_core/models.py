@@ -1,7 +1,3 @@
-import os
-import random
-import uuid
-
 from django.contrib.auth.models import (
     AbstractBaseUser,
     BaseUserManager,
@@ -12,9 +8,7 @@ from django.utils import timezone
 
 from user_accounts.avatars import clear_avatar
 from user_accounts.models import Account
-from user_stats.models import UserStats
 
-from .choices import RANDOM_USERNAMES
 from .validation import is_username_allowed
 
 
@@ -70,7 +64,6 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_staff = models.BooleanField(default=False)
-    is_deleted = models.BooleanField(default=False)
 
     objects = CustomUserManager()
 
@@ -103,34 +96,23 @@ class User(AbstractBaseUser, PermissionsMixin):
         # Simplest possible answer: Yes, always
         return True
 
-    def delete(self, anonymize=True):
-        """Custom delete method to handle soft deletion and updates."""
+    @transaction.atomic()
+    def delete(self, *args, **kwargs):
+        """Remove the user with everything they own, files included."""
+        from sent_images.delivery import clear_from_frames
+        from sent_images.models import SentImage
 
-        if anonymize:
-            max_length = self._meta.get_field("username").max_length
-            suffix = uuid.uuid4().hex[:8]
-            prefix = random.choice(RANDOM_USERNAMES)[: max_length - len(suffix) - 1]
-            self.username = f"{prefix}-{suffix}"
-
-        new_email = f"{uuid.uuid4()}@deleted.de"
-        self.email = new_email
-
-        default_password = os.environ.get(
-            "DJANGO_DEFAULT_USER_PASSWORT_ON_DELETION", "qJfxMgCKMO"
+        clear_from_frames(
+            SentImage.objects.sent().filter(
+                models.Q(sender=self) | models.Q(reciever=self)
+            )
         )
-        self.set_password(default_password)
 
-        self.is_active = False
-        self.is_staff = False
-        self.is_superuser = False
-
-        self.is_deleted = True
+        # Image.delete() removes the files; a cascade would not.
+        for image in self.images.all():
+            image.delete()
 
         if hasattr(self, "account"):
-            self.account.friendship_user_searchable = False
-            self.account.save()
             clear_avatar(self.account)
 
-        UserStats.objects.filter(user=self).update(user=None)
-
-        self.save()
+        return super().delete(*args, **kwargs)

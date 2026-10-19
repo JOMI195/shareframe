@@ -11,7 +11,6 @@ const Delete = () => {
 
     const [openDialog, setOpenDialog] = useState(false);
     const [password, setPassword] = useState("");
-    const [keepUserName] = useState(false);
     const [loading, setLoading] = useState(false);
 
     const handleDeleteClick = () => {
@@ -30,8 +29,7 @@ const Delete = () => {
     const handleConfirmDelete = async () => {
         setLoading(true);
         try {
-            const anonymize = !keepUserName;
-            await dispatch(deleteMyUserProfile(password, anonymize));
+            await dispatch(deleteMyUserProfile(password));
         } catch {
             // cleanup happens in finally
         } finally {
@@ -52,6 +50,9 @@ const Delete = () => {
                     </Typography>
                     <Typography variant="body1" color="textSecondary">
                         Hier kannst du dein Konto löschen.
+                    </Typography>
+                    <Typography variant="body1" color="textSecondary" sx={{ mt: 1 }}>
+                        Deine Fotos, Freundschaften und gesendeten Bilder werden endgültig gelöscht und deine Rahmen von deinem Konto getrennt.
                     </Typography>
                     <Typography variant="body1" color="textSecondary" sx={{ mt: 1, mb: 1 }}>
                         Diese Aktion ist unwiderruflich.

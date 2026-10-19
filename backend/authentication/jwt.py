@@ -3,12 +3,19 @@ from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
 from rest_framework import status
+from rest_framework.exceptions import AuthenticationFailed
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+
+from config.throttles import (
+    BurstRateThrottle,
+    FailedLoginThrottle,
+    SustainedRateThrottle,
+)
 
 from .auth import enforce_csrf
 from .cookies import delete_auth_cookies, set_auth_cookies
@@ -17,16 +24,23 @@ from .cookies import delete_auth_cookies, set_auth_cookies
 class SignalTokenObtainPairView(TokenObtainPairView):
     """TokenObtainPairView that fires Django login signals."""
 
+    throttle_classes = [BurstRateThrottle, SustainedRateThrottle, FailedLoginThrottle]
+
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         try:
             serializer.is_valid(raise_exception=True)
         except (InvalidToken, TokenError):
+            FailedLoginThrottle().record_failure(request, self)
             user_login_failed.send(
                 sender=self.__class__,
                 credentials={"email": request.data.get("email", "")},
                 request=request,
             )
+            raise
+        except AuthenticationFailed:
+            # authenticate() already sent user_login_failed for a bad password.
+            FailedLoginThrottle().record_failure(request, self)
             raise
 
         user_logged_in.send(

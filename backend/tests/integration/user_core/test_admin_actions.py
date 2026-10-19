@@ -1,9 +1,11 @@
+import os
+
 import pytest
 from django.contrib import admin
 from django.contrib.messages.storage.fallback import FallbackStorage
 from django.test import RequestFactory
 
-from tests.support.factories import UserFactory
+from tests.support.factories import ImageFactory, UserFactory
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -27,57 +29,24 @@ def admin_request(user, data=None):
     return request
 
 
-@pytest.mark.parametrize("action", ["soft_delete", "soft_delete_keep_name"])
-def test_soft_delete_asks_for_confirmation_first(model_admin, staff, action):
-    user = UserFactory(is_active=True)
+def test_bulk_delete_removes_the_users(model_admin, staff):
+    pks = [UserFactory(is_active=True).pk for _ in range(2)]
 
-    response = getattr(model_admin, action)(admin_request(staff), user)
+    model_admin.delete_queryset(admin_request(staff), User.objects.filter(pk__in=pks))
 
-    assert response.template_name == "admin/confirm_action.html"
-    assert list(response.context_data["objects"]) == [user]
-    user.refresh_from_db()
-    assert not user.is_deleted
+    assert not User.objects.filter(pk__in=pks).exists()
 
 
-def test_confirming_soft_deletes_and_anonymizes(model_admin, staff):
-    user = UserFactory(is_active=True)
+def test_bulk_delete_removes_the_image_files(model_admin, staff):
+    image = ImageFactory()
+    path = image.image.path
 
-    model_admin.soft_delete(admin_request(staff, {"apply": "yes"}), user)
+    model_admin.delete_queryset(
+        admin_request(staff), User.objects.filter(pk=image.user_id)
+    )
 
-    user_after = User.objects.get(pk=user.pk)
-    assert user_after.is_deleted
-    assert not user_after.is_active
-    assert user_after.email != user.email
-    assert user_after.username != user.username
-
-
-def test_confirming_without_anonymizing_keeps_the_name(model_admin, staff):
-    user = UserFactory(is_active=True)
-
-    model_admin.soft_delete_keep_name(admin_request(staff, {"apply": "yes"}), user)
-
-    user_after = User.objects.get(pk=user.pk)
-    assert user_after.is_deleted
-    assert user_after.username == user.username
+    assert not os.path.exists(path)
 
 
-def test_rows_offer_soft_delete_to_admins(model_admin, staff):
-    user = UserFactory(is_active=True)
-
-    assert model_admin.get_inline_actions(admin_request(staff), user) == [
-        "soft_delete",
-        "soft_delete_keep_name",
-    ]
-
-
-def test_deleted_users_have_no_row_actions(model_admin, staff):
-    user = UserFactory(is_active=True, is_deleted=True)
-
-    assert model_admin.get_inline_actions(admin_request(staff), user) == []
-
-
-def test_staff_without_change_permission_get_no_row_actions(model_admin):
-    viewer = UserFactory(is_active=True, is_staff=True, is_admin=False)
-    user = UserFactory(is_active=True)
-
-    assert model_admin.get_inline_actions(admin_request(viewer), user) == []
+def test_staff_without_superuser_get_no_bulk_delete(model_admin, staff):
+    assert "delete_selected" not in model_admin.get_actions(admin_request(staff))

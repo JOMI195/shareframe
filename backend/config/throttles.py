@@ -53,6 +53,31 @@ class UnsubscribeSustainedRateThrottle(_IpScopedThrottle):
     scope = "unsubscribe_sustained"
 
 
+class FailedLoginThrottle(_IpScopedThrottle):
+    """Only failed logins count; the view records them via record_failure."""
+
+    scope = "failed_login"
+
+    def throttle_success(self):
+        return True
+
+    def record_failure(self, request, view):
+        if self.rate is None:
+            return
+        key = self.get_cache_key(request, view)
+        now = self.timer()
+        history = [t for t in self.cache.get(key, []) if t > now - self.duration]
+        self.cache.set(key, [now, *history], self.duration)
+
+
+class AuthEmailBurstRateThrottle(_IpScopedThrottle):
+    scope = "auth_email_burst"
+
+
+class AuthEmailSustainedRateThrottle(_IpScopedThrottle):
+    scope = "auth_email_sustained"
+
+
 class _FrameScopedThrottle(SimpleRateThrottle):
     """Key on the authenticated frame (request.auth), not the frame's owner user."""
 

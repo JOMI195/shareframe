@@ -27,15 +27,6 @@ def test_existing_counts_are_kept():
     assert stats.images_sent == seed.user_stats()[seed.ALICE]["images_sent"]
 
 
-def test_deleted_users_are_skipped():
-    user = UserFactory()
-    user.delete()
-
-    call_command("init_user_stats", verbosity=0)
-
-    assert not UserStats.objects.filter(user=user).exists()
-
-
 def test_running_again_changes_nothing():
     call_command("init_user_stats", verbosity=0)
     before = UserStats.objects.count()

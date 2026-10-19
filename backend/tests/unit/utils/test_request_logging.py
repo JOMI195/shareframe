@@ -1,3 +1,9 @@
+import json
+import logging
+
+from django.http import HttpResponse
+from django.test import RequestFactory
+
 from utils.request_logging.decorators import no_logging
 from utils.request_logging.middleware import (
     LOG_BODY_ATTR,
@@ -5,6 +11,7 @@ from utils.request_logging.middleware import (
     NO_LOGGING_ATTR,
     NO_LOGGING_MSG,
     NO_LOGGING_MSG_ATTR,
+    LoggingMiddleware,
 )
 
 
@@ -61,3 +68,97 @@ def test_returns_the_same_function():
         pass
 
     assert no_logging()(view) is view
+
+
+LOGIN_PATH = "/api/auth/jwt/create/"
+
+
+def logged(caplog, request):
+    with caplog.at_level(logging.DEBUG, logger="django.request"):
+        LoggingMiddleware(lambda r: HttpResponse())(request)
+    return caplog.text
+
+
+class TestRedaction:
+    def test_json_secrets_are_masked(self, caplog):
+        request = RequestFactory().post(
+            LOGIN_PATH,
+            json.dumps({"email": "user@shareframe.local", "password": "hunter2-pass"}),
+            content_type="application/json",
+        )
+
+        text = logged(caplog, request)
+
+        assert "hunter2-pass" not in text
+        assert "user@shareframe.local" in text
+
+    def test_nested_json_secrets_are_masked(self, caplog):
+        body = {"items": [{"new_password": "nested-secret1", "name": "kept-name"}]}
+        request = RequestFactory().post(
+            LOGIN_PATH, json.dumps(body), content_type="application/json"
+        )
+
+        text = logged(caplog, request)
+
+        assert "nested-secret1" not in text
+        assert "kept-name" in text
+
+    def test_a_long_json_body_is_masked_before_truncation(self, caplog, settings):
+        settings.REQUEST_LOGGING_MAX_BODY_LENGTH = 40
+        request = RequestFactory().post(
+            LOGIN_PATH,
+            json.dumps({"password": "truncated-secret1", "padding": "x" * 30}),
+            content_type="application/json",
+        )
+
+        text = logged(caplog, request)
+
+        assert "truncated-secret1" not in text
+        assert "padding" in text
+
+    def test_form_encoded_secrets_are_masked(self, caplog):
+        request = RequestFactory().post(
+            "/api/admin/login/",
+            "username=admin%40shareframe.local&password=form-secret1&otp_token=123456",
+            content_type="application/x-www-form-urlencoded",
+        )
+
+        text = logged(caplog, request)
+
+        assert "form-secret1" not in text
+        assert "123456" not in text
+        assert "admin%40shareframe.local" in text
+
+    def test_multipart_text_secrets_are_masked(self, caplog):
+        request = RequestFactory().post(
+            "/api/admin/login/",
+            {"username": "multi-user", "password": "multipart-secret1"},
+        )
+
+        text = logged(caplog, request)
+
+        assert "multipart-secret1" not in text
+        assert "multi-user" in text
+
+    def test_cookies_and_the_csrf_header_are_masked(self, caplog):
+        request = RequestFactory().get(
+            "/api/version/",
+            HTTP_COOKIE="access=cookie-jwt-value; csrftoken=cookie-csrf-value",
+            HTTP_X_CSRFTOKEN="header-csrf-value",
+        )
+
+        text = logged(caplog, request)
+
+        assert "cookie-jwt-value" not in text
+        assert "cookie-csrf-value" not in text
+        assert "header-csrf-value" not in text
+
+    def test_query_string_secrets_are_masked(self, caplog):
+        request = RequestFactory().get(
+            "/api/version/", {"token": "query-secret1", "page": "2"}
+        )
+
+        text = logged(caplog, request)
+
+        assert "query-secret1" not in text
+        assert "page=2" in text

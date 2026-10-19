@@ -35,7 +35,7 @@ class Command(BaseCommand):
         }
 
         with transaction.atomic():
-            users = User.objects.filter(is_deleted=False)
+            users = User.objects.all()
             UserStats.objects.bulk_create(
                 [UserStats(user=user) for user in users.filter(stats__isnull=True)],
                 batch_size=500,

@@ -87,8 +87,7 @@ class TestRecipients:
 
         assert list(ChangelogFactory(groups=[group]).recipients()) == [user]
 
-    def test_inactive_and_deleted_accounts_are_excluded(self, group):
-        self.member(group, is_deleted=True)
+    def test_inactive_accounts_are_excluded(self, group):
         FrameFactory(user=UserFactory(is_active=False), groups=[group])
 
         assert not ChangelogFactory(groups=[group]).recipients().exists()

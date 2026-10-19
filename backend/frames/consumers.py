@@ -366,21 +366,28 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
     async def send_clear_specific_images_to_user_frames(
         cls, receiver: User, sent_image_ids: list[int]
     ):
-        channel_layer = get_channel_layer()
         connections = await cls.get_user_frame_connections(receiver)
+        await cls.send_clear_specific_images_to_channels(
+            [connection.channel_name for connection in connections], sent_image_ids
+        )
 
+    @classmethod
+    async def send_clear_specific_images_to_channels(
+        cls, channel_names: list[str], sent_image_ids: list[int]
+    ):
+        channel_layer = get_channel_layer()
         message = {
             "type": "clear_specific_sent_images",
             "sent_image_ids": sent_image_ids,
         }
 
         logger.info(
-            f"Sending clear command for {len(sent_image_ids)} images to {len(connections)} connections"
+            f"Sending clear command for {len(sent_image_ids)} images to {len(channel_names)} connections"
         )
 
-        for connection in connections:
+        for channel_name in channel_names:
             await channel_layer.send(
-                connection.channel_name,
+                channel_name,
                 {"type": "clear_specific_sent_images", "data": json.dumps(message)},
             )
 

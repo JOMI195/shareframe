@@ -84,8 +84,8 @@ class ShareframeBusinessCollector:
 
         yield _gauge(
             "shareframe_users_total",
-            "Users excluding soft-deleted ones",
-            User.objects.filter(is_deleted=False).count(),
+            "Registered users",
+            User.objects.count(),
         )
 
         sent = SentImage.objects.sent().aggregate(
@@ -117,7 +117,7 @@ class ShareframeBusinessCollector:
             SentImage.objects.sent().filter(sent_at__gte=day_ago).count(),
         )
 
-        live_users = User.objects.filter(is_deleted=False)
+        live_users = User.objects.all()
         active = GaugeMetricFamily(
             "shareframe_users_active",
             "Users who logged in within the window",

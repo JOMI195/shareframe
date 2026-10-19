@@ -2,6 +2,7 @@ import pytest
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.core import mail
 from django.test import RequestFactory
+from freezegun import freeze_time
 
 from tests.support import seed
 from tests.support.factories import UserFactory
@@ -89,6 +90,42 @@ class TestFailedLogin:
         failed(alice_user.email)
 
         assert alice_user.email in mail.outbox[-1].body
+
+    def test_repeated_attempts_mail_the_owner_once(self, alice_user):
+        before = len(mail.outbox)
+
+        for _ in range(5):
+            failed(alice_user.email)
+
+        assert len(mail.outbox) == before + 1
+
+    def test_the_owner_is_mailed_again_after_the_cooldown(self, alice_user, settings):
+        with freeze_time("2026-01-01 12:00:00"):
+            failed(alice_user.email)
+        before = len(mail.outbox)
+
+        later = 60 + settings.FAILED_LOGIN_MAIL_COOLDOWN
+        with freeze_time(f"2026-01-01 12:{later // 60:02d}:00"):
+            failed(alice_user.email)
+
+        assert len(mail.outbox) == before + 1
+
+    def test_each_owner_has_their_own_cooldown(self, alice_user):
+        other = UserFactory(is_active=True)
+        failed(alice_user.email)
+        before = len(mail.outbox)
+
+        failed(other.email)
+
+        assert mail.outbox[before:][0].to == [other.email]
+
+    def test_repeated_admin_attempts_mail_once(self):
+        before = len(mail.outbox)
+
+        for _ in range(3):
+            failed("whoever@shareframe.local", path="/api/admin/login/")
+
+        assert len(mail.outbox) == before + 1
 
 
 def test_an_admin_action_is_logged(caplog, alice_user):
