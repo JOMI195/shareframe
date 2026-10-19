@@ -64,7 +64,6 @@ class Changelog(models.Model):
             get_user_model()
             .objects.filter(
                 is_active=True,
-                is_deleted=False,
                 frame__is_active=True,
                 frame__groups__in=self.groups.all(),
             )

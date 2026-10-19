@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 from django.core import mail
 
 from tests.support import seed
@@ -90,7 +91,20 @@ class TestDeleteAccount:
         )
 
         assert response.status_code == 204
-        assert User.objects.get(pk=user.pk).is_deleted
+        assert not User.objects.filter(pk=user.pk).exists()
+
+    def test_the_auth_cookies_are_cleared(self, client_as):
+        user = UserFactory(is_active=True)
+
+        response = client_as(user).delete(
+            ME_URL, {"password": "factory-pass1"}, format="json"
+        )
+
+        for name in (
+            settings.AUTH_COOKIE_ACCESS_NAME,
+            settings.AUTH_COOKIE_REFRESH_NAME,
+        ):
+            assert response.cookies[name].value == ""
 
     def test_a_wrong_password_answers_400(self, client_as):
         user = UserFactory(is_active=True)
@@ -100,7 +114,7 @@ class TestDeleteAccount:
         )
 
         assert response.status_code == 400
-        assert not User.objects.get(pk=user.pk).is_deleted
+        assert User.objects.filter(pk=user.pk).exists()
 
     def test_a_wrong_password_sends_no_mail(self, client_as):
         """A re-check of the current user is not a login, so nothing is notified."""
@@ -123,16 +137,6 @@ class TestDeleteAccount:
         client_as(user).delete(ME_URL, {"password": "factory-pass1"}, format="json")
 
         assert len(mail.outbox) > before
-
-    def test_the_username_can_be_kept(self, client_as):
-        user = UserFactory(is_active=True)
-        original = user.username
-
-        client_as(user).delete(
-            ME_URL, {"password": "factory-pass1", "anonymize": False}, format="json"
-        )
-
-        assert User.objects.get(pk=user.pk).username == original
 
 
 class TestSetPassword:

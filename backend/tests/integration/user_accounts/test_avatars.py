@@ -59,7 +59,7 @@ def test_clear_avatar_deletes_the_file(django_capture_on_commit_callbacks):
     assert not _exists(name)
 
 
-def test_soft_delete_removes_the_avatar(django_capture_on_commit_callbacks):
+def test_deleting_the_user_removes_the_avatar(django_capture_on_commit_callbacks):
     user = UserFactory()
     with django_capture_on_commit_callbacks(execute=True):
         set_avatar(user.account, _upload())
@@ -68,8 +68,6 @@ def test_soft_delete_removes_the_avatar(django_capture_on_commit_callbacks):
     with django_capture_on_commit_callbacks(execute=True):
         user.delete()
 
-    user.account.refresh_from_db()
-    assert not user.account.avatar
     assert not _exists(name)
 
 

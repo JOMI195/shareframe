@@ -70,13 +70,10 @@ class TestBusinessCollector:
 
         assert after > before + image.size
 
-    def test_counts_live_users(self):
+    def test_counts_the_users(self):
         values = gauges(ShareframeBusinessCollector())
 
-        assert (
-            values["shareframe_users_total"]
-            == User.objects.filter(is_deleted=False).count()
-        )
+        assert values["shareframe_users_total"] == User.objects.count()
 
     def test_a_deleted_user_drops_out(self):
         before = gauges(ShareframeBusinessCollector())["shareframe_users_total"]

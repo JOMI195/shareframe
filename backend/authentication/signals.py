@@ -92,7 +92,7 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
         return
 
     # normal user: notify the owner only if the attempted email is a real account
-    user = User.objects.filter(email=attempted, is_deleted=False).first()
+    user = User.objects.filter(email=attempted).first()
     if not user or not _failed_login_mail_allowed(user.pk):
         return
 

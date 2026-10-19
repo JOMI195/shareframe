@@ -18,7 +18,6 @@ class UserSearchSerializer(serializers.ModelSerializer):
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.filter(
         is_active=True,
-        is_deleted=False,
         is_superuser=False,
         account__friendship_user_searchable=True,
     )

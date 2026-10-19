@@ -34,7 +34,7 @@ def due_accounts(now=None):
         account=OuterRef("pk"), kind=NotificationKind.INACTIVITY_REMINDER
     ).order_by("-sent_at")
     return (
-        Account.objects.filter(user__is_active=True, user__is_deleted=False)
+        Account.objects.filter(user__is_active=True)
         .annotate(
             last_activity=Coalesce(
                 Subquery(last_sent.values("sent_at")[:1]), "user__date_joined"

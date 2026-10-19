@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from appEmail.djoserEmailConfig import DjoserUserDeletedEmail
+from authentication.cookies import delete_auth_cookies
 from config.throttles import (
     AuthEmailBurstRateThrottle,
     AuthEmailSustainedRateThrottle,
@@ -23,7 +24,6 @@ AUTH_EMAIL_ACTIONS = (
 
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
-    anonymize = serializers.BooleanField(write_only=True, required=False, default=True)
 
 
 class CustomUserViewSet(BaseUserViewSet):
@@ -33,7 +33,6 @@ class CustomUserViewSet(BaseUserViewSet):
             serializer = PasswordSerializer(data=request.data)
             serializer.is_valid(raise_exception=True)
             password = serializer.validated_data["password"]
-            anonymize = serializer.validated_data.get("anonymize", True)
 
             if not request.user.check_password(password):
                 return Response(
@@ -41,14 +40,14 @@ class CustomUserViewSet(BaseUserViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            # delete() anonymises in place, so the mail needs a detached copy
+            # Loaded before delete() for the farewell mail.
             user = get_user_model().objects.get(pk=request.user.pk)
 
-            request.user.delete(anonymize=anonymize)
+            request.user.delete()
 
             DjoserUserDeletedEmail(self.request, {"user": user}).send([user.email])
 
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return delete_auth_cookies(Response(status=status.HTTP_204_NO_CONTENT))
 
         return super().me(request, *args, **kwargs)
 

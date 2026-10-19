@@ -19,7 +19,7 @@ def preview_address(user):
 class EmailChannel(Channel):
     def is_available(self, account):
         user = account.user
-        return user.is_active and not user.is_deleted and bool(user.email)
+        return user.is_active and bool(user.email)
 
     def send(self, account, kind, message, *, preview=False):
         base_url = os.environ.get("FRONTEND_BASE_URL")
