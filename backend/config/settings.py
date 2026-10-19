@@ -430,6 +430,9 @@ REST_FRAMEWORK = {
         "changelogs_sustained": "3000/day",
         "unsubscribe_burst": "10/min",
         "unsubscribe_sustained": "100/day",
+        "failed_login": "10/min",
+        "auth_email_burst": "5/min",
+        "auth_email_sustained": "50/day",
     },
 }
 
@@ -530,6 +533,8 @@ else:
 ADMIN_NOTIFICATION_EMAIL = os.environ.get(
     "ADMIN_NOTIFICATION_EMAIL", DEFAULT_FROM_EMAIL
 )
+# At most one failed-login warning per recipient within this many seconds.
+FAILED_LOGIN_MAIL_COOLDOWN = 15 * 60
 
 #### Images
 IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]

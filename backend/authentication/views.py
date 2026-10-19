@@ -5,6 +5,20 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from appEmail.djoserEmailConfig import DjoserUserDeletedEmail
+from config.throttles import (
+    AuthEmailBurstRateThrottle,
+    AuthEmailSustainedRateThrottle,
+)
+
+# Anonymous actions that mail an arbitrary address or check an emailed token.
+AUTH_EMAIL_ACTIONS = (
+    "activation",
+    "resend_activation",
+    "reset_password",
+    "reset_password_confirm",
+    "reset_username",
+    "reset_username_confirm",
+)
 
 
 class PasswordSerializer(serializers.Serializer):
@@ -37,6 +51,11 @@ class CustomUserViewSet(BaseUserViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         return super().me(request, *args, **kwargs)
+
+    def get_throttles(self):
+        if self.action in AUTH_EMAIL_ACTIONS:
+            return [AuthEmailBurstRateThrottle(), AuthEmailSustainedRateThrottle()]
+        return super().get_throttles()
 
     def create(self, request, *args, **kwargs):
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)

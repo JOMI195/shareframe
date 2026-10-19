@@ -3,6 +3,7 @@ import os
 import pytest
 
 from frames.models import Frame
+from tests.support import seed
 from tests.support.factories import FrameTokenFactory, ReleaseFactory
 from tests.support.helpers.frames import token_headers
 
@@ -113,4 +114,54 @@ def test_a_spoofed_forwarded_for_does_not_reset_the_ip_limit(client, throttled):
         for i in range(UNSUBSCRIBE_LIMIT + 1)
     ]
 
+    assert codes[-1] == 429
+
+
+LOGIN_URL = "/api/auth/jwt/create/"
+RESET_PASSWORD_URL = "/api/auth/users/reset_password/"
+# failed_login and auth_email_burst, keyed on the client IP.
+FAILED_LOGIN_LIMIT = 10
+AUTH_EMAIL_LIMIT = 5
+
+
+def login(client, password):
+    email, _ = seed.credentials(seed.ALICE)
+    return client.post(LOGIN_URL, {"email": email, "password": password}, format="json")
+
+
+def test_failed_logins_trip_the_limit(client, throttled):
+    codes = [
+        login(client, "wrong-pass1").status_code for _ in range(FAILED_LOGIN_LIMIT + 1)
+    ]
+
+    assert codes[:FAILED_LOGIN_LIMIT] == [401] * FAILED_LOGIN_LIMIT
+    assert codes[-1] == 429
+
+
+def test_the_limit_also_blocks_the_right_password(client, throttled):
+    for _ in range(FAILED_LOGIN_LIMIT):
+        login(client, "wrong-pass1")
+
+    _, password = seed.credentials(seed.ALICE)
+
+    assert login(client, password).status_code == 429
+
+
+def test_successful_logins_do_not_count(client, throttled):
+    _, password = seed.credentials(seed.ALICE)
+
+    codes = [login(client, password).status_code for _ in range(FAILED_LOGIN_LIMIT + 2)]
+
+    assert set(codes) == {200}
+
+
+def test_password_reset_mails_trip_the_limit(client, throttled):
+    email, _ = seed.credentials(seed.ALICE)
+
+    codes = [
+        client.post(RESET_PASSWORD_URL, {"email": email}, format="json").status_code
+        for _ in range(AUTH_EMAIL_LIMIT + 1)
+    ]
+
+    assert codes[:AUTH_EMAIL_LIMIT] == [204] * AUTH_EMAIL_LIMIT
     assert codes[-1] == 429
