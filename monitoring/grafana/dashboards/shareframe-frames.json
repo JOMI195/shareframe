@@ -5260,7 +5260,7 @@
             "type": "loki",
             "uid": "loki"
           },
-          "expr": "{job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} |= \"$search\" | regexp `log - b'(?P<payload>\\{.*\\})'$` | line_format `{{.payload}}` | json"
+          "expr": "{job=\"backend\", serial_number=~\".+\", serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"} |= \"$search\" | regexp `log - (?:b')?(?P<payload>\\{.*\\})'?$` | line_format `{{.payload}}` | json"
         }
       ],
       "description": "The raw telemetry JSON each frame posted. Use Search to grep it."

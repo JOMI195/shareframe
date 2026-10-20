@@ -43,10 +43,10 @@ scrape_configs:
 
       # Frame heartbeat bodies carry the fleet telemetry the Frames dashboard reads.
       - match:
-          selector: '{job="backend"} |= "log - b" |= "serial_number"'
+          selector: '{job="backend"} |= "log - " |= "serial_number"'
           stages:
             - regex:
-                expression: "log - b'(?P<payload>\\{.*\\})'$"
+                expression: "log - (?:b')?(?P<payload>\\{.*\\})'?$"
             - json:
                 source: payload
                 expressions:
