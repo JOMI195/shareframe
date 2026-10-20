@@ -36,17 +36,32 @@ DEFAULT_SENSITIVE_HEADERS = (
         "HTTP_X_CSRFTOKEN",
     ]
 )
-# Substrings of body/query keys whose values are masked.
-SENSITIVE_BODY_KEYS = (
-    "password",
-    "token",
-    "secret",
-    "otp",
-    "refresh",
-    "access",
-    "auth",
-    "p256dh",
-    "code",
+# Exact body/query keys whose values are masked.
+SENSITIVE_BODY_KEYS = frozenset(
+    {
+        "password",
+        "password1",
+        "password2",
+        "re_password",
+        "current_password",
+        "new_password",
+        "re_new_password",
+        "old_password",
+        "new_password1",
+        "new_password2",
+        "token",
+        "uid",
+        "refresh",
+        "access",
+        "access_token",
+        "otp",
+        "otp_token",
+        "csrfmiddlewaretoken",
+        "private_serial_number",
+        "p256dh",
+        "auth",
+        "reciever_friendship_user_search_code",
+    }
 )
 MASK = "*****"
 MULTIPART_NAME_REGEX = re.compile(r'\bname="([^"]*)"', re.I)
@@ -90,8 +105,7 @@ request_logger = logging.getLogger(LOGGER_NAME)
 
 
 def _is_sensitive_key(key):
-    key = str(key).lower()
-    return any(part in key for part in SENSITIVE_BODY_KEYS)
+    return str(key).lower() in SENSITIVE_BODY_KEYS
 
 
 def _redact_pairs(pairs):

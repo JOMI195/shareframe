@@ -103,6 +103,25 @@ class TestRedaction:
         assert "nested-secret1" not in text
         assert "kept-name" in text
 
+    def test_telemetry_keys_resembling_secrets_are_kept(self, caplog):
+        body = {
+            "serial_number": "TEST-0001",
+            "epd_refresh_total": 4711,
+            "epd_last_refresh_ms": 2345,
+            "status_code": 418,
+            "authenticated": "kept-flag",
+        }
+        request = RequestFactory().post(
+            "/api/frames/frame-hearbeat/",
+            json.dumps(body),
+            content_type="application/json",
+        )
+
+        text = logged(caplog, request)
+
+        for value in ("TEST-0001", "4711", "2345", "418", "kept-flag"):
+            assert value in text
+
     def test_a_long_json_body_is_masked_before_truncation(self, caplog, settings):
         settings.REQUEST_LOGGING_MAX_BODY_LENGTH = 40
         request = RequestFactory().post(
