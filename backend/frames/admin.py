@@ -1,7 +1,5 @@
-import base64
 import os
 
-from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from django.conf import settings
 from django.contrib import admin, messages
 from django.contrib.admin import helpers
@@ -14,10 +12,10 @@ from django.utils.html import format_html
 from inline_actions.admin import InlineActionsModelAdminMixin
 
 from frame_updates.views import ordered_releases_for
-from utils.admin import RowAction, confirm_page
+from utils.admin import RowAction
 
 from .commands import SERVICES, TIERS, FrameOffline, required_permission, send_command
-from .keys import public_key_fingerprint
+from .forms import FrameAdminForm
 from .models import (
     Frame,
     FrameCommand,
@@ -201,39 +199,9 @@ def generate_otp(modeladmin, request, queryset):
         )
 
 
-@admin.action(description="Generate ed25519 keypair (shows private key once)")
-def generate_keypair(modeladmin, request, queryset):
-    if "apply" not in request.POST:
-        return confirm_page(
-            modeladmin,
-            request,
-            queryset,
-            "generate_keypair",
-            "Generate keypair",
-            "These frames get a new keypair. The current key stops working until "
-            "the frame is set up with the new private key.",
-        )
-
-    for frame in queryset:
-        private_key = Ed25519PrivateKey.generate()
-        public_bytes = private_key.public_key().public_bytes_raw()
-        private_seed = private_key.private_bytes_raw()
-
-        public_key_b64 = base64.b64encode(public_bytes).decode()
-        frame.public_key = public_key_b64
-        frame.public_serial_number = public_key_fingerprint(public_key_b64)
-        frame.save(update_fields=["public_key", "public_serial_number"])
-
-        modeladmin.message_user(
-            request,
-            f"Frame id {frame.public_serial_number} — private key seed "
-            f"(copy now, shown once): {base64.b64encode(private_seed).decode()}",
-            level=messages.WARNING,
-        )
-
-
 @admin.register(Frame)
 class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
+    form = FrameAdminForm
     list_display = (
         "id",
         "public_serial_number",
@@ -249,7 +217,6 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
     filter_horizontal = ("groups",)
     actions = [
         generate_otp,
-        generate_keypair,
         send_request_diagnostics,
         send_restart_service,
         send_reboot,
@@ -257,7 +224,6 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         send_factory_reset,
     ]
     otp = RowAction(generate_otp, "OTP")
-    keypair = RowAction(generate_keypair, "Keypair")
     diagnostics = RowAction(send_request_diagnostics, "Diagnostics")
     restart_service = RowAction(send_restart_service, "Restart service")
     reboot = RowAction(send_reboot, "Reboot")
@@ -265,7 +231,6 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
     factory_reset = RowAction(send_factory_reset, "Factory reset")
     inline_actions = [
         "otp",
-        "keypair",
         "diagnostics",
         "restart_service",
         "reboot",
@@ -280,7 +245,7 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         FrameDiagnosticsInline,
     ]
     readonly_fields = (
-        "public_key",
+        "public_serial_number",
         "registered_at",
         "last_connected",
         "last_seen",
@@ -307,9 +272,9 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
             "Authentication",
             {
                 "fields": (
+                    "public_key",
                     "public_serial_number",
                     "private_serial_number",
-                    "public_key",
                 ),
             },
         ),
