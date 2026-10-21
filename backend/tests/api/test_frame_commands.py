@@ -146,6 +146,20 @@ def test_a_risky_command_needs_the_typed_serial(admin_client):
     assert FrameCommand.objects.get().tier == "risky"
 
 
+def test_shutdown_is_risky_and_reaches_the_frame(admin_client):
+    frame = FrameFactory()
+    receive = online(frame)
+
+    apply(admin_client, "send_shutdown", frame, confirm_serial="wrong")
+    assert not FrameCommand.objects.exists()
+
+    apply(
+        admin_client, "send_shutdown", frame, confirm_serial=frame.public_serial_number
+    )
+    assert FrameCommand.objects.get().tier == "risky"
+    assert json.loads(receive()["data"])["command"] == "shutdown"
+
+
 def test_an_offline_frame_gets_nothing(admin_client):
     frame = FrameFactory()
 
