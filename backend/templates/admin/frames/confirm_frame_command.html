@@ -20,7 +20,7 @@
 {% endif %}
 <p>The frame checks its own state first and rejects the command while an update runs, the display
 refreshes too long, the boot slot is unconfirmed, or it rebooted in the last 30 minutes.
-Diagnostics are captured before any reboot.</p>
+Diagnostics are captured before any reboot or shutdown.</p>
 
 <form method="post">{% csrf_token %}
     <input type="hidden" name="{{ action_checkbox_name }}" value="{{ frame.pk }}">

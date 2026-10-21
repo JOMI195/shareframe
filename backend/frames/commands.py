@@ -19,6 +19,7 @@ TIERS = {
     "reboot": "safe",
     "update_install": "risky",
     "factory_reset": "risky",
+    "shutdown": "risky",
 }
 SERVICES = ("display", "websocket", "dashboard", "heartbeat", "update")
 RESULT_STATUSES = {

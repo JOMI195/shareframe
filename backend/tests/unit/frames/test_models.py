@@ -4,6 +4,7 @@ import pytest
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from django.core.exceptions import ValidationError
 
+from frames.keys import public_key_fingerprint
 from frames.models import Frame
 
 
@@ -37,3 +38,31 @@ def test_rejects_invalid_base64():
 
 def test_a_frame_without_a_key_is_valid():
     frame_with(None).clean()
+
+
+def test_the_public_serial_follows_the_key():
+    raw = Ed25519PrivateKey.generate().public_key().public_bytes_raw()
+    key = base64.b64encode(raw).decode()
+    frame = frame_with(key)
+
+    frame.clean()
+
+    assert frame.public_serial_number == public_key_fingerprint(key)
+
+
+def test_a_frame_without_a_key_keeps_its_serial():
+    frame = frame_with(None)
+
+    frame.clean()
+
+    assert frame.public_serial_number == "XXXX-XXXX-XXXX-XXXX"
+
+
+def test_a_blank_private_serial_gets_a_random_one():
+    first, second = Frame(private_serial_number=""), Frame(private_serial_number="")
+
+    first.clean()
+    second.clean()
+
+    assert first.private_serial_number
+    assert first.private_serial_number != second.private_serial_number

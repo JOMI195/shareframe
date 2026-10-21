@@ -1,6 +1,7 @@
 import base64
 import os
 import random
+import secrets
 import string
 import uuid
 
@@ -10,6 +11,8 @@ from django.db import models
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
+
+from .keys import public_key_fingerprint
 
 
 class FrameGroup(models.Model):
@@ -26,7 +29,6 @@ class Frame(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True
     )
 
-    # be readonly in future - set by generation of public_key
     public_serial_number = models.CharField(max_length=100, unique=True)
     private_serial_number = models.CharField(max_length=100, unique=True)
     public_key = models.CharField(
@@ -75,6 +77,10 @@ class Frame(models.Model):
                 if isinstance(e, ValidationError):
                     raise
                 raise ValidationError({"public_key": "Invalid base64 encoding."}) from e
+            self.public_serial_number = public_key_fingerprint(self.public_key)
+        if not self.private_serial_number:
+            # Only legacy HMAC boards use it; unique, so never leave it blank.
+            self.private_serial_number = secrets.token_hex(16)
 
     def get_or_create_token(self):
         """
