@@ -45,15 +45,23 @@ DIAGNOSTICS_MAX_UPLOAD_BYTES = 256 * 1024
 DIAGNOSTICS_MAX_TEXT_BYTES = 4 * 1024 * 1024
 
 
+class _InvalidTimestamp(ValueError):
+    pass
+
+
+class _PastTimestamp(ValueError):
+    pass
+
+
 def _parse_future_unix_timestamp(value) -> datetime | None:
     if not value:
         return None
     try:
         parsed = datetime.fromtimestamp(float(value), tz=UTC)
     except (ValueError, OverflowError) as e:
-        raise ValueError("Invalid Unix timestamp provided.") from e
+        raise _InvalidTimestamp from e
     if parsed <= now():
-        raise ValueError("The provided timestamp must be in the future.")
+        raise _PastTimestamp
     return parsed
 
 
@@ -222,8 +230,16 @@ class FramesViewSet(viewsets.ModelViewSet):
         try:
             expiry_datetime = _parse_future_unix_timestamp(expiry_unix_timestamp)
             scheduled_for = _parse_future_unix_timestamp(scheduled_unix_timestamp)
-        except ValueError as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except _InvalidTimestamp:
+            return Response(
+                {"error": "Invalid Unix timestamp provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except _PastTimestamp:
+            return Response(
+                {"error": "The provided timestamp must be in the future."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if expiry_datetime is None:
             expiry_unix_timestamp = None

@@ -1,3 +1,5 @@
+import logging
+
 from asgiref.sync import async_to_sync
 from django.db.models import Q
 from django.utils import timezone
@@ -15,6 +17,8 @@ from .models import SentImage, SentImageStatus
 from .serializers import (
     SentImagesRetrieveSerializer,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class SentImagesPagination(PageNumberPagination):
@@ -128,9 +132,10 @@ class SentImagesViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_404_NOT_FOUND,
             )
-        except Exception as e:
+        except Exception:
+            logger.exception("Deactivating sent image %s failed", pk)
             return Response(
-                {"detail": f"An error occurred while deactivating the image.{e}"},
+                {"detail": "An error occurred while deactivating the image."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
