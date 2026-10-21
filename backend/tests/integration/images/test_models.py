@@ -1,12 +1,15 @@
+import io
 import os
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from freezegun import freeze_time
+from PIL import Image as PILImage
 
 from images.models import Image, ImageVariant
 from tests.support import seed
-from tests.support.factories import ImageFactory
+from tests.support.factories import ImageFactory, ImageSizeFactory
 from tests.support.helpers.images import upload_file
 from user_core.models import User
 
@@ -49,9 +52,101 @@ def test_uploads_land_under_the_private_prefix():
 def test_a_jpeg_source_yields_jpeg_variants():
     image = ImageFactory(image=upload_file(name="photo.jpg", fmt="JPEG"))
 
-    from PIL import Image as PILImage
-
     assert PILImage.open(image.get_variant("medium")).format == "JPEG"
+
+
+class TestVariantProcessing:
+    RED = (220, 30, 30)
+    BLUE = (30, 30, 220)
+
+    @staticmethod
+    def _upload(image, name, fmt, **save_kwargs):
+        buffer = io.BytesIO()
+        image.save(buffer, format=fmt, **save_kwargs)
+        return SimpleUploadedFile(name, buffer.getvalue())
+
+    @staticmethod
+    def _open(field_file):
+        return PILImage.open(field_file)
+
+    def _closer_to_red(self, pixel):
+        return abs(pixel[0] - self.RED[0]) < abs(pixel[0] - self.BLUE[0])
+
+    def test_exif_orientation_is_applied(self):
+        source = PILImage.new("RGB", (200, 100), self.BLUE)
+        source.paste(self.RED, (0, 0, 100, 100))
+        exif = PILImage.Exif()
+        exif[0x0112] = 6
+
+        image = ImageFactory(image=self._upload(source, "photo.jpg", "JPEG", exif=exif))
+        variant = self._open(image.get_variant("medium"))
+
+        assert (image.width, image.height) == (100, 200)
+        assert variant.size == (800, 1600)
+        # Rotated upright, the red left half ends up on top.
+        assert self._closer_to_red(variant.getpixel((400, 10)))
+        assert not self._closer_to_red(variant.getpixel((400, 1590)))
+
+    def test_variants_keep_the_aspect_ratio(self):
+        image = ImageFactory(image=upload_file(size=(400, 300)))
+
+        sizes = {
+            v.image_size.name: self._open(v.file).size for v in image.variants.all()
+        }
+
+        assert sizes == {
+            "large": (1600, 1200),
+            "medium": (800, 600),
+            "thumbnail": (350, 262),
+        }
+
+    def test_a_fixed_height_size_is_honoured(self):
+        size = ImageSizeFactory(width=120, height=40)
+
+        image = ImageFactory(image=upload_file(size=(400, 300)))
+
+        assert self._open(image.get_variant(size.name)).size == (120, 40)
+
+    def test_a_png_keeps_its_transparency(self):
+        source = PILImage.new("RGBA", (40, 30), (0, 0, 0, 0))
+
+        image = ImageFactory(image=self._upload(source, "clear.png", "PNG"))
+        variant = self._open(image.get_variant("medium"))
+
+        assert (variant.format, variant.mode) == ("PNG", "RGBA")
+        assert variant.getpixel((10, 10))[3] == 0
+
+    def test_a_palette_png_yields_rgb_variants(self):
+        source = PILImage.new("RGB", (40, 30), self.RED).convert("P")
+
+        image = ImageFactory(image=self._upload(source, "palette.png", "PNG"))
+        variant = self._open(image.get_variant("medium"))
+
+        assert (variant.format, variant.mode) == ("PNG", "RGB")
+
+    @pytest.mark.parametrize("mode", ["L", "CMYK"])
+    def test_a_non_rgb_jpeg_yields_rgb_jpeg_variants(self, mode):
+        source = PILImage.new("RGB", (40, 30), self.RED).convert(mode)
+
+        image = ImageFactory(image=self._upload(source, "photo.jpg", "JPEG"))
+        variant = self._open(image.get_variant("medium"))
+
+        assert (variant.format, variant.mode) == ("JPEG", "RGB")
+
+    def test_an_mpo_source_yields_jpeg_variants(self):
+        frames = [
+            PILImage.new("RGB", (40, 30), color) for color in (self.RED, self.BLUE)
+        ]
+
+        image = ImageFactory(
+            image=self._upload(
+                frames[0], "hdr.jpg", "MPO", save_all=True, append_images=frames[1:]
+            )
+        )
+        variant = self._open(image.get_variant("medium"))
+
+        assert image.format == "MPO"
+        assert (variant.format, variant.mode) == ("JPEG", "RGB")
 
 
 def test_get_variant_returns_none_for_an_unknown_size(alice_image):
