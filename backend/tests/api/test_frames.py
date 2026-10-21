@@ -289,6 +289,9 @@ class TestSendImage:
         )
 
         assert response.status_code == 400
+        assert response.json() == {
+            "error": "The provided timestamp must be in the future."
+        }
 
     def test_an_unparsable_expiry_is_rejected(self, world):
         response = self.send(
@@ -299,6 +302,7 @@ class TestSendImage:
         )
 
         assert response.status_code == 400
+        assert response.json() == {"error": "Invalid Unix timestamp provided."}
 
     def test_a_future_expiry_is_accepted(self, world):
         response = self.send(
