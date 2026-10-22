@@ -41,7 +41,7 @@ const useSeo = () => {
   useEffect(() => {
     const page = findPageMeta(pathname);
     const url = canonicalUrl(page.path);
-    const image = SITE_ORIGIN + OG_IMAGE;
+    const image = SITE_ORIGIN + OG_IMAGE.src;
 
     document.title = page.title;
     upsertCanonical(url);
@@ -55,11 +55,15 @@ const useSeo = () => {
     upsertMeta("property", "og:title", page.title);
     upsertMeta("property", "og:description", page.description);
     upsertMeta("property", "og:image", image);
+    upsertMeta("property", "og:image:width", String(OG_IMAGE.width));
+    upsertMeta("property", "og:image:height", String(OG_IMAGE.height));
+    upsertMeta("property", "og:image:alt", OG_IMAGE.alt);
 
-    upsertMeta("name", "twitter:card", "summary");
+    upsertMeta("name", "twitter:card", "summary_large_image");
     upsertMeta("name", "twitter:title", page.title);
     upsertMeta("name", "twitter:description", page.description);
     upsertMeta("name", "twitter:image", image);
+    upsertMeta("name", "twitter:image:alt", OG_IMAGE.alt);
   }, [pathname]);
 };
 

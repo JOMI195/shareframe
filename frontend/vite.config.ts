@@ -2,6 +2,7 @@ import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import { compression, defineAlgorithm } from 'vite-plugin-compression2';
+import { imagetools } from 'vite-imagetools';
 import prerenderPlugin from './vite/prerenderPlugin.ts';
 
 const envDir = path.resolve(import.meta.dirname, '../');
@@ -11,6 +12,7 @@ export default defineConfig(({ mode }) => {
     envDir,
     plugins: [
       react(),
+      imagetools(),
       compression({
         algorithms: [defineAlgorithm('brotliCompress')],
         include: /\.(js|css|html|svg|json|txt|ico|xml)$/,

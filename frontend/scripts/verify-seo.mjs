@@ -71,8 +71,58 @@ for (const path of prerendered) {
   if (!/<div id="root">\s*<\w/.test(html)) {
     failures.push(`${relative}: no markup injected into #root`);
   }
+  const headings = html.match(/<h1[\s>]/g) ?? [];
+  if (headings.length !== 1) {
+    failures.push(`${relative}: expected one <h1>, found ${headings.length}`);
+  }
+  const root = html.slice(html.indexOf('<div id="root">'));
+  for (const img of root.match(/<img[^>]*>/g) ?? []) {
+    const src = img.match(/\ssrc="([^"]*)"/)?.[1] ?? "?";
+    if (!/\salt="[^"]+"/.test(img)) failures.push(`${relative}: <img> ${src} has no alt text`);
+    if (src.startsWith("/assets/") && !(/\swidth="\d+"/.test(img) && /\sheight="\d+"/.test(img))) {
+      failures.push(`${relative}: <img> ${src} has no width/height`);
+    }
+  }
+
+  const ogImage = readTag(html, /<meta\s+property="og:image"\s+content="([^"]*)"/i, "og:image", relative);
+  if (ogImage && !existsSync(join(outDir, new URL(ogImage).pathname))) {
+    failures.push(`${relative}: og:image ${ogImage} is not in the build`);
+  }
+
+  if (path === "/") {
+    const jsonLd = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/)?.[1];
+    try {
+      const types = JSON.parse(jsonLd ?? "")["@graph"].map((node) => node["@type"]);
+      for (const type of ["Organization", "WebSite"]) {
+        if (!types.includes(type)) failures.push(`${relative}: JSON-LD has no ${type}`);
+      }
+    } catch {
+      failures.push(`${relative}: JSON-LD missing or invalid`);
+    }
+  }
+
+  if (path === "/" && !/<style data-emotion="css /.test(html)) {
+    failures.push(`${relative}: server-rendered styles missing`);
+  }
   if (/Deine Vorteile mit ShareFrame/.test(html)) {
     failures.push(`${relative}: old duplicated <noscript> block still present`);
+  }
+}
+
+const sitemapFile = join(outDir, "sitemap.xml");
+if (!existsSync(sitemapFile) || !existsSync(`${sitemapFile}.br`)) {
+  failures.push("sitemap.xml: not generated");
+} else {
+  const sitemap = readFileSync(sitemapFile, "utf-8");
+  for (const path of prerendered) {
+    if (!sitemap.includes(`<loc>https://www.shareframe.de${path}</loc>`)) {
+      failures.push(`sitemap.xml: ${path} missing`);
+    }
+  }
+  for (const [, image] of sitemap.matchAll(/<image:loc>([^<]+)<\/image:loc>/g)) {
+    if (!existsSync(join(outDir, new URL(image).pathname))) {
+      failures.push(`sitemap.xml: image ${image} is not in the build`);
+    }
   }
 }
 

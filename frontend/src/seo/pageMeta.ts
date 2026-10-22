@@ -1,6 +1,6 @@
 export const SITE_NAME = "ShareFrame";
 export const SITE_ORIGIN = "https://www.shareframe.de";
-export const OG_IMAGE = "/web-app-manifest-512x512.png";
+export const OG_IMAGE = { src: "/og-shareframe.jpg", width: 1200, height: 630, alt: "ShareFrame-Bilderrahmen mit E-Paper-Display" };
 
 export interface PageMeta {
   path: string;
@@ -14,9 +14,9 @@ export interface PageMeta {
 export const pages: PageMeta[] = [
   {
     path: "/",
-    title: "ShareFrame – Fotos auf digitale Bilderrahmen teilen",
+    title: "ShareFrame – Fotos auf digitale Bilderrahmen senden",
     description:
-      "Sende deine schönsten Momente direkt auf die digitalen Bilderrahmen von Freunden und Familie. Jetzt bei ShareFrame anmelden.",
+      "ShareFrame ist ein digitaler Bilderrahmen mit E-Paper-Display und eine Web-App, mit der Fotos an die Rahmen von Freunden und Familie gesendet werden.",
     prerender: true,
   },
   {

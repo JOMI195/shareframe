@@ -10,6 +10,9 @@ interface LogoProps {
     marginRight?: number;
     clickable?: boolean;
     linkUrl?: string;
+    alt?: string;
+    width?: number;
+    height?: number;
 }
 
 const Logo: React.FC<LogoProps> = ({
@@ -20,6 +23,9 @@ const Logo: React.FC<LogoProps> = ({
     marginRight = 16,
     clickable = true,
     linkUrl: homeUrl = "/",
+    alt = "Logo",
+    width,
+    height,
 }) => {
     const { colorMode } = useColorThemeContext();
     const isDarkMode = colorMode === 'dark';
@@ -29,9 +35,12 @@ const Logo: React.FC<LogoProps> = ({
         <Link to={homeUrl} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
             <img
                 src={logoSrc}
-                alt="Logo"
+                alt={alt}
+                width={width}
+                height={height}
                 style={{
                     width: '100%',
+                    height: 'auto',
                     maxWidth,
                     minWidth,
                     marginRight
@@ -41,9 +50,12 @@ const Logo: React.FC<LogoProps> = ({
     ) : (
         <img
             src={logoSrc}
-            alt="Logo"
+            alt={alt}
+            width={width}
+            height={height}
             style={{
                 width: '100%',
+                height: 'auto',
                 maxWidth,
                 minWidth,
                 marginRight
