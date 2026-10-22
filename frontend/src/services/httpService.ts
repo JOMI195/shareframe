@@ -13,10 +13,13 @@ import {
   getTokenLogoutUrl,
   getTokenRefreshUrl,
 } from "@/assets/endpoints/api/authEndpoints";
+import { serverAvailable, serverUnavailable } from "@/store/ui/serverStatus/serverStatus.slice";
+import { classifyServerError } from "./serverStatus";
 
 const MAX_AUTH_FAILURES = 2;
 let authFailureCount = 0;
 let isRefreshing = false;
+let serverDown = false;
 // Must always settle, else callers awaiting a queued request hang forever.
 let refreshSubscribers: Array<(error?: unknown) => void> = [];
 
@@ -32,6 +35,7 @@ const settleRefreshSubscribers = (error?: unknown) => {
 
 const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
   const { dispatch } = store;
+  serverDown = false;
 
   // Only the server can clear the HttpOnly cookies.
   const handleLogout = async () => {
@@ -45,9 +49,19 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
   axiosInstance.interceptors.response.use(
     (response) => {
       authFailureCount = 0;
+      if (serverDown) {
+        serverDown = false;
+        dispatch(serverAvailable());
+      }
       return response;
     },
     async (error) => {
+      const outage = classifyServerError(error);
+      if (outage) {
+        serverDown = true;
+        dispatch(serverUnavailable({ maintenance: outage === "maintenance" }));
+      }
+
       const originalRequest = error.config;
 
       const isCsrfFailure =

@@ -4,6 +4,7 @@ import BuildVersionChecker from "../buildVersionChecker";
 import InstallPrompt from "../pwa/installPrompt";
 import PushPrompt from "../pwa/pushPrompt";
 import ShareTargetRedirect from "../pwa/shareTargetRedirect";
+import ServerStatusNotice from "../serverStatus/serverStatusNotice";
 
 const Lifecycle: React.FC = () => {
     return (
@@ -13,6 +14,7 @@ const Lifecycle: React.FC = () => {
             <InstallPrompt />
             <PushPrompt />
             <ShareTargetRedirect />
+            <ServerStatusNotice />
         </Box>
     );
 };
