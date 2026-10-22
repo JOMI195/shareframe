@@ -5,14 +5,24 @@ x-logging: &default-logging
     max-file: "2"
 
 services:
-  backend: &backend
+  backend:
     logging: *default-logging
     container_name: backend
     restart: unless-stopped
+    # Shared by websockets and the workers, so one build serves all four.
+    image: shareframe-backend
     build:
       context: .
       dockerfile: ./backend/Dockerfile.prod
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile - --error-logfile -
+    healthcheck:
+      # Host must be in ALLOWED_HOSTS, and prod has no localhost there.
+      test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen(u.Request('http://localhost:8000/api/health/', headers={'Host': 'backend'}), timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      # entrypoint runs the migrations first
+      start_period: 120s
     volumes:
       - static_volume:/home/app/backend/staticfiles
       - media_volume:/home/app/backend/mediafiles
@@ -36,9 +46,7 @@ services:
     logging: *default-logging
     container_name: websockets
     restart: unless-stopped
-    build:
-      context: .
-      dockerfile: ./backend/Dockerfile.prod
+    image: shareframe-backend
     command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-daphne-access.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
     entrypoint: []
     volumes:
@@ -94,9 +102,17 @@ services:
       - redis_network
 
   celery:
-    <<: *backend
+    logging: *default-logging
     container_name: celery
     restart: unless-stopped
+    image: shareframe-backend
+    volumes:
+      - static_volume:/home/app/backend/staticfiles
+      - media_volume:/home/app/backend/mediafiles
+      - logs_volume:/home/app/backend/logs
+      - ./seed-data:/home/app/seed-data:ro
+    env_file:
+      - ./.env.prod.local
     command: celery -A config worker --loglevel=info -n worker1
     depends_on:
       redis:
@@ -113,9 +129,17 @@ services:
       - redis_network
 
   celery-beat:
-    <<: *backend
+    logging: *default-logging
     container_name: celery-beat
     restart: unless-stopped
+    image: shareframe-backend
+    volumes:
+      - static_volume:/home/app/backend/staticfiles
+      - media_volume:/home/app/backend/mediafiles
+      - logs_volume:/home/app/backend/logs
+      - ./seed-data:/home/app/seed-data:ro
+    env_file:
+      - ./.env.prod.local
     command: celery -A config beat --loglevel=INFO
     depends_on:
       redis:
@@ -131,29 +155,47 @@ services:
       - backend_db_network
       - redis_network
 
+  frontend:
+    logging: *default-logging
+    container_name: frontend
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./frontend/Dockerfile.prod
+      args:
+        VITE_APP_BUILD_VERSION: ${VITE_APP_BUILD_VERSION}
+        FORCE_RELOAD: ${FORCE_RELOAD:-false}
+      secrets:
+        - frontend_env
+    environment:
+      NGINX_ENTRYPOINT_QUIET_LOGS: "1"
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - frontend_network
+
+  # Gateway. No depends_on, so app deploys never recreate it.
   nginx:
     logging: *default-logging
     container_name: nginx
     restart: unless-stopped
     build:
       context: .
-      dockerfile: ./frontend/Dockerfile.prod.local
-      args:
-        VITE_APP_BUILD_VERSION: ${VITE_APP_BUILD_VERSION}
+      dockerfile: ./nginx/Dockerfile.prod
     volumes:
+      - ./nginx/local:/etc/nginx/site:ro
+      - ./data/maintenance:/etc/nginx/maintenance:ro
       - static_volume:/home/app/backend/staticfiles
       - media_volume:/home/app/backend/mediafiles
       - logs_volume:/home/app/backend/logs
-    depends_on:
-      backend:
-        condition: service_started
-      websockets:
-        condition: service_started
     ports:
       - "0.0.0.0:80:80"
       - "[::]:80:80"
-    env_file:
-      - ./.env.prod.local
     networks:
       - frontend_network
       - backend_network
@@ -304,6 +346,10 @@ services:
       - loki
     networks:
       - monitoring_network
+
+secrets:
+  frontend_env:
+    file: ./.env.prod.local
 
 volumes:
   backend_db_data:

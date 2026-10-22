@@ -12,29 +12,12 @@ RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.g
  && make modules
 
 
-FROM node:24.2.0-alpine AS build-app
-
-ARG VITE_APP_BUILD_VERSION
-ENV VITE_APP_BUILD_VERSION=${VITE_APP_BUILD_VERSION}
-
-WORKDIR /app/frontend
-
-COPY ./frontend/package.json .
-COPY ./frontend/package-lock.json .
-
-RUN npm install
-
-COPY ./frontend .
-COPY .env.prod.local ../.env.prod.local
-
-RUN npm run build
-
-
 FROM nginx:${NGINX_VERSION}-alpine
 ARG NGINX_VERSION
 
 RUN rm /etc/nginx/conf.d/default.conf
-COPY ./nginx/local/nginx.conf /etc/nginx
+# The config dir is bind-mounted, so edits only need a reload.
+RUN ln -sf /etc/nginx/site/nginx.conf /etc/nginx/nginx.conf
 
 RUN apk add --no-cache libmaxminddb
 COPY --from=geoip2-builder /build/nginx-${NGINX_VERSION}/objs/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
@@ -54,9 +37,6 @@ COPY ./nginx/logrotate-cron /etc/periodic/15min/logrotate
 COPY ./nginx/start-crond.sh /docker-entrypoint.d/99-start-crond.sh
 RUN chmod +x /etc/periodic/15min/logrotate /docker-entrypoint.d/98-seed-geoip.sh /docker-entrypoint.d/99-start-crond.sh
 
-WORKDIR /usr/share/nginx/html
-COPY --from=build-app /app/frontend/build .
-
-EXPOSE 80
+EXPOSE 80 443
 
 CMD ["nginx", "-g", "daemon off;"]
