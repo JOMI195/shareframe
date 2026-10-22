@@ -36,9 +36,10 @@ mkdir -p "$(dirname "$DOCKER_COMPOSE_FILE")/data/maintenance"
 # Generate the build version
 if GIT_SHA=$(git rev-parse --short=8 HEAD 2>/dev/null); then
   BUILD_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%d)
-  if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+  # Untracked files don't count, prod keeps its hand-copied compose and nginx config here.
+  if ! git diff --quiet HEAD 2>/dev/null; then
     # Each uncommitted state gets its own version, else two different dirty builds look identical.
-    DIRTY_HASH=$( { git diff HEAD; git ls-files --others --exclude-standard | while read -r f; do echo "$f"; git hash-object -- "$f"; done; } | sha1sum | cut -c1-6)
+    DIRTY_HASH=$(git diff HEAD | sha1sum | cut -c1-6)
     GIT_SHA="${GIT_SHA}-dirty-${DIRTY_HASH}"
   fi
   BUILD_VERSION="${BUILD_DATE}-${GIT_SHA}"
