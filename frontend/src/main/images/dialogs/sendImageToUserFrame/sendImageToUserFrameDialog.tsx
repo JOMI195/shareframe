@@ -25,6 +25,7 @@ import { getApi } from "@/store/entities/images/images.slice";
 import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import UserAvatar from "@/common/components/userAvatar";
+import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
 import CloseIcon from '@mui/icons-material/Close';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
@@ -66,14 +67,7 @@ const SendImageToUserFrameDialog = () => {
     const [isSendingInProgress, setIsSendingInProgress] = useState(false);
     const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
-    const receiverAvatars = new Map<string, string | null | undefined>([
-        ...friendships
-            .filter(friendship => friendship.status === "accepted")
-            .map((friendship): [string, string | null | undefined] => friendship.sender !== user.me.username
-                ? [friendship.sender, friendship.sender_avatar]
-                : [friendship.reciever, friendship.reciever_avatar]),
-        [user.me.username, user.me.account?.avatar]
-    ]);
+    const receiverAvatars = getFriendAvatars(friendships, user.me);
     const availableReceivers = [...receiverAvatars.keys()];
 
     const handleDialogClose = () => {

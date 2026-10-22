@@ -8,6 +8,8 @@ import { useState } from "react";
 import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import UserAvatar from "@/common/components/userAvatar";
+import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
 
 const FiltersDialog = () => {
     const theme = useTheme();
@@ -75,28 +77,19 @@ const FiltersDialog = () => {
         handleDialogClose();
     };
 
-    const getAvailableUsernames = () => {
-        const usernames = new Set<string>();
-
-        usernames.add(user.me.username);
-
-        friendships
-            .filter(friendship => friendship.status === "accepted")
-            .forEach((friendship) => {
-                const friendUsername = friendship.sender !== user.me.username
-                    ? friendship.sender
-                    : friendship.reciever;
-                usernames.add(friendUsername);
-            });
-
-        return Array.from(usernames);
-    };
-
-    const availableUsernames = getAvailableUsernames();
+    const userAvatars = getFriendAvatars(friendships, user.me);
+    const availableUsernames = [...userAvatars.keys()];
 
     const getUserDisplayName = (username: string) => {
         return username === user.me.username ? 'Du' : username;
     };
+
+    const renderUser = (username: string) => (
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <UserAvatar username={username} url={userAvatars.get(username)} size={24} />
+            {getUserDisplayName(username)}
+        </Box>
+    );
 
     return (
         <Dialog
@@ -142,6 +135,7 @@ const FiltersDialog = () => {
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={senderFilterLocal}
+                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Sender</em>}
                                     label="Suche nach Sender"
                                     onChange={(e) => setSenderFilterLocal(e.target.value as string)}
                                     displayEmpty
@@ -155,7 +149,7 @@ const FiltersDialog = () => {
                                             key={username}
                                             value={username}
                                         >
-                                            {getUserDisplayName(username)}
+                                            {renderUser(username)}
                                         </MenuItem>
                                     ))}
                                 </Select>
@@ -167,6 +161,7 @@ const FiltersDialog = () => {
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={receiverFilterLocal}
+                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Empfänger</em>}
                                     label="Suche nach Empfänger"
                                     onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
                                     displayEmpty
@@ -180,7 +175,7 @@ const FiltersDialog = () => {
                                             key={username}
                                             value={username}
                                         >
-                                            {getUserDisplayName(username)}
+                                            {renderUser(username)}
                                         </MenuItem>
                                     ))}
                                 </Select>
