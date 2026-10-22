@@ -17,6 +17,7 @@ const HalloweenDecoration = () => (
                 transformBox: 'view-box',
                 transformOrigin: '70.3px 29.7px',
                 animation: `${swing} 3s ease-in-out infinite alternate`,
+                '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
             }}
         >
             <path d="M70.3 29.7L70.3 70" stroke="currentColor" strokeWidth={0.6} opacity={0.6} />

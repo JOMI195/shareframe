@@ -84,6 +84,43 @@ describe('during halloween', () => {
   });
 });
 
+describe('with reduced motion', () => {
+  beforeEach(() => {
+    const matchMedia = window.matchMedia;
+    vi.spyOn(window, 'matchMedia').mockImplementation((query) =>
+      query.includes('prefers-reduced-motion')
+        ? ({ ...matchMedia(query), matches: true, media: query } as MediaQueryList)
+        : matchMedia(query),
+    );
+  });
+
+  it('still shows the bats and clears them after fading', () => {
+    renderWithProviders(<SeasonalFlyby />, seasonal(true));
+    const bats = Array.from(flyby()!.firstElementChild!.children);
+
+    act(() => {
+      bats.forEach((bat) => fireEvent(bat, new Event('webkitAnimationEnd', { bubbles: true })));
+    });
+
+    expect(flyby()).not.toBeInTheDocument();
+  });
+
+  it('shows them again from the pumpkin', async () => {
+    sessionStorage.setItem('seasonalFlybyShown', '1');
+    const { user } = renderWithProviders(
+      <>
+        <SeasonalLogoBadge>Logo</SeasonalLogoBadge>
+        <SeasonalFlyby />
+      </>,
+      seasonal(true),
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Halloween' }));
+
+    expect(flyby()).toBeInTheDocument();
+  });
+});
+
 describe('switched off', () => {
   it('keeps everything plain', () => {
     renderWithProviders(

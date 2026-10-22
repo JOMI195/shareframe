@@ -17,7 +17,7 @@ export interface Season {
     LogoIcon: ComponentType<SvgIconProps>;
     EmptyStateIcon: ComponentType<SvgIconProps>;
     Decoration: ComponentType;
-    Flyby: ComponentType<{ onDone: () => void }>;
+    Flyby: ComponentType<{ onDone: () => void; reducedMotion: boolean }>;
 }
 
 export const SEASONS: Season[] = [halloween];

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, useMediaQuery } from '@mui/material';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
 import { triggerFlyby, useFlybyRun } from '@/common/seasons/flyby';
 
@@ -19,6 +19,7 @@ const SeasonalFlyby: React.FC = () => {
     const { season } = useColorThemeContext();
     const run = useFlybyRun();
     const [doneRun, setDoneRun] = useState(run);
+    const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
 
     useEffect(() => {
         if (season && !shownThisSession()) triggerFlyby();
@@ -41,7 +42,7 @@ const SeasonalFlyby: React.FC = () => {
                 displayPrint: 'none',
             }}
         >
-            <Flyby key={run} onDone={() => setDoneRun(run)} />
+            <Flyby key={run} reducedMotion={reducedMotion} onDone={() => setDoneRun(run)} />
         </Box>
     );
 };
