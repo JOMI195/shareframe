@@ -20,8 +20,12 @@ const merge = <T>(base: T, over: DeepPartial<T>): T => {
 };
 
 // Cloned: RTK freezes slice initial state, and tests need to mutate it.
-export const defaultState = (): RootReducerState =>
-  structuredClone(rootReducer(undefined, { type: '@@tests/INIT' }));
+// Seasons follow the wall clock, so tests opt in to them.
+export const defaultState = (): RootReducerState => {
+  const state = structuredClone(rootReducer(undefined, { type: '@@tests/INIT' }));
+  state.ui.settings.design.seasonalThemes = false;
+  return state;
+};
 
 export const buildState = (over: DeepPartial<RootReducerState> = {}): RootReducerState =>
   merge(defaultState(), over);

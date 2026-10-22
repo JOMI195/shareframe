@@ -17,7 +17,7 @@ export interface RenderRouteOptions {
  * than one screen; single components go through renderWithProviders.
  */
 export const renderRoute = (path: string, options: RenderRouteOptions = {}) => {
-  const { preloadedState, store = setupStore(preloadedState ? buildState(preloadedState) : undefined) } =
+  const { preloadedState, store = setupStore(buildState(preloadedState ?? {})) } =
     options;
   const router = createMemoryRouter(routes, { initialEntries: [path] });
 

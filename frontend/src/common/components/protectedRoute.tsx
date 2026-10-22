@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
+import SeasonalSpinner from "./seasonal/seasonalSpinner";
 import { Navigate, Outlet } from "react-router";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -38,7 +39,7 @@ const ProtectedRoute = ({
   if (me.id === 0 && !attempted) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", width: "100%", py: 8 }}>
-        <CircularProgress />
+        <SeasonalSpinner />
       </Box>
     );
   }

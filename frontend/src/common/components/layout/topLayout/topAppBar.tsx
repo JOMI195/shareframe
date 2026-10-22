@@ -10,9 +10,10 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Logo from '../../logo';
+import SeasonalLogoBadge from '../../seasonal/seasonalLogoBadge';
 
 function TopAppBar() {
-    const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
+    const { colorMode, toggleColorMode, iconComponent: IconComponent, season } = useColorThemeContext();
     const sidebarOpen = useAppSelector(getSidebar).open;
 
     const dispatch = useAppDispatch();
@@ -32,6 +33,17 @@ function TopAppBar() {
                 height: theme => theme.layout.appbar.height,
                 background: theme => theme.palette.background.default,
                 zIndex: theme.zIndex.drawer + 1,
+                ...(season && {
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 3,
+                        background: season.stripe,
+                    },
+                }),
             }}
         >
             <Toolbar sx={{ height: "100%" }}>
@@ -47,13 +59,15 @@ function TopAppBar() {
                         {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
                     </IconButton>
                 </Tooltip>
-                <Logo
-                    darkLogoSrc="/logo-dark-full-shareframe.svg"
-                    lightLogoSrc="/logo-light-full-shareframe.svg"
-                    maxWidth={130}
-                    marginRight={0}
-                    clickable={false}
-                />
+                <SeasonalLogoBadge>
+                    <Logo
+                        darkLogoSrc="/logo-dark-full-shareframe.svg"
+                        lightLogoSrc="/logo-light-full-shareframe.svg"
+                        maxWidth={130}
+                        marginRight={0}
+                        clickable={false}
+                    />
+                </SeasonalLogoBadge>
                 <Box
                     sx={{
                         flex: 1

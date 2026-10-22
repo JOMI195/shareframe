@@ -3,6 +3,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
 import dark from '@/common/themes/darkTheme';
+import type { Season } from '@/common/seasons/seasons';
 
 export type ColorMode = 'light' | 'dark';
 export type ColorPreference = ColorMode | 'system';
@@ -16,6 +17,7 @@ export interface ColorThemeContextType {
     colorPreference: ColorPreference;
     setColorPreference: (preference: ColorPreference) => void;
     iconComponent: IconComponent;
+    season: Season | null;
 }
 
 export const ColorThemeContext = createContext<ColorThemeContextType | undefined>(undefined);

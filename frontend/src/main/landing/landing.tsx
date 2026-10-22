@@ -1,6 +1,9 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { Link as RouterLink, Navigate } from "react-router";
 import Logo from "@/common/components/logo";
+import SeasonalLogoBadge from "@/common/components/seasonal/seasonalLogoBadge";
+import SeasonalDecoration from "@/common/components/seasonal/seasonalDecoration";
+import SeasonalFlyby from "@/common/components/seasonal/seasonalFlyby";
 import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
 import { landingContent } from "@/seo/landingContent";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
@@ -19,13 +22,15 @@ const Landing = () => {
           alignItems: "center",
           textAlign: "center"
         }}>
-        <Logo
-          darkLogoSrc="/logo-dark-full-shareframe.svg"
-          lightLogoSrc="/logo-light-full-shareframe.svg"
-          maxWidth={220}
-          marginRight={0}
-          clickable={false}
-        />
+        <SeasonalLogoBadge size={26}>
+          <Logo
+            darkLogoSrc="/logo-dark-full-shareframe.svg"
+            lightLogoSrc="/logo-light-full-shareframe.svg"
+            maxWidth={220}
+            marginRight={0}
+            clickable={false}
+          />
+        </SeasonalLogoBadge>
         <Logo
           darkLogoSrc="/frame-3d.svg"
           lightLogoSrc="/frame-3d.svg"
@@ -54,6 +59,8 @@ const Landing = () => {
         </Typography>
         <PublicFooter />
       </Stack>
+      <SeasonalDecoration top={0} />
+      <SeasonalFlyby />
     </Container>
   );
 };

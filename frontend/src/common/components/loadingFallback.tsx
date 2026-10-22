@@ -1,5 +1,6 @@
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import Logo from "./logo";
+import SeasonalSpinner from "./seasonal/seasonalSpinner";
 
 const LoadingFallback = () => {
     return (
@@ -18,7 +19,7 @@ const LoadingFallback = () => {
                 marginRight={0}
                 clickable={false}
             />
-            <CircularProgress size={"50px"} />
+            <SeasonalSpinner size={50} />
         </Box>
     );
 };
