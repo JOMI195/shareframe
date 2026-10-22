@@ -5,6 +5,7 @@ import { render, RenderOptions } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { setupStore, TestStore, RootReducerState } from '@/store/setupStore';
 import { ColorThemeProvider } from '@/context/colorTheme/colorThemeContext';
+import { SnackbarStackProvider } from '@/common/components/snackbars/snackbarStack';
 import { buildState, DeepPartial } from './preloadedState';
 
 export interface ProviderOptions {
@@ -24,7 +25,9 @@ export const createWrapper = (options: ProviderOptions = {}) => {
   const Wrapper = ({ children }: { children: ReactNode }) => (
     <Provider store={store}>
       <ColorThemeProvider>
-        <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        <SnackbarStackProvider>
+          <MemoryRouter initialEntries={[route]}>{children}</MemoryRouter>
+        </SnackbarStackProvider>
       </ColorThemeProvider>
     </Provider>
   );

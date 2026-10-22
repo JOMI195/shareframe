@@ -1,5 +1,5 @@
 import Slide from "@mui/material/Slide";
-import Snackbar from "@mui/material/Snackbar";
+import { StackedSnackbar } from "./snackbarStack";
 import { RootState, useAppDispatch, useAppSelector } from "@/store";
 import { UnknownAction } from "redux";
 import { CircularProgress, Paper, Typography } from "@mui/material";
@@ -33,12 +33,10 @@ const LoadingSnackbar = (
     };
 
     return (
-        <Snackbar
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        <StackedSnackbar
             open={snackbar.open}
             onClose={handleSnackbarClose}
             autoHideDuration={30000}
-            sx={{ justifySelf: "center" }}
             slots={{
                 transition: Slide
             }}
@@ -65,7 +63,7 @@ const LoadingSnackbar = (
                 />
                 <Typography variant="subtitle2" sx={{ ml: 5 }}>{snackbar.message}</Typography>
             </ Paper>
-        </Snackbar>
+        </StackedSnackbar>
     );
 }
 
