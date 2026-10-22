@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { act, screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import * as authEndpoints from '@/assets/endpoints/api/authEndpoints';
@@ -10,8 +10,10 @@ import { server } from '@tests/mocks';
 import { setPrefersDark } from '@tests/setup/vitest.setup';
 import type { TestStore } from '@/store/setupStore';
 
-const openAppSettings = async () => {
-  const view = renderRoute('/settings/app/', { preloadedState: signedInState() });
+const openAppSettings = async (seasonalThemes = false) => {
+  const view = renderRoute('/settings/app/', {
+    preloadedState: signedInState({ ui: { settings: { design: { seasonalThemes } } } }),
+  });
   // "Darstellung" is both the tab and the section heading.
   await screen.findAllByText('Darstellung');
   return view;
@@ -88,6 +90,45 @@ describe('appearance', () => {
 
     await waitFor(() => expect(storedTheme(store)).toBe('dark'));
     expect(preference('Dunkel')).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('seasonal themes', () => {
+  const at = (date: string) => vi.useFakeTimers({ toFake: ['Date'] }).setSystemTime(new Date(date));
+  const decoration = () => screen.queryByTestId('SeasonalDecoration');
+  const logoIcon = () => screen.queryByTestId('PumpkinIcon');
+
+  afterEach(() => vi.useRealTimers());
+
+  it('decorates the app during halloween', async () => {
+    at('2026-10-22T12:00:00');
+    await openAppSettings(true);
+
+    expect(decoration()).toBeInTheDocument();
+    expect(logoIcon()).toBeInTheDocument();
+  });
+
+  it('can be switched off and on again', async () => {
+    at('2026-10-22T12:00:00');
+    const { user, store } = await openAppSettings(true);
+
+    await user.click(screen.getByLabelText('Saisonale Deko'));
+
+    expect(store.getState().ui.settings.design.seasonalThemes).toBe(false);
+    expect(decoration()).not.toBeInTheDocument();
+    expect(logoIcon()).not.toBeInTheDocument();
+
+    await user.click(screen.getByLabelText('Saisonale Deko'));
+
+    expect(decoration()).toBeInTheDocument();
+  });
+
+  it('stays plain outside any season', async () => {
+    at('2026-11-01T12:00:00');
+    await openAppSettings(true);
+
+    expect(decoration()).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Saisonale Deko')).toBeChecked();
   });
 });
 

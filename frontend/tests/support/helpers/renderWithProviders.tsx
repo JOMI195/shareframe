@@ -18,7 +18,7 @@ export interface ProviderOptions {
 export const createWrapper = (options: ProviderOptions = {}) => {
   const {
     preloadedState,
-    store = setupStore(preloadedState ? buildState(preloadedState) : undefined),
+    store = setupStore(buildState(preloadedState ?? {})),
     route = '/',
   } = options;
 

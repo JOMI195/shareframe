@@ -1,11 +1,12 @@
-import React, { PropsWithChildren, useSyncExternalStore } from 'react';
+import React, { PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
 import dark from '@/common/themes/darkTheme';
-import { ThemeProvider } from '@mui/material';
+import { alpha, createTheme, GlobalStyles, ThemeProvider } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
-import { designSelected, getDesign } from '@/store/ui/settings/settings.slice';
+import { designSelected, getDesign, getSeasonalThemes } from '@/store/ui/settings/settings.slice';
+import { activeSeason } from '@/common/seasons/seasons';
 import { ColorMode, ColorPreference, ColorThemeContext, ColorThemeContextType } from './colorThemeContextValue';
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
@@ -28,18 +29,31 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
     const dispatch = useAppDispatch();
     const colorPreference = useAppSelector(getDesign);
     const systemPrefersDark = useSyncExternalStore(subscribeToSystemScheme, getSystemPrefersDark);
+    const seasonalThemes = useAppSelector(getSeasonalThemes);
 
     const colorMode: ColorMode = colorPreference === 'system'
         ? (systemPrefersDark ? 'dark' : 'light')
         : colorPreference;
+
+    const season = seasonalThemes ? activeSeason() : null;
+
+    const theme = useMemo(() => {
+        const base = colorMode === 'dark' ? dark : light;
+        if (!season) return base;
+        const { accent, secondary, background } = season.palette[colorMode];
+        return createTheme(base, {
+            palette: { accent: { main: accent }, secondary: { main: secondary }, background: { default: background } },
+        });
+    }, [colorMode, season]);
 
     const setColorPreference = (preference: ColorPreference) => {
         dispatch(designSelected(preference));
     };
 
     const contextValue: ColorThemeContextType = {
-        theme: colorMode === 'dark' ? dark : light,
+        theme,
         colorMode,
+        season,
         colorPreference,
         setColorPreference,
         toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
@@ -49,6 +63,7 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
     return (
         <ColorThemeContext.Provider value={contextValue}>
             <ThemeProvider theme={contextValue.theme}>
+                {season && <GlobalStyles styles={{ '::selection': { backgroundColor: alpha(theme.palette.secondary.main, 0.35) } }} />}
                 {children}
             </ThemeProvider>
         </ColorThemeContext.Provider>

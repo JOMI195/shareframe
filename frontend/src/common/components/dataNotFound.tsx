@@ -1,5 +1,6 @@
-import { Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import Logo from "./logo";
+import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
 
 interface DataNotFoundProps {
     notFoundMessage: string;
@@ -7,6 +8,8 @@ interface DataNotFoundProps {
 const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const { season } = useColorThemeContext();
+    const imageWidth = isSmallScreen ? 150 : 300;
 
     return (
         <Stack
@@ -19,12 +22,20 @@ const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage }) => {
                 textAlign: "center"
             }}
         >
-            <Logo
-                darkLogoSrc="/frame-3d-no-data.svg"
-                lightLogoSrc="/frame-3d-no-data.svg"
-                clickable={false}
-                maxWidth={isSmallScreen ? 150 : 300}
-            />
+            <Box sx={{ position: "relative", display: "inline-flex" }}>
+                <Logo
+                    darkLogoSrc="/frame-3d-no-data.svg"
+                    lightLogoSrc="/frame-3d-no-data.svg"
+                    clickable={false}
+                    maxWidth={imageWidth}
+                />
+                {season && (
+                    <season.EmptyStateIcon
+                        aria-hidden
+                        sx={{ position: "absolute", right: 0, bottom: 0, fontSize: imageWidth / 4, color: "text.secondary", opacity: 0.8 }}
+                    />
+                )}
+            </Box>
             <Typography variant="h6">{notFoundMessage}</Typography>
         </Stack>
     );

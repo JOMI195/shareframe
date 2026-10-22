@@ -23,7 +23,7 @@ describe('initial state', () => {
     const state = reducer(undefined, { type: '@@init' });
 
     expect(state).toEqual({
-      design: { colorTheme: 'system' },
+      design: { colorTheme: 'system', seasonalThemes: true },
       cookies: { analyticsCookies: false, consentExpiry: null },
       navigation: { bottomNavigation: { open: false } },
       pwa: { installPromptDismissed: false, pushPromptDismissed: false },
@@ -51,6 +51,16 @@ describe('designSelected', () => {
 
     expect(state.design.colorTheme).toBe('dark');
     expect(localStorage.getItem('colorTheme')).toBe('dark');
+  });
+});
+
+describe('seasonalThemesSelected', () => {
+  it('switches seasonal themes off', async () => {
+    const { default: reducer, seasonalThemesSelected } = await loadSlice();
+
+    const state = reducer(reducer(undefined, { type: '@@init' }), seasonalThemesSelected(false));
+
+    expect(state.design.seasonalThemes).toBe(false);
   });
 });
 
