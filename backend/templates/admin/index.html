@@ -3,15 +3,19 @@
 {% block content %}
 <div id="content-main" class="app-list">
   {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
-  {% if user.is_admin %}
   <div class="module">
     <table>
       <caption>Diagnostics</caption>
       <tr>
-        <th scope="row"><a href="{% url 'admin-server-logs-download' %}">Download server logs</a></th>
+        <th scope="row">Backend version</th>
+        <td>{{ app_build_version|default:"unknown" }}</td>
       </tr>
+      {% if user.is_admin %}
+      <tr>
+        <th scope="row" colspan="2"><a href="{% url 'admin-server-logs-download' %}">Download server logs</a></th>
+      </tr>
+      {% endif %}
     </table>
   </div>
-  {% endif %}
 </div>
 {% endblock %}

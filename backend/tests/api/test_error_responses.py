@@ -11,7 +11,7 @@ def test_an_unknown_route_is_a_json_404(client):
 
 
 def test_a_disallowed_host_is_a_json_400(client):
-    response = client.get("/api/version/", HTTP_HOST="evil.example")
+    response = client.get("/api/auth/csrf/", HTTP_HOST="evil.example")
 
     assert response.status_code == 400
     assert response.json() == {"detail": "Bad request."}

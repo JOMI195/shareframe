@@ -47,8 +47,8 @@ if PRODUCTION:
 else:
     SECURE_SSL_REDIRECT = False
 
-# Prometheus scrapes /metrics over plain HTTP on the container network.
-SECURE_REDIRECT_EXEMPT = [r"^metrics(/business)?$"]
+# Prometheus and the Docker healthcheck call over plain HTTP on the container network.
+SECURE_REDIRECT_EXEMPT = [r"^metrics(/business)?$", r"^api/health/$"]
 
 # Refresh path is scoped so the cookie only reaches the token endpoints.
 AUTH_COOKIE_ACCESS_NAME = "sf_access"
@@ -147,6 +147,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "config.context_processors.build_version",
             ],
         },
     },

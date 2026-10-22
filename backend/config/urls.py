@@ -18,8 +18,8 @@ from .views import (
     AvatarAccessView,
     ChangelogsAccessView,
     FrameUpdatesAccessView,
+    HealthView,
     MediaAccessView,
-    VersionView,
 )
 
 if bool(settings.PRODUCTION):
@@ -48,6 +48,7 @@ urlpatterns = [
     # path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("authentication.urls")),
     path("api/auth/csrf/", CSRFView.as_view(), name="csrf"),
+    path("api/health/", HealthView.as_view(), name="health"),
     path(
         "api/auth/jwt/create/", CookieTokenObtainPairView.as_view(), name="jwt-create"
     ),
@@ -55,7 +56,6 @@ urlpatterns = [
     path("api/auth/jwt/logout/", LogoutView.as_view(), name="jwt-logout"),
     path("api/auth/jwt/verify/", TokenVerifyView.as_view(), name="jwt-verify"),
     # apps
-    path("api/version/", VersionView.as_view(), name="app-version"),
     path("api/", include("frames.urls")),
     path("api/", include("frame_updates.urls")),
     path("api/", include("images.urls")),
