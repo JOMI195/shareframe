@@ -1,6 +1,6 @@
 import React from "react";
 import Slide from "@mui/material/Slide";
-import Snackbar from "@mui/material/Snackbar";
+import { StackedSnackbar } from "./snackbarStack";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 import { RootState, useAppDispatch, useAppSelector } from "@/store";
 import { UnknownAction } from "redux";
@@ -50,12 +50,10 @@ const AlertSnackbar = (
   };
 
   return (
-    <Snackbar
-      anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+    <StackedSnackbar
       open={snackbar.open}
       autoHideDuration={10000}
       onClose={handleSnackbarClose}
-      sx={{ justifySelf: "center" }}
       slots={{
         transition: Slide
       }}
@@ -67,7 +65,7 @@ const AlertSnackbar = (
       >
         {snackbar.message}
       </Alert>
-    </Snackbar>
+    </StackedSnackbar>
   );
 }
 

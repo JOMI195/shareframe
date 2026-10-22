@@ -1,1 +1,1 @@
-export const getAppVersionUrl = () => `version/`
+export const getHealthUrl = () => `health/`

@@ -12,3 +12,4 @@ backend/.venv/
 backend/celerybeat-schedule
 **/__pycache__/
 **/*.pyc
+.env*

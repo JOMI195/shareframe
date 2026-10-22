@@ -8,6 +8,6 @@
 416|Bereich nicht verfügbar|Requested range not satisfiable.
 429|Zu viele Anfragen, bitte kurz warten|Request was throttled.
 500|Interner Fehler|A server error occurred.
-502|Dienst vorübergehend nicht erreichbar|Service temporarily unavailable.
-503|Dienst vorübergehend nicht verfügbar|Service temporarily unavailable.
-504|Zeitüberschreitung|Service temporarily unavailable.
+502|ShareFrame ist gerade nicht verfügbar, die Seite lädt gleich neu|Service temporarily unavailable.
+503|ShareFrame ist gerade nicht verfügbar, die Seite lädt gleich neu|Service temporarily unavailable.
+504|ShareFrame ist gerade nicht verfügbar, die Seite lädt gleich neu|Service temporarily unavailable.

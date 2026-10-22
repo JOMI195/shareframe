@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Alert, Box, Button, Snackbar, useMediaQuery, useTheme } from '@mui/material';
+import { Alert, Box, Button, useMediaQuery, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getPwa, installPromptDismissed } from '@/store/ui/settings/settings.slice';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import IosInstallDialog from './iosInstallDialog';
+import { StackedSnackbar } from '../snackbars/snackbarStack';
 
 const InstallPrompt: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -36,13 +37,8 @@ const InstallPrompt: React.FC = () => {
 
     return (
         <>
-            <Snackbar
+            <StackedSnackbar
                 open={open}
-                anchorOrigin={{ vertical: 'bottom', horizontal: isSmallScreen ? 'center' : 'left' }}
-                sx={{
-                    width: isSmallScreen ? '90%' : 'auto',
-                    bottom: 16
-                }}
                 onClose={handleClose}
             >
                 <Alert
@@ -72,7 +68,7 @@ const InstallPrompt: React.FC = () => {
                 >
                     Installiere ShareFrame als App für den schnellen Zugriff.
                 </Alert>
-            </Snackbar>
+            </StackedSnackbar>
             <IosInstallDialog open={iosDialogOpen} onClose={() => setIosDialogOpen(false)} />
         </>
     );

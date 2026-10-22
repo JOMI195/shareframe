@@ -3,9 +3,8 @@ import os
 from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
-from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -25,6 +24,7 @@ from friendships.models import Friendship
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
 from user_accounts.models import Account
+from utils.request_logging.decorators import no_logging
 
 
 class MediaAccessView(APIView):
@@ -240,10 +240,12 @@ class ChangelogsAccessView(APIView):
         return response
 
 
-class VersionView(APIView):
-    permission_classes = [IsAuthenticated]
+class HealthView(APIView):
+    # Polled by Docker and by clients during an outage, so it stays cheap and unthrottled.
+    authentication_classes = []
+    permission_classes = [AllowAny]
+    throttle_classes = []
 
+    @no_logging(value=True, silent=True)
     def get(self, request):
-        app_version = settings.APP_BUILD_VERSION
-        version_value = None if app_version == "" else app_version
-        return Response({"version": version_value}, status=status.HTTP_200_OK)
+        return Response({"status": "ok"})

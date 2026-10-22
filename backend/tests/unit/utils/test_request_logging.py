@@ -161,7 +161,7 @@ class TestRedaction:
 
     def test_cookies_and_the_csrf_header_are_masked(self, caplog):
         request = RequestFactory().get(
-            "/api/version/",
+            "/api/frames/",
             HTTP_COOKIE="access=cookie-jwt-value; csrftoken=cookie-csrf-value",
             HTTP_X_CSRFTOKEN="header-csrf-value",
         )
@@ -174,10 +174,18 @@ class TestRedaction:
 
     def test_query_string_secrets_are_masked(self, caplog):
         request = RequestFactory().get(
-            "/api/version/", {"token": "query-secret1", "page": "2"}
+            "/api/frames/", {"token": "query-secret1", "page": "2"}
         )
 
         text = logged(caplog, request)
 
         assert "query-secret1" not in text
         assert "page=2" in text
+
+
+# Docker polls the health route every few seconds, which would flood the logs.
+def test_the_health_route_is_not_logged(caplog):
+    assert "/api/frames/" in logged(caplog, RequestFactory().get("/api/frames/"))
+    caplog.clear()
+
+    assert "/api/health/" not in logged(caplog, RequestFactory().get("/api/health/"))

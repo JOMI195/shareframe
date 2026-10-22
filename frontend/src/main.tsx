@@ -7,11 +7,13 @@ import { Suspense } from 'react';
 import AppWrapper from './appWrapper.tsx';
 import LoadingFallback from './common/components/loadingFallback.tsx';
 import { initInstallPrompt } from './common/utils/pwa/installPrompt.ts';
+import { initStaleChunkReload } from './common/utils/staleChunkReload.ts';
 
 http.apiSetup(store, persistor);
 // Seeds the csrftoken cookie for the first unsafe request.
 http.get(getCsrfUrl()).catch(() => undefined);
 initInstallPrompt();
+initStaleChunkReload();
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {

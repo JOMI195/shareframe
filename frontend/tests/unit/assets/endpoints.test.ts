@@ -12,7 +12,7 @@ import * as images from '@/assets/endpoints/api/imagesEndpoints';
 describe('api endpoints', () => {
   it('matches the backend routes', () => {
     expect({
-      app: [app.getAppVersionUrl()],
+      app: [app.getHealthUrl()],
       auth: [
         auth.getTokenCreateUrl(),
         auth.getTokenRefreshUrl(),
@@ -63,7 +63,7 @@ describe('api endpoints', () => {
     }).toMatchInlineSnapshot(`
       {
         "app": [
-          "version/",
+          "health/",
         ],
         "auth": [
           "auth/jwt/create/",

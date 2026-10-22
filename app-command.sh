@@ -11,6 +11,13 @@ ENV_FILE="$2"
 DOCKER_COMPOSE_COMMAND="$3"
 CONTAINER_NAME="${4:-all}"  # Default to 'all' if not provided
 
+# Backend, websockets and the workers share one image and must never run different code.
+if [ "$CONTAINER_NAME" == "backend-stack" ]; then
+  SERVICES="backend websockets celery celery-beat"
+else
+  SERVICES="$CONTAINER_NAME"
+fi
+
 # Check if the Docker Compose file exists
 if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
   echo "Error: Docker Compose file '$DOCKER_COMPOSE_FILE' not found!"
@@ -23,10 +30,17 @@ if [ ! -f "$ENV_FILE" ]; then
   exit 1
 fi
 
+# Docker would create the bind-mounted switch dir as root otherwise.
+mkdir -p "$(dirname "$DOCKER_COMPOSE_FILE")/data/maintenance"
+
 # Generate the build version
 if GIT_SHA=$(git rev-parse --short=8 HEAD 2>/dev/null); then
   BUILD_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%d)
-  git diff --quiet HEAD 2>/dev/null || GIT_SHA="${GIT_SHA}-dirty"
+  if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+    # Each uncommitted state gets its own version, else two different dirty builds look identical.
+    DIRTY_HASH=$( { git diff HEAD; git ls-files --others --exclude-standard | while read -r f; do echo "$f"; git hash-object -- "$f"; done; } | sha1sum | cut -c1-6)
+    GIT_SHA="${GIT_SHA}-dirty-${DIRTY_HASH}"
+  fi
   BUILD_VERSION="${BUILD_DATE}-${GIT_SHA}"
 else
   BUILD_DATE=$(date -u +"%Y-%m-%d")
@@ -59,14 +73,14 @@ echo "Added build version variables to env file"
 if [ "$CONTAINER_NAME" == "all" ]; then
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" $DOCKER_COMPOSE_COMMAND
 else
-  # Check if the specified container exists in the configuration
-  if ! grep -q "^\s*$CONTAINER_NAME:" "$DOCKER_COMPOSE_FILE" && ! grep -q "^\s*services:.*$CONTAINER_NAME:" "$DOCKER_COMPOSE_FILE"; then
-    echo "Warning: Container '$CONTAINER_NAME' not explicitly found in the Docker Compose file."
-    echo "Proceeding anyway as it might be a valid service name or command parameter..."
-  fi
+  for SERVICE in $SERVICES; do
+    if ! grep -q "^\s*$SERVICE:" "$DOCKER_COMPOSE_FILE" && ! grep -q "^\s*services:.*$SERVICE:" "$DOCKER_COMPOSE_FILE"; then
+      echo "Warning: Container '$SERVICE' not explicitly found in the Docker Compose file."
+      echo "Proceeding anyway as it might be a valid service name or command parameter..."
+    fi
+  done
 
-  # Run the command on the specified container
-  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" $DOCKER_COMPOSE_COMMAND "$CONTAINER_NAME"
+  docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" $DOCKER_COMPOSE_COMMAND $SERVICES
 fi
 
 RESULT=$?
@@ -78,6 +92,10 @@ if [ $RESULT -eq 0 ] && [ "$CONTAINER_NAME" == "all" ] && [[ "$DOCKER_COMPOSE_CO
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" \
     restart prometheus promtail loki telegraf
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d --wait grafana
+  if docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" config --services | grep -qx nginx \
+    && docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" exec -T nginx nginx -t; then
+    docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" exec -T nginx nginx -s reload
+  fi
 fi
 
 # Restore the original env file

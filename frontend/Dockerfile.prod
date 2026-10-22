@@ -1,17 +1,3 @@
-ARG NGINX_VERSION=1.30.4
-
-FROM nginx:${NGINX_VERSION}-alpine AS geoip2-builder
-ARG NGINX_VERSION
-RUN apk add --no-cache git gcc make libc-dev pcre2-dev zlib-dev openssl-dev linux-headers libmaxminddb-dev
-WORKDIR /build
-RUN wget -O nginx.tar.gz https://nginx.org/download/nginx-${NGINX_VERSION}.tar.gz \
- && tar xzf nginx.tar.gz \
- && git clone --depth 1 https://github.com/leev/ngx_http_geoip2_module.git \
- && cd nginx-${NGINX_VERSION} \
- && ./configure --with-compat --add-dynamic-module=../ngx_http_geoip2_module \
- && make modules
-
-
 FROM node:24.2.0-alpine AS build-app
 
 ARG VITE_APP_BUILD_VERSION
@@ -25,38 +11,19 @@ COPY ./frontend/package-lock.json .
 RUN npm install
 
 COPY ./frontend .
-COPY .env.prod ../.env.prod
 
-RUN npm run build
+# Mounted only for this step, so the env file never lands in a layer.
+RUN --mount=type=secret,id=frontend_env,target=/app/.env.prod npm run build
+
+# Declared after the build, so toggling it does not rebuild the bundle.
+ARG FORCE_RELOAD=false
+RUN [ "$FORCE_RELOAD" = true ] && force=true || force=false; \
+    printf '{"version":"%s","force":%s}\n' "$VITE_APP_BUILD_VERSION" "$force" > build/version.json
 
 
-FROM nginx:${NGINX_VERSION}-alpine
-ARG NGINX_VERSION
+FROM nginxinc/nginx-unprivileged:1.30.4-alpine
 
-RUN rm /etc/nginx/conf.d/default.conf
-COPY ./nginx/production/nginx.conf /etc/nginx
+COPY ./frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build-app /app/frontend/build /usr/share/nginx/html
 
-RUN apk add --no-cache libmaxminddb
-COPY --from=geoip2-builder /build/nginx-${NGINX_VERSION}/objs/ngx_http_geoip2_module.so /usr/lib/nginx/modules/
-COPY ./nginx/GeoLite2-City.mmdb /usr/share/GeoIP-baseline/GeoLite2-City.mmdb
-COPY ./nginx/geo-block.conf /etc/nginx/geo-block.conf
-
-COPY ./nginx/errors /tmp/errors
-RUN sh /tmp/errors/render.sh /tmp/errors /usr/share/nginx/__errors /etc/nginx/errors \
- && cp /tmp/errors/errors-upstream.conf /tmp/errors/errors-location.conf /etc/nginx/errors/ \
- && rm -rf /tmp/errors
-
-COPY ./nginx/seed-geoip.sh /docker-entrypoint.d/98-seed-geoip.sh
-
-RUN apk add --no-cache logrotate
-COPY ./nginx/logrotate-shareframe /etc/logrotate.d/shareframe
-COPY ./nginx/logrotate-cron /etc/periodic/15min/logrotate
-COPY ./nginx/start-crond.sh /docker-entrypoint.d/99-start-crond.sh
-RUN chmod +x /etc/periodic/15min/logrotate /docker-entrypoint.d/98-seed-geoip.sh /docker-entrypoint.d/99-start-crond.sh
-
-WORKDIR /usr/share/nginx/html
-COPY --from=build-app /app/frontend/build .
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+EXPOSE 8080

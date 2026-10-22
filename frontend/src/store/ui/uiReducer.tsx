@@ -9,6 +9,7 @@ import framesReducer from "./frames/frames.slice";
 import imagesReducer from "./images/images.slice";
 import sentImagesReducer from "./sentImages/sentImages.slice";
 import changelogsReducer from "./changelogs/changelogs.slice";
+import serverStatusReducer from "./serverStatus/serverStatus.slice";
 
 export default combineReducers({
   navigation: navigationReducer,
@@ -20,4 +21,5 @@ export default combineReducers({
   images: imagesReducer,
   sentImages: sentImagesReducer,
   changelogs: changelogsReducer,
+  serverStatus: serverStatusReducer,
 });
