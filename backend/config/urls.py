@@ -13,6 +13,7 @@ from authentication.jwt import (
 )
 from metrics.views import business_metrics_view, metrics_view
 
+from .server_logs import download_server_logs
 from .views import (
     AvatarAccessView,
     ChangelogsAccessView,
@@ -38,6 +39,11 @@ urlpatterns = [
     path("metrics", metrics_view, name="prometheus-metrics"),
     path("metrics/business", business_metrics_view, name="prometheus-metrics-business"),
     # general
+    path(
+        "api/admin/server_logs/download/",
+        admin.site.admin_view(download_server_logs),
+        name="admin-server-logs-download",
+    ),
     path("api/admin/", admin.site.urls),
     # path("api/auth/", include("djoser.urls")),
     path("api/auth/", include("authentication.urls")),

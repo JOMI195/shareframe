@@ -1,0 +1,35 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; {{ title }}
+</div>
+{% endblock %}
+
+{% block content %}
+<p>The archive holds every server log, including email and IP addresses. Handle it with care.</p>
+
+<form method="post" id="server-logs-form">{% csrf_token %}
+    <div>
+        <input type="submit" value="Yes, download">
+        <a href="{% url 'admin:index' %}" class="button cancel-link">No, take me back</a>
+    </div>
+</form>
+
+<script>
+    document.getElementById("server-logs-form").addEventListener("submit", (event) => {
+        const cookie = "{{ ready_cookie }}";
+        const clear = () => { document.cookie = `${cookie}=; Max-Age=0; path=/`; };
+        clear();
+        event.submitter.disabled = true;
+        event.submitter.value = "Preparing archive…";
+        const timer = setInterval(() => {
+            if (!document.cookie.split("; ").some((c) => c.startsWith(`${cookie}=`))) return;
+            clearInterval(timer);
+            clear();
+            window.location.href = "{% url 'admin:index' %}";
+        }, 300);
+    });
+</script>
+{% endblock %}
