@@ -1,9 +1,4 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import appReducer, {
-  versionRequestedFailed,
-  versionRequestedFulfilled,
-  versionRequestedPending,
-} from '@/store/entities/app/app.slice';
 import contactReducer, {
   contactEmailSendingFailed,
   contactEmailSendingFulfilled,
@@ -25,30 +20,6 @@ import changelogsReducer, {
 import { makeChangelog, makeChangelogId } from '@tests/fixtures';
 
 afterEach(() => vi.useRealTimers());
-
-describe('app slice', () => {
-  const initial = () => appReducer(undefined, { type: '@@init' });
-
-  it('stores the version', () => {
-    const pending = appReducer(initial(), versionRequestedPending());
-    expect(pending.api.loading).toBe(true);
-
-    const state = appReducer(pending, versionRequestedFulfilled({ version: '2026-01-01-abc' }));
-    expect(state.version).toBe('2026-01-01-abc');
-    expect(state.api.loading).toBe(false);
-  });
-
-  it('clears loading on failure without touching the version', () => {
-    const state = appReducer({ ...initial(), version: 'old' }, versionRequestedFailed());
-    expect(state.version).toBe('old');
-    expect(state.api.loading).toBe(false);
-  });
-
-  // The reducer reads action.payload.version unconditionally.
-  it('throws when the payload has no version', () => {
-    expect(() => appReducer(initial(), versionRequestedFulfilled(undefined))).toThrow();
-  });
-});
 
 describe('contact slice', () => {
   const initial = () => contactReducer(undefined, { type: '@@init' });

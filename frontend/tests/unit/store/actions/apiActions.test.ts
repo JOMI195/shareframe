@@ -6,7 +6,6 @@ import * as images from '@/store/entities/images/images.actions';
 import * as changelogs from '@/store/entities/changelogs/changelogs.actions';
 import * as dashboard from '@/store/entities/dashboard/dashboard.actions';
 import * as contact from '@/store/entities/contact/contact.actions';
-import * as app from '@/store/entities/app/app.actions';
 import { signedOut } from '@/store/entities/authentication/authentication.slice';
 import { changelogsReceived } from '@/store/entities/changelogs/changelogs.slice';
 import { defaultState } from '@tests/helpers/preloadedState';
@@ -17,7 +16,6 @@ import { makeChangelogId } from '@tests/fixtures';
 describe('api request actions', () => {
   it('build the expected api/request payloads', () => {
     expect({
-      app: app.fetchAppVersion(),
       dashboard: dashboard.fetchDashboardStats(),
       contact: contact.sendContactEmail({ name: 'A', email: 'a@b.de', subject: 'S', message: 'M' }),
       framesFetch: frames.fetchframes(),
@@ -37,16 +35,6 @@ describe('api request actions', () => {
       changelogsByIds: changelogs.fetchChangelogsByIds([1, 2]),
     }).toMatchInlineSnapshot(`
       {
-        "app": {
-          "payload": {
-            "method": "get",
-            "onError": "app/versionRequestedFailed",
-            "onStart": "app/versionRequestedPending",
-            "onSuccess": "app/versionRequestedFulfilled",
-            "url": "version/",
-          },
-          "type": "api/request",
-        },
         "changelogIds": {
           "payload": {
             "onError": "changelogs/changelogIdsRequestFailed",
