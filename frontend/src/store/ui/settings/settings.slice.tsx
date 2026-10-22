@@ -10,7 +10,7 @@ const getNewConsentExpiryDate = () => {
 }
 
 type SliceState = {
-  design: { colorTheme: ColorPreference };
+  design: { colorTheme: ColorPreference; seasonalThemes: boolean };
   cookies: {
     analyticsCookies: boolean;
     consentExpiry: number | null;
@@ -20,7 +20,10 @@ type SliceState = {
 };
 
 const initialState: SliceState = {
-  design: { colorTheme: (localStorage.getItem('colorTheme') as ColorPreference | null) || 'system' },
+  design: {
+    colorTheme: (localStorage.getItem('colorTheme') as ColorPreference | null) || 'system',
+    seasonalThemes: true,
+  },
   cookies: {
     analyticsCookies: JSON.parse(localStorage.getItem('analyticsCookies') || 'false'),
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
@@ -36,6 +39,9 @@ const settingsSlice = createSlice({
     designSelected: (settings, action: PayloadAction<ColorPreference>) => {
       settings.design.colorTheme = action.payload;
       localStorage.setItem('colorTheme', action.payload);
+    },
+    seasonalThemesSelected: (settings, action: PayloadAction<boolean>) => {
+      settings.design.seasonalThemes = action.payload;
     },
     analyticsCookiesAccepted: (state) => {
       state.cookies.analyticsCookies = true;
@@ -109,6 +115,7 @@ export const closeBottomNavigation = () => ({
 
 export const {
   designSelected,
+  seasonalThemesSelected,
   analyticsCookiesAccepted,
   analyticsCookiesDeclined,
   allCookiesAccepted,
@@ -123,6 +130,7 @@ export const {
 export default settingsSlice.reducer;
 
 export const getDesign = (state: RootState) => state.ui.settings.design.colorTheme;
+export const getSeasonalThemes = (state: RootState) => state.ui.settings.design.seasonalThemes;
 export const getCookies = (state: RootState) => state.ui.settings.cookies;
 export const getNavigation = (state: RootState) => state.ui.settings.navigation;
 export const getPwa = (state: RootState) => state.ui.settings.pwa;
