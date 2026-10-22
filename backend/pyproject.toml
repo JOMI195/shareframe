@@ -4,7 +4,7 @@ version = "0"
 requires-python = ">=3.13"
 dependencies = [
     "Django>=6.0.8,<6.1",
-    "djangorestframework>=3.18.0",
+    "djangorestframework>=3.18.3",
     "djangorestframework-simplejwt>=5.5.1",
     "djoser>=2.3.4",
     "channels>=4.3.2",
