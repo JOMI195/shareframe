@@ -47,6 +47,7 @@ services:
     container_name: websockets
     restart: unless-stopped
     image: shareframe-backend
+    pull_policy: never
     command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /home/app/backend/logs/backend-daphne-access.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
     entrypoint: []
     volumes:
@@ -106,6 +107,7 @@ services:
     container_name: celery
     restart: unless-stopped
     image: shareframe-backend
+    pull_policy: never
     volumes:
       - static_volume:/home/app/backend/staticfiles
       - media_volume:/home/app/backend/mediafiles
@@ -133,6 +135,7 @@ services:
     container_name: celery-beat
     restart: unless-stopped
     image: shareframe-backend
+    pull_policy: never
     volumes:
       - static_volume:/home/app/backend/staticfiles
       - media_volume:/home/app/backend/mediafiles
