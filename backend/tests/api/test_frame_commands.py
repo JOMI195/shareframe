@@ -160,6 +160,18 @@ def test_shutdown_is_risky_and_reaches_the_frame(admin_client):
     assert json.loads(receive()["data"])["command"] == "shutdown"
 
 
+@pytest.mark.parametrize("command", ["enter_safe_mode", "exit_safe_mode"])
+def test_safe_mode_commands_are_safe_and_reach_the_frame(admin_client, command):
+    frame = FrameFactory()
+    receive = online(frame)
+
+    apply(admin_client, f"send_{command}", frame)
+
+    assert FrameCommand.objects.get().tier == "safe"
+    message = json.loads(receive()["data"])
+    assert (message["command"], message["arg"]) == (command, "")
+
+
 def test_an_offline_frame_gets_nothing(admin_client):
     frame = FrameFactory()
 
