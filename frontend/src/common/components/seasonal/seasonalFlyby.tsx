@@ -5,8 +5,6 @@ import { triggerFlyby, useFlybyRun } from '@/common/seasons/flyby';
 
 const SHOWN_KEY = 'seasonalFlybyShown';
 
-const reducedMotion = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 const shownThisSession = () => {
     try {
         if (sessionStorage.getItem(SHOWN_KEY)) return true;
@@ -23,10 +21,10 @@ const SeasonalFlyby: React.FC = () => {
     const [doneRun, setDoneRun] = useState(run);
 
     useEffect(() => {
-        if (season && !reducedMotion() && !shownThisSession()) triggerFlyby();
+        if (season && !shownThisSession()) triggerFlyby();
     }, [season]);
 
-    if (!season || run === doneRun || reducedMotion()) return null;
+    if (!season || run === doneRun) return null;
 
     const { Flyby } = season;
     return (
