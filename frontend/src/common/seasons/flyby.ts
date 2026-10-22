@@ -13,4 +13,4 @@ const subscribe = (listener: () => void) => {
     return () => listeners.delete(listener);
 };
 
-export const useFlybyRun = () => useSyncExternalStore(subscribe, () => run);
+export const useFlybyRun = () => useSyncExternalStore(subscribe, () => run, () => 0);
