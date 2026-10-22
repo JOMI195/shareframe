@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
-import { canonicalUrl, pages } from '@/seo/pageMeta';
+import userEvent from '@testing-library/user-event';
+import { canonicalUrl, OG_IMAGE, pages, SITE_ORIGIN } from '@/seo/pageMeta';
 import { landingContent } from '@/seo/landingContent';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
@@ -42,6 +43,14 @@ describe('public pages', () => {
     );
   });
 
+  it('shares the large preview image', async () => {
+    renderRoute('/');
+
+    await waitFor(() => expect(head('meta[property="og:image"]')?.getAttribute('content')).toBe(SITE_ORIGIN + OG_IMAGE.src));
+    expect(head('meta[property="og:image:width"]')?.getAttribute('content')).toBe(String(OG_IMAGE.width));
+    expect(head('meta[name="twitter:card"]')?.getAttribute('content')).toBe('summary_large_image');
+  });
+
   it('describes each public page for search results', async () => {
     renderRoute('/kontakt/');
 
@@ -57,6 +66,40 @@ describe('landing page', () => {
       await screen.findByRole('heading', { name: landingContent.headline }),
     ).toBeInTheDocument();
     expect(screen.getAllByRole('link', { name: /Anmelden/ })).not.toHaveLength(0);
+  });
+
+  it('switches between light and dark mode', async () => {
+    const user = userEvent.setup();
+    renderRoute('/');
+
+    await user.click(await screen.findByRole('button', { name: 'Wechsel in den dunklen Modus' }));
+
+    expect(screen.getByRole('button', { name: 'Wechsel in den hellen Modus' })).toBeInTheDocument();
+  });
+
+  it('explains the project in its own sections', async () => {
+    renderRoute('/');
+
+    await screen.findByRole('heading', { level: 1, name: landingContent.headline });
+    [landingContent.featuresHeading, landingContent.screenshotsHeading].forEach((name) =>
+      expect(screen.getByRole('heading', { level: 2, name })).toBeInTheDocument(),
+    );
+    landingContent.features.forEach(({ title }) =>
+      expect(screen.getByRole('heading', { level: 3, name: title })).toBeInTheDocument(),
+    );
+  });
+
+  it('switches the app screenshot with its tab', async () => {
+    const user = userEvent.setup();
+    renderRoute('/');
+    const [first, second] = landingContent.screenshots;
+
+    expect(await screen.findByText(first.caption)).toBeInTheDocument();
+    await user.click(screen.getByRole('tab', { name: second.label }));
+
+    expect(screen.getByText(second.caption)).toBeInTheDocument();
+    expect(screen.queryByText(first.caption)).not.toBeInTheDocument();
+    expect(screen.getByRole('tabpanel')).toHaveAccessibleName(second.label);
   });
 
   // The landing page is pointless once you have a session.

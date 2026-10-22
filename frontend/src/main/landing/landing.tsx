@@ -1,67 +1,33 @@
-import { Box, Button, Container, Stack, Typography } from "@mui/material";
-import { Link as RouterLink, Navigate } from "react-router";
-import Logo from "@/common/components/logo";
-import SeasonalLogoBadge from "@/common/components/seasonal/seasonalLogoBadge";
+import { Box, Container } from "@mui/material";
+import { Navigate } from "react-router";
 import SeasonalDecoration from "@/common/components/seasonal/seasonalDecoration";
 import SeasonalFlyby from "@/common/components/seasonal/seasonalFlyby";
 import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
-import { landingContent } from "@/seo/landingContent";
-import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
+import LandingHeader from "./landingHeader";
+import HeroSection from "./heroSection";
+import FeaturesSection from "./featuresSection";
+import ScreenshotShowcase from "./screenshotShowcase";
 
 const Landing = () => {
-  if (localStorage.getItem("loggedIn") === "true") {
+  if (typeof window !== "undefined" && localStorage.getItem("loggedIn") === "true") {
     return <Navigate to={getDashboardUrl()} replace />;
   }
 
   return (
-    <Container component="main" maxWidth="sm" sx={{ my: 6 }}>
-      <Stack
-        spacing={4}
-        sx={{
-          alignItems: "center",
-          textAlign: "center"
-        }}>
-        <SeasonalLogoBadge size={26}>
-          <Logo
-            darkLogoSrc="/logo-dark-full-shareframe.svg"
-            lightLogoSrc="/logo-light-full-shareframe.svg"
-            maxWidth={220}
-            marginRight={0}
-            clickable={false}
-          />
-        </SeasonalLogoBadge>
-        <Logo
-          darkLogoSrc="/frame-3d.svg"
-          lightLogoSrc="/frame-3d.svg"
-          maxWidth={280}
-          marginRight={0}
-          clickable={false}
-        />
-        <Box>
-          <Typography variant="h1" sx={{ fontSize: { xs: "2rem", sm: "2.5rem" }, mb: 2 }}>
-            {landingContent.headline}
-          </Typography>
-          <Typography variant="body1">{landingContent.lead}</Typography>
-        </Box>
-        <Button
-          component={RouterLink}
-          to={getAuthenticationUrl() + getSignInUrl()}
-          variant="contained"
-          size="large"
-        >
-          {landingContent.ctaLabel}
-        </Button>
-        <Typography variant="body2" sx={{
-          color: "text.secondary"
-        }}>
-          {landingContent.contactHint}
-        </Typography>
-        <PublicFooter />
-      </Stack>
+    <Box sx={{ position: "relative", overflowX: "clip" }}>
+      <LandingHeader />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <ScreenshotShowcase />
+      </main>
+      <Container component="footer" maxWidth="lg" sx={{ py: 5 }}>
+        <PublicFooter sx={{ display: "block" }} />
+      </Container>
       <SeasonalDecoration top={0} />
       <SeasonalFlyby />
-    </Container>
+    </Box>
   );
 };
 
