@@ -17,6 +17,9 @@ result_extended = True
 
 timezone = "Europe/Berlin"
 
+# config is no Django app, so autodiscover_tasks() misses it
+imports = ("config.tasks",)
+
 beat_schedule = {
     "delete-inactive-users-every-24-hours": {
         "task": "user_core.tasks.delete_inactive_users",
@@ -62,5 +65,9 @@ beat_schedule = {
     "send-inactivity-reminders-every-24-hours": {
         "task": "notifications.tasks.send_inactivity_reminders",
         "schedule": crontab(minute=0, hour=18),
+    },
+    "delete-old-server-logs-every-15-minutes": {
+        "task": "config.tasks.delete_old_server_logs",
+        "schedule": timedelta(minutes=15),
     },
 }

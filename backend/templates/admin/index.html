@@ -1,0 +1,17 @@
+{% extends "admin/index.html" %}
+
+{% block content %}
+<div id="content-main" class="app-list">
+  {% include "admin/app_list.html" with app_list=app_list show_changelinks=True %}
+  {% if user.is_admin %}
+  <div class="module">
+    <table>
+      <caption>Diagnostics</caption>
+      <tr>
+        <th scope="row"><a href="{% url 'admin-server-logs-download' %}">Download server logs</a></th>
+      </tr>
+    </table>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

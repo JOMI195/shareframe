@@ -91,6 +91,8 @@ COMMAND_WARNINGS = {
     "update_install": "Installs the newest release regardless of criticality and reboots into it.",
     "factory_reset": "Wipes all images, WiFi networks, the device password and settings. Cannot be undone.",
     "shutdown": "Powers the frame off and blanks the panel. It stays off until someone unplugs and replugs it. Last resort.",
+    "enter_safe_mode": "Blanks the panel and keeps the display off, also across reboots, until safe mode is exited or an update commits. The frame stays online.",
+    "exit_safe_mode": "Turns the display back on, also after an automatic safe mode, without a reboot.",
 }
 
 
@@ -174,6 +176,8 @@ send_reboot = frame_command_action("reboot", "Reboot")
 send_update_install = frame_command_action("update_install", "Install update (risky)")
 send_factory_reset = frame_command_action("factory_reset", "Factory reset (risky)")
 send_shutdown = frame_command_action("shutdown", "Shut down (risky)")
+send_enter_safe_mode = frame_command_action("enter_safe_mode", "Enter safe mode")
+send_exit_safe_mode = frame_command_action("exit_safe_mode", "Exit safe mode")
 
 
 @admin.register(FrameGroup)
@@ -225,6 +229,8 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         send_update_install,
         send_factory_reset,
         send_shutdown,
+        send_enter_safe_mode,
+        send_exit_safe_mode,
     ]
     otp = RowAction(generate_otp, "OTP")
     diagnostics = RowAction(send_request_diagnostics, "Diagnostics")
@@ -233,6 +239,8 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
     update_install = RowAction(send_update_install, "Update")
     factory_reset = RowAction(send_factory_reset, "Factory reset")
     shutdown = RowAction(send_shutdown, "Shut down")
+    enter_safe_mode = RowAction(send_enter_safe_mode, "Safe mode")
+    exit_safe_mode = RowAction(send_exit_safe_mode, "Exit safe mode")
     inline_actions = [
         "otp",
         "diagnostics",
@@ -241,6 +249,8 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
         "update_install",
         "factory_reset",
         "shutdown",
+        "enter_safe_mode",
+        "exit_safe_mode",
     ]
 
     inlines = [
