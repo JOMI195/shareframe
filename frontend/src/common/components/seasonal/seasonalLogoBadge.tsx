@@ -32,6 +32,7 @@ const SeasonalLogoBadge: React.FC<PropsWithChildren<{ size?: number }>> = ({ chi
                         fontSize: size,
                         color: 'accent.main',
                         animation: wobbles ? `${wobble} 0.5s ease-in-out` : 'none',
+                        '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
                     }}
                 />
             </ButtonBase>

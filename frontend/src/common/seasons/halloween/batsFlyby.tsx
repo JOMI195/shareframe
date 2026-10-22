@@ -26,24 +26,48 @@ const flapLeft = keyframes`
     to { transform: rotate(-28deg) scaleY(0.7); }
 `;
 
+const fade = keyframes`
+    0% { opacity: 0; }
+    30%, 70% { opacity: 1; }
+    100% { opacity: 0; }
+`;
+
 const flapRight = keyframes`
     from { transform: rotate(-22deg) scaleY(1); }
     to { transform: rotate(28deg) scaleY(0.7); }
 `;
 
 const bats = [
-    { top: '22%', width: 84, delay: 0, duration: 5, arc: '-12vh', flap: 0.2 },
-    { top: '34%', width: 64, delay: 0.6, duration: 5.6, arc: '-18vh', flap: 0.17 },
-    { top: '16%', width: 52, delay: 1.1, duration: 4.6, arc: '-6vh', flap: 0.15 },
+    { top: '22%', left: '18%', width: 84, delay: 0, duration: 5, arc: '-12vh', flap: 0.2 },
+    { top: '34%', left: '55%', width: 64, delay: 0.6, duration: 5.6, arc: '-18vh', flap: 0.17 },
+    { top: '16%', left: '78%', width: 52, delay: 1.1, duration: 4.6, arc: '-6vh', flap: 0.15 },
 ];
 
-const wing = (flap: string, origin: string, seconds: number) => ({
+const wing = (flap: string, origin: string, seconds: number | null) => ({
     transformBox: 'view-box',
     transformOrigin: origin,
-    animation: `${flap} ${seconds}s ease-in-out infinite alternate`,
+    animation: seconds ? `${flap} ${seconds}s ease-in-out infinite alternate` : 'none',
 });
 
-const BatsFlyby: React.FC<{ onDone: () => void }> = ({ onDone }) => {
+const Bat: React.FC<{ width: number; flap: number | null }> = ({ width, flap }) => {
+    const theme = useTheme();
+    return (
+        <Box
+            component="svg"
+            viewBox="0 0 64 40"
+            sx={{ display: 'block', width: { xs: width * 0.75, sm: width }, fill: 'currentColor' }}
+        >
+            <Box component="path" d={LEFT_WING} sx={wing(flapLeft, '29px 19px', flap)} />
+            <Box component="path" d={RIGHT_WING} sx={wing(flapRight, '35px 19px', flap)} />
+            <ellipse cx={32} cy={21} rx={4} ry={7} />
+            <path d={HEAD} />
+            <circle cx={30.7} cy={13} r={0.8} fill={theme.palette.accent.main} />
+            <circle cx={33.3} cy={13} r={0.8} fill={theme.palette.accent.main} />
+        </Box>
+    );
+};
+
+const BatsFlyby: React.FC<{ onDone: () => void; reducedMotion: boolean }> = ({ onDone, reducedMotion }) => {
     const theme = useTheme();
     const landed = useRef(0);
 
@@ -55,36 +79,35 @@ const BatsFlyby: React.FC<{ onDone: () => void }> = ({ onDone }) => {
 
     return (
         <Box sx={{ color: theme.palette.mode === 'dark' ? '#C9B8E8' : '#2B1F36' }}>
-            {bats.map(({ top, width, delay, duration, arc: arcHeight, flap }, i) => (
-                <Box
-                    key={i}
-                    onAnimationEnd={handleEnd}
-                    sx={{
-                        position: 'absolute',
-                        left: 0,
-                        top,
-                        transform: 'translateX(-20vw)',
-                        animation: `${travel} ${duration}s linear ${delay}s forwards`,
-                    }}
-                >
-                    <Box sx={{ '--arc': arcHeight, animation: `${arc} ${duration}s ease-in-out ${delay}s forwards` }}>
-                        <Box sx={{ animation: `${bob} ${duration / 4}s ease-in-out infinite alternate` }}>
-                            <Box
-                                component="svg"
-                                viewBox="0 0 64 40"
-                                sx={{ display: 'block', width: { xs: width * 0.75, sm: width }, fill: 'currentColor' }}
-                            >
-                                <Box component="path" d={LEFT_WING} sx={wing(flapLeft, '29px 19px', flap)} />
-                                <Box component="path" d={RIGHT_WING} sx={wing(flapRight, '35px 19px', flap)} />
-                                <ellipse cx={32} cy={21} rx={4} ry={7} />
-                                <path d={HEAD} />
-                                <circle cx={30.7} cy={13} r={0.8} fill={theme.palette.accent.main} />
-                                <circle cx={33.3} cy={13} r={0.8} fill={theme.palette.accent.main} />
+            {bats.map(({ top, left, width, delay, duration, arc: arcHeight, flap }, i) =>
+                reducedMotion ? (
+                    <Box
+                        key={i}
+                        onAnimationEnd={handleEnd}
+                        sx={{ position: 'absolute', left, top, opacity: 0, animation: `${fade} 3s ease-in-out ${delay}s forwards` }}
+                    >
+                        <Bat width={width} flap={null} />
+                    </Box>
+                ) : (
+                    <Box
+                        key={i}
+                        onAnimationEnd={handleEnd}
+                        sx={{
+                            position: 'absolute',
+                            left: 0,
+                            top,
+                            transform: 'translateX(-20vw)',
+                            animation: `${travel} ${duration}s linear ${delay}s forwards`,
+                        }}
+                    >
+                        <Box sx={{ '--arc': arcHeight, animation: `${arc} ${duration}s ease-in-out ${delay}s forwards` }}>
+                            <Box sx={{ animation: `${bob} ${duration / 4}s ease-in-out infinite alternate` }}>
+                                <Bat width={width} flap={flap} />
                             </Box>
                         </Box>
                     </Box>
-                </Box>
-            ))}
+                ),
+            )}
         </Box>
     );
 };
