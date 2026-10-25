@@ -214,6 +214,49 @@ services:
     networks:
       - backend_network
 
+  backup:
+    logging: *default-logging
+    container_name: backup
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: ./backup/Dockerfile.prod
+    # restic unlock only clears locks of dead PIDs on its own hostname
+    hostname: backup
+    environment:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?}
+      RESTIC_HOST: shareframe
+      RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:?}
+      RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:?}
+      RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:?}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:?}
+      BACKUP_CHECK_SCHEDULE: ${BACKUP_CHECK_SCHEDULE:?}
+      BACKUP_CHECK_SUBSET: ${BACKUP_CHECK_SUBSET:?}
+      BACKUP_ON_START: ${BACKUP_ON_START:-false}
+      PGHOST: backend_db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "supercronic"]
+      interval: 60s
+      timeout: 5s
+      # BACKUP_ON_START runs before the scheduler starts
+      start_period: 10m
+    # the base image declares a data VOLUME, this keeps it from piling up
+    tmpfs:
+      - /var/lib/postgresql/data
+    volumes:
+      - backup_repo:/repo
+      - backup_metrics:/metrics
+      - media_volume:/data/media:ro
+      - logs_volume:/data/logs:ro
+    depends_on:
+      backend_db:
+        condition: service_healthy
+    networks:
+      - backend_db_network
+
   # ---- Monitoring ----
   prometheus:
     logging: *default-logging
@@ -300,9 +343,11 @@ services:
       - --no-collector.netclass
       - --no-collector.nfs
       - --no-collector.nfsd
+      - --collector.textfile.directory=/textfile
     pid: host
     volumes:
       - /:/host:ro
+      - backup_metrics:/textfile:ro
     networks:
       - monitoring_network
 
@@ -366,6 +411,8 @@ volumes:
   grafana_logs:
   loki_data:
   promtail_positions:
+  backup_repo:
+  backup_metrics:
 
 
 networks:
