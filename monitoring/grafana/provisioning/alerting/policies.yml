@@ -4,7 +4,7 @@ apiVersion: 1
 policies:
   - orgId: 1
     receiver: shareframe-admin
-    group_by: [grafana_folder, alertname, userID, clientIP, container_name, serial_number, task, job, remote_addr, rule]
+    group_by: [grafana_folder, alertname, userID, clientIP, container_name, serial_number, task, job, remote_addr]
     group_wait: 10s
     group_interval: 1m
     repeat_interval: 4h

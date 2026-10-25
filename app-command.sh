@@ -92,9 +92,6 @@ if [ $RESULT -eq 0 ] && [ "$CONTAINER_NAME" == "all" ] && [[ "$DOCKER_COMPOSE_CO
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" stop grafana
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" \
     restart prometheus promtail loki telegraf
-  if docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" config --services | grep -qx falco; then
-    docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" restart falco
-  fi
   docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" up -d --wait grafana
   if docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" config --services | grep -qx nginx \
     && docker compose -f "$DOCKER_COMPOSE_FILE" --env-file "$ENV_FILE" exec -T nginx nginx -t; then

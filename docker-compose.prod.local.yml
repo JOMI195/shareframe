@@ -322,23 +322,6 @@ services:
     networks:
       - monitoring_network
 
-  falco:
-    logging: *default-logging
-    container_name: falco
-    image: falcosecurity/falco:0.45.1
-    restart: unless-stopped
-    # eBPF probe needs host-level privileges; capped so it can never starve the app
-    privileged: true
-    pid: host
-    mem_limit: 512m
-    network_mode: none
-    volumes:
-      - ./monitoring/falco/falco.yaml:/etc/falco/config.d/shareframe.yaml:ro
-      - ./monitoring/falco/shareframe_rules.yaml:/etc/falco/rules.d/shareframe_rules.yaml:ro
-      - /var/run/docker.sock:/host/var/run/docker.sock:ro
-      - /proc:/host/proc:ro
-      - /etc:/host/etc:ro
-
   loki:
     logging: *default-logging
     container_name: loki
