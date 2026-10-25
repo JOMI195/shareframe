@@ -258,6 +258,7 @@ services:
       GF_LOG_FILE_MAX_DAYS: "7"
       # read by the Grafana alerting contact point
       ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
+      HEALTHCHECKS_PING_URL: ${HEALTHCHECKS_PING_URL}
       # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
       GF_SMTP_ENABLED: "true"
       GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
@@ -376,9 +377,12 @@ networks:
         - subnet: fd4e:9a2c:71b3:2::/64
   backend_network:
     driver: bridge
+  # postgres and redis never need the internet
   backend_db_network:
     driver: bridge
+    internal: true
   redis_network:
     driver: bridge
+    internal: true
   monitoring_network:
     driver: bridge
