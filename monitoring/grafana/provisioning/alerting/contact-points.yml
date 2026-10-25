@@ -11,3 +11,14 @@ contactPoints:
         settings:
           addresses: $__env{ADMIN_NOTIFICATION_EMAIL}
           singleEmail: true
+
+  # External dead-man's switch; mails on its own when pings stop.
+  - orgId: 1
+    name: heartbeat
+    receivers:
+      - uid: shareframe_heartbeat_webhook
+        type: webhook
+        disableResolveMessage: true
+        settings:
+          url: $__env{HEALTHCHECKS_PING_URL}
+          httpMethod: POST

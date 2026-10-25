@@ -1,0 +1,22 @@
+# Healthcheck shells are spawned by runc, not by the app, so they never match.
+- rule: Shell spawned by app server
+  desc: >
+    gunicorn, daphne and celery never need a shell; one below them means code
+    execution through the app.
+  condition: >
+    spawned_process and container and shell_procs
+    and proc.aname in (gunicorn, daphne, celery)
+  output: Shell spawned below app server | command=%proc.cmdline parent=%proc.pname gparent=%proc.aname[2] user=%user.name
+  priority: WARNING
+  tags: [shareframe, mitre_execution]
+
+# The postgres healthcheck (perl) reads /etc/shadow on every run.
+- rule: Read sensitive file untrusted
+  exceptions:
+    - name: postgres_healthcheck
+      fields: [container.image.repository, proc.name, fd.name]
+      comps: ["=", "=", "="]
+      values:
+        - [postgres, pg_isready, /etc/shadow]
+  override:
+    exceptions: append

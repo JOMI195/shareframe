@@ -4,7 +4,15 @@ apiVersion: 1
 policies:
   - orgId: 1
     receiver: shareframe-admin
-    group_by: [grafana_folder, alertname, userID, clientIP, container_name, serial_number, task, job]
+    group_by: [grafana_folder, alertname, userID, clientIP, container_name, serial_number, task, job, remote_addr, rule]
     group_wait: 10s
     group_interval: 1m
     repeat_interval: 4h
+    routes:
+      - receiver: heartbeat
+        object_matchers:
+          - ["heartbeat", "=", "true"]
+        group_by: [alertname]
+        group_wait: 0s
+        group_interval: 1m
+        repeat_interval: 5m

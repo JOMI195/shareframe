@@ -189,6 +189,7 @@ services:
       GF_LOG_FILTERS: "auth:debug"
       # read by the Grafana alerting contact point
       ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
+      HEALTHCHECKS_PING_URL: ${HEALTHCHECKS_PING_URL}
       # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
       GF_SMTP_ENABLED: "true"
       GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"

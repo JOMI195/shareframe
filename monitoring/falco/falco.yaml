@@ -1,0 +1,17 @@
+# Merged over the image's /etc/falco/falco.yaml.
+json_output: true
+priority: notice
+syslog_output:
+  enabled: false
+log_syslog: false
+webserver:
+  enabled: false
+engine:
+  kind: modern_ebpf
+  modern_ebpf:
+    buf_size_preset: 3
+# The periodic snapshot line is the PipelineHeartbeat signal.
+metrics:
+  enabled: true
+  interval: 5m
+  output_rule: true

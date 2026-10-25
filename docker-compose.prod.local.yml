@@ -258,6 +258,7 @@ services:
       GF_LOG_FILE_MAX_DAYS: "7"
       # read by the Grafana alerting contact point
       ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
+      HEALTHCHECKS_PING_URL: ${HEALTHCHECKS_PING_URL}
       # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
       GF_SMTP_ENABLED: "true"
       GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
@@ -321,6 +322,23 @@ services:
     networks:
       - monitoring_network
 
+  falco:
+    logging: *default-logging
+    container_name: falco
+    image: falcosecurity/falco:0.45.1
+    restart: unless-stopped
+    # eBPF probe needs host-level privileges; capped so it can never starve the app
+    privileged: true
+    pid: host
+    mem_limit: 512m
+    network_mode: none
+    volumes:
+      - ./monitoring/falco/falco.yaml:/etc/falco/config.d/shareframe.yaml:ro
+      - ./monitoring/falco/shareframe_rules.yaml:/etc/falco/rules.d/shareframe_rules.yaml:ro
+      - /var/run/docker.sock:/host/var/run/docker.sock:ro
+      - /proc:/host/proc:ro
+      - /etc:/host/etc:ro
+
   loki:
     logging: *default-logging
     container_name: loki
@@ -376,9 +394,12 @@ networks:
         - subnet: fd4e:9a2c:71b3:2::/64
   backend_network:
     driver: bridge
+  # postgres and redis never need the internet
   backend_db_network:
     driver: bridge
+    internal: true
   redis_network:
     driver: bridge
+    internal: true
   monitoring_network:
     driver: bridge

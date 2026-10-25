@@ -342,6 +342,64 @@ groups:
                     type: gt
                     params: [0]
 
+      # Needs sftp-server logging on the host (README.deploy.md). Not grouped
+      # by path, so a multi-file transfer sends one mail.
+      - uid: shareframe_host_sftp_download
+        title: HostSftpDownload
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: info
+        annotations:
+          summary: 'SFTP file download from host'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum (count_over_time({job="host", program=~"sftp-server|internal-sftp|sshd(-session)?"} |= "bytes read" | regexp `close "(?P<path>[^"]+)" bytes read (?P<read>\d+)` | read > 0 [1m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
       - uid: shareframe_app_failed_login_burst
         title: AppFailedLoginBurst
         condition: C
@@ -566,11 +624,183 @@ groups:
                     type: gt
                     params: [100]
 
+      - uid: shareframe_nginx_egress_spike
+        title: NginxEgressSpike
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: warning
+        annotations:
+          summary: '{{ $labels.remote_addr }} downloaded {{ humanize1024 $values.B.Value }}B in 5m'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum by (remote_addr) (sum_over_time({job="nginx", logtype="access"} | json remote_addr="remote_addr", bytes="body_bytes_sent" | unwrap bytes | __error__="" [5m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    # 500 MiB
+                    params: [524288000]
+
+      - uid: shareframe_host_falco
+        title: HostFalcoAlert
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Falco: {{ $labels.rule }} in {{ $labels.container_name }}'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum by (rule, container_name) (count_over_time({container="falco"} |= "\"rule\"" | json rule="rule", container_name=`output_fields["container.name"]` | __error__="" | rule != "Falco internal: metrics snapshot" [1m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 120
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
   - orgId: 1
     name: platform
     folder: ShareFrame
     interval: 1m
     rules:
+      # Always firing while Falco -> promtail -> Loki -> Grafana works; routed to
+      # the external heartbeat, which mails when the pings stop. NoData/Error must
+      # stay OK, otherwise a broken pipeline would still send pings.
+      - uid: shareframe_pipeline_heartbeat
+        title: PipelineHeartbeat
+        condition: C
+        for: 0s
+        noDataState: OK
+        execErrState: OK
+        labels:
+          heartbeat: "true"
+        annotations:
+          summary: 'Monitoring pipeline alive'
+        data:
+          - refId: A
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: loki
+            model:
+              refId: A
+              datasource:
+                type: loki
+                uid: loki
+              editorMode: code
+              queryType: range
+              expr: 'sum (count_over_time({container="falco"} |= "Falco internal: metrics snapshot" [15m]))'
+              intervalMs: 1000
+              maxDataPoints: 43200
+          - refId: B
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: B
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: reduce
+              reducer: last
+              expression: A
+          - refId: C
+            relativeTimeRange:
+              from: 900
+              to: 0
+            datasourceUid: __expr__
+            model:
+              refId: C
+              datasource:
+                type: __expr__
+                uid: __expr__
+              type: threshold
+              expression: B
+              conditions:
+                - evaluator:
+                    type: gt
+                    params: [0]
+
       - uid: shareframe_backend_metrics_down
         title: BackendMetricsDown
         condition: C
