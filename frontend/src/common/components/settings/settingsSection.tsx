@@ -13,7 +13,7 @@ const SettingsSection = ({ title, description, action, tone = "default", childre
     const error = tone === "error";
 
     return (
-        <Paper variant="outlined" sx={{ p: 2, ...(error && { borderColor: "error.main" }) }}>
+        <Paper variant="outlined" sx={{ p: { xs: 1.5, sm: 2 }, ...(error && { borderColor: "error.main" }) }}>
             <Stack spacing={2}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
                     <Box sx={{ flex: "1 1 12rem", minWidth: 0, overflowWrap: "anywhere" }}>

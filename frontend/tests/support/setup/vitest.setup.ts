@@ -13,13 +13,18 @@ afterAll(() => server.close());
 
 // --- jsdom gaps ---
 
-const matchMediaState = { prefersDark: false };
+const matchMediaState = { prefersDark: false, smallScreen: false };
 const darkSchemeListeners = new Set<() => void>();
 
 // Notifies like the OS does when its appearance flips; plain functions so restoreMocks keeps them.
 export const setPrefersDark = (value: boolean) => {
   matchMediaState.prefersDark = value;
   darkSchemeListeners.forEach((listener) => listener());
+};
+
+// Makes every max-width breakpoint match, as on a phone.
+export const setSmallScreen = (value: boolean) => {
+  matchMediaState.smallScreen = value;
 };
 
 Object.defineProperty(window, 'matchMedia', {
@@ -34,7 +39,7 @@ Object.defineProperty(window, 'matchMedia', {
       darkSchemeListeners.delete(listener);
     };
     return {
-      matches: isDarkQuery ? matchMediaState.prefersDark : false,
+      matches: isDarkQuery ? matchMediaState.prefersDark : matchMediaState.smallScreen && query.includes('max-width'),
       media: query,
       onchange: null,
       addEventListener: add,
@@ -111,6 +116,7 @@ afterEach(() => {
   sessionStorage.clear();
   intersectionObservers.length = 0;
   matchMediaState.prefersDark = false;
+  matchMediaState.smallScreen = false;
   darkSchemeListeners.clear();
   document.head.querySelectorAll('meta[data-seo], link[rel="canonical"]').forEach((el) => el.remove());
 });

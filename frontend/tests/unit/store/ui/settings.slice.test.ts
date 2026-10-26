@@ -25,7 +25,6 @@ describe('initial state', () => {
     expect(state).toEqual({
       design: { colorTheme: 'system', seasonalThemes: true },
       cookies: { analyticsCookies: false, consentExpiry: null },
-      navigation: { bottomNavigation: { open: false } },
       pwa: { installPromptDismissed: false, pushPromptDismissed: false },
     });
   });
@@ -92,16 +91,6 @@ describe('cookie consent', () => {
 
     expect(reducer(base, allCookiesAccepted()).cookies).toEqual(reducer(base, analyticsCookiesAccepted()).cookies);
     expect(reducer(base, allCookiesDeclined()).cookies).toEqual(reducer(base, analyticsCookiesDeclined()).cookies);
-  });
-});
-
-describe('bottom navigation', () => {
-  it('opens and closes', async () => {
-    const { default: reducer, bottomNavigationOpened, bottomNavigationClosed } = await loadSlice();
-    const base = reducer(undefined, { type: '@@init' });
-
-    expect(reducer(base, bottomNavigationOpened()).navigation.bottomNavigation.open).toBe(true);
-    expect(reducer(base, bottomNavigationClosed()).navigation.bottomNavigation.open).toBe(false);
   });
 });
 

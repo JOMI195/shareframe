@@ -1,30 +1,24 @@
 import { Outlet } from "react-router";
-import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Container } from "@mui/material";
 import Contact from "../contact/contact";
 import BuildVersionInfo from "@/common/components/buildVersionInfo";
 
 const Layout = () => {
-  const theme = useTheme();
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
-
   return (
     <Container
       sx={{
         justifyContent: "center",
         display: "flex",
         flexDirection: "column",
-        pb: 10
+        px: { xs: 0, sm: 3 },
+        pb: { xs: 4, sm: 10 }
       }}
       maxWidth="md"
     >
       <Outlet />
-      {!isSmallScreen && (
-        <Box
-          sx={{ mt: 10 }}
-        >
-          <Contact />
-        </Box>
-      )}
+      <Box sx={{ mt: { xs: 5, sm: 10 } }}>
+        <Contact />
+      </Box>
       <Box
         sx={{ mt: 5 }}
       >

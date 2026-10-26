@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
+import { useLocation } from 'react-router';
 import Delete from '@/main/settings/user/delete/delete';
 import * as authEndpoints from '@/assets/endpoints/api/authEndpoints';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
@@ -8,76 +9,118 @@ import { signedInState } from '@tests/helpers/preloadedState';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server } from '@tests/mocks/server';
 
-const render = () => renderWithProviders(<Delete />, { preloadedState: signedInState() });
+const Path = () => <output aria-label="path">{useLocation().pathname}</output>;
 
-const recordDelete = () => {
+const render = () =>
+  renderWithProviders(
+    <>
+      <Delete />
+      <Path />
+    </>,
+    { preloadedState: signedInState(), route: '/settings/user/' },
+  );
+
+const recordDelete = (response = () => new HttpResponse(null, { status: 204 })) => {
   const bodies: Record<string, unknown>[] = [];
   server.use(
     mswHttp.delete(apiUrl(authEndpoints.getMyUserDataUrl()), async ({ request }) => {
       bodies.push((await request.json()) as Record<string, unknown>);
-      return new HttpResponse(null, { status: 204 });
+      return response();
     }),
   );
   return bodies;
 };
 
-const openDialog = async (user: ReturnType<typeof render>['user']) => {
+const enterPassword = async (user: ReturnType<typeof render>['user'], password = 'geheim123') => {
   await user.click(screen.getByRole('button', { name: 'Mein Konto löschen' }));
-  return screen.findByLabelText('Passwort');
+  if (password) await user.type(screen.getByLabelText('Passwort'), password);
+  await user.click(screen.getByRole('button', { name: 'Konto löschen' }));
 };
 
-// Deleting the account is irreversible, so the confirmation path matters.
+const confirmDialog = () => screen.queryByRole('dialog', { name: 'Konto endgültig löschen?' });
+
+// Deleting the account is irreversible, so every step before the request matters.
 describe('delete account', () => {
-  it('does not delete anything without a confirmation', async () => {
-    const bodies = recordDelete();
+  it('shows no password field until asked', () => {
     render();
 
     expect(screen.queryByLabelText('Passwort')).not.toBeInTheDocument();
-    expect(bodies).toHaveLength(0);
   });
 
-  it('asks for the password before deleting', async () => {
+  it('explains why the password is needed', async () => {
     const { user } = render();
 
-    await openDialog(user);
+    await user.click(screen.getByRole('button', { name: 'Mein Konto löschen' }));
 
-    expect(
-      screen.getByText('Bitte bestätige die Löschung deines Kontos mit deinem Passwort.'),
-    ).toBeVisible();
+    expect(screen.getByText('Bitte gib zur Bestätigung dein Passwort ein.')).toBeVisible();
   });
 
-  it('sends only the password', async () => {
+  it('needs the password before it asks for confirmation', async () => {
     const bodies = recordDelete();
     const { user } = render();
 
-    const password = await openDialog(user);
-    await user.type(password, 'geheim123');
-    await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
+    await enterPassword(user, '');
+
+    expect(await screen.findByText('Dieses Feld wird benötigt')).toBeInTheDocument();
+    expect(confirmDialog()).not.toBeInTheDocument();
+    expect(bodies).toHaveLength(0);
+  });
+
+  it('asks for a final confirmation before sending anything', async () => {
+    const bodies = recordDelete();
+    const { user } = render();
+
+    await enterPassword(user);
+
+    expect(await screen.findByRole('dialog', { name: 'Konto endgültig löschen?' })).toBeVisible();
+    expect(bodies).toHaveLength(0);
+  });
+
+  it('sends only the password and signs the user out', async () => {
+    const bodies = recordDelete();
+    const { user, store } = render();
+
+    await enterPassword(user);
+    await user.click(await screen.findByRole('button', { name: 'Endgültig löschen' }));
 
     await waitFor(() => expect(bodies).toHaveLength(1));
     expect(bodies[0]).toEqual({ password: 'geheim123' });
-  });
-
-  it('signs the user out afterwards', async () => {
-    recordDelete();
-    const { user, store } = render();
-
-    const password = await openDialog(user);
-    await user.type(password, 'geheim123');
-    await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
-
-    await waitFor(() => expect(localStorage.getItem('loggedIn')).toBeNull());
+    await waitFor(() => expect(screen.getByLabelText('path')).toHaveTextContent(/^\/$/));
+    expect(localStorage.getItem('loggedIn')).toBeNull();
     expect(store.getState().auth.user.me.id).toBe(0);
   });
 
-  it('keeps the account when the dialog is cancelled', async () => {
+  it('stays signed in on the page when the password is wrong', async () => {
+    recordDelete(() => HttpResponse.json({ current_password: ['Ungültiges Passwort.'] }, { status: 400 }));
+    const { user, store } = render();
+    const id = store.getState().auth.user.me.id;
+
+    await enterPassword(user);
+    await user.click(await screen.findByRole('button', { name: 'Endgültig löschen' }));
+
+    await waitFor(() => expect(confirmDialog()).not.toBeInTheDocument());
+    expect(screen.getByLabelText('path')).toHaveTextContent('/settings/user/');
+    expect(store.getState().auth.user.me.id).toBe(id);
+    expect(screen.getByLabelText('Passwort')).toHaveValue('');
+  });
+
+  it('keeps the account when the confirmation is cancelled', async () => {
     const bodies = recordDelete();
     const { user } = render();
 
-    await openDialog(user);
+    await enterPassword(user);
+    await user.click(await screen.findByRole('button', { name: 'Abbrechen' }));
+
+    await waitFor(() => expect(confirmDialog()).not.toBeInTheDocument());
+    expect(bodies).toHaveLength(0);
+  });
+
+  it('closes the password field on cancel', async () => {
+    const { user } = render();
+    await user.click(screen.getByRole('button', { name: 'Mein Konto löschen' }));
+
     await user.click(screen.getByRole('button', { name: 'Abbrechen' }));
 
-    await waitFor(() => expect(screen.queryByLabelText('Passwort')).not.toBeInTheDocument());
-    expect(bodies).toHaveLength(0);
+    expect(screen.queryByLabelText('Passwort')).not.toBeInTheDocument();
   });
 });
