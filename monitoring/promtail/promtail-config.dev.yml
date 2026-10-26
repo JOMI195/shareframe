@@ -33,6 +33,10 @@ scrape_configs:
         target_label: job
         replacement: grafana
     pipeline_stages:
+      # Link tokens in request paths must not reach Loki.
+      - replace:
+          expression: '(?:/auth/users/(?:activate|password-reset)/[^/\s"]+/|/auth/users/email-change/|/benachrichtigungen/abmelden/|[?&]token=)([^/?&\s"]+)'
+          replace: 'REDACTED'
       - match:
           selector: '{job="backend"}'
           stages:

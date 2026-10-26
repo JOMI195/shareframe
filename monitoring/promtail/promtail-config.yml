@@ -32,6 +32,10 @@ scrape_configs:
         target_label: job
         replacement: backend
     pipeline_stages:
+      # Link tokens in request paths must not reach Loki.
+      - replace:
+          expression: &link_token '(?:/auth/users/(?:activate|password-reset)/[^/\s"]+/|/auth/users/email-change/|/benachrichtigungen/abmelden/|[?&]token=)([^/?&\s"]+)'
+          replace: 'REDACTED'
       - match:
           selector: '{job="backend"}'
           stages:
@@ -81,6 +85,9 @@ scrape_configs:
           logtype: access
           __path__: /logs/nginx-json-access.log
     pipeline_stages:
+      - replace:
+          expression: *link_token
+          replace: 'REDACTED'
       - json:
           expressions:
             status: status

@@ -180,6 +180,7 @@ class TestRedaction:
         text = logged(caplog, request)
 
         assert "query-secret1" not in text
+        assert "token=REDACTED" in text
         assert "page=2" in text
 
 
