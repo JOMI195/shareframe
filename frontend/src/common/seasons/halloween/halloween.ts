@@ -1,8 +1,15 @@
 import type { Season } from '../seasons';
-import PumpkinIcon from './pumpkinIcon';
-import GhostIcon from './ghostIcon';
-import HalloweenDecoration from './halloweenDecoration';
-import BatsFlyby from './batsFlyby';
+import PumpkinIcon from './icons/pumpkinIcon';
+import GhostIcon from './icons/ghostIcon';
+import BatIcon from './icons/batIcon';
+import JackOLanternIcon from './icons/jackOLanternIcon';
+import Stripe from './overlays/stripe';
+import SpiderWeb from './overlays/spiderWeb';
+import PeekingGhost from './overlays/peekingGhost';
+import BatsFlyby from './overlays/batsFlyby';
+import WitchFlyby from './overlays/witchFlyby';
+import GhostFlyby from './overlays/ghostFlyby';
+import LeavesFlyby from './overlays/leavesFlyby';
 
 const halloween: Season = {
     id: 'halloween',
@@ -13,12 +20,15 @@ const halloween: Season = {
         light: { accent: '#E8711A', secondary: '#E8711A', background: '#F4EFEA' },
         dark: { accent: '#FF9F43', secondary: '#FF9F43', background: '#25212B' },
     },
-    stripe: 'linear-gradient(90deg, #8b5cf6, #FF9F43)',
-    greeting: 'Schaurig schöne Halloween-Zeit!',
-    LogoIcon: PumpkinIcon,
-    EmptyStateIcon: GhostIcon,
-    Decoration: HalloweenDecoration,
-    Flyby: BatsFlyby,
+    overlays: {
+        logo: [JackOLanternIcon],
+        loading: [PumpkinIcon, GhostIcon],
+        emptyState: [GhostIcon, PumpkinIcon, BatIcon],
+        greeting: ['Schaurig schöne Halloween-Zeit!'],
+        appBar: [Stripe],
+        screen: [SpiderWeb, PeekingGhost],
+        flyby: [BatsFlyby, WitchFlyby, GhostFlyby, LeavesFlyby],
+    },
 };
 
 export default halloween;

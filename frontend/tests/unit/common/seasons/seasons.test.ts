@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeSeason, isInWindow, SEASONS, type Season } from '@/common/seasons/seasons';
+import { activeSeason, isInWindow, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
 
 const on = (month: number, day: number) => new Date(2026, month - 1, day, 12);
 
@@ -41,5 +41,25 @@ describe('activeSeason', () => {
     const second = { ...SEASONS[0], id: 'second' } as Season;
 
     expect(activeSeason(on(10, 22), [first, second])?.id).toBe('first');
+  });
+});
+
+describe('pickOne', () => {
+  it('is empty for no items', () => {
+    expect(pickOne([])).toBeNull();
+  });
+
+  it('takes the item the random number lands on', () => {
+    expect(pickOne(['a', 'b', 'c'], () => 0.5)).toBe('b');
+  });
+});
+
+describe('pickNext', () => {
+  it('repeats a single item', () => {
+    expect(pickNext(['a'], 'a')).toBe('a');
+  });
+
+  it.each([0, 0.5, 0.99])('never repeats the last one (random %s)', (value) => {
+    expect(pickNext(['a', 'b', 'c'], 'b', () => value)).not.toBe('b');
   });
 });

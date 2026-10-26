@@ -6,6 +6,7 @@ import dark from '@/common/themes/darkTheme';
 import { alpha, createTheme, GlobalStyles, ThemeProvider } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { designSelected, getDesign, getSeasonalThemes } from '@/store/ui/settings/settings.slice';
+import { getIsSignedIn } from '@/store/entities/authentication/authentication.slice';
 import { activeSeason } from '@/common/seasons/seasons';
 import { ColorMode, ColorPreference, ColorThemeContext, ColorThemeContextType } from './colorThemeContextValue';
 
@@ -30,12 +31,13 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
     const colorPreference = useAppSelector(getDesign);
     const systemPrefersDark = useSyncExternalStore(subscribeToSystemScheme, getSystemPrefersDark);
     const seasonalThemes = useAppSelector(getSeasonalThemes);
+    const signedIn = useAppSelector(getIsSignedIn);
 
     const colorMode: ColorMode = colorPreference === 'system'
         ? (systemPrefersDark ? 'dark' : 'light')
         : colorPreference;
 
-    const season = seasonalThemes ? activeSeason() : null;
+    const season = seasonalThemes && signedIn ? activeSeason() : null;
 
     const theme = useMemo(() => {
         const base = colorMode === 'dark' ? dark : light;

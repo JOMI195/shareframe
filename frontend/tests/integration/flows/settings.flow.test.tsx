@@ -94,8 +94,8 @@ describe('appearance', () => {
 
 describe('seasonal themes', () => {
   const at = (date: string) => vi.useFakeTimers({ toFake: ['Date'] }).setSystemTime(new Date(date));
-  const decoration = () => screen.queryByTestId('SeasonalDecoration');
-  const logoIcon = () => screen.queryByTestId('PumpkinIcon');
+  const decoration = () => screen.queryByTestId('SeasonalScreen');
+  const logoIcon = () => screen.queryByTestId('JackOLanternIcon');
 
   afterEach(() => vi.useRealTimers());
 

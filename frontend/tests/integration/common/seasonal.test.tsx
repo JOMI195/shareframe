@@ -6,20 +6,44 @@ import DataNotFound from '@/common/components/dataNotFound';
 import SeasonalSpinner from '@/common/components/seasonal/seasonalSpinner';
 import SeasonalFlyby from '@/common/components/seasonal/seasonalFlyby';
 import SeasonalLogoBadge from '@/common/components/seasonal/seasonalLogoBadge';
+import SeasonalScreen from '@/common/components/seasonal/seasonalScreen';
+import SeasonalAppBar from '@/common/components/seasonal/seasonalAppBar';
+import halloween from '@/common/seasons/halloween/halloween';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
+import { buildState, signedInState } from '@tests/helpers/preloadedState';
 
-const seasonal = (on: boolean) => ({ preloadedState: { ui: { settings: { design: { seasonalThemes: on } } } } });
+const design = (on: boolean) => ({ ui: { settings: { design: { seasonalThemes: on } } } });
+const seasonal = (on: boolean) => ({ preloadedState: signedInState(design(on)) });
+const signedOut = () => ({ preloadedState: buildState(design(true)) });
 
 const SecondaryProbe = () => <span>{useTheme().palette.secondary.main}</span>;
 
 const flyby = () => screen.queryByTestId('SeasonalFlyby');
 
+// jsdom has no AnimationEvent, so React listens for the webkit name there.
+const endAnimations = (root: Element) =>
+  act(() => {
+    root.querySelectorAll('*').forEach((el) => fireEvent(el, new Event('webkitAnimationEnd', { bubbles: true })));
+  });
+
+const preferReducedMotion = () => {
+  const matchMedia = window.matchMedia;
+  vi.spyOn(window, 'matchMedia').mockImplementation((query) =>
+    query.includes('prefers-reduced-motion')
+      ? ({ ...matchMedia(query), matches: true, media: query } as MediaQueryList)
+      : matchMedia(query),
+  );
+};
+
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] }).setSystemTime(new Date('2026-10-22T12:00:00'));
-  sessionStorage.clear();
+  vi.spyOn(Math, 'random').mockReturnValue(0);
 });
 
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 describe('during halloween', () => {
   it('greets with the season on the dashboard', () => {
@@ -34,6 +58,19 @@ describe('during halloween', () => {
     expect(screen.getByTestId('GhostIcon')).toBeInTheDocument();
   });
 
+  it('picks one of the season icons at random', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.99);
+    renderWithProviders(<DataNotFound notFoundMessage="Nichts da" />, seasonal(true));
+
+    expect(screen.getByTestId('BatIcon')).toBeInTheDocument();
+  });
+
+  it('crowns the logo with a jack-o-lantern', () => {
+    renderWithProviders(<SeasonalLogoBadge>Logo</SeasonalLogoBadge>, seasonal(true));
+
+    expect(screen.getByRole('button', { name: 'Halloween' })).toContainElement(screen.getByTestId('JackOLanternIcon'));
+  });
+
   it('turns the spinner into a pumpkin', () => {
     renderWithProviders(<SeasonalSpinner />, seasonal(true));
 
@@ -46,7 +83,20 @@ describe('during halloween', () => {
     expect(screen.getByText('#E8711A')).toBeInTheDocument();
   });
 
-  it('lets the bats fly once per session', () => {
+  it('draws every app bar and screen overlay', () => {
+    renderWithProviders(
+      <>
+        <SeasonalAppBar />
+        <SeasonalScreen />
+      </>,
+      seasonal(true),
+    );
+
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(halloween.overlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(halloween.overlays.screen.length);
+  });
+
+  it('lets a flyby pass once per session', () => {
     const first = renderWithProviders(<SeasonalFlyby />, seasonal(true));
     expect(flyby()).toBeInTheDocument();
     first.unmount();
@@ -55,7 +105,7 @@ describe('during halloween', () => {
     expect(flyby()).not.toBeInTheDocument();
   });
 
-  it('sends the bats again from the pumpkin', async () => {
+  it('sends another flyby from the pumpkin', async () => {
     sessionStorage.setItem('seasonalFlybyShown', '1');
     const { user } = renderWithProviders(
       <>
@@ -71,41 +121,38 @@ describe('during halloween', () => {
     expect(flyby()).toBeInTheDocument();
   });
 
-  it('clears the bats once they are gone', () => {
+  it('clears the flyby once it is gone', () => {
     renderWithProviders(<SeasonalFlyby />, seasonal(true));
-    const bats = Array.from(flyby()!.firstElementChild!.children);
 
-    // jsdom has no AnimationEvent, so React listens for the webkit name there.
-    act(() => {
-      bats.forEach((bat) => fireEvent(bat, new Event('webkitAnimationEnd', { bubbles: true })));
-    });
+    endAnimations(flyby()!);
 
     expect(flyby()).not.toBeInTheDocument();
+  });
+});
+
+describe.each([false, true])('every halloween flyby (reduced motion: %s)', (reducedMotion) => {
+  it.each(halloween.overlays.flyby.map((Flyby) => [Flyby.name, Flyby]))('%s finishes once', (_, Flyby) => {
+    const onDone = vi.fn();
+    const { container } = renderWithProviders(<Flyby onDone={onDone} reducedMotion={reducedMotion} />);
+
+    endAnimations(container);
+
+    expect(onDone).toHaveBeenCalledOnce();
   });
 });
 
 describe('with reduced motion', () => {
-  beforeEach(() => {
-    const matchMedia = window.matchMedia;
-    vi.spyOn(window, 'matchMedia').mockImplementation((query) =>
-      query.includes('prefers-reduced-motion')
-        ? ({ ...matchMedia(query), matches: true, media: query } as MediaQueryList)
-        : matchMedia(query),
-    );
-  });
+  beforeEach(preferReducedMotion);
 
-  it('still shows the bats and clears them after fading', () => {
+  it('still shows the flyby and clears it after fading', () => {
     renderWithProviders(<SeasonalFlyby />, seasonal(true));
-    const bats = Array.from(flyby()!.firstElementChild!.children);
 
-    act(() => {
-      bats.forEach((bat) => fireEvent(bat, new Event('webkitAnimationEnd', { bubbles: true })));
-    });
+    endAnimations(flyby()!);
 
     expect(flyby()).not.toBeInTheDocument();
   });
 
-  it('shows them again from the pumpkin', async () => {
+  it('shows it again from the pumpkin', async () => {
     sessionStorage.setItem('seasonalFlybyShown', '1');
     const { user } = renderWithProviders(
       <>
@@ -121,21 +168,43 @@ describe('with reduced motion', () => {
   });
 });
 
+const everything = (
+  <>
+    <Header username="alice" />
+    <DataNotFound notFoundMessage="Nichts da" />
+    <SeasonalSpinner />
+    <SeasonalLogoBadge>Logo</SeasonalLogoBadge>
+    <SeasonalAppBar />
+    <SeasonalScreen />
+    <SeasonalFlyby />
+    <SecondaryProbe />
+  </>
+);
+
+const expectPlain = () => {
+  expect(screen.getByText('Willkommen zu ShareFrame')).toBeVisible();
+  expect(screen.queryByTestId('GhostIcon')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('PumpkinIcon')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('JackOLanternIcon')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Halloween' })).not.toBeInTheDocument();
+  expect(screen.queryByTestId('SeasonalAppBar')).not.toBeInTheDocument();
+  expect(screen.queryByTestId('SeasonalScreen')).not.toBeInTheDocument();
+  expect(screen.queryByText('#E8711A')).not.toBeInTheDocument();
+  expect(flyby()).not.toBeInTheDocument();
+};
+
 describe('switched off', () => {
   it('keeps everything plain', () => {
-    renderWithProviders(
-      <>
-        <Header username="alice" />
-        <DataNotFound notFoundMessage="Nichts da" />
-        <SeasonalSpinner />
-        <SeasonalFlyby />
-      </>,
-      seasonal(false),
-    );
+    renderWithProviders(everything, seasonal(false));
 
-    expect(screen.getByText('Willkommen zu ShareFrame')).toBeVisible();
-    expect(screen.queryByTestId('GhostIcon')).not.toBeInTheDocument();
-    expect(screen.queryByTestId('PumpkinIcon')).not.toBeInTheDocument();
-    expect(flyby()).not.toBeInTheDocument();
+    expectPlain();
+  });
+});
+
+describe('signed out', () => {
+  it('keeps everything plain despite the setting', () => {
+    renderWithProviders(everything, signedOut());
+
+    expectPlain();
   });
 });

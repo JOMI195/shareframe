@@ -11,9 +11,10 @@ import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/na
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Logo from '../../logo';
 import SeasonalLogoBadge from '../../seasonal/seasonalLogoBadge';
+import SeasonalAppBar from '../../seasonal/seasonalAppBar';
 
 function TopAppBar() {
-    const { colorMode, toggleColorMode, iconComponent: IconComponent, season } = useColorThemeContext();
+    const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
     const sidebarOpen = useAppSelector(getSidebar).open;
 
     const dispatch = useAppDispatch();
@@ -33,19 +34,9 @@ function TopAppBar() {
                 height: theme => theme.layout.appbar.height,
                 background: theme => theme.palette.background.default,
                 zIndex: theme.zIndex.drawer + 1,
-                ...(season && {
-                    '&::after': {
-                        content: '""',
-                        position: 'absolute',
-                        left: 0,
-                        right: 0,
-                        bottom: 0,
-                        height: 3,
-                        background: season.stripe,
-                    },
-                }),
             }}
         >
+            <SeasonalAppBar />
             <Toolbar sx={{ height: "100%" }}>
                 <Tooltip title={`Seitenmenü ${sidebarOpen ? "schließen" : "öffnen"}`} placement="bottom">
                     <IconButton

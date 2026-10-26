@@ -4,7 +4,7 @@ import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from "react-router";
 import { getSettingsUrl, getUserSettingsUrl, getAppSettingsUrl } from "@/assets/endpoints/app/settingEndpoints";
-import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
+import { useSeasonPick } from "@/common/components/seasonal/useSeasonSlot";
 
 interface HeaderProps {
     username: string;
@@ -13,7 +13,7 @@ interface HeaderProps {
 const Header: FC<HeaderProps> = ({ username }) => {
     const theme = useTheme();
     const navigate = useNavigate();
-    const { season } = useColorThemeContext();
+    const greeting = useSeasonPick('greeting');
 
     return (
         <Card sx={{ mb: 2, bgcolor: theme.palette.primary.main, color: "white" }}>
@@ -26,7 +26,7 @@ const Header: FC<HeaderProps> = ({ username }) => {
                             Hi, {username}
                         </Typography>
                         <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            {season ? season.greeting : "Willkommen zu ShareFrame"}
+                            {greeting ?? "Willkommen zu ShareFrame"}
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "row" }}>

@@ -225,3 +225,4 @@ export default userSlice.reducer;
 export const getApi = (state: RootState) => state.auth.user.api;
 export const getUser = (state: RootState) => state.auth.user;
 export const getMyUserDetails = (state: RootState) => state.auth.user.me;
+export const getIsSignedIn = (state: RootState) => state.auth.user.me.id !== 0;
