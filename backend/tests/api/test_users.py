@@ -1,6 +1,8 @@
 import pytest
 from django.conf import settings
+from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
+from djoser.utils import encode_uid
 from freezegun import freeze_time
 
 from tests.support import seed
@@ -17,6 +19,7 @@ USERS_URL = "/api/auth/users/"
 SET_PASSWORD_URL = "/api/auth/users/set_password/"
 REQUEST_EMAIL_CHANGE_URL = "/api/auth/users/request_email_change/"
 CONFIRM_EMAIL_CHANGE_URL = "/api/auth/users/confirm_email_change/"
+RESET_PASSWORD_CONFIRM_URL = "/api/auth/users/reset_password_confirm/"
 
 
 def test_me_requires_authentication(client):
@@ -154,6 +157,14 @@ class TestDeleteAccount:
 
         assert len(mail.outbox) > before
 
+    def test_the_deletion_is_audited(self, client_as, caplog):
+        user = UserFactory(is_active=True)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client_as(user).delete(ME_URL, {"password": "factory-pass1"}, format="json")
+
+        assert f"Account deleted: {user.email}" in caplog.text
+
 
 class TestSetPassword:
     def test_changes_the_password(self, client_as):
@@ -171,6 +182,38 @@ class TestSetPassword:
 
         assert response.status_code == 204
         assert User.objects.get(pk=user.pk).check_password("brand-new-pass1")
+
+    def test_the_change_is_audited(self, client_as, caplog):
+        user = UserFactory(is_active=True)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client_as(user).post(
+                SET_PASSWORD_URL,
+                {
+                    "current_password": "factory-pass1",
+                    "new_password": "brand-new-pass1",
+                    "re_new_password": "brand-new-pass1",
+                },
+                format="json",
+            )
+
+        assert f"Password changed: {user.email}" in caplog.text
+
+    def test_a_refused_change_is_not_audited(self, client_as, caplog):
+        user = UserFactory(is_active=True)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client_as(user).post(
+                SET_PASSWORD_URL,
+                {
+                    "current_password": "wrong-pass1",
+                    "new_password": "brand-new-pass1",
+                    "re_new_password": "brand-new-pass1",
+                },
+                format="json",
+            )
+
+        assert "Password changed" not in caplog.text
 
     def test_the_current_password_must_match(self, client_as):
         user = UserFactory(is_active=True)
@@ -201,6 +244,34 @@ class TestSetPassword:
         )
 
         assert response.status_code == 400
+
+
+class TestResetPasswordConfirm:
+    def confirm(self, client, user):
+        return client.post(
+            RESET_PASSWORD_CONFIRM_URL,
+            {
+                "uid": encode_uid(user.pk),
+                "token": default_token_generator.make_token(user),
+                "new_password": "brand-new-pass1",
+                "re_new_password": "brand-new-pass1",
+            },
+            format="json",
+        )
+
+    def test_sets_the_new_password(self, client):
+        user = UserFactory(is_active=True)
+
+        assert self.confirm(client, user).status_code == 204
+        assert User.objects.get(pk=user.pk).check_password("brand-new-pass1")
+
+    def test_the_reset_is_audited(self, client, caplog):
+        user = UserFactory(is_active=True)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            self.confirm(client, user)
+
+        assert f"Password reset: {user.email}" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -342,3 +413,30 @@ class TestEmailChange:
         )
 
         assert response.status_code == 200
+
+    def test_requesting_is_audited(self, client_as, user, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            self.request_change(client_as(user), "after@example.com")
+
+        assert (
+            "Email change requested: before@example.com to after@example.com"
+            in caplog.text
+        )
+
+    def test_confirming_is_audited(self, client, user, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(
+                CONFIRM_EMAIL_CHANGE_URL,
+                {"token": self.token_for(user, "after@example.com")},
+                format="json",
+            )
+
+        assert "Email changed: before@example.com to after@example.com" in caplog.text
+
+    def test_a_rejected_link_is_audited(self, client, user, caplog):
+        token = self.token_for(user, "after@example.com")
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(CONFIRM_EMAIL_CHANGE_URL, {"token": token + "x"}, format="json")
+
+        assert "Email change rejected (bad link)" in caplog.text

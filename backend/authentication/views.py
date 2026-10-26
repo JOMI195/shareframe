@@ -1,6 +1,9 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.core import signing
 from django.db import IntegrityError, transaction
+from djoser.utils import decode_uid
 from djoser.views import UserViewSet as BaseUserViewSet
 from rest_framework import serializers, status
 from rest_framework.decorators import action
@@ -22,6 +25,9 @@ from user_core.serializers import (
     EmailChangeConfirmSerializer,
     EmailChangeRequestSerializer,
 )
+from utils.client_ip import client_ip
+
+logger = logging.getLogger("admin.audit")
 
 # Actions that mail an arbitrary address or check an emailed token.
 AUTH_EMAIL_ACTIONS = (
@@ -58,6 +64,7 @@ class CustomUserViewSet(BaseUserViewSet):
             user = get_user_model().objects.get(pk=request.user.pk)
 
             request.user.delete()
+            logger.info("Account deleted: %s from %s", user.email, client_ip(request))
 
             DjoserUserDeletedEmail(self.request, {"user": user}).send([user.email])
 
@@ -79,6 +86,12 @@ class CustomUserViewSet(BaseUserViewSet):
                 "token": email_change.make_token(request.user, new_email),
             },
         ).send([new_email])
+        logger.info(
+            "Email change requested: %s to %s from %s",
+            request.user.email,
+            new_email,
+            client_ip(request),
+        )
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -97,16 +110,16 @@ class CustomUserViewSet(BaseUserViewSet):
                 serializer.validated_data["token"]
             )
         except signing.BadSignature:
-            return self._email_change_rejected(INVALID_EMAIL_CHANGE_LINK)
+            return self._email_change_rejected(INVALID_EMAIL_CHANGE_LINK, "bad link")
 
         User = get_user_model()
         user = User.objects.filter(pk=user_id).first()
         if user is None or not email_change.matches(user, fingerprint):
-            return self._email_change_rejected(INVALID_EMAIL_CHANGE_LINK)
+            return self._email_change_rejected(INVALID_EMAIL_CHANGE_LINK, "stale link")
 
         taken = "Diese E-Mail ist bereits vergeben."
         if User.objects.filter(email__iexact=new_email).exists():
-            return self._email_change_rejected(taken)
+            return self._email_change_rejected(taken, "address taken")
 
         old_email = user.email
         user.email = new_email
@@ -114,14 +127,35 @@ class CustomUserViewSet(BaseUserViewSet):
             with transaction.atomic():
                 user.save(update_fields=["email"])
         except IntegrityError:
-            return self._email_change_rejected(taken)
+            return self._email_change_rejected(taken, "address taken")
 
+        logger.info(
+            "Email changed: %s to %s from %s", old_email, new_email, client_ip(request)
+        )
         DjoserEmailChangedEmail(request, {"user": user}).send([old_email])
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    def _email_change_rejected(self, message):
+    def _email_change_rejected(self, message, reason):
+        logger.warning(
+            "Email change rejected (%s) from %s", reason, client_ip(self.request)
+        )
         return Response({"detail": message}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(["post"], detail=False)
+    def set_password(self, request, *args, **kwargs):
+        response = super().set_password(request, *args, **kwargs)
+        logger.info(
+            "Password changed: %s from %s", request.user.email, client_ip(request)
+        )
+        return response
+
+    @action(["post"], detail=False)
+    def reset_password_confirm(self, request, *args, **kwargs):
+        response = super().reset_password_confirm(request, *args, **kwargs)
+        user = get_user_model().objects.get(pk=decode_uid(request.data["uid"]))
+        logger.info("Password reset: %s from %s", user.email, client_ip(request))
+        return response
 
     # Direct changes skip the confirmation mail to the new address.
     @action(["post"], detail=False, url_path="set_email")

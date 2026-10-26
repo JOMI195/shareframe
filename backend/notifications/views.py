@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.core import signing
 from rest_framework import status
@@ -20,6 +22,8 @@ from .serializers import (
     UnsubscribeSerializer,
 )
 from .unsubscribe import read_token
+
+logger = logging.getLogger(__name__)
 
 
 class PushKeyView(APIView):
@@ -71,6 +75,7 @@ def _opt_out(token):
     NotificationPreference.objects.update_or_create(
         account=account, kind=kind, channel=channel, defaults={"enabled": False}
     )
+    logger.info("Opt-out of %s via %s: %s", kind, channel, account.user.email)
     return True
 
 

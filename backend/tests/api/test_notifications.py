@@ -196,6 +196,14 @@ class TestUnsubscribe:
         assert response.status_code == 204
         assert not NotificationPreference.is_enabled(user.account, KIND, EMAIL)
 
+    def test_the_opt_out_is_logged(self, client, user, caplog):
+        token = make_token(user.account, KIND, EMAIL)
+
+        with caplog.at_level("INFO", logger="notifications.views"):
+            client.post(UNSUBSCRIBE_URL, {"token": token}, format="json")
+
+        assert f"Opt-out of {KIND} via {EMAIL}: {user.email}" in caplog.text
+
     def test_a_tampered_token_is_rejected(self, client, user):
         token = make_token(user.account, KIND, EMAIL)
 

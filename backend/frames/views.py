@@ -40,6 +40,8 @@ from .models import Frame, FrameCommand, FrameDiagnostics, FrameToken
 from .serializers import FrameRetrieveSerializer
 
 telemetry_logger = logging.getLogger("frames.telemetry")
+audit_logger = logging.getLogger("admin.audit")
+logger = logging.getLogger(__name__)
 
 DIAGNOSTICS_MAX_UPLOAD_BYTES = 256 * 1024
 DIAGNOSTICS_MAX_TEXT_BYTES = 4 * 1024 * 1024
@@ -163,6 +165,9 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         frame.user = request.user
         frame.save()
+        audit_logger.info(
+            "Frame %s registered to %s", public_serial_number, request.user.email
+        )
 
         serializer = FrameRetrieveSerializer(frame)
 
@@ -197,6 +202,9 @@ class FramesViewSet(viewsets.ModelViewSet):
 
         frame.user = None
         frame.save()
+        audit_logger.info(
+            "Frame %s unregistered from %s", public_serial_number, request.user.email
+        )
 
         serializer = FrameRetrieveSerializer(frame)
 
@@ -318,6 +326,12 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         except Exception:
+            logger.exception(
+                "Sending image %s from %s to %s failed",
+                image.id,
+                user.email,
+                reciever.email,
+            )
             return Response(
                 {"detail": "Error sending the image."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -503,6 +517,9 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         if not frame.verify_otp(otp_code):
+            audit_logger.warning(
+                "OTP rejected for frame %s", frame.public_serial_number
+            )
             return Response(
                 {"error": "OTP invalid or expired."},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -533,6 +550,9 @@ class FramesViewSet(viewsets.ModelViewSet):
         is_valid = frame.verify_otp(otp_code)
 
         if not is_valid:
+            audit_logger.warning(
+                "OTP rejected for frame %s", frame.public_serial_number
+            )
             return Response(
                 {"error": "OTP invalid or expired."},
                 status=status.HTTP_401_UNAUTHORIZED,
