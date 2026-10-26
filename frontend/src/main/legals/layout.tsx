@@ -1,20 +1,18 @@
-import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
 import { Outlet } from "react-router";
-import Logo from "@/common/components/logo";
+import PublicHeader from "@/common/components/layout/topLayout/publicHeader";
+import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
 
 export default function PublicLayout() {
   return (
-    <Container component="main" maxWidth="xl" disableGutters sx={{ my: 5, }}>
-      <Box sx={{ display: "flex", justifyContent: "center", mb: 5 }}>
-        <Logo
-          darkLogoSrc="/logo-dark-full-shareframe.svg"
-          lightLogoSrc="/logo-light-full-shareframe.svg"
-          maxWidth={220}
-          marginRight={0}
-        />
-      </Box>
-      <Outlet />
-    </Container>
+    <>
+      <PublicHeader />
+      <Container component="main" maxWidth="md" disableGutters sx={{ pt: { xs: 2, md: 5 } }}>
+        <Outlet />
+      </Container>
+      <Container component="footer" maxWidth="lg" sx={{ py: 5 }}>
+        <PublicFooter sx={{ display: "block" }} />
+      </Container>
+    </>
   );
 }

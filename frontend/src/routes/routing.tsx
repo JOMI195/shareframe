@@ -19,6 +19,8 @@ import Frames from '@/main/frames/frames';
 import SentImages from '@/main/sentImages/sentImages';
 import Images from '@/main/images/images';
 import PublicLayout from '@/main/legals/layout';
+import SessionLayout from '@/common/components/layout/sessionLayout';
+import PublicHeader from '@/common/components/layout/topLayout/publicHeader';
 import Home from '@/main/home/home';
 import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
@@ -46,7 +48,12 @@ export const routes = [
           },
           {
             path: getAuthenticationUrl(),
-            element: <FeatureSelectorWrapper feature="authentication" />,
+            element: (
+              <>
+                <PublicHeader />
+                <FeatureSelectorWrapper feature="authentication" />
+              </>
+            ),
             children: authenticationRoutes,
           },
           {
@@ -55,10 +62,6 @@ export const routes = [
               {
                 element: <FeatureSelectorWrapper feature="legals" />,
                 children: [
-                  {
-                    path: getContactUrl(),
-                    element: <ContactForm />,
-                  },
                   {
                     path: getPrivacyPolicyUrl(),
                     element: <PrivacyPolicy />,
@@ -74,6 +77,20 @@ export const routes = [
                 ],
               },
             ]
+          },
+          {
+            element: <SessionLayout />,
+            children: [
+              {
+                element: <FeatureSelectorWrapper feature="legals" />,
+                children: [
+                  {
+                    path: getContactUrl(),
+                    element: <ContactForm />,
+                  },
+                ],
+              },
+            ],
           },
           {
             element: <MainLayout />,

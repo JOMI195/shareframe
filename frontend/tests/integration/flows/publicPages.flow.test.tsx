@@ -117,4 +117,32 @@ describe('landing page', () => {
     expect(screen.getByRole('link', { name: 'Kontakt' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Impressum' })).toBeInTheDocument();
   });
+
+  it.each([['/impressum/'], ['/datenschutzerklaerung/'], ['/kontakt/']])(
+    '%s has the public header and footer',
+    async (path) => {
+      renderRoute(path);
+
+      expect(await screen.findByRole('link', { name: 'Anmelden' })).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Datenschutzerklärung' })).toBeInTheDocument();
+      expect(screen.getByText(/Copyright ©/)).toBeInTheDocument();
+    },
+  );
+
+  it('leads from the header logo back to the start page', async () => {
+    const user = userEvent.setup();
+    const { router } = renderRoute('/impressum/');
+
+    await user.click(await screen.findByRole('img', { name: 'ShareFrame' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+  });
+
+  // Already on the way in, so the header drops its own sign-in button.
+  it('keeps the header but hides its sign-in button on the sign-in page', async () => {
+    renderRoute('/auth/sign-in/');
+
+    expect(await screen.findByRole('img', { name: 'ShareFrame' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
+  });
 });

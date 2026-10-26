@@ -4,7 +4,7 @@ import SeasonalDecoration from "@/common/components/seasonal/seasonalDecoration"
 import SeasonalFlyby from "@/common/components/seasonal/seasonalFlyby";
 import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
-import LandingHeader from "./landingHeader";
+import PublicHeader from "@/common/components/layout/topLayout/publicHeader";
 import HeroSection from "./heroSection";
 import FeaturesSection from "./featuresSection";
 import ScreenshotShowcase from "./screenshotShowcase";
@@ -16,7 +16,7 @@ const Landing = () => {
 
   return (
     <Box sx={{ position: "relative", overflowX: "clip" }}>
-      <LandingHeader />
+      <PublicHeader />
       <main>
         <HeroSection />
         <FeaturesSection />
