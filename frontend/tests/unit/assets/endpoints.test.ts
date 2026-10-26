@@ -27,7 +27,8 @@ describe('api endpoints', () => {
         auth.getSetPasswordUrl(),
         auth.getResetPasswordUrl(),
         auth.getResetPasswordConfirmUrl(),
-        auth.getSetEmailUrl(),
+        auth.getRequestEmailChangeUrl(),
+        auth.getConfirmEmailChangeUrl(),
         auth.getSetUsernameUrl(),
       ],
       changelogs: [
@@ -79,7 +80,8 @@ describe('api endpoints', () => {
           "auth/users/set_password/",
           "auth/users/reset_password/",
           "auth/users/reset_password_confirm/",
-          "auth/users/set_email/",
+          "auth/users/request_email_change/",
+          "auth/users/confirm_email_change/",
           "auth/users/set_username/",
         ],
         "changelogs": [

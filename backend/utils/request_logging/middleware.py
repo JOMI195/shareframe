@@ -63,7 +63,8 @@ SENSITIVE_BODY_KEYS = frozenset(
         "reciever_friendship_user_search_code",
     }
 )
-MASK = "*****"
+# Same placeholder as the promtail redaction, so one search finds both.
+MASK = "REDACTED"
 MULTIPART_NAME_REGEX = re.compile(r'\bname="([^"]*)"', re.I)
 SETTING_NAMES = {
     "log_level": "REQUEST_LOGGING_DATA_LOG_LEVEL",
@@ -134,7 +135,7 @@ def _redact_body(body, content_type):
             return "(unparseable body)"
     if content_type.startswith("application/x-www-form-urlencoded"):
         pairs = parse_qsl(body.decode(errors="replace"), keep_blank_values=True)
-        return urlencode(_redact_pairs(pairs), safe="*")
+        return urlencode(_redact_pairs(pairs))
     return body
 
 
@@ -150,7 +151,7 @@ def _safe_path(request):
     pairs = parse_qsl(request.META.get("QUERY_STRING", ""), keep_blank_values=True)
     if not any(_is_sensitive_key(k) for k, _ in pairs):
         return request.get_full_path()
-    return f"{request.path}?{urlencode(_redact_pairs(pairs), safe='*')}"
+    return f"{request.path}?{urlencode(_redact_pairs(pairs))}"
 
 
 class Logger:

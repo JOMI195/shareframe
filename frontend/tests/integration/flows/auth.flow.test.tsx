@@ -118,3 +118,43 @@ describe('signing out', () => {
     expect(localStorage.getItem('loggedIn')).toBe('true');
   });
 });
+
+describe('confirming an email change', () => {
+  const recordConfirm = (response = () => new HttpResponse(null, { status: 204 })) => {
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getConfirmEmailChangeUrl()), async ({ request }) => {
+        bodies.push((await request.json()) as Record<string, unknown>);
+        return response();
+      }),
+    );
+    return bodies;
+  };
+
+  it('sends the token from the link and asks to sign in with the new address', async () => {
+    const bodies = recordConfirm();
+    const { router, store } = renderRoute('/auth/users/email-change/abc:def:ghi', {
+      preloadedState: buildState(),
+    });
+
+    await waitFor(() => expect(bodies).toEqual([{ token: 'abc:def:ghi' }]));
+    expect(router.state.location.pathname).toBe('/auth/sign-in/');
+    await waitFor(() =>
+      expect(store.getState().ui.auth.snackbar.alert.message).toMatch(/mit der neuen Adresse an/),
+    );
+  });
+
+  it('explains an expired link', async () => {
+    recordConfirm(() =>
+      HttpResponse.json({ detail: 'Der Link ist ungültig oder abgelaufen.' }, { status: 400 }),
+    );
+    const { store } = renderRoute('/auth/users/email-change/abc', { preloadedState: buildState() });
+
+    await waitFor(() =>
+      expect(store.getState().ui.auth.snackbar.alert).toMatchObject({
+        message: 'Der Link ist ungültig oder abgelaufen.',
+        severity: 'error',
+      }),
+    );
+  });
+});

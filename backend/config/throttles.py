@@ -53,6 +53,15 @@ class UnsubscribeSustainedRateThrottle(_IpScopedThrottle):
     scope = "unsubscribe_sustained"
 
 
+# Mail providers send these, so many recipients share a few IPs.
+class OneClickUnsubscribeBurstRateThrottle(_IpScopedThrottle):
+    scope = "unsubscribe_one_click_burst"
+
+
+class OneClickUnsubscribeSustainedRateThrottle(_IpScopedThrottle):
+    scope = "unsubscribe_one_click_sustained"
+
+
 class FailedLoginThrottle(_IpScopedThrottle):
     """Only failed logins count; the view records them via record_failure."""
 

@@ -27,6 +27,10 @@ export const getResetPasswordUrl = () => `auth/users/reset_password/`
 export const getResetPasswordConfirmUrl = () =>
   `auth/users/reset_password_confirm/`
 
-export const getSetEmailUrl = () => `auth/users/set_email/`
+export const getRequestEmailChangeUrl = () =>
+  `auth/users/request_email_change/`
+
+export const getConfirmEmailChangeUrl = () =>
+  `auth/users/confirm_email_change/`
 
 export const getSetUsernameUrl = () => `auth/users/set_username/`

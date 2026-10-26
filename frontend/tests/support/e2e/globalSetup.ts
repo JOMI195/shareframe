@@ -1,6 +1,4 @@
-import { startStack } from './stack';
-
-const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8100/api';
+import { API_URL, startStack } from './stack';
 
 const reachable = async (url: string) => {
   try {

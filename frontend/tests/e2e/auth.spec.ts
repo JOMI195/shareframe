@@ -1,22 +1,31 @@
 import { expect, signIn, test } from '../support/e2e/fixtures';
 import { alice } from '../support/e2e/credentials';
+import { expectMail } from '../support/e2e/mailhog';
 
 test.describe('authentication', () => {
   test('signs a seeded user in and lands on the dashboard', async ({ page }) => {
+    const since = new Date();
     await signIn(page);
 
     await expect(page).toHaveTitle('Start – ShareFrame');
     await expect(page.getByRole('link', { name: 'Fotos' }).first()).toBeVisible();
+
+    const mail = await expectMail(alice.email, { subject: 'ShareFrame - Login', since });
+    expect(mail.text).toContain(`Konto: ${alice.email}`);
   });
 
   test('rejects a wrong password', async ({ page }) => {
     await page.goto('/auth/sign-in/');
     await page.getByLabel('Email').fill(alice.email);
+    const since = new Date();
     await page.getByLabel('Passwort').fill('falsches-passwort');
     await page.getByRole('button', { name: 'anmelden' }).click();
 
     await expect(page.getByRole('alert').first()).toBeVisible();
     await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
+
+    const mail = await expectMail(alice.email, { subject: 'ShareFrame - Fehlgeschlagener Login-Versuch', since });
+    expect(mail.text).toContain(alice.email);
   });
 
   test('sends a signed-out visitor from a protected route to sign-in', async ({ page }) => {

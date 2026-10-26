@@ -180,3 +180,20 @@ def test_reseeding_keeps_a_replaced_avatar():
 
     account.refresh_from_db()
     assert account.avatar.name == replaced
+
+
+def test_users_keep_their_seeded_active_and_admin_flags():
+    for spec in seed.users().values():
+        user = User.objects.get(username=spec["username"])
+        assert user.is_active == spec.get("is_active", True)
+        assert user.is_admin == user.is_staff == spec.get("is_admin", False)
+
+
+def test_a_reseed_does_not_activate_an_inactive_account():
+    inactive = [s for s in seed.users().values() if not s.get("is_active", True)]
+
+    call_command("seed_dev_data", verbosity=0)
+
+    assert inactive
+    for spec in inactive:
+        assert not User.objects.get(username=spec["username"]).is_active

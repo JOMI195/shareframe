@@ -1,7 +1,9 @@
 import logging
 import os
+from urllib.parse import urlencode
 
 from django.conf import settings
+from django.urls import reverse
 
 from appEmail.tasks import send_django_mail_with_logo
 
@@ -14,6 +16,12 @@ logger = logging.getLogger(__name__)
 
 def preview_address(user):
     return settings.ADMIN_NOTIFICATION_EMAIL if user.is_admin else user.email
+
+
+def one_click_link(token):
+    base_url = os.environ.get("BACKEND_BASE_URL").rstrip("/")
+    path = reverse("notifications-unsubscribe-one-click")
+    return f"{base_url}{path}?{urlencode({'token': token})}"
 
 
 class EmailChannel(Channel):
@@ -39,7 +47,10 @@ class EmailChannel(Channel):
             context["unsubscribe_link"] = (
                 f"{base_url}{settings.FRONTEND_UNSUBSCRIBE_URL}{token}/"
             )
-            headers = {"List-Unsubscribe": f"<{context['unsubscribe_link']}>"}
+            headers = {
+                "List-Unsubscribe": f"<{one_click_link(token)}>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            }
 
         try:
             send_django_mail_with_logo(

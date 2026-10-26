@@ -3,7 +3,7 @@ import reducer, {
   authenticationFulfilled,
   authenticationPending,
   authenticationRejected,
-  emailUpdateFulfilled,
+  emailChangeRequestFulfilled,
   getUserDataFulfilled,
   getUserDataPending,
   signedOut,
@@ -68,13 +68,13 @@ describe('profile updates', () => {
     expect(reducer(initial(), userUpdateFulfilled(seedUser)).me).toEqual(seedUser);
   });
 
-  // These two take a scalar payload, not a user object.
-  it('writes a scalar email and username', () => {
-    const withEmail = reducer(signedIn(), emailUpdateFulfilled('neu@example.com'));
-    expect(withEmail.me.email).toBe('neu@example.com');
-    expect(withEmail.me.username).toBe(seedUser.username);
-
+  it('writes a scalar username', () => {
     expect(reducer(signedIn(), usernameUpdateFulfilled('neu')).me.username).toBe('neu');
+  });
+
+  // The address only changes once the link in the mail is opened.
+  it('keeps the email when a change is requested', () => {
+    expect(reducer(signedIn(), emailChangeRequestFulfilled()).me.email).toBe(seedUser.email);
   });
 });
 

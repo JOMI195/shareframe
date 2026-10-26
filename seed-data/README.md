@@ -24,7 +24,7 @@ compose files bind-mount it into the backend container.
 
 | File | Fields |
 |---|---|
-| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable`, optional `joined_days_ago`, optional `avatar_file` (under `assets/avatars/`) |
+| `users.json` | `username`, `email`, `password`, `friendship_code` (8 chars, unique), `friendship_user_searchable`, optional `joined_days_ago`, optional `avatar_file` (under `assets/avatars/`), optional `is_active` (default `true`; an inactive account stays inactive on re-seed), optional `is_admin` (admin site access) |
 | `frame-groups.json` | `name` (unique), `description` |
 | `frames.json` | `name`, `seed_b64`, `private_serial_number`, `owner_username` (or `null`), `groups[]`, `version`, `local_ip_address` |
 | `images.json` | `display_name`, `owner_username`, `file_name` (under `assets/images/`), `auto_delete_after_period` |

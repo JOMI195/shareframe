@@ -28,6 +28,8 @@ const compose = async (args: string[], timeout = 15 * 60_000) => {
   return `${stdout}${stderr}`;
 };
 
+export const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8100/api';
+
 export const stackIsExternal = () => process.env.E2E_NO_STACK === '1';
 
 export const startStack = async () => {
@@ -51,3 +53,7 @@ export const stopStack = async () => {
   console.log('[e2e] destroying the shared test stack');
   await compose(['down', '-v', '--remove-orphans'], 5 * 60_000);
 };
+
+// For work that only a schedule triggers; everything else goes through the UI.
+export const runInBackend = async (code: string) =>
+  compose(['exec', '-T', 'backend', 'python', 'manage.py', 'shell', '-c', code], 2 * 60_000);

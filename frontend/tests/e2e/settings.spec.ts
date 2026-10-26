@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { dave, erin, mallory } from '../support/e2e/credentials';
+import { dave, erin, frank, mallory } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
+import { expectMail, linkIn } from '../support/e2e/mailhog';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 
@@ -126,6 +127,7 @@ test.describe('password', () => {
 
     // The form empties itself once the backend accepted the change.
     await expect(page.getByLabel('Aktuelles Passwort')).toHaveValue('', { timeout: 30_000 });
+    await expectMail(dave.email, { subject: 'ShareFrame - Passwort geändert' });
 
     await signOut(page);
 
@@ -160,6 +162,80 @@ test.describe('password', () => {
   });
 });
 
+test.describe('email address', () => {
+  const NEW_EMAIL = 'seed.frank.neu@shareframe.local';
+  const signInFails = async (page: import('@playwright/test').Page, email: string) => {
+    await page.goto('/auth/sign-in/');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Passwort').fill(frank.password);
+    await page.getByRole('button', { name: 'anmelden' }).click();
+
+    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
+  };
+
+  test('changes the address only after the link from the mail is opened', async ({ page }) => {
+    // Two sign-ins, two mails and several reloads.
+    test.setTimeout(120_000);
+    await signIn(page, frank);
+    await openUserSettings(page, 'Profil');
+
+    // Hidden tab panels stay mounted, so the password tab has a field with the same label.
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
+    await panel.getByLabel('Neue E-Mail-Adresse').fill(NEW_EMAIL);
+    await panel.getByLabel('Aktuelles Passwort').fill(frank.password);
+    await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
+
+    await expect(panel.getByText(`Bestätigungslink an ${NEW_EMAIL}`)).toBeVisible({ timeout: 30_000 });
+    const confirmMail = await expectMail(NEW_EMAIL, { subject: 'ShareFrame - Neue E-Mail-Adresse bestätigen' });
+    const link = linkIn(confirmMail, '/auth/users/email-change/');
+
+    await test.step('nothing changes before the link is opened', async () => {
+      await page.reload();
+      await page.getByRole('tab', { name: 'Profil' }).click();
+      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(frank.email);
+    });
+
+    await test.step('the link switches the address and tells the old one', async () => {
+      await page.goto(link);
+      await expect(page.getByText('E-Mail-Adresse geändert', { exact: false })).toBeVisible();
+
+      await openUserSettings(page, 'Profil');
+      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(NEW_EMAIL);
+      const notice = await expectMail(frank.email, { subject: 'ShareFrame - E-Mail-Adresse geändert' });
+      expect(notice.text).toContain('mit einer neuen E-Mail-Adresse');
+    });
+
+    await test.step('the link works only once', async () => {
+      await page.goto(link);
+      await expect(page.getByText('Der Link ist ungültig oder abgelaufen.')).toBeVisible();
+    });
+
+    await signOut(page);
+
+    await test.step('only the new address signs in', async () => {
+      await signInFails(page, frank.email);
+      await signIn(page, { ...frank, email: NEW_EMAIL });
+      await expect(page).toHaveTitle('Start – ShareFrame');
+    });
+  });
+
+  test('refuses an address another account already uses', async ({ page }) => {
+    await signIn(page, erin);
+    await openUserSettings(page, 'Profil');
+
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
+    await panel.getByLabel('Neue E-Mail-Adresse').fill(dave.email);
+    await panel.getByLabel('Aktuelles Passwort').fill(erin.password);
+    await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
+
+    await expect(page.getByText('Diese E-Mail ist bereits vergeben.')).toBeVisible();
+    await expect(panel.getByLabel('Neue E-Mail-Adresse')).toHaveValue(dave.email);
+  });
+});
+
 test.describe('account deletion', () => {
   test('deletes the account and locks the credentials out', async ({ page }) => {
     await signIn(page, mallory);
@@ -177,6 +253,7 @@ test.describe('account deletion', () => {
 
     // The account is gone, so the landing page keeps a signed-out visitor.
     await page.waitForURL('/', { timeout: 30_000 });
+    await expectMail(mallory.email, { subject: 'ShareFrame - Konto gelöscht' });
 
     await test.step('the account cannot sign in any more', async () => {
       await page.goto('/auth/sign-in/');

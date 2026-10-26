@@ -1,6 +1,7 @@
 from django.core import mail
 
 from appEmail.tasks import send_django_mail, send_django_mail_with_logo
+from tests.support.helpers.mail import html_of
 
 TEMPLATE = "authentication/login.html"
 CONTEXT = {
@@ -21,12 +22,14 @@ def send(**overrides):
     return mail.outbox[-1]
 
 
-def test_sends_one_html_message():
+def test_sends_html_with_a_plain_text_version():
     message = send()
 
     assert message.subject == CONTEXT["subject"]
     assert message.to == ["someone@shareframe.local"]
-    assert message.content_subtype == "html"
+    assert "<table" in html_of(message)
+    assert "<" not in message.body
+    assert CONTEXT["ip_address"] in message.body
 
 
 def test_the_body_carries_the_context():
@@ -47,7 +50,7 @@ def test_the_logo_is_attached_inline():
 def test_the_template_references_the_attachment_by_cid():
     message = send()
 
-    assert "cid:logo_image" in message.body
+    assert "cid:logo_image" in html_of(message)
 
 
 def test_the_contact_link_is_built_from_the_frontend_url(settings):

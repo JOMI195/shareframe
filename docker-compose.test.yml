@@ -41,6 +41,25 @@ services:
     networks:
       - backend_network
 
+  # Login mails and changelog notifications are queued with .delay().
+  celery:
+    container_name: celery-test
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: celery -A config worker --loglevel=info -n worker1
+    entrypoint: []
+    volumes:
+      - ./backend/:/app/backend
+      - ./seed-data:/app/seed-data:ro
+    env_file:
+      - ./.env.test
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - backend_network
+
   backend_db:
     container_name: backend_db-test
     image: postgres:15
@@ -60,10 +79,13 @@ services:
       - backend_network
 
   # Account deletion and the account mails go through SMTP, and a refused
-  # connection turns into a 500 that rolls the whole request back.
+  # connection turns into a 500 that rolls the whole request back. The API is
+  # published for the e2e specs that follow a link from a mail.
   mailhog:
     container_name: mailhog-test
     image: mailhog/mailhog
+    ports:
+      - 127.0.0.1:8125:8025
     networks:
       - backend_network
 

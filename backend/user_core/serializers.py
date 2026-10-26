@@ -56,3 +56,25 @@ class UserRetrievePatchSerializer(UsernameBlacklistMixin, BaseUserSerializer):
             account_serializer.save()
 
         return user
+
+
+class EmailChangeRequestSerializer(serializers.Serializer):
+    current_password = serializers.CharField(write_only=True)
+    new_email = serializers.EmailField()
+
+    def validate_current_password(self, value):
+        if not self.context["request"].user.check_password(value):
+            raise serializers.ValidationError("Das Passwort ist falsch.")
+        return value
+
+    def validate_new_email(self, value):
+        value = User.objects.normalize_email(value)
+        if value.lower() == self.context["request"].user.email.lower():
+            raise serializers.ValidationError("Das ist bereits deine E-Mail-Adresse.")
+        if User.objects.filter(email__iexact=value).exists():
+            raise serializers.ValidationError("Diese E-Mail ist bereits vergeben.")
+        return value
+
+
+class EmailChangeConfirmSerializer(serializers.Serializer):
+    token = serializers.CharField()

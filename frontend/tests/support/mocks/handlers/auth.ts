@@ -22,6 +22,7 @@ export const authHandlers = [
   http.post(apiUrl(auth.getSetPasswordUrl()), () => new HttpResponse(null, { status: 204 })),
   http.post(apiUrl(auth.getResetPasswordUrl()), () => new HttpResponse(null, { status: 204 })),
   http.post(apiUrl(auth.getResetPasswordConfirmUrl()), () => new HttpResponse(null, { status: 204 })),
-  http.post(apiUrl(auth.getSetEmailUrl()), () => new HttpResponse(null, { status: 204 })),
+  http.post(apiUrl(auth.getRequestEmailChangeUrl()), () => new HttpResponse(null, { status: 204 })),
+  http.post(apiUrl(auth.getConfirmEmailChangeUrl()), () => new HttpResponse(null, { status: 204 })),
   http.post(apiUrl(auth.getSetUsernameUrl()), () => new HttpResponse(null, { status: 204 })),
 ];

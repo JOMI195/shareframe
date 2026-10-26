@@ -15,6 +15,7 @@ from tests.support.factories import (
     UserFactory,
 )
 from tests.support.helpers.images import upload_file
+from tests.support.helpers.mail import html_of
 from tests.support.helpers.notifications import (
     enable_channels,
     set_preference,
@@ -80,7 +81,7 @@ class TestNotifyChangelog:
 
         message = mail.outbox[-1]
         assert message.subject == "ShareFrame - Power"
-        assert "<strong>power</strong>" in message.body
+        assert "<strong>power</strong>" in html_of(message)
         assert settings.FRONTEND_CHANGELOGS_URL in message.body
         assert settings.FRONTEND_UNSUBSCRIBE_URL in message.body
         assert "List-Unsubscribe" in message.extra_headers
@@ -166,6 +167,7 @@ class TestSendChangelogTest:
         assert settings.FRONTEND_UNSUBSCRIBE_URL not in message.body
         assert settings.FRONTEND_NOTIFICATION_SETTINGS_URL in message.body
         assert "List-Unsubscribe" not in message.extra_headers
+        assert "List-Unsubscribe-Post" not in message.extra_headers
 
     def test_reaches_the_admins_push_devices(self, changelog, staff, webpush):
         subscribe_push(staff.account)
