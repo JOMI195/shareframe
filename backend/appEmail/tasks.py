@@ -1,12 +1,23 @@
 import mimetypes
 import os
 from email.message import MIMEPart
+from email.policy import default as default_policy
 
 from django.conf import settings
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 from config.celery import celery
+
+from .text import html_to_text
+
+
+class _EmailMessage(EmailMultiAlternatives):
+    # RFC 5322 allows 998; folding at 78 turns a long List-Unsubscribe URL into
+    # encoded words, which mail clients do not read as a link. The SMTP backend
+    # passes its own policy, so only the line length is changed.
+    def message(self, *, policy=default_policy):
+        return super().message(policy=policy.clone(max_line_length=998))
 
 
 def send_django_mail(
@@ -40,14 +51,14 @@ def send_django_mail(
 
     html_message = render_to_string(template_name, context)
 
-    email = EmailMessage(
+    email = _EmailMessage(
         subject=context["subject"],
-        body=html_message,
+        body=html_to_text(html_message),
         from_email=from_email,
         to=to_emails,
         headers=headers,
     )
-    email.content_subtype = "html"
+    email.attach_alternative(html_message, "text/html")
 
     for image in images:
         with open(image["path"], "rb") as f:

@@ -5,6 +5,7 @@ from freezegun import freeze_time
 
 from tests.support import seed
 from tests.support.factories import UserFactory
+from tests.support.helpers.mail import break_delivery
 from user_core import email_change
 from user_core.blacklist import USERNAME_BLACKLIST
 from user_core.models import User
@@ -109,6 +110,17 @@ class TestDeleteAccount:
             settings.AUTH_COOKIE_REFRESH_NAME,
         ):
             assert response.cookies[name].value == ""
+
+    def test_a_failed_farewell_mail_still_signs_out(self, client_as, monkeypatch):
+        user = UserFactory(is_active=True)
+        client = client_as(user)
+        break_delivery(monkeypatch)
+
+        response = client.delete(ME_URL, {"password": "factory-pass1"}, format="json")
+
+        assert response.status_code == 204
+        assert not User.objects.filter(pk=user.pk).exists()
+        assert response.cookies[settings.AUTH_COOKIE_ACCESS_NAME].value == ""
 
     def test_a_wrong_password_answers_400(self, client_as):
         user = UserFactory(is_active=True)

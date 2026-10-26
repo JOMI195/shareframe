@@ -52,7 +52,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
     logger.info("Login: %s from %s", user.email, ip)
 
     is_admin = getattr(user, "is_admin", False)
-    subject = "ShareFrame Admin Login" if is_admin else "ShareFrame Login"
+    subject = "ShareFrame - Admin-Login" if is_admin else "ShareFrame - Login"
     to_email = settings.ADMIN_NOTIFICATION_EMAIL if is_admin else user.email
     send_django_mail_with_logo.delay(
         template_name="authentication/login.html",

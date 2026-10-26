@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from djoser.email import (
     ActivationEmail,
@@ -9,138 +11,76 @@ from djoser.email import (
 
 from .tasks import send_django_mail_with_logo
 
+logger = logging.getLogger(__name__)
 
-class DjoserActivationEmail(ActivationEmail):
+
+class _LogoMail:
+    mail_subject = ""
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["subject"] = self.mail_subject
+        return context
+
+    def send(self, to, *args, **kwargs):
+        send_django_mail_with_logo(
+            template_name=self.template_name,
+            context=self.get_context_data(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=to,
+        )
+
+
+class _NoticeMail(_LogoMail):
+    """Sent after the action is saved, so a failed delivery must not fail the request."""
+
+    def send(self, to, *args, **kwargs):
+        try:
+            super().send(to)
+        except Exception:
+            logger.exception("Notice mail %s failed", self.template_name)
+
+
+class DjoserActivationEmail(_LogoMail, ActivationEmail):
     template_name = "djoser/activation.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = (
-            "Willkommen bei ShareFrame.de! Wir freuen uns, dich an Bord zu haben."
-        )
-        return context
-
-    def send(self, *args, **kwargs):
-        context = self.get_context_data()
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=context,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=[context["user"].email],
-        )
+    mail_subject = "ShareFrame - Konto aktivieren"
 
 
-class DjoserConfirmationEmail(ConfirmationEmail):
+class DjoserConfirmationEmail(_NoticeMail, ConfirmationEmail):
     template_name = "djoser/confirmation.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = (
-            "Dein Konto ist jetzt aktiv. Viel Spaß beim Teilen deiner schönsten Momente!"
-        )
-        return context
-
-    def send(self, *args, **kwargs):
-        context = self.get_context_data()
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=context,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=[context["user"].email],
-        )
+    mail_subject = "ShareFrame - Konto aktiviert"
 
 
-class DjoserPasswordResetEmail(PasswordResetEmail):
+class DjoserPasswordResetEmail(_LogoMail, PasswordResetEmail):
     template_name = "djoser/password_reset.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = (
-            "Keine Sorge, wir sind für dich da. Setze dein Passwort zurück, um wieder Zugriff zu erhalten."
-        )
-        return context
-
-    def send(self, *args, **kwargs):
-        context = self.get_context_data()
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=context,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=[context["user"].email],
-        )
+    mail_subject = "ShareFrame - Passwort zurücksetzen"
 
 
-class DjoserPasswordChangedConfirmationEmail(PasswordChangedConfirmationEmail):
+class DjoserPasswordChangedConfirmationEmail(
+    _NoticeMail, PasswordChangedConfirmationEmail
+):
     template_name = "djoser/password_changed_confirmation.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = (
-            "Dein Passwort wurde erfolgreich aktualisiert. Dein Konto ist jetzt sicherer!"
-        )
-        return context
-
-    def send(self, *args, **kwargs):
-        context = self.get_context_data()
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=context,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=[context["user"].email],
-        )
+    mail_subject = "ShareFrame - Passwort geändert"
 
 
-class DjoserUserDeletedEmail(BaseDjoserEmail):
+class DjoserUserDeletedEmail(_NoticeMail, BaseDjoserEmail):
     template_name = "djoser/user_deleted.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = "Dein Konto wurde gelöscht – Alles Gute und bis bald!"
-        return context
-
-    def send(self, *args, **kwargs):
-        context = self.get_context_data()
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=context,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=[context["user"].email],
-        )
+    mail_subject = "ShareFrame - Konto gelöscht"
 
 
-class DjoserEmailChangeConfirmEmail(BaseDjoserEmail):
+class DjoserEmailChangeConfirmEmail(_LogoMail, BaseDjoserEmail):
     template_name = "djoser/email_change_confirm.html"
+    mail_subject = "ShareFrame - Neue E-Mail-Adresse bestätigen"
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["subject"] = "Bestätige deine neue E-Mail-Adresse bei ShareFrame.de"
         context["url"] = settings.FRONTEND_EMAIL_CHANGE_CONFIRM_URL.format(
             token=context["token"]
         )
         return context
 
-    def send(self, to, *args, **kwargs):
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=self.get_context_data(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=to,
-        )
 
-
-class DjoserEmailChangedEmail(BaseDjoserEmail):
+# The user already carries the new address; `to` is the old one.
+class DjoserEmailChangedEmail(_NoticeMail, BaseDjoserEmail):
     template_name = "djoser/email_changed.html"
-
-    def get_context_data(self):
-        context = super().get_context_data()
-        context["subject"] = "Deine E-Mail-Adresse bei ShareFrame.de wurde geändert"
-        return context
-
-    # The user already carries the new address; `to` is the old one.
-    def send(self, to, *args, **kwargs):
-        send_django_mail_with_logo(
-            template_name=self.template_name,
-            context=self.get_context_data(),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=to,
-        )
+    mail_subject = "ShareFrame - E-Mail-Adresse geändert"

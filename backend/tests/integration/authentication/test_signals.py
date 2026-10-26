@@ -36,7 +36,7 @@ class TestLogin:
         message = login(alice_user)
 
         assert message.to == [alice_user.email]
-        assert message.subject == "ShareFrame Login"
+        assert message.subject == "ShareFrame - Login"
 
     def test_an_admin_login_goes_to_the_admin_address(self, settings):
         admin = UserFactory(is_admin=True)
@@ -44,7 +44,7 @@ class TestLogin:
         message = login(admin)
 
         assert message.to == [settings.ADMIN_NOTIFICATION_EMAIL]
-        assert message.subject == "ShareFrame Admin Login"
+        assert message.subject == "ShareFrame - Admin-Login"
 
     def test_the_client_ip_is_reported(self, alice_user):
         request = RequestFactory().get(

@@ -14,6 +14,7 @@ import logging
 import os
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import urlparse
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -432,6 +433,8 @@ REST_FRAMEWORK = {
         "changelogs_sustained": "3000/day",
         "unsubscribe_burst": "10/min",
         "unsubscribe_sustained": "100/day",
+        "unsubscribe_one_click_burst": "60/min",
+        "unsubscribe_one_click_sustained": "1000/day",
         "failed_login": "10/min",
         "auth_email_burst": "5/min",
         "auth_email_sustained": "50/day",
@@ -468,8 +471,13 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
+_frontend_base_url = urlparse(os.environ.get("FRONTEND_BASE_URL", ""))
+
 DJOSER = {
     "LOGIN_FIELD": "email",
+    # Links lead to the frontend, which is not the API host in dev and test.
+    "EMAIL_FRONTEND_PROTOCOL": _frontend_base_url.scheme,
+    "EMAIL_FRONTEND_DOMAIN": _frontend_base_url.netloc,
     "USER_ID_FIELD": "id",
     "USER_CREATE_PASSWORD_RETYPE": True,
     "SET_PASSWORD_RETYPE": True,
