@@ -34,6 +34,23 @@ describe('public routes', () => {
   });
 });
 
+describe('contact page', () => {
+  it('keeps the app bar for a signed-in user', async () => {
+    renderRoute('/kontakt/', { preloadedState: signedInState() });
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Kontaktiere uns' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'account of current user' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
+  });
+
+  it('shows the public header and footer when signed out', async () => {
+    renderRoute('/kontakt/', { preloadedState: buildState() });
+
+    expect(await screen.findByRole('link', { name: 'Anmelden' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Impressum' })).toBeInTheDocument();
+  });
+});
+
 describe('protected routes', () => {
   it.each(protectedRoutes)('renders %s and selects the %s feature', async (path, feature) => {
     const { store } = renderRoute(path, { preloadedState: signedInState() });
