@@ -1,3 +1,5 @@
+from urllib.parse import urlencode
+
 import pytest
 
 from notifications.choices import NotificationChannel, NotificationKind
@@ -13,6 +15,7 @@ ME_URL = "/api/auth/users/me/"
 KEY_URL = "/api/notifications/push/key/"
 SUBSCRIPTIONS_URL = "/api/notifications/push/subscriptions/"
 UNSUBSCRIBE_URL = "/api/notifications/unsubscribe/"
+ONE_CLICK_URL = "/api/notifications/unsubscribe/one-click/"
 
 KIND = NotificationKind.INACTIVITY_REMINDER
 EMAIL = NotificationChannel.EMAIL
@@ -203,3 +206,58 @@ class TestUnsubscribe:
 
     def test_a_missing_token_is_rejected(self, client):
         assert client.post(UNSUBSCRIBE_URL, {}, format="json").status_code == 400
+
+
+class TestOneClickUnsubscribe:
+    """The mail provider POSTs `List-Unsubscribe=One-Click` to the header URL (RFC 8058)."""
+
+    def one_click(self, client, token):
+        return client.post(
+            f"{ONE_CLICK_URL}?{urlencode({'token': token})}",
+            "List-Unsubscribe=One-Click",
+            content_type="application/x-www-form-urlencoded",
+        )
+
+    def test_opts_out_of_exactly_that_kind_and_channel(self, client, user):
+        response = self.one_click(client, make_token(user.account, KIND, EMAIL))
+
+        assert response.status_code == 204
+        assert not NotificationPreference.is_enabled(user.account, KIND, EMAIL)
+        assert NotificationPreference.is_enabled(user.account, KIND, PUSH)
+        assert NotificationPreference.is_enabled(
+            user.account, NotificationKind.CHANGELOG, EMAIL
+        )
+
+    def test_a_second_click_changes_nothing(self, client, user):
+        token = make_token(user.account, KIND, EMAIL)
+        self.one_click(client, token)
+
+        assert self.one_click(client, token).status_code == 204
+        assert not NotificationPreference.is_enabled(user.account, KIND, EMAIL)
+
+    def test_a_get_never_opts_out(self, client, user):
+        token = make_token(user.account, KIND, EMAIL)
+
+        response = client.get(f"{ONE_CLICK_URL}?{urlencode({'token': token})}")
+
+        assert response.status_code == 405
+        assert NotificationPreference.is_enabled(user.account, KIND, EMAIL)
+
+    @pytest.mark.parametrize("token", ["", "not-a-token"])
+    def test_an_invalid_token_is_rejected(self, client, user, token):
+        assert self.one_click(client, token).status_code == 400
+
+    def test_a_tampered_token_is_rejected(self, client, user):
+        token = make_token(user.account, KIND, EMAIL)
+
+        assert self.one_click(client, token + "x").status_code == 400
+        assert NotificationPreference.is_enabled(user.account, KIND, EMAIL)
+
+    def test_signed_in_cookies_without_csrf_are_ignored(self, client_as, user):
+        client = client_as(UserFactory(is_active=True))
+        client.cookies.pop("csrftoken")
+
+        response = self.one_click(client, make_token(user.account, KIND, EMAIL))
+
+        assert response.status_code == 204
+        assert not NotificationPreference.is_enabled(user.account, KIND, EMAIL)

@@ -6,6 +6,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from config.throttles import (
+    OneClickUnsubscribeBurstRateThrottle,
+    OneClickUnsubscribeSustainedRateThrottle,
     UnsubscribeBurstRateThrottle,
     UnsubscribeSustainedRateThrottle,
 )
@@ -55,6 +57,29 @@ class PushSubscriptionView(APIView):
         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
+def _opt_out(token):
+    """Switch off what the token names; returns whether the token was valid."""
+    try:
+        account_id, kind, channel = read_token(token)
+    except signing.BadSignature:
+        return False
+
+    account = Account.objects.filter(pk=account_id).first()
+    if account is None:
+        return False
+
+    NotificationPreference.objects.update_or_create(
+        account=account, kind=kind, channel=channel, defaults={"enabled": False}
+    )
+    return True
+
+
+def _opt_out_response(token):
+    if _opt_out(token):
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
 class UnsubscribeView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
@@ -63,16 +88,18 @@ class UnsubscribeView(APIView):
     def post(self, request):
         serializer = UnsubscribeSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        try:
-            account_id, kind, channel = read_token(serializer.validated_data["token"])
-        except signing.BadSignature:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+        return _opt_out_response(serializer.validated_data["token"])
 
-        account = Account.objects.filter(pk=account_id).first()
-        if account is None:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
 
-        NotificationPreference.objects.update_or_create(
-            account=account, kind=kind, channel=channel, defaults={"enabled": False}
-        )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+class OneClickUnsubscribeView(APIView):
+    """RFC 8058 target for the List-Unsubscribe header; only POST opts out, so link scanners cannot."""
+
+    permission_classes = [AllowAny]
+    authentication_classes = []
+    throttle_classes = [
+        OneClickUnsubscribeBurstRateThrottle,
+        OneClickUnsubscribeSustainedRateThrottle,
+    ]
+
+    def post(self, request):
+        return _opt_out_response(request.query_params.get("token", ""))

@@ -117,6 +117,18 @@ def test_a_spoofed_forwarded_for_does_not_reset_the_ip_limit(client, throttled):
     assert codes[-1] == 429
 
 
+ONE_CLICK_URL = "/api/notifications/unsubscribe/one-click/"
+# unsubscribe_one_click_burst; higher, because mail providers share few IPs.
+ONE_CLICK_LIMIT = 60
+
+
+def test_one_click_unsubscribe_has_its_own_higher_ip_limit(client, throttled):
+    codes = [client.post(ONE_CLICK_URL).status_code for _ in range(ONE_CLICK_LIMIT + 1)]
+
+    assert set(codes[: UNSUBSCRIBE_LIMIT + 1]) == {400}
+    assert codes[-1] == 429
+
+
 LOGIN_URL = "/api/auth/jwt/create/"
 RESET_PASSWORD_URL = "/api/auth/users/reset_password/"
 # failed_login and auth_email_burst, keyed on the client IP.

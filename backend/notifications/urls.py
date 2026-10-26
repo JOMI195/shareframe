@@ -1,6 +1,11 @@
 from django.urls import path
 
-from .views import PushKeyView, PushSubscriptionView, UnsubscribeView
+from .views import (
+    OneClickUnsubscribeView,
+    PushKeyView,
+    PushSubscriptionView,
+    UnsubscribeView,
+)
 
 urlpatterns = [
     path("notifications/push/key/", PushKeyView.as_view(), name="push-key"),
@@ -13,5 +18,10 @@ urlpatterns = [
         "notifications/unsubscribe/",
         UnsubscribeView.as_view(),
         name="notifications-unsubscribe",
+    ),
+    path(
+        "notifications/unsubscribe/one-click/",
+        OneClickUnsubscribeView.as_view(),
+        name="notifications-unsubscribe-one-click",
     ),
 ]

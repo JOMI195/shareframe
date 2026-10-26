@@ -1,4 +1,6 @@
+import email.policy
 import json
+import os
 from dataclasses import replace
 
 import pytest
@@ -8,6 +10,7 @@ from pywebpush import WebPushException
 from notifications.choices import NotificationChannel, NotificationKind
 from notifications.dispatch import notify, preview
 from notifications.models import Notification, PushSubscription
+from tests.support.helpers.mail import html_of
 from tests.support.helpers.notifications import set_preference
 
 pytestmark = pytest.mark.django_db
@@ -104,8 +107,26 @@ def test_the_mail_carries_message_and_unsubscribe_link(
     assert sent.subject == "ShareFrame - Hallo"
     assert "Text" in sent.body
     assert settings.FRONTEND_UNSUBSCRIBE_URL in sent.body
-    assert settings.FRONTEND_UNSUBSCRIBE_URL in sent.extra_headers["List-Unsubscribe"]
+    assert sent.extra_headers["List-Unsubscribe"].startswith(
+        f"<{os.environ['BACKEND_BASE_URL']}api/notifications/unsubscribe/one-click/?token="
+    )
+    assert sent.extra_headers["List-Unsubscribe-Post"] == "List-Unsubscribe=One-Click"
     assert settings.FRONTEND_NOTIFICATION_SETTINGS_URL in sent.body
+
+
+def test_the_unsubscribe_header_survives_serialisation_as_a_plain_url(
+    account, enable, message
+):
+    """Folded into encoded words, mail clients no longer see a link."""
+    enable(EMAIL)
+
+    notify(account, KIND, message)
+
+    # Serialised the way the SMTP backend does it.
+    raw = mail.outbox[-1].message(policy=email.policy.SMTP).as_bytes()
+    url = mail.outbox[-1].extra_headers["List-Unsubscribe"]
+    assert f"List-Unsubscribe: {url}\r\n".encode() in raw
+    assert b"List-Unsubscribe-Post: List-Unsubscribe=One-Click\r\n" in raw
 
 
 def test_an_inactive_user_gets_no_mail(account, enable, message):
@@ -138,7 +159,7 @@ def test_a_custom_mail_template_gets_its_context(account, enable, message):
 
     notify(account, KIND, rich)
 
-    assert "<em>neu</em>" in mail.outbox[-1].body
+    assert "<em>neu</em>" in html_of(mail.outbox[-1])
     assert "01.10.2026" in mail.outbox[-1].body
 
 
