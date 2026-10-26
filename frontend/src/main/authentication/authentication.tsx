@@ -1,5 +1,6 @@
 import {
   getActivationUrl,
+  getEmailChangeConfirmationUrl,
   getResetPasswordConfirmationUrl,
   getResetPasswordUrl,
   getSignInUrl,
@@ -11,6 +12,7 @@ import Layout from "./layout";
 import SignIn from "./signIn/signIn";
 import SignOut from "./signOut/signOut";
 import Activation from "./users/activation";
+import EmailChangeConfirmation from "./users/emailChangeConfirmation";
 import PasswordReset from "./users/passwordReset";
 import PasswordResetConfirmation from "./users/passwordResetConfirmation";
 import SignUpConfirmation from "./signUp/signUpConfirmation";
@@ -46,6 +48,10 @@ const authenticationRoutes = [
           {
             path: getActivationUrl(),
             element: <Activation />,
+          },
+          {
+            path: getEmailChangeConfirmationUrl(),
+            element: <EmailChangeConfirmation />,
           },
           {
             path: getResetPasswordUrl(),

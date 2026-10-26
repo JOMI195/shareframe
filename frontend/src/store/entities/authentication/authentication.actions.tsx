@@ -113,18 +113,28 @@ export const resetPasswordConfirm = (confirmationData: {
     data: confirmationData,
   });
 
-export const setEmail = (email: {
+export const requestEmailChange = (emailData: {
   current_password: string;
   new_email: string;
 }) =>
   apiRequest({
-    url: authEndpoints.getSetEmailUrl(),
+    url: authEndpoints.getRequestEmailChangeUrl(),
     method: "post",
-    onStart: userSlice.emailUpdatePending.type,
-    onSuccess: userSlice.emailUpdateFulfilled.type,
-    onSuccessPayload: email.new_email,
-    onError: userSlice.emailUpdateRejected.type,
-    data: email,
+    onStart: userSlice.emailChangeRequestPending.type,
+    onSuccess: userSlice.emailChangeRequestFulfilled.type,
+    onSuccessPayload: emailData.new_email,
+    onError: userSlice.emailChangeRequestRejected.type,
+    data: emailData,
+  });
+
+export const confirmEmailChange = (token: string) =>
+  apiRequest({
+    url: authEndpoints.getConfirmEmailChangeUrl(),
+    method: "post",
+    onStart: userSlice.emailChangeConfirmPending.type,
+    onSuccess: userSlice.emailChangeConfirmFulfilled.type,
+    onError: userSlice.emailChangeConfirmRejected.type,
+    data: { token: token },
   });
 
 export const loadMyUserProfile = () =>

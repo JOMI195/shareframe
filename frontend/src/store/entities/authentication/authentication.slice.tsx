@@ -1,6 +1,6 @@
 import { RootState } from "@/store";
 import { IUser } from "@/types";
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SliceState = {
   api: {
@@ -128,14 +128,22 @@ const userSlice = createSlice({
     passwordUpdateRejected: (user) => {
       user.api.loading = false;
     },
-    emailUpdatePending: (user) => {
+    emailChangeRequestPending: (user) => {
       user.api.loading = true;
     },
-    emailUpdateFulfilled: (user, action) => {
+    emailChangeRequestFulfilled: (user) => {
       user.api.loading = false;
-      user.me.email = action.payload;
     },
-    emailUpdateRejected: (user) => {
+    emailChangeRequestRejected: (user, _action: PayloadAction<string | undefined>) => {
+      user.api.loading = false;
+    },
+    emailChangeConfirmPending: (user) => {
+      user.api.loading = true;
+    },
+    emailChangeConfirmFulfilled: (user) => {
+      user.api.loading = false;
+    },
+    emailChangeConfirmRejected: (user, _action: PayloadAction<string | undefined>) => {
       user.api.loading = false;
     },
     usernameUpdatePending: (user) => {
@@ -199,9 +207,12 @@ export const {
   passwordUpdatePending,
   passwordUpdateFulfilled,
   passwordUpdateRejected,
-  emailUpdatePending,
-  emailUpdateFulfilled,
-  emailUpdateRejected,
+  emailChangeRequestPending,
+  emailChangeRequestFulfilled,
+  emailChangeRequestRejected,
+  emailChangeConfirmPending,
+  emailChangeConfirmFulfilled,
+  emailChangeConfirmRejected,
   usernameUpdatePending,
   usernameUpdateFulfilled,
   usernameUpdateRejected,

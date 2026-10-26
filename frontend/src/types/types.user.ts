@@ -49,6 +49,11 @@ export interface IPatchUserForm {
     account: Pick<IUserAccount, 'friendship_user_searchable' | 'friendship_user_search_code'>;
 }
 
+export interface IRequestEmailChangeForm {
+    "new_email": string;
+    "current_password": string;
+}
+
 export interface ISetUserPasswortForm {
     "new_password": string;
     "re_new_password": string;

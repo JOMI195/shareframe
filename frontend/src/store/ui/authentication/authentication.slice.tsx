@@ -4,6 +4,12 @@ import {
   authenticationFulfilled,
   authenticationPending,
   authenticationRejected,
+  emailChangeConfirmFulfilled,
+  emailChangeConfirmPending,
+  emailChangeConfirmRejected,
+  emailChangeRequestFulfilled,
+  emailChangeRequestPending,
+  emailChangeRequestRejected,
   passwordResetFulfilled,
   passwordResetPending,
   passwordResetRejected,
@@ -188,6 +194,62 @@ const authSlice = createSlice({
         auth.snackbar.alert = {
           open: true,
           message: "Vergabe eines neuen Passwort fehlgeschlagen",
+          severity: "error",
+        };
+        auth.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
+      .addCase(emailChangeRequestPending, (auth) => {
+        auth.snackbar.loading = {
+          open: true,
+          message: "Sende Bestätigungslink",
+        };
+      })
+      .addCase(emailChangeRequestFulfilled, (auth) => {
+        auth.snackbar.alert = {
+          open: true,
+          message: "Bestätigungslink an die neue E-Mail-Adresse gesendet",
+          severity: "success",
+        };
+        auth.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
+      .addCase(emailChangeRequestRejected, (auth, action) => {
+        auth.snackbar.alert = {
+          open: true,
+          message: action.payload || "Änderung der E-Mail-Adresse fehlgeschlagen",
+          severity: "error",
+        };
+        auth.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
+      .addCase(emailChangeConfirmPending, (auth) => {
+        auth.snackbar.loading = {
+          open: true,
+          message: "Bestätige neue E-Mail-Adresse",
+        };
+      })
+      .addCase(emailChangeConfirmFulfilled, (auth) => {
+        auth.snackbar.alert = {
+          open: true,
+          message: "E-Mail-Adresse geändert. Melde dich ab jetzt mit der neuen Adresse an",
+          severity: "success",
+        };
+        auth.snackbar.loading = {
+          open: false,
+          message: "",
+        };
+      })
+      .addCase(emailChangeConfirmRejected, (auth, action) => {
+        auth.snackbar.alert = {
+          open: true,
+          message: action.payload || "Bestätigung der E-Mail-Adresse fehlgeschlagen",
           severity: "error",
         };
         auth.snackbar.loading = {

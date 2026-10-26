@@ -17,4 +17,4 @@ export const getResetPasswordUrl = () => `password-reset/form/`
 export const getResetPasswordConfirmationUrl = () =>
   `password-reset/:uid/:token`
 
-export const getResetEmailUrl = () => `email-reset/:uid/:token`
+export const getEmailChangeConfirmationUrl = () => `email-change/:token`
