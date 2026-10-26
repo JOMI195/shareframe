@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib import admin, messages
 from django.contrib.admin import helpers
 from django.template.response import TemplateResponse
@@ -10,6 +12,8 @@ from .forms import ChangelogAdminForm
 from .models import Changelog, ChangelogImage
 from .publish import notify_group_members, skip_reason
 from .tasks import notify_changelog_test
+
+logger = logging.getLogger("admin.audit")
 
 
 class ChangelogImageInline(admin.StackedInline):
@@ -105,6 +109,12 @@ class ChangelogAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
 
         for changelog, count in notifiable:
             if notify_group_members(changelog):
+                logger.info(
+                    "Changelog %s notified to %s recipients by %s",
+                    changelog.pk,
+                    count,
+                    request.user.email,
+                )
                 self.message_user(
                     request,
                     f'"{changelog}": notifications queued for {count} recipients.',

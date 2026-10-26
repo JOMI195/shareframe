@@ -1,3 +1,4 @@
+import logging
 import os
 
 from django.conf import settings
@@ -24,6 +25,8 @@ from .models import (
     FrameToken,
     FrameWebsocketConnection,
 )
+
+logger = logging.getLogger("admin.audit")
 
 
 class FrameTokenInline(admin.TabularInline):
@@ -199,6 +202,11 @@ def generate_otp(modeladmin, request, queryset):
     expiry_minutes = int(os.environ.get("DJANGO_FRAME_OTP_EXPIRY_MINUTES", 10))
     for frame in queryset:
         code = frame.generate_otp(expiry_minutes=expiry_minutes)
+        logger.info(
+            "OTP generated for frame %s by %s",
+            frame.public_serial_number,
+            request.user.email,
+        )
         modeladmin.message_user(
             request,
             f"Frame {frame.public_serial_number} — OTP: {code} (expires in {expiry_minutes} min)",

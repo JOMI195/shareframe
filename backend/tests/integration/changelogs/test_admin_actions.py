@@ -101,6 +101,15 @@ class TestNotifyGroupMembers:
         changelog.refresh_from_db()
         assert changelog.notified_at is not None
 
+    def test_confirming_is_audited(self, model_admin, staff, changelog, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            self.notify(model_admin, staff, changelog)
+
+        assert (
+            f"Changelog {changelog.pk} notified to 2 recipients by {staff.email}"
+            in caplog.text
+        )
+
     def test_groups_added_before_notifying_are_included(
         self, model_admin, staff, changelog
     ):

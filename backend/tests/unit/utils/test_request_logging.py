@@ -190,3 +190,23 @@ def test_the_health_route_is_not_logged(caplog):
     caplog.clear()
 
     assert "/api/health/" not in logged(caplog, RequestFactory().get("/api/health/"))
+
+
+def levels_for(caplog, status):
+    request = RequestFactory().post(
+        LOGIN_PATH, json.dumps({"email": "x"}), content_type="application/json"
+    )
+    with caplog.at_level(logging.DEBUG, logger="django.request"):
+        LoggingMiddleware(lambda r: HttpResponse(status=status))(request)
+    return {record.levelno for record in caplog.records}
+
+
+def test_client_errors_are_warnings(caplog):
+    levels = levels_for(caplog, 400)
+
+    assert logging.WARNING in levels
+    assert logging.ERROR not in levels
+
+
+def test_server_errors_stay_errors(caplog):
+    assert logging.ERROR in levels_for(caplog, 500)

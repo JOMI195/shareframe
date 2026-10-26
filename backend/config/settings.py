@@ -266,12 +266,12 @@ LOGGING = {
         "django": {
             "handlers": ["django-file", "console"],
             "level": DJANGO_LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
         "django.server": {
             "handlers": ["django-file", "console"],
             "level": DJANGO_LOG_LEVEL,
-            "propagate": True,
+            "propagate": False,
         },
         "django.request": {
             "handlers": ["django-file", "console"],
@@ -318,6 +318,11 @@ LOGGING = {
             "propagate": False,
         },
     },
+    # Module loggers without an entry above; INFO keeps third-party debug out.
+    "root": {
+        "handlers": ["file", "console"],
+        "level": "INFO",
+    },
 }
 
 REQUEST_LOGGING_DATA_LOG_LEVEL = getattr(
@@ -326,6 +331,8 @@ REQUEST_LOGGING_DATA_LOG_LEVEL = getattr(
 DJANGO_REQUEST_LOGGING_LOG_BODY_DEFAULT_VALUE = True
 DJANGO_REQUEST_LOGGING_LOG_RESPONSE_DEFAULT_VALUE = False
 REQUEST_LOGGING_ENABLE_COLORIZE = False
+# Client errors are expected traffic, ERROR stays for real failures.
+REQUEST_LOGGING_HTTP_4XX_LOG_LEVEL = logging.WARNING
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases

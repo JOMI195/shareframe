@@ -9,6 +9,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from appEmail.tasks import send_django_mail_with_logo
+from utils.client_ip import client_ip
 from utils.endpoint_request_cooldown import (
     check_endpoint_request_cooldown,
     set_endpoint_request_cooldown,
@@ -19,16 +20,6 @@ logger = logging.getLogger("admin.audit")
 User = get_user_model()
 
 ACTION_MAP = {ADDITION: "CREATE", CHANGE: "UPDATE", DELETION: "DELETE"}
-
-
-def _get_client_ip(request):
-    if request is None:
-        return "unknown"
-
-    forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
-    if forwarded_for:
-        return forwarded_for.split(",")[0].strip()
-    return request.META.get("REMOTE_ADDR", "unknown")
 
 
 def _is_admin_request(request):
@@ -46,7 +37,7 @@ def _failed_login_mail_allowed(recipient_key):
 
 @receiver(user_logged_in)
 def on_user_logged_in(sender, request, user, **kwargs):
-    ip = _get_client_ip(request)
+    ip = client_ip(request)
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
     logger.info("Login: %s from %s", user.email, ip)
@@ -69,7 +60,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
 
 @receiver(user_login_failed)
 def on_user_login_failed(sender, credentials, request, **kwargs):
-    ip = _get_client_ip(request)
+    ip = client_ip(request)
     attempted = credentials.get("username", credentials.get("email", "unknown"))
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 

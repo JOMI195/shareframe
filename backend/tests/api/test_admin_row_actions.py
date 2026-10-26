@@ -38,3 +38,15 @@ def test_a_row_otp_click_redirects_back_with_the_code(admin_client):
 
     assert response.redirect_chain[-1][0] == URL
     assert "OTP:" in response.content.decode()
+
+
+def test_generating_an_otp_is_audited_without_the_code(admin_client, caplog):
+    frame = FrameFactory()
+    button = row_button(admin_client.get(URL).content.decode(), frame, "otp")
+
+    with caplog.at_level("INFO", logger="admin.audit"):
+        response = admin_client.post(URL, {button: "OTP"}, follow=True)
+
+    code = re.search(r"OTP: (\S+)", response.content.decode()).group(1)
+    assert f"OTP generated for frame {frame.public_serial_number}" in caplog.text
+    assert code not in caplog.text

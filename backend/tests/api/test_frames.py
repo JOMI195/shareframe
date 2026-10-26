@@ -5,6 +5,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from frames.consumers import FrameWebSocketConsumer
 from frames.models import Frame, FrameCommand, FrameDiagnostics
 from securePayload.securePayload import SecurePayload
 from sent_images.models import SentImage, SentImageStatus
@@ -104,6 +105,16 @@ class TestRegister:
             Frame.objects.get(public_serial_number=serial).user.username == seed.ALICE
         )
 
+    def test_the_claim_is_audited(self, alice, spare_entry, caplog):
+        serial = serial_for(spare_entry["seed_b64"])
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            alice.post(
+                f"{URL}register-user/", {"public_serial_number": serial}, format="json"
+            )
+
+        assert f"Frame {serial} registered to" in caplog.text
+
     def test_the_serial_is_required(self, alice):
         response = alice.post(f"{URL}register-user/", {}, format="json")
 
@@ -158,6 +169,18 @@ class TestUnregister:
         assert response.status_code == 200
         alice_frame.refresh_from_db()
         assert alice_frame.user is None
+
+    def test_the_release_is_audited(self, alice, alice_frame, caplog):
+        serial = alice_frame.public_serial_number
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            alice.post(
+                f"{URL}unregister-user/",
+                {"public_serial_number": serial},
+                format="json",
+            )
+
+        assert f"Frame {serial} unregistered from" in caplog.text
 
     def test_the_serial_is_required(self, alice):
         assert (
@@ -219,6 +242,23 @@ class TestSendImage:
         )
 
         assert response.status_code == 200
+
+    def test_a_failed_push_is_logged(self, world, monkeypatch, caplog):
+        async def broken(**kwargs):
+            raise RuntimeError("channel layer down")
+
+        monkeypatch.setattr(
+            FrameWebSocketConsumer, "send_picture_to_user_frames", broken
+        )
+
+        with caplog.at_level("ERROR", logger="frames.views"):
+            response = self.send(
+                world, reciever_username=world.friend.username, image_id=world.image.id
+            )
+
+        assert response.status_code == 500
+        assert f"Sending image {world.image.id}" in caplog.text
+        assert "channel layer down" in caplog.text
 
     def test_the_send_is_counted_for_both_sides(self, world):
         self.send(
@@ -510,6 +550,22 @@ class TestOTP:
         )
 
         assert response.status_code == 401
+
+    def test_a_wrong_code_is_audited(self, client, alice_frame, caplog):
+        alice_frame.generate_otp()
+        token = FrameTokenFactory(frame=alice_frame)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(
+                f"{URL}verify-otp/",
+                {"otp": "000000"},
+                format="json",
+                headers=token_headers(token.access_token),
+            )
+
+        assert (
+            f"OTP rejected for frame {alice_frame.public_serial_number}" in caplog.text
+        )
 
     def test_the_code_is_required(self, client, alice_frame):
         token = FrameTokenFactory(frame=alice_frame)

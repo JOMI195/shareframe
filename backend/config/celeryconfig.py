@@ -14,6 +14,8 @@ broker_connection_retry_on_startup = True
 
 result_backend = "django-db"
 result_extended = True
+# The root logger stays as Django configured it.
+worker_hijack_root_logger = False
 
 timezone = "Europe/Berlin"
 

@@ -9,7 +9,7 @@ from django.db.models import Count, Max, Q, Sum
 from django.utils import timezone
 from prometheus_client.core import GaugeMetricFamily
 
-logger = logging.getLogger("default")
+logger = logging.getLogger(__name__)
 
 
 def _variant_bytes(variant_model, storage):
