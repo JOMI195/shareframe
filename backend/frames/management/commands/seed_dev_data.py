@@ -165,13 +165,17 @@ class Command(BaseCommand):
         users = {}
         for spec in user_specs:
             user = User.objects.filter(username=spec["username"]).first()
+            active = spec.get("is_active", True)
+            admin = spec.get("is_admin", False)
             created = False
             if user is None:
                 user = User.objects.create_user(
                     email=spec["email"],
                     username=spec["username"],
                     password=spec["password"],
-                    is_active=True,
+                    is_active=active,
+                    is_staff=admin,
+                    is_admin=admin,
                 )
                 if "joined_days_ago" in spec:
                     user.date_joined = datetime.now(UTC) - timedelta(
@@ -186,7 +190,7 @@ class Command(BaseCommand):
                 if not user.email:
                     user.email = spec["email"]
                     updated_fields.append("email")
-                if not user.is_active:
+                if active and not user.is_active:
                     user.is_active = True
                     updated_fields.append("is_active")
                 if updated_fields:

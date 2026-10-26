@@ -11,3 +11,10 @@ export const erin = { email: 'seed.erin@shareframe.local', password: 'seed-erin-
 export const mallory = { email: 'seed.mallory@shareframe.local', password: 'seed-mallory-dev-pass1', username: 'seed_mallory', code: 'SEEDM001' };
 // Changes its email address.
 export const frank = { email: 'seed.frank@shareframe.local', password: 'seed-frank-dev-pass1', username: 'seed_frank', code: 'SEEDF001' };
+// Inactive until the activation spec opens its link.
+export const ivy = { email: 'seed.ivy@shareframe.local', password: 'seed-ivy-dev-pass1', username: 'seed_ivy', code: 'SEEDI001' };
+// Resets its password.
+export const grace = { email: 'seed.grace@shareframe.local', password: 'seed-grace-dev-pass1', username: 'seed_grace', code: 'SEEDG001' };
+// Signs in to the Django admin; its own mails go to ADMIN_NOTIFICATION_EMAIL.
+export const admin = { email: 'seed.admin@shareframe.local', password: 'seed-admin-dev-pass1', username: 'seed_admin', code: 'SEEDX001' };
+export const ADMIN_NOTIFICATION_EMAIL = 'test@shareframe.local';

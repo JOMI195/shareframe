@@ -41,6 +41,25 @@ services:
     networks:
       - backend_network
 
+  # Login mails and changelog notifications are queued with .delay().
+  celery:
+    container_name: celery-test
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: celery -A config worker --loglevel=info -n worker1
+    entrypoint: []
+    volumes:
+      - ./backend/:/app/backend
+      - ./seed-data:/app/seed-data:ro
+    env_file:
+      - ./.env.test
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - backend_network
+
   backend_db:
     container_name: backend_db-test
     image: postgres:15

@@ -53,5 +53,28 @@
     "password": "seed-frank-dev-pass1",
     "friendship_code": "SEEDF001",
     "friendship_user_searchable": false
+  },
+  {
+    "username": "seed_ivy",
+    "email": "seed.ivy@shareframe.local",
+    "password": "seed-ivy-dev-pass1",
+    "friendship_code": "SEEDI001",
+    "friendship_user_searchable": false,
+    "is_active": false
+  },
+  {
+    "username": "seed_grace",
+    "email": "seed.grace@shareframe.local",
+    "password": "seed-grace-dev-pass1",
+    "friendship_code": "SEEDG001",
+    "friendship_user_searchable": false
+  },
+  {
+    "username": "seed_admin",
+    "email": "seed.admin@shareframe.local",
+    "password": "seed-admin-dev-pass1",
+    "friendship_code": "SEEDX001",
+    "friendship_user_searchable": false,
+    "is_admin": true
   }
 ]
