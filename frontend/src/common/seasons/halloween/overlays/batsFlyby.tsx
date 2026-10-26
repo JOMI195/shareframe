@@ -1,14 +1,10 @@
-import { useRef } from 'react';
 import { Box, keyframes, useTheme } from '@mui/material';
+import type { FlybyProps } from '../../seasons';
+import { fade, silhouetteColor, travel, useAllEnded } from '../../motion';
 
 const LEFT_WING = 'M29 17C22 10 12 8 2 12C6 14 7 18 6 22C10 19 14 20 16 24C19 20 23 21 26 25C27 22 28 21 29 22Z';
 const RIGHT_WING = 'M35 17C42 10 52 8 62 12C58 14 57 18 58 22C54 19 50 20 48 24C45 20 41 21 38 25C37 22 36 21 35 22Z';
 const HEAD = 'M29.2 13.5L28.6 6.5 31 10C31.6 9.8 32.4 9.8 33 10L35.4 6.5 34.8 13.5A3.6 3.6 0 1 1 29.2 13.5Z';
-
-const travel = keyframes`
-    from { transform: translateX(-20vw); }
-    to { transform: translateX(120vw); }
-`;
 
 const arc = keyframes`
     0% { transform: translateY(0); }
@@ -24,12 +20,6 @@ const bob = keyframes`
 const flapLeft = keyframes`
     from { transform: rotate(22deg) scaleY(1); }
     to { transform: rotate(-28deg) scaleY(0.7); }
-`;
-
-const fade = keyframes`
-    0% { opacity: 0; }
-    30%, 70% { opacity: 1; }
-    100% { opacity: 0; }
 `;
 
 const flapRight = keyframes`
@@ -67,18 +57,11 @@ const Bat: React.FC<{ width: number; flap: number | null }> = ({ width, flap }) 
     );
 };
 
-const BatsFlyby: React.FC<{ onDone: () => void; reducedMotion: boolean }> = ({ onDone, reducedMotion }) => {
-    const theme = useTheme();
-    const landed = useRef(0);
-
-    const handleEnd = (event: React.AnimationEvent) => {
-        if (event.target !== event.currentTarget) return;
-        landed.current += 1;
-        if (landed.current === bats.length) onDone();
-    };
+const BatsFlyby: React.FC<FlybyProps> = ({ onDone, reducedMotion }) => {
+    const handleEnd = useAllEnded(bats.length, onDone);
 
     return (
-        <Box sx={{ color: theme.palette.mode === 'dark' ? '#C9B8E8' : '#2B1F36' }}>
+        <Box sx={{ color: silhouetteColor }}>
             {bats.map(({ top, left, width, delay, duration, arc: arcHeight, flap }, i) =>
                 reducedMotion ? (
                     <Box

@@ -1,7 +1,8 @@
-import { PropsWithChildren, useState } from 'react';
+import { createElement, PropsWithChildren, useState } from 'react';
 import { Box, ButtonBase, keyframes } from '@mui/material';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
 import { triggerFlyby } from '@/common/seasons/flyby';
+import { useSeasonPick } from './useSeasonSlot';
 
 const wobble = keyframes`
     0%, 100% { transform: rotate(0deg); }
@@ -11,10 +12,10 @@ const wobble = keyframes`
 
 const SeasonalLogoBadge: React.FC<PropsWithChildren<{ size?: number }>> = ({ children, size = 18 }) => {
     const { season } = useColorThemeContext();
+    const LogoIcon = useSeasonPick('logo');
     const [wobbles, setWobbles] = useState(0);
-    if (!season) return children;
+    if (!season || !LogoIcon) return children;
 
-    const { LogoIcon } = season;
     return (
         <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
             {children}
@@ -26,15 +27,15 @@ const SeasonalLogoBadge: React.FC<PropsWithChildren<{ size?: number }>> = ({ chi
                 }}
                 sx={{ position: 'absolute', top: -size / 3, right: -size / 2, borderRadius: '50%' }}
             >
-                <LogoIcon
-                    key={wobbles}
-                    sx={{
+                {createElement(LogoIcon, {
+                    key: wobbles,
+                    sx: {
                         fontSize: size,
                         color: 'accent.main',
                         animation: wobbles ? `${wobble} 0.5s ease-in-out` : 'none',
                         '@media (prefers-reduced-motion: reduce)': { animation: 'none' },
-                    }}
-                />
+                    },
+                })}
             </ButtonBase>
         </Box>
     );

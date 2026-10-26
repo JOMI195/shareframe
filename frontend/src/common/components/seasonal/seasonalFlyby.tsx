@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { Box, useMediaQuery } from '@mui/material';
-import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
 import { triggerFlyby, useFlybyRun } from '@/common/seasons/flyby';
+import { pickNext, type FlybyProps } from '@/common/seasons/seasons';
+import { useSeasonSlot } from './useSeasonSlot';
 
 const SHOWN_KEY = 'seasonalFlybyShown';
 
@@ -16,18 +17,25 @@ const shownThisSession = () => {
 };
 
 const SeasonalFlyby: React.FC = () => {
-    const { season } = useColorThemeContext();
+    const flybys = useSeasonSlot('flyby');
     const run = useFlybyRun();
     const [doneRun, setDoneRun] = useState(run);
+    const [picked, setPicked] = useState<{ run: number; Flyby: React.ComponentType<FlybyProps> | null }>({ run, Flyby: null });
     const reducedMotion = useMediaQuery('(prefers-reduced-motion: reduce)', { noSsr: true });
+    const active = flybys.length > 0;
 
     useEffect(() => {
-        if (season && !shownThisSession()) triggerFlyby();
-    }, [season]);
+        if (active && !shownThisSession()) triggerFlyby();
+    }, [active]);
 
-    if (!season || run === doneRun) return null;
+    let { Flyby } = picked;
+    if (picked.run !== run) {
+        Flyby = pickNext(flybys, picked.Flyby);
+        setPicked({ run, Flyby });
+    }
 
-    const { Flyby } = season;
+    if (!active || run === doneRun || !Flyby) return null;
+
     return (
         <Box
             aria-hidden
@@ -42,7 +50,7 @@ const SeasonalFlyby: React.FC = () => {
                 displayPrint: 'none',
             }}
         >
-            <Flyby key={run} reducedMotion={reducedMotion} onDone={() => setDoneRun(run)} />
+            {createElement(Flyby, { key: run, reducedMotion, onDone: () => setDoneRun(run) })}
         </Box>
     );
 };

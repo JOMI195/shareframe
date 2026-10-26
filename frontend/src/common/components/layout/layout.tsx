@@ -5,7 +5,7 @@ import Sidebar from "./sidebar/sidebar";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";
 import { useEffect } from "react";
 import Lifecycle from "../lifecycle/lifecycle";
-import SeasonalDecoration from "../seasonal/seasonalDecoration";
+import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
 
 const MainLayout: React.FC = () => {
@@ -59,7 +59,7 @@ const MainLayout: React.FC = () => {
                 <Outlet />
             </Container>
             <Lifecycle />
-            <SeasonalDecoration />
+            <SeasonalScreen />
             <SeasonalFlyby />
         </Box>
     );
