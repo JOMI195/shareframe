@@ -1,4 +1,5 @@
-import { Box, Divider, FormControlLabel, FormGroup, Paper, Switch, Typography } from '@mui/material';
+import { Divider, FormControlLabel, FormGroup, Switch, Typography } from '@mui/material';
+import SettingsSection from '@/common/components/settings/settingsSection';
 import { INotificationKindPatch, INotificationKindSettings, NotificationChannel, NotificationKind } from '@/types';
 
 const KIND_TEXTS: Record<NotificationKind, { title: string; description: string }> = {
@@ -27,20 +28,19 @@ const KindSettings = ({ settings, disabled, onChange }: KindSettingsProps) => {
     const { title, description } = KIND_TEXTS[settings.kind];
 
     return (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-            <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
-                <Box>
-                    <Typography variant="h6">{title}</Typography>
-                    <Typography variant="body2" color="text.secondary">{description}</Typography>
-                </Box>
+        <SettingsSection
+            title={title}
+            description={description}
+            action={
                 <Switch
                     checked={settings.enabled}
                     disabled={disabled}
                     onChange={(event) => onChange({ kind: settings.kind, enabled: event.target.checked })}
                     slotProps={{ input: { 'aria-label': title } }}
                 />
-            </Box>
-            <Divider sx={{ my: 1.5 }} />
+            }
+        >
+            <Divider />
             <FormGroup>
                 {settings.channels.map(({ channel, enabled }) => (
                     <FormControlLabel
@@ -70,7 +70,7 @@ const KindSettings = ({ settings, disabled, onChange }: KindSettingsProps) => {
                     />
                 ))}
             </FormGroup>
-        </Paper>
+        </SettingsSection>
     );
 };
 

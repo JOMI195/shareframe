@@ -151,6 +151,7 @@ export const deleteMyUserProfile = (password: string) =>
     onStart: userSlice.userDeletePending.type,
     onSuccess: userSlice.userDeleteFulfilled.type,
     onError: userSlice.userDeleteRejected.type,
+    onSuccessPayload: true,
     method: "delete",
     data: { password: password }
   });

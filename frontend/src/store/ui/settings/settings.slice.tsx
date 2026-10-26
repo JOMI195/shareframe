@@ -15,7 +15,6 @@ type SliceState = {
     analyticsCookies: boolean;
     consentExpiry: number | null;
   };
-  navigation: { bottomNavigation: { open: boolean } };
   pwa: { installPromptDismissed: boolean; pushPromptDismissed: boolean };
 };
 
@@ -28,7 +27,6 @@ const initialState: SliceState = {
     analyticsCookies: JSON.parse(localStorage.getItem('analyticsCookies') || 'false'),
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
   },
-  navigation: { bottomNavigation: { open: false } },
   pwa: { installPromptDismissed: false, pushPromptDismissed: false }
 };
 
@@ -75,12 +73,6 @@ const settingsSlice = createSlice({
       state.cookies.consentExpiry = newConsentExpiryDate;
       localStorage.setItem('consentExpiry', JSON.stringify(newConsentExpiryDate));
     },
-    bottomNavigationOpened: (state) => {
-      state.navigation.bottomNavigation.open = true;
-    },
-    bottomNavigationClosed: (state) => {
-      state.navigation.bottomNavigation.open = false;
-    },
     installPromptDismissed: (state) => {
       state.pwa.installPromptDismissed = true;
     },
@@ -105,14 +97,6 @@ export const acceptAllCookies = () => ({
   type: allCookiesAccepted.type,
 });
 
-export const openBottomNavigation = () => ({
-  type: bottomNavigationOpened.type,
-});
-
-export const closeBottomNavigation = () => ({
-  type: bottomNavigationClosed.type,
-});
-
 export const {
   designSelected,
   seasonalThemesSelected,
@@ -120,8 +104,6 @@ export const {
   analyticsCookiesDeclined,
   allCookiesAccepted,
   allCookiesDeclined,
-  bottomNavigationOpened,
-  bottomNavigationClosed,
   installPromptDismissed,
   pushPromptDismissed,
   pushPromptReset
@@ -132,5 +114,4 @@ export default settingsSlice.reducer;
 export const getDesign = (state: RootState) => state.ui.settings.design.colorTheme;
 export const getSeasonalThemes = (state: RootState) => state.ui.settings.design.seasonalThemes;
 export const getCookies = (state: RootState) => state.ui.settings.cookies;
-export const getNavigation = (state: RootState) => state.ui.settings.navigation;
 export const getPwa = (state: RootState) => state.ui.settings.pwa;

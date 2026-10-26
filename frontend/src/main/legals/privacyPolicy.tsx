@@ -1,11 +1,10 @@
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 const PrivacyPolicy = () => {
 
     return (
-        <Container>
-            <Box sx={{ wordBreak: 'break-word', }}>
-                <Typography variant="h1" sx={{ textAlign: "left" }}>Datenschutzerklärung</Typography>
+        <Box sx={{ wordBreak: 'break-word', }}>
+                <Typography variant="h4" component="h1" gutterBottom>Datenschutzerklärung</Typography>
                 <h2 id="m716">Präambel</h2>
                 <p>Mit der folgenden Datenschutzerklärung möchten wir Sie darüber aufklären, welche Arten Ihrer personenbezogenen Daten (nachfolgend auch kurz als "Daten" bezeichnet) wir zu welchen Zwecken und in welchem Umfang verarbeiten. Die Datenschutzerklärung gilt für alle von uns durchgeführten Verarbeitungen personenbezogener Daten, sowohl im Rahmen der Erbringung unserer Leistungen als auch insbesondere auf unseren Webseiten, in mobilen Applikationen sowie innerhalb externer Onlinepräsenzen, wie z. B. unserer Social-Media-Profile (nachfolgend zusammenfassend bezeichnet als "Onlineangebot").</p>
                 <p>Die verwendeten Begriffe sind nicht geschlechtsspezifisch.</p>
@@ -115,8 +114,7 @@ const PrivacyPolicy = () => {
                     <p>Vom Websiteinhaber angepasst</p>
                 </p>
 
-            </Box>
-        </Container>
+        </Box>
     );
 };
 

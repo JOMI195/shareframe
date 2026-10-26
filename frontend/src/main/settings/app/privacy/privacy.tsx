@@ -1,73 +1,21 @@
-import React from 'react';
-import { Box, FormControlLabel, Switch, Typography } from '@mui/material';
+import { Box, Switch, Typography } from '@mui/material';
+import SettingsSection from '@/common/components/settings/settingsSection';
 
-const PrivacySettings: React.FC = () => {
-    //const dispatch = useAppDispatch();
-
-    // const handleAnalyticsCookiesChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    //     const isChecked = event.target.checked;
-    //     setAnalyticsCookies(isChecked);
-
-    //     if (isChecked) {
-    //         dispatch(analyticsCookiesAccepted());
-    //     } else {
-    //         dispatch(analyticsCookiesDeclined());
-    //     }
-    // };
-
-    return (
-        <Box
-        // border={1} 
-        // sx={{ 
-        //     padding: 2, 
-        //     borderRadius: 1, 
-        //     borderColor: 'grey.300' 
-        // }}
-        >
-            <Typography variant="h6" gutterBottom>
-                Cookies
-            </Typography>
-            <Typography variant="body1" sx={{
-                marginBottom: "16px"
-            }}>
-                Du kannst mehr über die auf shareframe.de verwendeten Cookies in den Datenschutzbestimmungen erfahren.
-            </Typography>
-            <Typography variant="body1" sx={{
-                marginBottom: "16px"
-            }}>
-                Um weitere Informationen zu erhalten, kontaktiere uns einfach.
-            </Typography>
-            <FormControlLabel
-                control={
-                    <Switch
-                        checked={true}
-                        color="primary"
-                    />
-                }
-                label="Notwendige Cookies"
-                labelPlacement="end"
-            />
-            <Typography variant="body2" sx={{
-                marginBottom: "16px"
-            }}>
-                Notwendige Cookies werden nur von uns geschrieben und gelesen. Diese Cookies garantieren ein reibungsloses Funktionieren der Website und sind für dieses unabdingbar. Daher können notwendige Cookies nicht deaktiviert werden.
-            </Typography>
-            {/* <FormControlLabel
-                control={
-                    <Switch
-                        checked={analyticsCookies}
-                        onChange={handleAnalyticsCookiesChange}
-                        color="primary"
-                    />
-                }
-                label="Analytics-Cookies"
-                labelPlacement="end"
-            />
-            <Typography variant="body2" paragraph>
-                Analytics-Cookies helfen uns, die Besuchszahlen zu messen.
-            </Typography> */}
+const PrivacySettings = () => (
+    <SettingsSection
+        title="Cookies"
+        description="Mehr über die auf shareframe.de verwendeten Cookies erfährst du in den Datenschutzbestimmungen. Für weitere Informationen kontaktiere uns einfach."
+    >
+        <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 2 }}>
+            <Box>
+                <Typography variant="body1">Notwendige Cookies</Typography>
+                <Typography variant="body2" color="text.secondary">
+                    Notwendige Cookies werden nur von uns geschrieben und gelesen. Diese Cookies garantieren ein reibungsloses Funktionieren der Website und sind für dieses unabdingbar. Daher können notwendige Cookies nicht deaktiviert werden.
+                </Typography>
+            </Box>
+            <Switch checked disabled slotProps={{ input: { 'aria-label': 'Notwendige Cookies' } }} />
         </Box>
-    );
-};
+    </SettingsSection>
+);
 
 export default PrivacySettings;

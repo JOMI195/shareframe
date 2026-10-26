@@ -1,11 +1,10 @@
 import PersonIcon from "@mui/icons-material/Person";
 import KeyIcon from "@mui/icons-material/Key";
 import LogoutIcon from '@mui/icons-material/Logout';
-import { Button, Grid } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import { Link } from "react-router";
 import { getAuthenticationUrl, getSignOutUrl } from "@/assets/endpoints/app/authEndpoints";
 import Profile from "./profile/profile";
-import ProfileAvatar from "./avatar/avatar";
 import Security from "./password/password";
 import Email from "./email/email";
 import Settings from "@/common/components/settings/settings";
@@ -30,17 +29,10 @@ const UserSettings = () => {
       id: "profile",
       icon: <PersonIcon />,
       content: (
-        <Grid container spacing={2}>
-          <Grid size={12}>
-            <ProfileAvatar />
-          </Grid>
-          <Grid size={12}>
-            <Email />
-          </Grid>
-          <Grid size={12}>
-            <Profile />
-          </Grid>
-        </Grid>
+        <Stack spacing={2}>
+          <Profile />
+          <Email />
+        </Stack>
       ),
     },
     {

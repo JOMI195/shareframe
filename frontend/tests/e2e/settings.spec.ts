@@ -26,7 +26,7 @@ test.describe('personal information', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Profil');
 
-    await expect(page.getByLabel('Email')).toHaveValue(erin.email);
+    await expect(page.getByText(erin.email)).toBeVisible();
     const username = page.getByLabel('Nutzername');
     await expect(username).toHaveValue(erin.username);
 
@@ -100,7 +100,7 @@ test.describe('personal information', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Profil');
 
-    const searchable = page.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' });
+    const searchable = page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' });
     await expect(searchable).toBeChecked();
     await searchable.uncheck();
     await page.getByRole('button', { name: 'Speichern' }).click();
@@ -108,7 +108,7 @@ test.describe('personal information', () => {
     await page.reload();
     await page.getByRole('tab', { name: 'Profil' }).click();
     await expect(
-      page.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' }),
+      page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' }),
     ).not.toBeChecked();
   });
 });
@@ -194,7 +194,7 @@ test.describe('email address', () => {
     await test.step('nothing changes before the link is opened', async () => {
       await page.reload();
       await page.getByRole('tab', { name: 'Profil' }).click();
-      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(frank.email);
+      await expect(page.getByRole('tabpanel').getByText(frank.email)).toBeVisible();
     });
 
     await test.step('the link switches the address and tells the old one', async () => {
@@ -202,7 +202,7 @@ test.describe('email address', () => {
       await expect(page.getByText('E-Mail-Adresse geändert', { exact: false })).toBeVisible();
 
       await openUserSettings(page, 'Profil');
-      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(NEW_EMAIL);
+      await expect(page.getByRole('tabpanel').getByText(NEW_EMAIL)).toBeVisible();
       const notice = await expectMail(frank.email, { subject: 'ShareFrame - E-Mail-Adresse geändert' });
       expect(notice.text).toContain('mit einer neuen E-Mail-Adresse');
     });
@@ -242,14 +242,13 @@ test.describe('account deletion', () => {
     await openUserSettings(page, 'Löschen');
 
     await expect(page.getByText('Diese Aktion ist unwiderruflich.')).toBeVisible();
-    await page.getByRole('button', { name: 'Mein Konto löschen' }).click();
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'Mein Konto löschen' }).click();
+    await panel.getByLabel('Passwort', { exact: true }).fill(mallory.password);
+    await panel.getByRole('button', { name: 'Konto löschen', exact: true }).click();
 
-    await expect(
-      page.getByText('Bitte bestätige die Löschung deines Kontos mit deinem Passwort.'),
-    ).toBeVisible();
-    // Hidden tab panels stay mounted, so 'Passwort' also matches the password tab.
-    await page.getByRole('dialog').getByLabel('Passwort', { exact: true }).fill(mallory.password);
-    await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+    const confirm = page.getByRole('dialog', { name: 'Konto endgültig löschen?' });
+    await confirm.getByRole('button', { name: 'Endgültig löschen' }).click();
 
     // The account is gone, so the landing page keeps a signed-out visitor.
     await page.waitForURL('/', { timeout: 30_000 });
@@ -270,8 +269,29 @@ test.describe('account deletion', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Löschen');
 
-    await page.getByRole('button', { name: 'Mein Konto löschen' }).click();
-    await page.getByRole('button', { name: 'Abbrechen' }).click();
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'Mein Konto löschen' }).click();
+    await panel.getByLabel('Passwort', { exact: true }).fill(erin.password);
+    await panel.getByRole('button', { name: 'Konto löschen', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Abbrechen' }).click();
+    await expect(page.getByRole('dialog')).toBeHidden();
+
+    await page.goto('/dashboard/');
+    await expect(page).toHaveTitle('Start – ShareFrame');
+  });
+
+  test('keeps the user on the page when the password is wrong', async ({ page }) => {
+    await signIn(page, erin);
+    await openUserSettings(page, 'Löschen');
+
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'Mein Konto löschen' }).click();
+    await panel.getByLabel('Passwort', { exact: true }).fill('Falsches2026Passwort');
+    await panel.getByRole('button', { name: 'Konto löschen', exact: true }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Endgültig löschen' }).click();
+
+    await expect(page.getByText('Löschen des Nutzerkontos fehlgeschlagen')).toBeVisible();
+    await expect(page).toHaveURL(/\/settings\/user\//);
 
     await page.goto('/dashboard/');
     await expect(page).toHaveTitle('Start – ShareFrame');

@@ -3,7 +3,7 @@ import { Box, Link, Typography } from "@mui/material"
 const Impressum = () => {
     return (
         <Box>
-            <Typography variant="h4" gutterBottom>
+            <Typography variant="h4" component="h1" gutterBottom>
                 Impressum
             </Typography>
 

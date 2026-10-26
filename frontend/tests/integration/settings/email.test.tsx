@@ -38,7 +38,7 @@ describe('email settings', () => {
   it('shows the current address without a form', () => {
     render();
 
-    expect(screen.getByLabelText('Email')).toHaveValue(seedUser.email);
+    expect(screen.getByText(seedUser.email)).toBeInTheDocument();
     expect(screen.queryByLabelText('Neue E-Mail-Adresse')).not.toBeInTheDocument();
   });
 

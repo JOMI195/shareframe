@@ -3,6 +3,7 @@ import { screen } from '@testing-library/react';
 import { useLocation } from 'react-router';
 import Settings from '@/common/components/settings/settings';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
+import { setSmallScreen } from '@tests/setup/vitest.setup';
 
 const tabs = [
   { label: 'Profil', id: 'profile', icon: <span />, content: <p>Profilinhalt</p> },
@@ -43,6 +44,17 @@ describe('settings tabs', () => {
   it('puts the chosen tab into the url', async () => {
     const { user } = render('/');
 
+    await user.click(screen.getByRole('tab', { name: 'Mitteilungen' }));
+
+    expect(screen.getByText('Mitteilungsinhalt')).toBeVisible();
+    expect(screen.getByLabelText('search')).toHaveTextContent('?tab=notifications');
+  });
+
+  it('shows the tabs above the content on a phone', async () => {
+    setSmallScreen(true);
+    const { user } = render('/');
+
+    expect(screen.getByRole('tablist')).not.toHaveAttribute('aria-orientation', 'vertical');
     await user.click(screen.getByRole('tab', { name: 'Mitteilungen' }));
 
     expect(screen.getByText('Mitteilungsinhalt')).toBeVisible();

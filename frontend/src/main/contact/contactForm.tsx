@@ -4,13 +4,18 @@ import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
+import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch } from "@/store";
 import { sendContactEmail } from "@/store/entities/contact/contact.actions";
+import SettingsSection from "@/common/components/settings/settingsSection";
+import FormActions from "@/common/components/settings/formActions";
 
 export default function ContactForm() {
     const dispatch = useAppDispatch();
+    const loggedIn = localStorage.getItem("loggedIn") === "true";
 
     const [initialValues] = useState({
         name: "",
@@ -44,6 +49,55 @@ export default function ContactForm() {
             contactForm.resetForm();
         },
     });
+
+    const fields = [
+        { name: "name", label: "Dein Name" },
+        { name: "email", label: "Email" },
+        { name: "subject", label: "Betreff" },
+        { name: "message", label: "Message", multiline: true },
+    ] as const;
+
+    const renderField = ({ name, label, ...rest }: (typeof fields)[number]) => (
+        <TextField
+            key={name}
+            id={name}
+            name={name}
+            label={label}
+            value={contactForm.values[name]}
+            onBlur={contactForm.handleBlur}
+            error={contactForm.touched[name] && Boolean(contactForm.errors[name])}
+            helperText={getIn(contactForm.touched, name) && getIn(contactForm.errors, name)}
+            onChange={contactForm.handleChange}
+            fullWidth
+            variant="outlined"
+            {...("multiline" in rest && { multiline: true, rows: 10 })}
+        />
+    );
+
+    const mailLink = <a href="mailto:info@shareframe.de">info@shareframe.de</a>;
+
+    if (loggedIn) {
+        return (
+            <Container maxWidth="md" sx={{ px: { xs: 0, sm: 3 }, pb: { xs: 4, sm: 10 } }}>
+                <Typography variant="h4" component="h1" sx={{ mb: { xs: 1, sm: 2 } }}>
+                    Kontaktiere uns
+                </Typography>
+                <Typography variant="body1" color="text.secondary" sx={{ mb: { xs: 2, sm: 3 } }}>
+                    Hast du Fragen, Anregungen oder möchtest einen Bug melden? Schreib uns über das Formular oder direkt an {mailLink}.
+                </Typography>
+                <SettingsSection title="Nachricht">
+                    <Stack component="form" id="contact-form" noValidate onSubmit={contactForm.handleSubmit} spacing={2}>
+                        {fields.map(renderField)}
+                        <FormActions>
+                            <Button type="submit" variant="contained">
+                                Nachricht absenden
+                            </Button>
+                        </FormActions>
+                    </Stack>
+                </SettingsSection>
+            </Container>
+        );
+    }
 
     return (
         <Box
@@ -93,103 +147,14 @@ export default function ContactForm() {
                     }}>
                     <Typography variant="body1" sx={{ mt: 2, mb: 5 }}>
                         Alternativ kannst du uns auch direkt eine E-Mail an{" "}
-                        <a href="mailto:info@shareframe.de">info@shareframe.de</a> senden.
+                        {mailLink} senden.
                     </Typography>
                 </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        lg: 7
-                    }}>
-                    <TextField
-                        id="name"
-                        name="name"
-                        label="Dein Name"
-                        value={contactForm.values.name}
-                        onBlur={contactForm.handleBlur}
-                        error={
-                            contactForm.touched.name && Boolean(contactForm.errors.name)
-                        }
-                        helperText={
-                            getIn(contactForm.touched, "name") &&
-                            getIn(contactForm.errors, "name")
-                        }
-                        onChange={contactForm.handleChange}
-                        fullWidth
-                        variant="outlined"
-                    />
-                </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        lg: 7
-                    }}>
-                    <TextField
-                        id="email"
-                        name="email"
-                        label="Email"
-                        value={contactForm.values.email}
-                        onBlur={contactForm.handleBlur}
-                        error={
-                            contactForm.touched.email && Boolean(contactForm.errors.email)
-                        }
-                        helperText={
-                            getIn(contactForm.touched, "email") &&
-                            getIn(contactForm.errors, "email")
-                        }
-                        onChange={contactForm.handleChange}
-                        fullWidth
-                        variant="outlined"
-                    />
-                </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        lg: 7
-                    }}>
-                    <TextField
-                        id="subject"
-                        name="subject"
-                        label="Betreff"
-                        value={contactForm.values.subject}
-                        onBlur={contactForm.handleBlur}
-                        error={
-                            contactForm.touched.subject && Boolean(contactForm.errors.subject)
-                        }
-                        helperText={
-                            getIn(contactForm.touched, "subject") &&
-                            getIn(contactForm.errors, "subject")
-                        }
-                        onChange={contactForm.handleChange}
-                        fullWidth
-                        variant="outlined"
-                    />
-                </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        lg: 7
-                    }}>
-                    <TextField
-                        id="message"
-                        name="message"
-                        label="Message"
-                        value={contactForm.values.message}
-                        onBlur={contactForm.handleBlur}
-                        error={
-                            contactForm.touched.message && Boolean(contactForm.errors.message)
-                        }
-                        helperText={
-                            getIn(contactForm.touched, "message") &&
-                            getIn(contactForm.errors, "message")
-                        }
-                        onChange={contactForm.handleChange}
-                        fullWidth
-                        variant="outlined"
-                        multiline
-                        rows={10}
-                    />
-                </Grid>
+                {fields.map((field) => (
+                    <Grid key={field.name} size={{ xs: 12, lg: 7 }}>
+                        {renderField(field)}
+                    </Grid>
+                ))}
                 <Grid
                     size={{
                         xs: 12,
