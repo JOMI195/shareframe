@@ -1,10 +1,10 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { canonicalUrl, OG_IMAGE, pages, SITE_ORIGIN } from '@/seo/pageMeta';
 import { landingContent } from '@/seo/landingContent';
 import { renderRoute } from '@tests/helpers/renderRoute';
-import { signedInState } from '@tests/helpers/preloadedState';
+import { buildState, signedInState } from '@tests/helpers/preloadedState';
 
 const publicPaths = pages.filter((page) => !page.noindex).map((page) => [page.path, page.title]);
 const privatePaths = pages.filter((page) => page.noindex && !page.matchPrefix).map((page) => [page.path]);
@@ -144,5 +144,16 @@ describe('landing page', () => {
 
     expect(await screen.findByRole('img', { name: 'ShareFrame' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
+  });
+
+  // Seasonal decorations are a perk of the signed-in app.
+  it('stays plain during a season', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] }).setSystemTime(new Date('2026-10-22T12:00:00'));
+    renderRoute('/', { preloadedState: buildState({ ui: { settings: { design: { seasonalThemes: true } } } }) });
+
+    expect(await screen.findByRole('img', { name: 'ShareFrame' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Halloween' })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('SeasonalScreen')).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
