@@ -1,0 +1,18 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}Neue E-Mail-Adresse bestätigen{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Fast geschafft – bestätige
+    deine neue Adresse!</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Hey {{ user.username }},
+</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Du möchtest deine
+    E-Mail-Adresse bei ShareFrame auf <strong>{{ new_email }}</strong> ändern.</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Klick auf den Button unten,
+    um die Änderung zu bestätigen. Der Link ist 24 Stunden gültig.</p>
+<a style="background-color: #8b5cf6; padding: 10px 20px; color: #ffffff; border-radius: 5px; display: inline-block; text-decoration: none;"
+    href="{{ protocol }}://{{ domain }}/{{ url|safe }}" class="button">E-Mail-Adresse bestätigen</a>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Wenn das nicht von dir kam,
+    ignorier diese E-Mail einfach. Deine Adresse bleibt dann unverändert.</p>
+{% endblock %}

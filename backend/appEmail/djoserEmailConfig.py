@@ -95,7 +95,7 @@ class DjoserUserDeletedEmail(BaseDjoserEmail):
 
     def get_context_data(self):
         context = super().get_context_data()
-        context["subject"] = "Dein Konto wurde gelöscht – Alles Gute und bis bald! 👋"
+        context["subject"] = "Dein Konto wurde gelöscht – Alles Gute und bis bald!"
         return context
 
     def send(self, *args, **kwargs):
@@ -105,4 +105,42 @@ class DjoserUserDeletedEmail(BaseDjoserEmail):
             context=context,
             from_email=settings.DEFAULT_FROM_EMAIL,
             to_emails=[context["user"].email],
+        )
+
+
+class DjoserEmailChangeConfirmEmail(BaseDjoserEmail):
+    template_name = "djoser/email_change_confirm.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["subject"] = "Bestätige deine neue E-Mail-Adresse bei ShareFrame.de"
+        context["url"] = settings.FRONTEND_EMAIL_CHANGE_CONFIRM_URL.format(
+            token=context["token"]
+        )
+        return context
+
+    def send(self, to, *args, **kwargs):
+        send_django_mail_with_logo(
+            template_name=self.template_name,
+            context=self.get_context_data(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=to,
+        )
+
+
+class DjoserEmailChangedEmail(BaseDjoserEmail):
+    template_name = "djoser/email_changed.html"
+
+    def get_context_data(self):
+        context = super().get_context_data()
+        context["subject"] = "Deine E-Mail-Adresse bei ShareFrame.de wurde geändert"
+        return context
+
+    # The user already carries the new address; `to` is the old one.
+    def send(self, to, *args, **kwargs):
+        send_django_mail_with_logo(
+            template_name=self.template_name,
+            context=self.get_context_data(),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=to,
         )

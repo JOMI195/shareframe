@@ -563,6 +563,10 @@ FRONTEND_CHANGELOGS_URL = "aenderungen/"
 FRONTEND_IMAGES_URL = "fotos/"
 FRONTEND_UNSUBSCRIBE_URL = "benachrichtigungen/abmelden/"
 FRONTEND_NOTIFICATION_SETTINGS_URL = "settings/user/?tab=notifications"
+FRONTEND_EMAIL_CHANGE_CONFIRM_URL = "auth/users/email-change/{token}"
+
+#### Email change
+EMAIL_CHANGE_TIMEOUT = timedelta(hours=24)
 
 #### Notifications
 VAPID_PUBLIC_KEY = os.environ.get("VAPID_PUBLIC_KEY", "")

@@ -1,0 +1,17 @@
+{% extends "djoser/djoser_base_email.html" %}
+
+{% block title %}E-Mail-Adresse geändert{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 24px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Deine E-Mail-Adresse wurde
+    geändert</h1>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Hey {{ user.username }},
+</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Dein ShareFrame-Konto ist ab
+    jetzt mit einer neuen E-Mail-Adresse verknüpft. Melde dich künftig mit der neuen Adresse an. An diese Adresse
+    schicken wir keine Nachrichten mehr.</p>
+<p style="font-size: 16px; line-height: 1.5; font-family: Inter, Roboto, Arial, sans-serif;">Falls du diese Änderung
+    nicht selbst durchgeführt hast, schick schnell eine Nachricht an unser Support-Team.</p>
+<a style="background-color: #8b5cf6; padding: 10px 20px; color: #ffffff; border-radius: 5px; display: inline-block; text-decoration: none;"
+    href="{{ contact_link }}" class="button">Support anschreiben</a>
+{% endblock %}
