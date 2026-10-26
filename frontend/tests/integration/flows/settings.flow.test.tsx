@@ -14,8 +14,7 @@ const openAppSettings = async (seasonalThemes = false) => {
   const view = renderRoute('/settings/app/', {
     preloadedState: signedInState({ ui: { settings: { design: { seasonalThemes } } } }),
   });
-  // "Darstellung" is both the tab and the section heading.
-  await screen.findAllByText('Darstellung');
+  await screen.findByText('Farbschema');
   return view;
 };
 
@@ -137,7 +136,7 @@ describe('profile', () => {
     await openUserSettings();
 
     expect((screen.getByLabelText('Nutzername') as HTMLInputElement).value).toBe(seedUser.username);
-    expect(screen.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' })).toBeChecked();
+    expect(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' })).toBeChecked();
   });
 
   it('saves a new username together with the searchable flag', async () => {
@@ -152,7 +151,7 @@ describe('profile', () => {
 
     await user.clear(screen.getByLabelText('Nutzername'));
     await user.type(screen.getByLabelText('Nutzername'), 'alice2');
-    await user.click(screen.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' }));
+    await user.click(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' }));
     await user.click(screen.getByRole('button', { name: 'Speichern' }));
 
     await waitFor(() => expect(bodies).toHaveLength(1));
@@ -182,7 +181,7 @@ describe('profile', () => {
 
     await user.clear(screen.getByLabelText('Nutzername'));
     await user.type(screen.getByLabelText('Nutzername'), 'irgendwas');
-    await user.click(screen.getByRole('button', { name: 'Eingaben zurücksetzen' }));
+    await user.click(screen.getByRole('button', { name: 'Zurücksetzen' }));
 
     expect((screen.getByLabelText('Nutzername') as HTMLInputElement).value).toBe(seedUser.username);
   });

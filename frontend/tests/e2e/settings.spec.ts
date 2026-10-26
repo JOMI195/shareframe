@@ -26,7 +26,7 @@ test.describe('personal information', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Profil');
 
-    await expect(page.getByLabel('Email')).toHaveValue(erin.email);
+    await expect(page.getByText(erin.email)).toBeVisible();
     const username = page.getByLabel('Nutzername');
     await expect(username).toHaveValue(erin.username);
 
@@ -100,7 +100,7 @@ test.describe('personal information', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Profil');
 
-    const searchable = page.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' });
+    const searchable = page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' });
     await expect(searchable).toBeChecked();
     await searchable.uncheck();
     await page.getByRole('button', { name: 'Speichern' }).click();
@@ -108,7 +108,7 @@ test.describe('personal information', () => {
     await page.reload();
     await page.getByRole('tab', { name: 'Profil' }).click();
     await expect(
-      page.getByRole('checkbox', { name: 'Freundschaftsanfragen erhalten' }),
+      page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' }),
     ).not.toBeChecked();
   });
 });
@@ -194,7 +194,7 @@ test.describe('email address', () => {
     await test.step('nothing changes before the link is opened', async () => {
       await page.reload();
       await page.getByRole('tab', { name: 'Profil' }).click();
-      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(frank.email);
+      await expect(page.getByRole('tabpanel').getByText(frank.email)).toBeVisible();
     });
 
     await test.step('the link switches the address and tells the old one', async () => {
@@ -202,7 +202,7 @@ test.describe('email address', () => {
       await expect(page.getByText('E-Mail-Adresse geändert', { exact: false })).toBeVisible();
 
       await openUserSettings(page, 'Profil');
-      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(NEW_EMAIL);
+      await expect(page.getByRole('tabpanel').getByText(NEW_EMAIL)).toBeVisible();
       const notice = await expectMail(frank.email, { subject: 'ShareFrame - E-Mail-Adresse geändert' });
       expect(notice.text).toContain('mit einer neuen E-Mail-Adresse');
     });

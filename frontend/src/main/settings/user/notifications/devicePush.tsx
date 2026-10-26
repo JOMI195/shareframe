@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FormControlLabel, Paper, Switch, Typography } from '@mui/material';
+import { FormControlLabel, Switch, Typography } from '@mui/material';
+import SettingsSection from '@/common/components/settings/settingsSection';
 import { getPushSubscription, isPushSupported, subscribePush, unsubscribePush } from '@/common/utils/pwa/push';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 
@@ -40,10 +41,7 @@ const DevicePush = () => {
     };
 
     return (
-        <Paper variant="outlined" sx={{ p: 2 }}>
-            <Typography variant="h6" gutterBottom>
-                Push auf diesem Gerät
-            </Typography>
+        <SettingsSection title="Push auf diesem Gerät">
             {pushAvailable ? (
                 <>
                     <FormControlLabel
@@ -59,7 +57,7 @@ const DevicePush = () => {
                     Push-Benachrichtigungen gibt es nur in der installierten App. Installiere ShareFrame über die App-Einstellungen.
                 </Typography>
             )}
-        </Paper>
+        </SettingsSection>
     );
 };
 

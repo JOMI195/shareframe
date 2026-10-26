@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import { Button, Typography } from '@mui/material';
+import SettingsSection from '@/common/components/settings/settingsSection';
+import FormActions from '@/common/components/settings/formActions';
 import InstallMobileIcon from '@mui/icons-material/InstallMobile';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import IosInstallDialog from '@/common/components/pwa/iosInstallDialog';
@@ -10,17 +12,19 @@ const Install = () => {
 
     const renderAction = () => {
         if (installed) {
-            return <Typography variant="body1">ShareFrame ist bereits installiert.</Typography>;
+            return <Typography variant="body2">ShareFrame ist bereits installiert.</Typography>;
         }
         if (canPrompt || showIosHint) {
             return (
-                <Button
-                    variant="contained"
-                    startIcon={<InstallMobileIcon />}
-                    onClick={canPrompt ? promptInstall : () => setIosDialogOpen(true)}
-                >
-                    App installieren
-                </Button>
+                <FormActions>
+                    <Button
+                        variant="contained"
+                        startIcon={<InstallMobileIcon />}
+                        onClick={canPrompt ? promptInstall : () => setIosDialogOpen(true)}
+                    >
+                        App installieren
+                    </Button>
+                </FormActions>
             );
         }
         return (
@@ -31,16 +35,13 @@ const Install = () => {
     };
 
     return (
-        <Box>
-            <Typography variant="h6" gutterBottom>
-                App installieren
-            </Typography>
-            <Typography variant="body1" sx={{ mb: 2 }}>
-                Installiere ShareFrame auf deinem Gerät und starte es wie eine App vom Home-Bildschirm oder Desktop.
-            </Typography>
+        <SettingsSection
+            title="App installieren"
+            description="Installiere ShareFrame auf deinem Gerät und starte es wie eine App vom Home-Bildschirm oder Desktop."
+        >
             {renderAction()}
             <IosInstallDialog open={iosDialogOpen} onClose={() => setIosDialogOpen(false)} />
-        </Box>
+        </SettingsSection>
     );
 };
 

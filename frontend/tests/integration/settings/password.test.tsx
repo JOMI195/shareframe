@@ -106,7 +106,7 @@ describe('password settings', () => {
     const { user } = render();
     await user.type(screen.getByLabelText('Neues Passwort'), VALID);
 
-    await user.click(screen.getByRole('button', { name: 'Eingaben zurücksetzen' }));
+    await user.click(screen.getByRole('button', { name: 'Zurücksetzen' }));
 
     expect((screen.getByLabelText('Neues Passwort') as HTMLInputElement).value).toBe('');
   });

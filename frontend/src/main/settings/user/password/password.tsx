@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, InputAdornment, TextField } from "@mui/material";
+import { Button, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi } from "@/store/entities/authentication/authentication.slice";
@@ -8,6 +8,8 @@ import { ISetUserPasswortForm } from "@/types";
 import { setPassword } from "@/store/entities/authentication/authentication.actions";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import SettingsSection from "@/common/components/settings/settingsSection";
+import FormActions from "@/common/components/settings/formActions";
 
 const Security = () => {
     const dispatch = useAppDispatch();
@@ -71,186 +73,80 @@ const Security = () => {
         },
     });
 
+    const fields: { name: keyof ISetUserPasswortForm; label: string; autoComplete: string }[] = [
+        { name: 'current_password', label: 'Aktuelles Passwort', autoComplete: 'current-password' },
+        { name: 'new_password', label: 'Neues Passwort', autoComplete: 'new-password' },
+        { name: 're_new_password', label: 'Neues Passwort wiederholen', autoComplete: 'new-password' },
+    ];
+
     return (
-        <Box
-            component='form'
-            id='set-user-password-form'
-            noValidate
-            onSubmit={setUserPasswordForm.handleSubmit}
-        >
-            <Grid container spacing={2}>
-                <Grid size={12}>
+        <SettingsSection title="Passwort ändern">
+            <Stack
+                component='form'
+                id='set-user-password-form'
+                noValidate
+                onSubmit={setUserPasswordForm.handleSubmit}
+                spacing={2}
+            >
+                {fields.map(({ name, label, autoComplete }) => (
                     <TextField
-                        id='current_password'
-                        name='current_password'
-                        label={'Aktuelles Passwort'}
-                        value={setUserPasswordForm.values.current_password}
+                        key={name}
+                        id={name}
+                        name={name}
+                        label={label}
+                        value={setUserPasswordForm.values[name]}
                         onBlur={setUserPasswordForm.handleBlur}
                         error={
-                            setUserPasswordForm.touched.current_password &&
-                            Boolean(setUserPasswordForm.errors.current_password)
+                            setUserPasswordForm.touched[name] &&
+                            Boolean(setUserPasswordForm.errors[name])
                         }
                         helperText={
-                            getIn(setUserPasswordForm.touched, "current_password") &&
-                            getIn(setUserPasswordForm.errors, "current_password")
+                            getIn(setUserPasswordForm.touched, name) &&
+                            getIn(setUserPasswordForm.errors, name)
                         }
                         onChange={setUserPasswordForm.handleChange}
                         fullWidth
-                        autoComplete='password'
+                        autoComplete={autoComplete}
                         variant='outlined'
-                        type={showPassword.current_password ? 'text' : 'password'}
+                        type={showPassword[name] ? 'text' : 'password'}
                         slotProps={{
                             input: {
                                 endAdornment: (
                                     <InputAdornment position='end'>
                                         <IconButton
-                                            aria-label='toggle current password visibility'
-                                            onClick={() =>
-                                                handleClickShowPassword('current_password')
-                                            }
+                                            aria-label="Passwort anzeigen"
+                                            onClick={() => handleClickShowPassword(name)}
                                             onMouseDown={handleMouseDownPassword}
                                             edge='end'
                                         >
-                                            {showPassword.current_password ? (
-                                                <VisibilityOff />
-                                            ) : (
-                                                <Visibility />
-                                            )}
+                                            {showPassword[name] ? <VisibilityOff /> : <Visibility />}
                                         </IconButton>
                                     </InputAdornment>
                                 ),
                             }
                         }}
                     />
-                </Grid>
-                <Grid size={12}>
-                    <TextField
-                        id='new_password'
-                        name='new_password'
-                        label={'Neues Passwort'}
-                        value={setUserPasswordForm.values.new_password}
-                        onBlur={setUserPasswordForm.handleBlur}
-                        error={
-                            setUserPasswordForm.touched.new_password &&
-                            Boolean(setUserPasswordForm.errors.new_password)
-                        }
-                        helperText={
-                            getIn(setUserPasswordForm.touched, "new_password") &&
-                            getIn(setUserPasswordForm.errors, "new_password")
-                        }
-                        onChange={setUserPasswordForm.handleChange}
-                        fullWidth
-                        autoComplete='password'
-                        variant='outlined'
-                        type={showPassword.new_password ? 'text' : 'password'}
-                        slotProps={{
-                            input: {
-                                endAdornment: (
-                                    <InputAdornment position='end'>
-                                        <IconButton
-                                            aria-label='toggle current password visibility'
-                                            onClick={() =>
-                                                handleClickShowPassword('new_password')
-                                            }
-                                            onMouseDown={handleMouseDownPassword}
-                                            edge='end'
-                                        >
-                                            {showPassword.new_password ? (
-                                                <VisibilityOff />
-                                            ) : (
-                                                <Visibility />
-                                            )}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }
-                        }}
-                    />
-                </Grid>
-                <Grid size={12}>
-                    <TextField
-                        id='re_new_password'
-                        name='re_new_password'
-                        label={'Neues Passwort wiederholen'}
-                        value={setUserPasswordForm.values.re_new_password}
-                        onBlur={setUserPasswordForm.handleBlur}
-                        error={
-                            setUserPasswordForm.touched.re_new_password &&
-                            Boolean(setUserPasswordForm.errors.re_new_password)
-                        }
-                        helperText={
-                            getIn(setUserPasswordForm.touched, "re_new_password") &&
-                            getIn(setUserPasswordForm.errors, "re_new_password")
-                        }
-                        onChange={setUserPasswordForm.handleChange}
-                        fullWidth
-                        autoComplete='password'
-                        variant='outlined'
-                        type={showPassword.re_new_password ? 'text' : 'password'}
-                        slotProps={{
-                            input: {
-                                endAdornment: (
-                                    <InputAdornment position='end'>
-                                        <IconButton
-                                            aria-label='toggle current password visibility'
-                                            onClick={() =>
-                                                handleClickShowPassword('re_new_password')
-                                            }
-                                            onMouseDown={handleMouseDownPassword}
-                                            edge='end'
-                                        >
-                                            {showPassword.re_new_password ? (
-                                                <VisibilityOff />
-                                            ) : (
-                                                <Visibility />
-                                            )}
-                                        </IconButton>
-                                    </InputAdornment>
-                                ),
-                            }
-                        }}
-                    />
-                </Grid>
+                ))}
 
-                <Grid container spacing={2} size={12} sx={{
-                    justifyContent: "space-between"
-                }}>
-                    <Grid
-                        sx={{ order: { xs: 1, md: 2 } }}
-                        size={{
-                            xs: 12,
-                            md: 5
-                        }}>
-                        <Button
-                            type='submit'
-                            fullWidth
-                            form='set-user-password-form'
-                            variant='contained'
-                            disabled={getAuthApi.loading}
-                        >
-                            {'Speichern'}
-                        </Button>
-                    </Grid>
-
-                    <Grid
-                        sx={{ order: { xs: 2, md: 1 } }}
-                        size={{
-                            xs: 12,
-                            md: 5
-                        }}>
-                        <Button
-                            type="button"
-                            fullWidth
-                            variant="outlined"
-                            color="secondary"
-                            onClick={() => setUserPasswordForm.resetForm()}
-                        >
-                            {"Eingaben zurücksetzen"}
-                        </Button>
-                    </Grid>
-                </Grid>
-            </Grid>
-        </Box>
+                <FormActions>
+                    <Button
+                        type="button"
+                        variant="outlined"
+                        color="secondary"
+                        onClick={() => setUserPasswordForm.resetForm()}
+                    >
+                        {"Zurücksetzen"}
+                    </Button>
+                    <Button
+                        type='submit'
+                        variant='contained'
+                        disabled={getAuthApi.loading}
+                    >
+                        {'Speichern'}
+                    </Button>
+                </FormActions>
+            </Stack>
+        </SettingsSection>
     );
 }
 
