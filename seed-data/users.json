@@ -46,5 +46,12 @@
     "password": "seed-mallory-dev-pass1",
     "friendship_code": "SEEDM001",
     "friendship_user_searchable": false
+  },
+  {
+    "username": "seed_frank",
+    "email": "seed.frank@shareframe.local",
+    "password": "seed-frank-dev-pass1",
+    "friendship_code": "SEEDF001",
+    "friendship_user_searchable": false
   }
 ]

@@ -9,3 +9,5 @@ export const dave = { email: 'seed.dave@shareframe.local', password: 'seed-dave-
 export const erin = { email: 'seed.erin@shareframe.local', password: 'seed-erin-dev-pass1', username: 'seed_erin', code: 'SEEDE001' };
 // friendship_user_searchable is false for this one.
 export const mallory = { email: 'seed.mallory@shareframe.local', password: 'seed-mallory-dev-pass1', username: 'seed_mallory', code: 'SEEDM001' };
+// Changes its email address.
+export const frank = { email: 'seed.frank@shareframe.local', password: 'seed-frank-dev-pass1', username: 'seed_frank', code: 'SEEDF001' };

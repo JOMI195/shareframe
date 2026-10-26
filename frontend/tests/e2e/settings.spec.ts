@@ -1,6 +1,7 @@
 import path from 'node:path';
-import { dave, erin, mallory } from '../support/e2e/credentials';
+import { dave, erin, frank, mallory } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
+import { hasMailTo, readFromMail } from '../support/e2e/mailhog';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 
@@ -157,6 +158,78 @@ test.describe('password', () => {
     await signOut(page);
     await signIn(page, erin);
     await expect(page).toHaveTitle('Start – ShareFrame');
+  });
+});
+
+test.describe('email address', () => {
+  const NEW_EMAIL = 'seed.frank.neu@shareframe.local';
+  const signInFails = async (page: import('@playwright/test').Page, email: string) => {
+    await page.goto('/auth/sign-in/');
+    await page.getByLabel('Email').fill(email);
+    await page.getByLabel('Passwort').fill(frank.password);
+    await page.getByRole('button', { name: 'anmelden' }).click();
+
+    await expect(page.getByRole('alert').first()).toBeVisible();
+    await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
+  };
+
+  test('changes the address only after the link from the mail is opened', async ({ page }) => {
+    // Two sign-ins, two mails and several reloads.
+    test.setTimeout(120_000);
+    await signIn(page, frank);
+    await openUserSettings(page, 'Profil');
+
+    // Hidden tab panels stay mounted, so the password tab has a field with the same label.
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
+    await panel.getByLabel('Neue E-Mail-Adresse').fill(NEW_EMAIL);
+    await panel.getByLabel('Aktuelles Passwort').fill(frank.password);
+    await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
+
+    await expect(panel.getByText(`Bestätigungslink an ${NEW_EMAIL}`)).toBeVisible({ timeout: 30_000 });
+    const token = await readFromMail(NEW_EMAIL, /email-change\/([A-Za-z0-9_:-]+)/);
+
+    await test.step('nothing changes before the link is opened', async () => {
+      await page.reload();
+      await page.getByRole('tab', { name: 'Profil' }).click();
+      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(frank.email);
+    });
+
+    await test.step('the link switches the address and tells the old one', async () => {
+      await page.goto(`/auth/users/email-change/${token}`);
+      await expect(page.getByText('E-Mail-Adresse geändert', { exact: false })).toBeVisible();
+
+      await openUserSettings(page, 'Profil');
+      await expect(page.getByLabel('Email', { exact: true })).toHaveValue(NEW_EMAIL);
+      await expect.poll(() => hasMailTo(frank.email, /mit einer neuen E-Mail-Adresse/)).toBe(true);
+    });
+
+    await test.step('the link works only once', async () => {
+      await page.goto(`/auth/users/email-change/${token}`);
+      await expect(page.getByText('Der Link ist ungültig oder abgelaufen.')).toBeVisible();
+    });
+
+    await signOut(page);
+
+    await test.step('only the new address signs in', async () => {
+      await signInFails(page, frank.email);
+      await signIn(page, { ...frank, email: NEW_EMAIL });
+      await expect(page).toHaveTitle('Start – ShareFrame');
+    });
+  });
+
+  test('refuses an address another account already uses', async ({ page }) => {
+    await signIn(page, erin);
+    await openUserSettings(page, 'Profil');
+
+    const panel = page.getByRole('tabpanel');
+    await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
+    await panel.getByLabel('Neue E-Mail-Adresse').fill(dave.email);
+    await panel.getByLabel('Aktuelles Passwort').fill(erin.password);
+    await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
+
+    await expect(page.getByText('Diese E-Mail ist bereits vergeben.')).toBeVisible();
+    await expect(panel.getByLabel('Neue E-Mail-Adresse')).toHaveValue(dave.email);
   });
 });
 
