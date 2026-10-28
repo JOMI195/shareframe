@@ -1,5 +1,6 @@
 import { useAppDispatch } from '@/store';
-import { fetchChangelogIds, fetchChangelogIdsIfStale, fetchMissingChangelogs, fetchNewestChangelog } from '@/store/entities/changelogs/changelogs.actions';
+import { fetchChangelogIds, fetchChangelogIdsIfStale, fetchMissingChangelogs, fetchNewestChangelog, publishedBeforeJoining } from '@/store/entities/changelogs/changelogs.actions';
+import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getApi, getChangelogIds, getChangelogs, getSortedChangelogIds } from '@/store/entities/changelogs/changelogs.slice';
 import { clearOutdatedDeactivatedIds, toggleChangelogDeactivation } from '@/store/ui/changelogs/changelogs.actions';
 import { getDeactivatedIds } from '@/store/ui/changelogs/changelogs.slice';
@@ -13,6 +14,7 @@ export const useChangelogs = () => {
     const changelogs = useSelector(getChangelogs);
     const sortedChangelogIds = useSelector(getSortedChangelogIds);
     const deactivatedIds = useSelector(getDeactivatedIds);
+    const dateJoined = useSelector(getUser).me.date_joined;
 
     const loadChangelogIds = useCallback(() => {
         dispatch(fetchChangelogIds());
@@ -56,7 +58,7 @@ export const useChangelogs = () => {
 
         const newestId = sortedChangelogIds[0];
 
-        if (!deactivatedIds.includes(newestId.id)) {
+        if (!deactivatedIds.includes(newestId.id) && !publishedBeforeJoining(newestId.date, dateJoined)) {
             return changelogs.find(log => log.id === newestId.id) || null;
         }
 

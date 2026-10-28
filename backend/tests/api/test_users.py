@@ -68,6 +68,19 @@ class TestUpdateProfile:
         user.refresh_from_db()
         assert user.email == original
 
+    # The app compares it with changelog dates, so it must not be editable.
+    def test_the_join_date_is_returned_and_read_only(self, client_as):
+        user = UserFactory(is_active=True)
+        original = user.date_joined
+
+        response = client_as(user).patch(
+            ME_URL, {"date_joined": "2000-01-01T00:00:00Z"}, format="json"
+        )
+
+        user.refresh_from_db()
+        assert user.date_joined == original
+        assert response.data["date_joined"]
+
     def test_a_blacklisted_username_is_refused(self, client_as):
         user = UserFactory(is_active=True)
         original = user.username

@@ -53,6 +53,18 @@ describe('getNewestActiveChangelog', () => {
     expect(setup([], [makeChangelog({ id: 1 })]).result.current.getNewestActiveChangelog()).toBeNull();
   });
 
+  // A new account was not away for anything.
+  it('returns null when the newest entry is older than the account', () => {
+    const { Wrapper } = createWrapper({
+      preloadedState: {
+        entities: { changelogs: { changelogIds: ids, changelogs: ids.map((id) => makeChangelog({ id: id.id })) } },
+        auth: { user: { me: { date_joined: '2026-04-01T10:00:00Z' } } },
+      },
+    });
+
+    expect(renderHook(() => useChangelogs(), { wrapper: Wrapper }).result.current.getNewestActiveChangelog()).toBeNull();
+  });
+
   it('returns null when there are no changelogs at all', () => {
     const { Wrapper } = createWrapper();
     expect(renderHook(() => useChangelogs(), { wrapper: Wrapper }).result.current.getNewestActiveChangelog()).toBeNull();

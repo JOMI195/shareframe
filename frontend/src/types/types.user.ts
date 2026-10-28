@@ -42,6 +42,7 @@ export interface IUserAccount {
 
 export interface IUser extends ICoreUser {
     account: IUserAccount;
+    date_joined?: string;
 }
 
 export interface IPatchUserForm {

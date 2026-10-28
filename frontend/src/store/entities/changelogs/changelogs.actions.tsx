@@ -23,6 +23,10 @@ export const fetchChangelogsByIds = (ids: number[]) =>
         data: { ids },
     });
 
+// A brand-new account has nothing it was "away" for.
+export const publishedBeforeJoining = (changelogDate: string, dateJoined?: string) =>
+    Boolean(dateJoined) && changelogDate < dateJoined!.slice(0, 10);
+
 const IDS_MAX_AGE_MS = 5 * 60 * 1000;
 
 export const fetchChangelogIdsIfStale = () =>
@@ -41,5 +45,6 @@ export const fetchNewestChangelog =
         const state = getState();
         const newest = changelogsSlice.getSortedChangelogIds(state)[0];
         if (!newest || getDeactivatedIds(state).includes(newest.id)) return;
+        if (publishedBeforeJoining(newest.date, state.auth.user.me.date_joined)) return;
         dispatch(fetchMissingChangelogs([newest.id]));
     };
