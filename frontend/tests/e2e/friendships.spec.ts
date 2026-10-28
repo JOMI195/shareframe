@@ -41,7 +41,7 @@ test.describe('friendships', () => {
   test('refuses a friend code that is not searchable', async ({ signedInPage: page }) => {
     await openFriendships(page);
 
-    await page.getByRole('button', { name: 'Freundschafsanfrage' }).click();
+    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
     await page.getByLabel('Freundschaftscode').fill(mallory.code);
     await page.getByRole('button', { name: 'Hinzufügen' }).click();
 
@@ -55,7 +55,7 @@ test.describe('friendships', () => {
   test('rejects a code that does not belong to anyone', async ({ signedInPage: page }) => {
     await openFriendships(page);
 
-    await page.getByRole('button', { name: 'Freundschafsanfrage' }).click();
+    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
     await page.getByLabel('Freundschaftscode').fill('ZZZZ9999');
     await page.getByRole('button', { name: 'Hinzufügen' }).click();
 
@@ -68,7 +68,7 @@ test.describe('friendships', () => {
 
     const friend = page.locator('.MuiCard-root', { hasText: carol.username });
     await expect(friend).toBeVisible({ timeout: 30_000 });
-    await friend.getByRole('button', { name: 'delete' }).click();
+    await friend.getByRole('button', { name: 'Freundschaft beenden' }).click();
 
     await expect(
       page.getByText('Die Freundschaft kann mit einer Freundschaftanfrage jederzeit wieder hergestellt werden.'),

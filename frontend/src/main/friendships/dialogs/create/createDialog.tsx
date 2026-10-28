@@ -141,15 +141,14 @@ const FriendshipCreateDialog: React.FC = () => {
                 >
                   {friendshipCode}
                 </Typography>
-                <ContentCopyIcon
+                <IconButton
                   onClick={handleCopyCode}
                   className="ignore-clickaway"
-                  sx={{
-                    cursor: 'pointer',
-                    color: 'text.secondary',
-                    '&:hover': { color: 'primary.main' }
-                  }}
-                />
+                  aria-label="Freundschaftscode kopieren"
+                  sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                >
+                  <ContentCopyIcon />
+                </IconButton>
               </Box>
             </Stack>
           </Paper>
@@ -192,6 +191,7 @@ const FriendshipCreateDialog: React.FC = () => {
                     <TextField
                       id='friend_code'
                       name='reciever_friendship_user_search_code'
+                      autoComplete="off"
                       label="Freundschaftscode"
                       value={form.values.reciever_friendship_user_search_code}
                       onBlur={form.handleBlur}
@@ -211,7 +211,10 @@ const FriendshipCreateDialog: React.FC = () => {
                       variant='outlined'
                       slotProps={{
                         htmlInput: {
-                          style: { textTransform: 'uppercase' }
+                          style: { textTransform: 'uppercase' },
+                          autoCapitalize: 'characters',
+                          autoCorrect: 'off',
+                          spellCheck: false,
                         }
                       }}
                     />

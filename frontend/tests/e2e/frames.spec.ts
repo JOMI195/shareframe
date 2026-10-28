@@ -29,7 +29,7 @@ test.describe('frames', () => {
   test('issues a one-time password for a frame', async ({ signedInPage: page }) => {
     await openFrames(page);
 
-    await frameCards(page).first().getByRole('button', { name: 'generate otp' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Einmalcode anzeigen' }).click();
     const otp = page.locator('input#otp');
     await expect(otp).toHaveValue('');
     await expect(page.getByRole('button', { name: 'copy otp' })).toBeDisabled();
@@ -43,7 +43,7 @@ test.describe('frames', () => {
 
   test('issues a different one-time password on demand', async ({ signedInPage: page }) => {
     await openFrames(page);
-    await frameCards(page).first().getByRole('button', { name: 'generate otp' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Einmalcode anzeigen' }).click();
 
     await page.getByRole('button', { name: 'Generieren' }).click();
     await expect(page.locator('input#otp')).toHaveValue(/^\d{6}$/, { timeout: 30_000 });
@@ -77,7 +77,7 @@ test.describe('frames', () => {
     const serial = (await frameCards(page).first().innerText()).match(SERIAL)?.[0];
     expect(serial).toBeTruthy();
 
-    await frameCards(page).first().getByRole('button', { name: 'delete' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Bilderrahmen entfernen' }).click();
     await expect(
       page.getByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
     ).toBeVisible();

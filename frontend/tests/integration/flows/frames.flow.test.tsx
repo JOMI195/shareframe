@@ -168,7 +168,7 @@ describe('unregistering a frame', () => {
     );
     const { user } = await openFrames();
 
-    await user.click(await screen.findByRole('button', { name: 'delete' }));
+    await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     expect(
       await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
     ).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe('unregistering a frame', () => {
     );
     const { user } = await openFrames();
 
-    await user.click(await screen.findByRole('button', { name: 'delete' }));
+    await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     await user.click(screen.getByRole('button', { name: 'Abbrechen' }));
 
     expect(calls).toHaveLength(0);

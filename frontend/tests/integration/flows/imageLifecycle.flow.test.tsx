@@ -91,6 +91,16 @@ describe('photo library', () => {
     await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 10_000 });
   });
 
+  it('opens a photo from the keyboard', async () => {
+    const { user, store } = await openLibrary();
+
+    const tile = screen.getByRole('button', { name: library[0].display_name || library[0].name });
+    tile.focus();
+    await user.keyboard('{Enter}');
+
+    expect(store.getState().ui.images.dialogs.preview.open).toBe(true);
+  });
+
   it('offers the first upload in the empty library', async () => {
     server.use(...withImages([]));
     const { user, store } = renderRoute('/fotos/', { preloadedState: signedInState() });

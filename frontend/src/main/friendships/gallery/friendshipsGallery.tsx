@@ -112,11 +112,12 @@ const FriendshipsGallery: React.FC = () => {
                         width: "100%"
                     }}>
                         <Stack direction="row">
-                            <Tooltip title={"Freundschaft löschen"}>
+                            <Tooltip title={"Freundschaft beenden"}>
                                 <IconButton
                                     onClick={() => { deleteFriendButtonClickHandle(friendship) }}
-                                    aria-label="delete"
+                                    aria-label="Freundschaft beenden"
                                     color="error"
+                                    sx={{ width: 44, height: 44 }}
                                 >
                                     <DeleteIcon />
                                 </IconButton>

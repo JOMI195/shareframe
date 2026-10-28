@@ -4,12 +4,15 @@ import { useBackToClose } from '@/hooks/navigation/useBackToClose';
 
 const marker = () => (window.history.state as Record<string, unknown> | null)?.backToClose;
 
-const back = async () => {
-  await act(async () => {
-    window.history.back();
-    await new Promise((resolve) => setTimeout(resolve, 20));
-  });
-};
+// Resolves once the browser has actually landed on the previous entry.
+const back = () =>
+  act(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener('popstate', () => setTimeout(resolve, 0), { once: true });
+        window.history.back();
+      }),
+  );
 
 // An unmount in the previous test may still have a history traversal in flight.
 beforeEach(async () => {

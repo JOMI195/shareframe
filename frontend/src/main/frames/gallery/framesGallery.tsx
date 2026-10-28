@@ -158,9 +158,7 @@ const FramesGallery: React.FC = () => {
                                         onClick={() => window.open(`http://${ipAddress}`, "_blank")}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
                                         startIcon={<OpenInNewIcon />}
-                                        sx={{
-                                            height: "28px"
-                                        }}
+                                        sx={{ minHeight: 36 }}
                                     >
                                         {"Öffnen"}
                                     </Button>
@@ -173,18 +171,20 @@ const FramesGallery: React.FC = () => {
                                     justifyContent: "center",
                                     alignItems: "center"
                                 }}>
-                                <Tooltip title={"Bilderrahmen abmelden"}>
+                                <Tooltip title={"Bilderrahmen entfernen"}>
                                     <IconButton
                                         onClick={() => { unregisterFrameButtonClickHandle(frame) }}
-                                        aria-label="delete"
+                                        aria-label="Bilderrahmen entfernen"
                                         color="error"
+                                        sx={{ width: 44, height: 44 }}
                                     >
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={"OTP generieren"}>
+                                <Tooltip title={"Einmalcode für den Rahmen anzeigen"}>
                                     <IconButton
-                                        aria-label="generate otp"
+                                        aria-label="Einmalcode anzeigen"
+                                        sx={{ width: 44, height: 44 }}
                                         onClick={() => dispatch(openRequestOTPDialog({ frameId: frame.id }))}
                                     >
                                         <KeyIcon />

@@ -1,18 +1,18 @@
-// components/QuickAccessCard.tsx
 import { FC, ReactNode } from 'react';
-import { Card, CardContent, Typography } from "@mui/material";
+import { Card, CardActionArea, CardContent, Typography } from "@mui/material";
+import { Link as RouterLink } from "react-router";
 
 interface QuickAccessCardProps {
     title: string;
     icon: ReactNode;
-    onClick: () => void;
+    to: string;
 }
 
-const QuickAccessCard: FC<QuickAccessCardProps> = ({ title, icon, onClick }) => {
+// A real link: reachable by keyboard and can be opened in a new tab.
+const QuickAccessCard: FC<QuickAccessCardProps> = ({ title, icon, to }) => {
     return (
         <Card
             sx={{
-                cursor: 'pointer',
                 transition: 'transform 0.2s',
                 '&:hover': {
                     transform: 'translateY(-4px)',
@@ -20,16 +20,17 @@ const QuickAccessCard: FC<QuickAccessCardProps> = ({ title, icon, onClick }) => 
                 }
             }}
             elevation={10}
-            onClick={onClick}
         >
-            <CardContent sx={{ textAlign: 'center', py: 2 }}>
-                {icon}
-                <Typography variant="subtitle1" sx={{
-                    fontWeight: "medium"
-                }}>
-                    {title}
-                </Typography>
-            </CardContent>
+            <CardActionArea component={RouterLink} to={to}>
+                <CardContent sx={{ textAlign: 'center', py: 2 }}>
+                    {icon}
+                    <Typography variant="subtitle1" sx={{
+                        fontWeight: "medium"
+                    }}>
+                        {title}
+                    </Typography>
+                </CardContent>
+            </CardActionArea>
         </Card>
     );
 };

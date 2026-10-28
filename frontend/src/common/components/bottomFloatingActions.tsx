@@ -70,6 +70,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                             size="large"
                             onClick={actionPrimary.onClick}
                             disabled={allActionsdisabled || actionPrimary.disabled}
+                            aria-label={actionPrimary.label ? undefined : actionPrimary.tooltip}
                             variant='extended'
                             sx={{
                                 borderRadius: '10px',
@@ -95,6 +96,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                             size="large"
                             onClick={actionSecondary.onClick}
                             disabled={allActionsdisabled || actionSecondary.disabled}
+                            aria-label={actionSecondary.label ? undefined : actionSecondary.tooltip}
                             variant='extended'
                             sx={{
                                 borderRadius: '10px',

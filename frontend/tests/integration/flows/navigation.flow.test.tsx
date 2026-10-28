@@ -85,12 +85,13 @@ describe('in-app navigation', () => {
     server.use(...withUser(seedUser), ...withFrames([makeFrame()]));
     const { user, router, store } = renderRoute('/dashboard/', { preloadedState: signedInState() });
 
-    expect(screen.queryByRole('link', { name: 'Bilderrahmen' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: 'Hauptmenü' })).not.toBeInTheDocument();
 
     await user.click((await screen.findByTestId('MenuIcon')).closest('button')!);
     expect(store.getState().ui.navigation.sidebar.open).toBe(true);
 
-    await user.click(await screen.findByRole('link', { name: 'Bilderrahmen' }));
+    const menu = await screen.findByRole('navigation', { name: 'Hauptmenü' });
+    await user.click(within(menu).getByRole('link', { name: 'Bilderrahmen' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/bilderrahmen/'));
     expect(await screen.findByText(/AAAA-BBBB/)).toBeInTheDocument();
@@ -134,6 +135,16 @@ describe('side menu on a phone', () => {
 });
 
 describe('start page', () => {
+  it('links the quick access cards to their pages', async () => {
+    server.use(...withFrames([]));
+    renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    const main = await screen.findByText('Schnellzugriff');
+    expect(main).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: 'Fotos' }).some((link) => link.getAttribute('href') === '/fotos/')).toBe(true);
+  });
+
+
   it('opens the photo editor from the send button', async () => {
     server.use(...withFrames([]));
     const { user, router, store } = renderRoute('/dashboard/', { preloadedState: signedInState() });

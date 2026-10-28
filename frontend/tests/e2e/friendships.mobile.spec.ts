@@ -14,7 +14,7 @@ test.describe('friendships on a phone', () => {
     expect(card.x + card.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     await expectNoHorizontalScroll(page);
 
-    await page.getByRole('button', { name: 'Freundschafsanfrage' }).click();
+    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
     await expect(page.getByLabel('Freundschaftscode')).toBeInViewport();
     await expect(page.getByRole('button', { name: 'Hinzufügen' })).toBeInViewport({ ratio: 1 });
 

@@ -27,6 +27,7 @@ import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
+import { onActivateKey } from "@/common/utils/keyboard";
 import { fetchSentImagesPaginated, setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import { getSentImageState } from "../sentImageStatus";
@@ -227,6 +228,10 @@ const SentImagesGallery = () => {
                             <ImageListItem
                                 key={sentImage.id}
                                 onClick={() => handleImageClick(sentImage)}
+                                role="button"
+                                tabIndex={0}
+                                aria-label={sentImage.image.display_name || sentImage.image.name}
+                                onKeyDown={(event) => onActivateKey(event, () => handleImageClick(sentImage))}
                                 style={{ cursor: "pointer" }}
                             >
                                 <AuthenticatedImage

@@ -31,15 +31,15 @@ const Header: FC<HeaderProps> = ({ username }) => {
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "row" }}>
                         <IconButton
-                            size="small"
-                            sx={{ color: "white" }}
+                            aria-label="Account-Einstellungen"
+                            sx={{ color: "white", width: 44, height: 44 }}
                             onClick={() => navigate("/" + getSettingsUrl() + getUserSettingsUrl())}
                         >
                             <ManageAccountsIcon />
                         </IconButton>
                         <IconButton
-                            size="small"
-                            sx={{ color: "white" }}
+                            aria-label="App-Einstellungen"
+                            sx={{ color: "white", width: 44, height: 44 }}
                             onClick={() => navigate("/" + getSettingsUrl() + getAppSettingsUrl())}
                         >
                             <SettingsIcon />

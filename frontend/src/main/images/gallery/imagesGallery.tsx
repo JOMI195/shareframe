@@ -23,6 +23,7 @@ import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/ima
 import FilterControls from "./filters/filters";
 import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
+import { onActivateKey } from "@/common/utils/keyboard";
 import SelectableElement from "../../../common/components/selectableElement";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
@@ -137,7 +138,10 @@ const ImagesGallery: React.FC = () => {
                                 <ImageListItem
                                     key={image.id}
                                     onClick={() => handleImageClick(image)}
-                                    //onTouchStart={() => handleImageClick(image)}
+                                    role="button"
+                                    tabIndex={0}
+                                    aria-label={image.display_name || image.name}
+                                    onKeyDown={(event) => onActivateKey(event, () => handleImageClick(image))}
                                     style={{ cursor: "pointer" }}
                                 >
                                     <SelectableElement
