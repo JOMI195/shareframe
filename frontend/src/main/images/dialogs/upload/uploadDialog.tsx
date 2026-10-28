@@ -1,45 +1,39 @@
-import React, { Suspense, lazy, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
+import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import {
-  AppBar,
-  Box,
+  Button,
+  CircularProgress,
   Dialog,
-  DialogContent,
-  IconButton,
-  Container,
-  Toolbar,
-  Typography,
+  LinearProgress,
   useMediaQuery,
   useTheme,
-  Stepper,
-  Step,
-  StepLabel,
-  StepContent,
 } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
-import CloseIcon from '@mui/icons-material/Close'
 
 import { validateImage } from './imageUpload/validation/imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { closeCreateImageDialog, getDialogs, openCreateImageDialog, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
+import { closeCreateImageDialog, getDialogs, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImageValidationResponse, isIImage } from '@/types'
 import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
 import { Area, Point } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
-import ImageUpload from './imageUpload/imageUpload'
 import ImageCropping from './imageCropping/imageCropping'
 import ImageAdjust from './imageAdjust/imageAdjust'
-import { Adjustment, NEUTRAL_ADJUSTMENT } from './imageAdjust/adjust'
-import { SHARE_EMPTY_PARAM, SHARE_EMPTY_VALUE, takeSharedFiles } from '@/common/utils/pwa/sharedFiles'
-import { useSearchParams } from 'react-router'
+import { Adjustment, NEUTRAL_ADJUSTMENT, isNeutral } from './imageAdjust/adjust'
+import { adjustImage } from './imageAdjust/adjustImage'
 import ImagePreview from './imagePreview/imagePreview'
-import FrameAspectBox from './frameAspectBox'
 import { useBlobImage } from './useBlobImage'
 import type { TextOverlay } from './imageText/textOverlays'
-import type { EpaperView } from '@/main/images/epaper/epaperToggle'
+import EpaperToggle, { EpaperView } from '@/main/images/epaper/epaperToggle'
+import { maxFilesOnce, useUploadQueue } from './useUploadQueue'
+import { usePhotoPicker } from './usePhotoPicker'
+import EditorLayout, { EditorGrid, ToolCanvas } from './editorLayout'
+import StartScreen from './startScreen'
+import ThumbStrip from './thumbStrip'
+import ToolTabs, { Tool } from './toolTabs'
 
 const ImageText = lazy(() => import('./imageText/imageText'))
 
@@ -58,19 +52,8 @@ const SlideTransition = React.forwardRef(function Transition(
   },
   ref: React.Ref<unknown>
 ) {
-  return <Slide ref={ref} {...props} />
+  return <Slide ref={ref} direction="up" {...props} />
 })
-
-export interface ImageStatus {
-  id: string;
-  file: File;
-  status: 'pending' | 'cropping' | 'uploaded';
-  croppedFile?: File;
-}
-
-const steps = ['Fotos auswählen', 'Fotos zuschneiden', 'Foto anpassen', 'Text hinzufügen', 'Vorschau und hochladen']
-// Collapsing and expanding steps end together, so nothing shifts after the scroll.
-const STEP_TRANSITION_MS = 300
 
 const CROPPER_PROPS_INITIAL_STATE = {
   crop: { x: 0, y: 0 },
@@ -83,83 +66,46 @@ const UploadDialog: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
   const matches = useMediaQuery(theme.breakpoints.up('md'));
+  const showCamera = useMediaQuery('(pointer: coarse)');
   const sending = useAppSelector(getApi).sending;
 
   const imagesPaginatedCount = useAppSelector(getImagesPaginated).count;
 
-  const [activeStep, setActiveStep] = useState(0)
-  const [imageStatuses, setImageStatuses] = useState<ImageStatus[]>([]);
+  const {
+    imageStatuses,
+    setImageStatuses,
+    addImages,
+    reset: resetQueue,
+    imagePreviews,
+    previewErrors,
+    markPreviewBroken,
+  } = useUploadQueue()
+  const { inputProps, openPicker, selectFiles, isPreparing } = usePhotoPicker(imageStatuses, addImages)
+
+  const [tool, setTool] = useState<Tool>('crop')
+  const [previewing, setPreviewing] = useState(false)
+  const [busy, setBusy] = useState(false)
+  // The cropper measures itself on mount, which mid-transition yields a scaled-down box.
+  const [entered, setEntered] = useState(false)
+  const [exportRequested, setExportRequested] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
   const [autoDeleteAfterPeriod, setAutoDeleteAfterPeriod] = useState(true);
-
-  const [imagePreviews, setImagePreviews] = useState<{ [id: string]: string }>({});
-  const [previewErrors, setPreviewErrors] = useState<{ [id: string]: string }>({});
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
   const [crop, setCrop] = useState<Point>(CROPPER_PROPS_INITIAL_STATE.crop)
   const [zoom, setZoom] = useState(CROPPER_PROPS_INITIAL_STATE.zoom)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
   const [croppedImage, replaceCroppedImage] = useBlobImage()
+  const [croppedKey, setCroppedKey] = useState<string | null>(null)
   const [adjustment, setAdjustment] = useState<Adjustment>(NEUTRAL_ADJUSTMENT)
   const [adjustedImage, replaceAdjustedImage] = useBlobImage()
+  const [adjustedKey, setAdjustedKey] = useState<string | null>(null)
   const [textOverlays, setTextOverlays] = useState<TextOverlay[]>([])
+  const [overlaysWidth, setOverlaysWidth] = useState<number | null>(null)
   const [finalImage, replaceFinalImage] = useBlobImage()
   const [epaperView, setEpaperView] = useState<EpaperView>('original')
 
   const open = useAppSelector(getDialogs).create.open
-  const [searchParams, setSearchParams] = useSearchParams()
-
-  const contentRef = useRef<HTMLDivElement>(null)
-  const stepRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [stepScroll, setStepScroll] = useState<{ index: number; minHeight?: number } | null>(null)
-
-  // A short last step cannot reach the top on its own, so it gets at least one screen of height.
-  const stepperRef = useRef<HTMLDivElement>(null)
-  const scrollableRef = useRef(false)
-
-  const scrollStepToTop = useCallback((index: number) => {
-    const content = contentRef.current
-    if (!content) return
-    const scrollable = content.scrollHeight > content.clientHeight
-    setStepScroll({ index, minHeight: scrollable ? content.clientHeight : undefined })
-  }, [])
-
-  useLayoutEffect(() => {
-    if (stepScroll) {
-      stepRefs.current[stepScroll.index]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, [stepScroll])
-
-  // An opened step that grows into a scrollbar later, e.g. by the text actions, scrolls up then.
-  const openedStep = stepScroll?.index === activeStep ? activeStep : null
-  useEffect(() => {
-    const content = contentRef.current
-    const stepper = stepperRef.current
-    if (!open || !content || !stepper) return
-    const observer = new ResizeObserver(() => {
-      const scrollable = content.scrollHeight > content.clientHeight
-      if (scrollable && !scrollableRef.current && openedStep !== null) {
-        scrollStepToTop(openedStep)
-      }
-      scrollableRef.current = scrollable
-    })
-    observer.observe(content)
-    observer.observe(stepper)
-    return () => observer.disconnect()
-  }, [open, openedStep, scrollStepToTop])
-
-  const handleDialogClose = () => {
-    dispatch(closeCreateImageDialog());
-    setStepScroll(null);
-    scrollableRef.current = false;
-    setImageStatuses([]);
-    setActiveStep(0);
-    setCurrentImageIndex(null);
-    setAutoDeleteAfterPeriod(true);
-    resetCropperState();
-    setImagePreviews({});
-    setPreviewErrors({});
-  }
 
   // Everything derived from the photo in edit belongs to that photo only.
   const resetCropperState = useCallback(() => {
@@ -168,162 +114,26 @@ const UploadDialog: React.FC = () => {
     setZoom(CROPPER_PROPS_INITIAL_STATE.zoom)
     setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
     replaceCroppedImage(null)
+    setCroppedKey(null)
     setAdjustment(NEUTRAL_ADJUSTMENT)
     replaceAdjustedImage(null)
+    setAdjustedKey(null)
     setTextOverlays([])
+    setOverlaysWidth(null)
     replaceFinalImage(null)
     setEpaperView('original')
+    setExportRequested(false)
+    setPreviewing(false)
+    setTool('crop')
   }, [replaceCroppedImage, replaceAdjustedImage, replaceFinalImage])
 
-  const handleNext = () => {
-    if (activeStep === 0 && imageStatuses.length === 0) {
-      return
-    }
-    setActiveStep((prevActiveStep) => prevActiveStep + 1)
+  const handleDialogClose = () => {
+    dispatch(closeCreateImageDialog());
+    resetQueue();
+    setCurrentImageIndex(null);
+    setAutoDeleteAfterPeriod(true);
+    resetCropperState();
   }
-
-  const handleBack = () => {
-    if (activeStep === 0) {
-      handleDialogClose()
-    } else {
-      setActiveStep((prevActiveStep) => prevActiveStep - 1)
-    }
-  }
-
-  const maxFilesOnce = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
-    ? +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE
-    : 5;
-
-  const getFileKey = (file: File) => `${file.name}-${file.size}-${file.lastModified}`
-
-  const addImages = (files: File[]) => {
-    const knownKeys = new Set(imageStatuses.map(status => getFileKey(status.file)))
-    const additions: ImageStatus[] = []
-    let skipped = 0
-
-    files.forEach(file => {
-      const key = getFileKey(file)
-      if (knownKeys.has(key) || imageStatuses.length + additions.length >= maxFilesOnce) {
-        skipped++
-        return
-      }
-      knownKeys.add(key)
-      additions.push({
-        id: `${key}-${Date.now()}-${Math.random()}`,
-        file,
-        status: 'pending'
-      })
-    })
-
-    if (skipped > 0) {
-      dispatch(openImagesAlertSnackbar({
-        message: `${skipped} Foto(s) wurden nicht hinzugefügt (bereits ausgewählt oder Maximum von ${maxFilesOnce} erreicht).`,
-        severity: "warning"
-      }))
-    }
-
-    if (additions.length > 0) {
-      setImageStatuses(prev => [...prev, ...additions])
-    }
-  }
-
-  const removeImage = (indexToRemove: number) => {
-    setImageStatuses(prev => prev.filter((_, index) => index !== indexToRemove))
-    setCurrentImageIndex(prev => {
-      if (prev === null || indexToRemove === prev) {
-        return null
-      }
-      return indexToRemove < prev ? prev - 1 : prev
-    })
-    if (imageStatuses.length <= 1) {
-      setActiveStep(0)
-    }
-  }
-
-  useEffect(() => {
-    if (searchParams.get(SHARE_EMPTY_PARAM) === SHARE_EMPTY_VALUE) {
-      setSearchParams((params) => {
-        params.delete(SHARE_EMPTY_PARAM);
-        return params;
-      }, { replace: true });
-      dispatch(openCreateImageDialog());
-      dispatch(openImagesAlertSnackbar({
-        message: 'Das geteilte Foto ist nicht angekommen. Wähle es hier direkt aus.',
-        severity: 'warning'
-      }));
-    }
-
-    let cancelled = false;
-    takeSharedFiles().then((files) => {
-      if (cancelled || files.length === 0) return;
-      addImages(files);
-      dispatch(openCreateImageDialog());
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- photos shared into the app are picked up once on mount
-  }, []);
-
-  const activeUrlRefs = useRef<{ [id: string]: string }>({});
-
-  useEffect(() => {
-    const newPreviewsMap: { [id: string]: string } = {}; // This will be the map for the new state update
-    const currentImageIdsInStatus = new Set(imageStatuses.map(status => status.id));
-
-    // Identify URLs from the *previous* successful effect run that are no longer needed
-    const urlsToRevokeFromPreviousActiveSet: string[] = [];
-    for (const imageId in activeUrlRefs.current) { // Check against the ref's stored URLs
-      if (!currentImageIdsInStatus.has(imageId)) {
-        urlsToRevokeFromPreviousActiveSet.push(activeUrlRefs.current[imageId]);
-      }
-    }
-
-    // Populate newPreviewsMap: reuse existing if available in *activeUrlRefs*, otherwise create new
-    imageStatuses.forEach(imageStatus => {
-      if (activeUrlRefs.current[imageStatus.id]) { // Check against the ref for reuse
-        newPreviewsMap[imageStatus.id] = activeUrlRefs.current[imageStatus.id];
-      } else {
-        newPreviewsMap[imageStatus.id] = URL.createObjectURL(imageStatus.file);
-      }
-    });
-
-    // Update the React state
-    setImagePreviews(newPreviewsMap);
-    setPreviewErrors(prev => {
-      const staleIds = Object.keys(prev).filter(id => !currentImageIdsInStatus.has(id));
-      if (staleIds.length === 0) {
-        return prev;
-      }
-      const next = { ...prev };
-      staleIds.forEach(id => delete next[id]);
-      return next;
-    });
-
-    // Update the mutable ref to reflect the URLs that are now active
-    activeUrlRefs.current = newPreviewsMap;
-
-    // Perform immediate revocations.
-    // Note: no cleanup that revokes ALL urls here. An effect's cleanup runs before
-    // every re-run (not only on unmount), so revoking all + clearing the ref on each
-    // imageStatuses change would defeat the reuse-by-id logic above and leave Avatar
-    // <img> src pointing at a just-revoked blob (net::ERR_FILE_NOT_FOUND). Removed
-    // images are already handled by the targeted revoke above; unmount is handled by
-    // the dedicated effect below.
-    urlsToRevokeFromPreviousActiveSet.forEach(url => URL.revokeObjectURL(url));
-  }, [imageStatuses]);
-
-  // Revoke any remaining preview URLs only on unmount.
-  useEffect(() => {
-    return () => {
-      Object.values(activeUrlRefs.current).forEach(url => URL.revokeObjectURL(url));
-      activeUrlRefs.current = {};
-    };
-  }, []);
-
-  const markPreviewBroken = useCallback((id: string, reason: string) => {
-    setPreviewErrors(prev => (prev[id] ? prev : { ...prev, [id]: reason }))
-  }, [])
 
   const selectImageForCropping = useCallback((index: number) => {
     if (imageStatuses[index].status === 'uploaded') return
@@ -336,55 +146,104 @@ const UploadDialog: React.FC = () => {
         status: i === index ? 'cropping' : (status.status === 'cropping' ? 'pending' : status.status)
       }))
     )
-  }, [imageStatuses, resetCropperState])
+  }, [imageStatuses, resetCropperState, setImageStatuses])
 
-  const handleCrop = async () => {
-    if (currentImageIndex === null || !imageStatuses[currentImageIndex]) {
+  const handleSelectPhoto = (index: number) => {
+    if (index === currentImageIndex || busy) return
+    selectImageForCropping(index)
+  }
+
+  const removeImage = (indexToRemove: number) => {
+    const remaining = imageStatuses.filter((_, index) => index !== indexToRemove)
+    if (remaining.length > 0 && remaining.every(status => status.status === 'uploaded')) {
+      handleDialogClose()
       return
     }
-
-    if (croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1) {
-      dispatch(openImagesAlertSnackbar({
-        message: "Der Zuschnitt wird noch vorbereitet. Bitte kurz warten.",
-        severity: "warning"
-      }))
-      return
+    setImageStatuses(remaining)
+    if (indexToRemove === currentImageIndex) {
+      resetCropperState()
+      setCurrentImageIndex(null)
+    } else {
+      setCurrentImageIndex(prev => (prev !== null && indexToRemove < prev ? prev - 1 : prev))
     }
+  }
 
+  const currentImage = currentImageIndex !== null ? imageStatuses[currentImageIndex] ?? null : null
+  const area = croppedAreaPixels
+  const cropKey = currentImage ? `${currentImage.id}:${area.x},${area.y},${area.width},${area.height}:${rotation}` : null
+  const adjustKey = `${cropKey}:${adjustment.brightness},${adjustment.contrast}`
+  const cropMeasured = area.width >= 1 && area.height >= 1
+  const editLocked = busy || exportRequested || !cropMeasured
+
+  // Each stage is computed when a later tool needs it and reused until its inputs change.
+  const ensureCropped = async (): Promise<Blob> => {
+    if (croppedImage && croppedKey === cropKey) return croppedImage.blob
+    if (!currentImage || area.width < 1 || area.height < 1) {
+      throw new Error('Der Zuschnitt wird noch vorbereitet. Bitte kurz warten.')
+    }
+    const blob = await getCroppedImg(currentImage.file, area, rotation)
+    replaceCroppedImage(blob)
+    setCroppedKey(cropKey)
+    return blob
+  }
+
+  const ensureAdjusted = async (cropped: Blob): Promise<Blob> => {
+    if (adjustedImage && adjustedKey === adjustKey) return adjustedImage.blob
+    const blob = isNeutral(adjustment) ? cropped : await adjustImage(cropped, adjustment)
+    replaceAdjustedImage(blob)
+    setAdjustedKey(adjustKey)
+    return blob
+  }
+
+  const runBusy = async (task: () => Promise<void>) => {
+    setBusy(true)
     try {
-      replaceCroppedImage(await getCroppedImg(imageStatuses[currentImageIndex].file, croppedAreaPixels, rotation))
-      setActiveStep(2)
+      await task()
     } catch (error) {
       dispatch(openImagesAlertSnackbar({
-        message: error instanceof Error ? error.message : 'Zuschneiden fehlgeschlagen',
+        message: error instanceof Error ? error.message : 'Bearbeiten fehlgeschlagen',
         severity: 'error'
-      }));
+      }))
+    } finally {
+      setBusy(false)
     }
   }
 
-  const handleBackToCrop = () => {
-    replaceCroppedImage(null)
-    setActiveStep(1)
+  const changeTool = (next: Tool) => {
+    if (next === 'crop') {
+      setTool(next)
+      return
+    }
+    runBusy(async () => {
+      const cropped = await ensureCropped()
+      if (next === 'text') await ensureAdjusted(cropped)
+      setTool(next)
+    })
   }
 
-  const handleAdjustDone = (blob: Blob) => {
-    replaceAdjustedImage(blob)
-    setActiveStep(3)
-  }
+  // Without texts the photo needs no editor stage, so the preview skips the text tool.
+  const goToPreview = () => runBusy(async () => {
+    const adjusted = await ensureAdjusted(await ensureCropped())
+    if (textOverlays.length === 0) {
+      replaceFinalImage(adjusted)
+      setPreviewing(true)
+    } else {
+      setTool('text')
+      setExportRequested(true)
+    }
+  })
 
-  const handleBackToAdjust = () => {
-    replaceAdjustedImage(null)
-    setActiveStep(2)
-  }
-
-  const handleTextDone = (blob: Blob) => {
+  const handleTextDone = useCallback((blob: Blob) => {
     replaceFinalImage(blob)
-    setActiveStep(4)
-  }
+    setExportRequested(false)
+    setPreviewing(true)
+  }, [replaceFinalImage])
 
-  const handleBackToText = () => {
+  const handleExportFailed = useCallback(() => setExportRequested(false), [])
+
+  const handleBackToEdit = () => {
     replaceFinalImage(null)
-    setActiveStep(3)
+    setPreviewing(false)
   }
 
   const handleUpload = async (blob: Blob) => {
@@ -426,7 +285,6 @@ const UploadDialog: React.FC = () => {
           }
 
           resetCropperState()
-          setActiveStep(1)
           const nextPendingIndex = imageStatuses.findIndex((status, i) =>
             i !== index && status.status === 'pending'
           )
@@ -450,183 +308,148 @@ const UploadDialog: React.FC = () => {
     }
   }
 
-  // Auto-select first image when moving to step 2
+  // Picked or shared photos open straight in the editor, so the first pending one gets selected.
   useEffect(() => {
-    if (activeStep === 1 && imageStatuses.length > 0) {
-      let targetIndex: number | null = null;
+    if (imageStatuses.length === 0) return
+    if (currentImageIndex !== null && imageStatuses[currentImageIndex]?.status === 'cropping') return
 
-      // First, try to re-select the image that was last being cropped, if it's still in 'cropping' status.
-      if (currentImageIndex !== null && imageStatuses[currentImageIndex]?.status === 'cropping') {
-        targetIndex = currentImageIndex;
-      } else {
-        // If no image is currently being cropped, or the current one is no longer 'cropping',
-        // find the very first image that is still 'pending'.
-        const firstPendingIdx = imageStatuses.findIndex(status => status.status === 'pending');
-        if (firstPendingIdx !== -1) {
-          targetIndex = firstPendingIdx;
-        }
-      }
-
-      // Only update the selection if a valid target is found and it's different from the current selection.
-      if (targetIndex !== null && currentImageIndex !== targetIndex) {
-        // selection follows async status changes from several handlers, so it stays an effect
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        selectImageForCropping(targetIndex);
-      }
-      // If there are no pending or actively cropping images, and something was selected, deselect it.
-      else if (targetIndex === null && currentImageIndex !== null) {
-        setCurrentImageIndex(null);
-      }
+    const firstPendingIdx = imageStatuses.findIndex(status => status.status === 'pending')
+    if (firstPendingIdx !== -1) {
+      // selection follows async status changes from several handlers, so it stays an effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      selectImageForCropping(firstPendingIdx)
+    } else if (currentImageIndex !== null) {
+      setCurrentImageIndex(null)
     }
-  }, [activeStep, imageStatuses, currentImageIndex, selectImageForCropping, setCurrentImageIndex]);
+  }, [imageStatuses, currentImageIndex, selectImageForCropping])
 
-  // Collapsed steps stay mounted; only the open one renders the e-paper view.
-  const viewOf = (step: number): EpaperView => (activeStep === step ? epaperView : 'original')
-
-  const totalImages = imageStatuses.length;
-  const uploadedImagesCount = imageStatuses.filter(status => status.status === 'uploaded').length;
-  const allImagesUploaded = totalImages > 0 && uploadedImagesCount === totalImages;
+  const epaper = epaperView === 'epaper'
+  const showsEpaperToggle = previewing || tool !== 'crop'
+  const title = imageStatuses.length > 0 && currentImageIndex !== null
+    ? `Foto ${currentImageIndex + 1} von ${imageStatuses.length}`
+    : 'Fotos hochladen'
 
   return (
-    <Container>
-      <Dialog
-        fullScreen={matches ? false : true}
-        open={open}
+    <Dialog
+      fullScreen={!matches}
+      open={open}
+      onClose={handleDialogClose}
+      aria-labelledby="upload-dialog-title"
+      maxWidth="lg"
+      fullWidth
+      slots={{
+        transition: matches ? ZoomTransition : SlideTransition
+      }}
+      slotProps={{
+        paper: { sx: { height: { md: 'min(900px, calc(100% - 64px))' } } },
+        transition: { onEntered: () => setEntered(true), onExited: () => setEntered(false) }
+      }}
+    >
+      <input {...inputProps} />
+      <EditorLayout
+        title={title}
+        subtitle={currentImage?.file.name}
         onClose={handleDialogClose}
-        aria-describedby="dialog-slide-upload"
-        maxWidth="lg"
-        fullWidth
-        slots={{
-          transition: matches ? ZoomTransition : SlideTransition
-        }}
-      >
-        {!matches && (
-          <AppBar sx={{ position: 'relative' }} color="inherit">
-            <Toolbar>
-              <Typography sx={{ flex: 1 }} variant="h6" component="div">
-                Fotos hochladen
-              </Typography>
-              <IconButton
-                edge="start"
-                color="inherit"
-                onClick={handleDialogClose}
-                aria-label="cancel"
-              >
-                <CloseIcon />
-              </IconButton>
-            </Toolbar>
-          </AppBar>
+        actions={currentImage && showsEpaperToggle && <EpaperToggle value={epaperView} onChange={setEpaperView} />}
+        strip={imageStatuses.length > 0 && (
+          <>
+            <ThumbStrip
+              imageStatuses={imageStatuses}
+              currentImageIndex={currentImageIndex}
+              imagePreviews={imagePreviews}
+              previewErrors={previewErrors}
+              markPreviewBroken={markPreviewBroken}
+              onSelect={handleSelectPhoto}
+              onRemove={removeImage}
+              onAdd={() => openPicker('gallery')}
+              canAdd={imageStatuses.length < maxFilesOnce}
+              isPreparing={isPreparing}
+            />
+            <LinearProgress sx={{ visibility: busy || exportRequested ? 'visible' : 'hidden' }} />
+          </>
         )}
-        <DialogContent ref={contentRef} sx={{ p: matches ? 3 : 1 }}>
-          <Box ref={stepperRef} sx={{ width: '100%' }}>
-            <Stepper orientation="vertical" activeStep={activeStep}>
-              {steps.map((label, index) => (
-                <Step
-                  key={label}
-                  ref={(element: HTMLDivElement | null) => { stepRefs.current[index] = element }}
-                  sx={{
-                    width: "100%",
-                    height: "100%",
-                    minHeight: stepScroll?.index === index && activeStep === index ? stepScroll.minHeight : undefined
-                  }}
-                >
-                  <StepLabel>{label}</StepLabel>
-                  <StepContent
-                    transitionDuration={STEP_TRANSITION_MS}
-                    slotProps={{ transition: { onEntered: () => scrollStepToTop(index) } }}
-                  >
-                    {index === 0 && (
-                      <ImageUpload
-                        showCloseButton={matches}
-                        imageStatuses={imageStatuses}
-                        addImages={addImages}
-                        removeImage={removeImage}
-                        handleNext={handleNext}
-                        handleBack={handleBack}
-                        imagePreviews={imagePreviews}
-                        previewErrors={previewErrors}
-                        markPreviewBroken={markPreviewBroken}
-                      />
-                    )}
-                    {index === 1 && (
-                      <ImageCropping
-                        showCloseButton={matches}
-                        imageStatuses={imageStatuses}
-                        currentImageIndex={currentImageIndex}
-                        selectImageForCropping={selectImageForCropping}
-                        removeImage={removeImage}
-                        setCroppedAreaPixels={setCroppedAreaPixels}
-                        crop={crop}
-                        setCrop={setCrop}
-                        zoom={zoom}
-                        setZoom={setZoom}
-                        rotation={rotation}
-                        setRotation={setRotation}
-                        croppedAreaPixels={croppedAreaPixels}
-                        handleCrop={handleCrop}
-                        handleDialogClose={handleDialogClose}
-                        handleBack={handleBack}
-                        allImagesUploaded={allImagesUploaded}
-                        sending={sending}
-                        imagePreviews={imagePreviews}
-                        previewErrors={previewErrors}
-                        markPreviewBroken={markPreviewBroken}
-                      />
-                    )}
-                    {index === 2 && croppedImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
-                      <ImageAdjust
-                        showCloseButton={matches}
-                        croppedImage={croppedImage}
-                        fileName={imageStatuses[currentImageIndex].file.name}
-                        adjustment={adjustment}
-                        view={viewOf(2)}
-                        onViewChange={setEpaperView}
-                        setAdjustment={setAdjustment}
-                        handleAdjustDone={handleAdjustDone}
-                        handleBackToCrop={handleBackToCrop}
-                        handleDialogClose={handleDialogClose}
-                      />
-                    )}
-                    {index === 3 && adjustedImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
-                      <Suspense fallback={<Box sx={{ my: 2 }}><FrameAspectBox /></Box>}>
-                        <ImageText
-                          showCloseButton={matches}
-                          key={adjustedImage.url}
-                          photo={adjustedImage}
-                          view={viewOf(3)}
-                          onViewChange={setEpaperView}
-                          fileName={imageStatuses[currentImageIndex].file.name}
-                          overlays={textOverlays}
-                          setOverlays={setTextOverlays}
-                          handleTextDone={handleTextDone}
-                          handleBackToAdjust={handleBackToAdjust}
-                          handleDialogClose={handleDialogClose}
-                        />
-                      </Suspense>
-                    )}
-                    {index === 4 && finalImage && currentImageIndex !== null && imageStatuses[currentImageIndex] && (
-                      <ImagePreview
-                        showCloseButton={matches}
-                        finalImage={finalImage}
-                        view={viewOf(4)}
-                        onViewChange={setEpaperView}
-                        fileName={imageStatuses[currentImageIndex].file.name}
-                        handleUpload={handleUpload}
-                        handleBackToText={handleBackToText}
-                        handleDialogClose={handleDialogClose}
-                        sending={sending}
-                        autoDeleteAfterPeriod={autoDeleteAfterPeriod}
-                        setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
-                      />
-                    )}
-                  </StepContent>
-                </Step>
-              ))}
-            </Stepper>
-          </Box>
-        </DialogContent>
-      </Dialog>
-    </Container>
+        footer={currentImage && !previewing && (
+          <Button
+            variant="contained"
+            size="large"
+            fullWidth
+            disabled={editLocked || sending || !!previewErrors[currentImage.id]}
+            startIcon={busy || exportRequested ? <CircularProgress size={18} color="inherit" /> : undefined}
+            onClick={goToPreview}
+          >
+            Weiter zur Vorschau
+          </Button>
+        )}
+      >
+        {imageStatuses.length === 0 && (
+          <StartScreen
+            openPicker={openPicker}
+            selectFiles={selectFiles}
+            isPreparing={isPreparing}
+            showCamera={showCamera}
+          />
+        )}
+        {currentImage && !previewing && entered && (
+          <EditorGrid>
+            {tool === 'crop' && (
+              <ImageCropping
+                currentImage={currentImage}
+                preview={imagePreviews[currentImage.id]}
+                previewError={previewErrors[currentImage.id]}
+                markPreviewBroken={markPreviewBroken}
+                setCroppedAreaPixels={setCroppedAreaPixels}
+                croppedAreaPixels={croppedAreaPixels}
+                crop={crop}
+                setCrop={setCrop}
+                zoom={zoom}
+                setZoom={setZoom}
+                rotation={rotation}
+                setRotation={setRotation}
+              />
+            )}
+            {tool === 'adjust' && croppedImage && (
+              <ImageAdjust
+                epaper={epaper}
+                croppedImage={croppedImage}
+                fileName={currentImage.file.name}
+                adjustment={adjustment}
+                setAdjustment={setAdjustment}
+              />
+            )}
+            {tool === 'text' && adjustedImage && (
+              <Suspense fallback={<ToolCanvas><CircularProgress /></ToolCanvas>}>
+                <ImageText
+                  key={adjustedImage.url}
+                  epaper={epaper}
+                  photo={adjustedImage}
+                  fileName={currentImage.file.name}
+                  overlays={textOverlays}
+                  setOverlays={setTextOverlays}
+                  overlaysWidth={overlaysWidth}
+                  setOverlaysWidth={setOverlaysWidth}
+                  exportRequested={exportRequested}
+                  handleTextDone={handleTextDone}
+                  handleExportFailed={handleExportFailed}
+                />
+              </Suspense>
+            )}
+            <ToolTabs value={tool} onChange={changeTool} disabled={editLocked} />
+          </EditorGrid>
+        )}
+        {previewing && finalImage && currentImage && (
+          <ImagePreview
+            finalImage={finalImage}
+            epaper={epaper}
+            fileName={currentImage.file.name}
+            handleUpload={handleUpload}
+            handleBackToEdit={handleBackToEdit}
+            sending={sending}
+            autoDeleteAfterPeriod={autoDeleteAfterPeriod}
+            setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
+          />
+        )}
+      </EditorLayout>
+    </Dialog>
   );
 }
 

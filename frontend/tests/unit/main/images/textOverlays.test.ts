@@ -13,6 +13,7 @@ import {
   overlayFromPreset,
   overlayToPreset,
   rotatedHalfExtents,
+  scaleOverlays,
   wrapWidth,
 } from '@/main/images/dialogs/upload/imageText/textOverlays';
 
@@ -84,6 +85,22 @@ describe('applyWidthTransform', () => {
 
   it('keeps at least one font size of width', () => {
     expect(applyWidthTransform(overlay, { x: 0, y: 0, width: 5 }).width).toBe(60);
+  });
+});
+
+describe('scaleOverlays', () => {
+  const overlay = { ...createTextOverlay(800, 480, 0), rotation: 30, width: 200 };
+
+  it('keeps a text at the same place relative to a larger photo', () => {
+    expect(scaleOverlays([overlay], 2)[0]).toMatchObject({ x: 800, y: 480, fontSize: 120, width: 400, rotation: 30 });
+  });
+
+  it('leaves automatic wrapping automatic', () => {
+    expect(scaleOverlays([{ ...overlay, width: null }], 0.5)[0].width).toBeNull();
+  });
+
+  it('never shrinks a text below a readable size', () => {
+    expect(scaleOverlays([overlay], 0.01)[0].fontSize).toBe(8);
   });
 });
 

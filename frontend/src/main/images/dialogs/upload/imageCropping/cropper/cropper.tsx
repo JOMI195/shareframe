@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from 'react';
 import EasyCropper, { Area, Point } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
+import { ToolCanvas, ToolControls } from '../../editorLayout';
+import { frameSize } from '../../frameSize';
 import { FRAME_ASPECT_RATIO } from '../../frameAspectBox';
 import { passepartoutBackground, passepartoutShade } from '../../passepartout';
 
@@ -21,9 +23,12 @@ interface CropperProps {
     zoom: number;
     setZoom: React.Dispatch<React.SetStateAction<number>>;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
+    // the crop to restore when the cropper mounts again, e.g. after another tool was open
+    initialArea?: Area;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
     onError: () => void;
+    children?: React.ReactNode;
 }
 
 const Cropper: React.FC<CropperProps> = ({
@@ -33,14 +38,28 @@ const Cropper: React.FC<CropperProps> = ({
     zoom,
     setZoom,
     setCroppedAreaPixels,
+    initialArea,
     rotation,
     setRotation,
-    onError
+    onError,
+    children
 }) => {
     const theme = useTheme();
     const cropperRef = useRef<EasyCropper>(null);
     const cropperContainerRef = useRef<HTMLDivElement>(null);
     const [isTouching, setIsTouching] = useState(false);
+    const [cropSize, setCropSize] = useState<{ width: number; height: number } | null>(null);
+
+    useEffect(() => {
+        const container = cropperContainerRef.current;
+        if (!container) return;
+        const observer = new ResizeObserver(([entry]) => {
+            const size = frameSize(entry.contentRect.width, entry.contentRect.height);
+            setCropSize(size.width > 0 ? size : null);
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, []);
 
     const getCropperStyles = () => {
         const isLight = theme.palette.mode === 'light';
@@ -79,17 +98,6 @@ const Cropper: React.FC<CropperProps> = ({
         }
     }, []);
 
-    // Opening the step scrolls its title into view, so only a switch to another photo scrolls here.
-    const scrolledSrcRef = useRef(src);
-    useEffect(() => {
-        if (scrolledSrcRef.current === src) return;
-        scrolledSrcRef.current = src;
-        const timeout = setTimeout(() => {
-            cropperContainerRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300);
-        return () => clearTimeout(timeout);
-    }, [src]);
-
     const onCropChange = (newCrop: Point) => setCrop(newCrop);
 
     const onCropComplete = (_: Area, croppedAreaPixels: Area) => setCroppedAreaPixels(croppedAreaPixels);
@@ -110,58 +118,59 @@ const Cropper: React.FC<CropperProps> = ({
     };
 
     return (
-        <div ref={cropperContainerRef} style={{
-            width: '100%', height: '500px', display: "flex", flexDirection: "column"
-        }}>
-            {src && (
-                <>
+        <>
+            <ToolCanvas>
+                <div ref={cropperContainerRef} style={{
+                    position: 'relative',
+                    alignSelf: 'stretch',
+                    width: '100%',
+                    backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                }}>
                     <style>{getCropperStyles()}</style>
-                    <div style={{
-                        position: 'relative',
-                        width: '100%',
-                        height: '100%',
-                        backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
-                        border: theme.palette.mode === 'light' ? `1px solid ${theme.palette.divider}` : 'none'
-                    }}>
-                        <EasyCropper
-                            ref={cropperRef}
-                            image={src}
-                            crop={crop}
-                            zoom={zoom}
-                            rotation={rotation}
-                            aspect={FRAME_ASPECT_RATIO}
-                            onCropChange={onCropChange}
-                            onCropComplete={onCropComplete}
-                            onCropAreaChange={onCropComplete}
-                            onZoomChange={onZoom}
-                            onRotationChange={(newRotation) => {
-                                if (!isTouching) {
-                                    onRotation(newRotation);
-                                }
-                            }}
-                            minZoom={MIN_ZOOM}
-                            maxZoom={MAX_ZOOM}
-                            restrictPosition={false}
-                            cropShape="rect"
-                            objectFit="horizontal-cover"
-                            mediaProps={{ onError }}
-                        />
-                    </div>
-                    <Navigation
+                    <EasyCropper
+                        ref={cropperRef}
+                        image={src}
+                        crop={crop}
                         zoom={zoom}
-                        onZoom={onZoom}
-                        rotation={{ rotation, onRotation, ROTATION_DEGREE, MIN_ROTATION, MAX_ROTATION }}
-                        onMove={onMove}
-                        onCenter={onCenter}
-                        onCropperReset={onCropperReset}
-                        disabled={false}
-                        ZOOM_FACTOR={ZOOM_FACTOR}
-                        MIN_ZOOM={MIN_ZOOM}
-                        MAX_ZOOM={MAX_ZOOM}
+                        rotation={rotation}
+                        aspect={FRAME_ASPECT_RATIO}
+                        cropSize={cropSize ?? undefined}
+                        onCropChange={onCropChange}
+                        onCropComplete={onCropComplete}
+                        onCropAreaChange={onCropComplete}
+                        onZoomChange={onZoom}
+                        onRotationChange={(newRotation) => {
+                            if (!isTouching) {
+                                onRotation(newRotation);
+                            }
+                        }}
+                        minZoom={MIN_ZOOM}
+                        maxZoom={MAX_ZOOM}
+                        restrictPosition={false}
+                        cropShape="rect"
+                        objectFit="horizontal-cover"
+                        initialCroppedAreaPixels={initialArea}
+                        mediaProps={{ onError }}
                     />
-                </>
-            )}
-        </div>
+                </div>
+            </ToolCanvas>
+            <ToolControls>
+                <Navigation
+                    zoom={zoom}
+                    onZoom={onZoom}
+                    rotation={{ rotation, onRotation, ROTATION_DEGREE, MIN_ROTATION, MAX_ROTATION }}
+                    onMove={onMove}
+                    onCenter={onCenter}
+                    onCropperReset={onCropperReset}
+                    disabled={false}
+                    compact
+                    ZOOM_FACTOR={ZOOM_FACTOR}
+                    MIN_ZOOM={MIN_ZOOM}
+                    MAX_ZOOM={MAX_ZOOM}
+                />
+                {children}
+            </ToolControls>
+        </>
     );
 };
 

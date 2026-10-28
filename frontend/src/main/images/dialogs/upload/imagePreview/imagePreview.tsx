@@ -5,42 +5,33 @@ import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
 import PassepartoutOverlay from '../passepartoutOverlay';
 import PassepartoutHint from '../passepartoutHint';
-import StepHeader from '../stepHeader';
-import { EpaperView } from '@/main/images/epaper/epaperToggle';
 import { useEpaperPreview } from '@/main/images/epaper/useEpaperPreview';
 
 interface ImagePreviewProps {
-    view: EpaperView;
-    onViewChange: (view: EpaperView) => void;
+    epaper: boolean;
     finalImage: BlobImage;
     fileName: string;
     handleUpload: (blob: Blob) => Promise<void>;
-    handleBackToText: () => void;
-    handleDialogClose: () => void;
-    showCloseButton: boolean;
+    handleBackToEdit: () => void;
     sending: boolean;
     autoDeleteAfterPeriod: boolean;
     setAutoDeleteAfterPeriod: (value: boolean) => void;
 }
 
 const ImagePreview: React.FC<ImagePreviewProps> = ({
-    view,
-    onViewChange,
+    epaper,
     finalImage,
     fileName,
     handleUpload,
-    handleBackToText,
-    handleDialogClose,
-    showCloseButton,
+    handleBackToEdit,
     sending,
     autoDeleteAfterPeriod,
     setAutoDeleteAfterPeriod,
 }) => {
-    const epaperUrl = useEpaperPreview(finalImage.blob, view === 'epaper');
+    const epaperUrl = useEpaperPreview(finalImage.blob, epaper);
 
     return (
         <Box sx={{ my: 2 }}>
-            <StepHeader fileName={fileName} view={view} onViewChange={onViewChange} />
             <FrameAspectBox>
                 <Box
                     component="img"
@@ -55,7 +46,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
             <AutoDeleteOption checked={autoDeleteAfterPeriod} onChange={setAutoDeleteAfterPeriod} />
 
             <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 3 } }}>
+                <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 2 } }}>
                     <Button
                         variant="contained"
                         fullWidth
@@ -65,18 +56,11 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({
                         Hochladen
                     </Button>
                 </Grid>
-                <Grid size={{ xs: 12, md: 3 }} sx={{ order: { xs: 2, md: 2 } }}>
-                    <Button fullWidth variant="outlined" onClick={handleBackToText}>
-                        Zurück zum Text
+                <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 2, md: 1 } }}>
+                    <Button fullWidth variant="outlined" onClick={handleBackToEdit}>
+                        Zurück zum Bearbeiten
                     </Button>
                 </Grid>
-                {showCloseButton && (
-                    <Grid size={{ xs: 12, md: 3 }} sx={{ order: { xs: 3, md: 1 } }}>
-                        <Button fullWidth variant="outlined" onClick={handleDialogClose}>
-                            Dialog schließen
-                        </Button>
-                    </Grid>
-                )}
             </Grid>
         </Box>
     );

@@ -15,7 +15,7 @@ interface ImagePreviewThumbProps {
 // Not MUI Avatar: it swallows the img error internally and renders a fallback,
 // so there is no way to report why a preview failed.
 const ImagePreviewThumb: React.FC<ImagePreviewThumbProps> = ({ src, alt, error, onError, size = 40 }) => {
-    const box = { width: size, height: size, mr: 1, flexShrink: 0, borderRadius: 0.5 };
+    const box = { width: size, height: size, flexShrink: 0, display: 'block' };
 
     if (error || !src) {
         return (

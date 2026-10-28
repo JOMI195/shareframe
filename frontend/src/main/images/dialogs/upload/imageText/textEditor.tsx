@@ -152,7 +152,7 @@ const OverlayText: React.FC<OverlayTextProps> = ({ overlay, safe, scale, isWidth
     );
 };
 
-const Passepartout: React.FC<{ image: HTMLImageElement; safe: Bounds; scale: number }> = ({ image, safe, scale }) => {
+const Passepartout: React.FC<{ image: HTMLImageElement; safe: Bounds }> = ({ image, safe }) => {
     const theme = useTheme();
     const shade = passepartoutShade(theme.palette.mode);
     const bands = [
@@ -167,14 +167,7 @@ const Passepartout: React.FC<{ image: HTMLImageElement; safe: Bounds; scale: num
             {bands.map((band, index) => (
                 <Rect key={index} {...band} fill={shade} name={EDITOR_ONLY} listening={false} />
             ))}
-            <Rect
-                {...safe}
-                stroke={theme.palette.text.secondary}
-                strokeWidth={1 / scale}
-                dash={[6 / scale, 4 / scale]}
-                name={`${EDITOR_ONLY} safe-area`}
-                listening={false}
-            />
+            <Rect {...safe} name={`${EDITOR_ONLY} safe-area`} listening={false} />
         </>
     );
 };
@@ -301,7 +294,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                 >
                     <Layer>
                         <KonvaImage image={image} name={PHOTO} visible={!backdrop} listening={false} />
-                        <Passepartout image={image} safe={safe} scale={scale} />
+                        <Passepartout image={image} safe={safe} />
                         {overlays.map((overlay) => (
                             <OverlayText
                                 key={overlay.id}
