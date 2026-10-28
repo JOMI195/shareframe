@@ -1,13 +1,6 @@
-import path from 'node:path';
 import type Konva from 'konva';
 import { expect, test } from '../support/e2e/fixtures';
-
-const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
-
-const photoCount = async (page: import('@playwright/test').Page) => {
-  const text = await page.getByRole('heading', { name: /\d+ Fotos?/ }).innerText();
-  return Number(text.match(/\d+/)?.[0] ?? 0);
-};
+import { FIXTURE, enterSelectionMode, photoCount, runSpeedDialAction } from '../support/e2e/photos';
 
 const textEditorState = (page: import('@playwright/test').Page) =>
   page.evaluate(() => {
@@ -44,18 +37,6 @@ const dragOnCanvas = async (
   await page.mouse.down();
   await page.mouse.move(box.x + to.x, box.y + to.y, { steps: 10 });
   await page.mouse.up();
-};
-
-const enterSelectionMode = async (page: import('@playwright/test').Page) => {
-  // The floating actions carry icons rather than accessible names.
-  await page.locator('button:has([data-testid="HighlightAltIcon"])').click();
-  // Selection mode opens behind an intro backdrop that has to be dismissed first.
-  await page.locator('.MuiBackdrop-root').first().click();
-};
-
-const runSpeedDialAction = async (page: import('@playwright/test').Page, label: string) => {
-  await page.getByRole('button', { name: 'Aktionen' }).hover();
-  await page.locator('.MuiSpeedDialAction-staticTooltip', { hasText: label }).locator('button').click();
 };
 
 // Real canvas only here: the panel image is 800 px wide and pure black and white.

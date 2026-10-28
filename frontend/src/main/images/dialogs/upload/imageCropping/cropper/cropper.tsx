@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import EasyCropper, { Area, Point } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
@@ -23,8 +23,6 @@ interface CropperProps {
     zoom: number;
     setZoom: React.Dispatch<React.SetStateAction<number>>;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
-    // the crop to restore when the cropper mounts again, e.g. after another tool was open
-    initialArea?: Area;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
     onError: () => void;
@@ -38,7 +36,6 @@ const Cropper: React.FC<CropperProps> = ({
     zoom,
     setZoom,
     setCroppedAreaPixels,
-    initialArea,
     rotation,
     setRotation,
     onError,
@@ -49,14 +46,20 @@ const Cropper: React.FC<CropperProps> = ({
     const cropperContainerRef = useRef<HTMLDivElement>(null);
     const [isTouching, setIsTouching] = useState(false);
     const [cropSize, setCropSize] = useState<{ width: number; height: number } | null>(null);
+    const [measured, setMeasured] = useState(false);
 
-    useEffect(() => {
+    // The cropper rescales the kept position when its box changes size, so it has to start at the final one.
+    useLayoutEffect(() => {
         const container = cropperContainerRef.current;
         if (!container) return;
-        const observer = new ResizeObserver(([entry]) => {
-            const size = frameSize(entry.contentRect.width, entry.contentRect.height);
+        const measure = (width: number, height: number) => {
+            const size = frameSize(width, height);
             setCropSize(size.width > 0 ? size : null);
-        });
+        };
+        const rect = container.getBoundingClientRect();
+        measure(rect.width, rect.height);
+        setMeasured(true);
+        const observer = new ResizeObserver(([entry]) => measure(entry.contentRect.width, entry.contentRect.height));
         observer.observe(container);
         return () => observer.disconnect();
     }, []);
@@ -127,7 +130,7 @@ const Cropper: React.FC<CropperProps> = ({
                     backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
                 }}>
                     <style>{getCropperStyles()}</style>
-                    <EasyCropper
+                    {measured && <EasyCropper
                         ref={cropperRef}
                         image={src}
                         crop={crop}
@@ -149,9 +152,8 @@ const Cropper: React.FC<CropperProps> = ({
                         restrictPosition={false}
                         cropShape="rect"
                         objectFit="horizontal-cover"
-                        initialCroppedAreaPixels={initialArea}
                         mediaProps={{ onError }}
-                    />
+                    />}
                 </div>
             </ToolCanvas>
             <ToolControls>

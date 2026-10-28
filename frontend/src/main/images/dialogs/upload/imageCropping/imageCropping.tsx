@@ -13,7 +13,6 @@ interface ImageCroppingProps {
     previewError?: string;
     markPreviewBroken: (id: string, reason: string) => void;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
-    croppedAreaPixels: Area;
     crop: Point;
     setCrop: React.Dispatch<React.SetStateAction<Point>>;
     zoom: number;
@@ -28,7 +27,6 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     previewError,
     markPreviewBroken,
     setCroppedAreaPixels,
-    croppedAreaPixels,
     crop,
     setCrop,
     zoom,
@@ -59,7 +57,6 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
             zoom={zoom}
             setZoom={setZoom}
             setCroppedAreaPixels={setCroppedAreaPixels}
-            initialArea={croppedAreaPixels.width >= 1 ? croppedAreaPixels : undefined}
             rotation={rotation}
             setRotation={setRotation}
             onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
