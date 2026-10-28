@@ -1,20 +1,14 @@
 import { readFileSync } from 'node:fs';
-import path from 'node:path';
 import { Page } from '@playwright/test';
 import { alice } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
+import { FIXTURE, photoCount } from '../support/e2e/photos';
 
-const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 const IPHONE_UA =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';
 const INSTALL_HINT = 'Installiere ShareFrame als App für den schnellen Zugriff.';
 
 type InstallWindow = Window & { installPrompted?: boolean };
-
-const photoCount = async (page: Page) => {
-  const text = await page.getByRole('heading', { name: /\d+ Fotos?/ }).innerText();
-  return Number(text.match(/\d+/)?.[0] ?? 0);
-};
 
 // The stack serves vite in dev mode, where main.tsx skips the registration.
 const registerServiceWorker = (page: Page) =>
