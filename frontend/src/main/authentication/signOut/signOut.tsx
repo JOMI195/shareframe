@@ -11,6 +11,7 @@ import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authE
 import { unsubscribePush } from "@/common/utils/pwa/push";
 import { clearSharedFiles } from "@/common/utils/pwa/sharedFiles";
 import { clearAvatarCache } from "@/common/utils/avatar/avatarCache";
+import { clearImageCache } from "@/common/utils/imageCache";
 import { pushPromptReset } from "@/store/ui/settings/settings.slice";
 
 export default function SignOut() {
@@ -25,6 +26,7 @@ export default function SignOut() {
     // Awaited, else the route change cancels the request.
     await dispatch(signOutUser());
     clearAvatarCache();
+    clearImageCache();
     navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
   };
 

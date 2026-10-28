@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import axiosInstance from '@/services/api';
+import { clearImageCache } from '@/common/utils/imageCache';
 import { server } from '../mocks/server';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -58,7 +59,8 @@ export const intersectionObservers: { callback: ObserverCallback; elements: Elem
 
 export const triggerIntersection = (isIntersecting = true) => {
   intersectionObservers.forEach(({ callback, elements }) => {
-    callback(elements.map((target) => ({ isIntersecting, target })));
+    // A browser never reports an empty entry list, e.g. for an unmounted component.
+    if (elements.length > 0) callback(elements.map((target) => ({ isIntersecting, target })));
   });
 };
 
@@ -112,6 +114,7 @@ Object.defineProperty(window, 'location', {
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  clearImageCache();
   localStorage.clear();
   sessionStorage.clear();
   intersectionObservers.length = 0;
