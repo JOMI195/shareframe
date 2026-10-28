@@ -44,7 +44,7 @@ const PushPrompt: React.FC = () => {
             <DialogTitle>Push-Benachrichtigungen aktivieren?</DialogTitle>
             <DialogContent>
                 <Typography>
-                    Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit in den Einstellungen unter Benachrichtigungen ändern.
+                    Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
                 </Typography>
             </DialogContent>
             <DialogActions>
