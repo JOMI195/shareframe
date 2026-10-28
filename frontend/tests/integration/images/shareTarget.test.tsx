@@ -6,10 +6,22 @@ import ShareTargetRedirect from '@/common/components/pwa/shareTargetRedirect';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { signedInState } from '@tests/helpers/preloadedState';
 import { clearSharedFilesStub, stubSharedFiles } from '@tests/helpers/sharedFiles';
+import { renderRoute } from '@tests/helpers/renderRoute';
+import { server, withFriendships, withImages } from '@tests/mocks';
 
 afterEach(() => clearSharedFilesStub());
 
 describe('photos shared into the app', () => {
+  // Through the real page: the dialog is a lazy chunk and must still be mounted to pick them up.
+  it('open the upload dialog on the photos page', async () => {
+    stubSharedFiles([{ name: 'a.jpg' }]);
+    server.use(...withImages([]), ...withFriendships([]));
+    const { store } = renderRoute('/fotos/', { preloadedState: signedInState() });
+
+    expect(await screen.findByRole('button', { name: 'a.jpg' }, { timeout: 5000 })).toBeInTheDocument();
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
+  });
+
   it('open the upload dialog with the shared photos selected', async () => {
     stubSharedFiles([{ name: 'a.jpg' }, { name: 'b.jpg' }]);
     const { store } = renderWithProviders(<UploadDialog />, { preloadedState: signedInState() });
