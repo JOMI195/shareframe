@@ -103,6 +103,8 @@ class LogoutView(APIView):
                 pass
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
+        # Private photos must not stay in the HTTP cache of a shared device.
+        response["Clear-Site-Data"] = '"cache"'
         return delete_auth_cookies(response)
 
 

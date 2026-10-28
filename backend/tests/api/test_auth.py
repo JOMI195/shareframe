@@ -126,3 +126,9 @@ def test_logout_clears_the_cookies_and_kills_the_session(alice):
     assert response.status_code == 204
     assert alice.cookies[settings.AUTH_COOKIE_ACCESS_NAME].value == ""
     assert alice.get(ME_URL).status_code == 401
+
+
+def test_logout_clears_the_http_cache(alice):
+    response = alice.post(LOGOUT_URL, {}, format="json")
+
+    assert response["Clear-Site-Data"] == '"cache"'
