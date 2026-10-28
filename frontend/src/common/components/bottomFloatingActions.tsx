@@ -44,7 +44,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
             return {
                 ...baseStyles,
                 position: "fixed",
-                bottom: { xs: 16, md: 72 },
+                bottom: { xs: 'calc(16px + env(safe-area-inset-bottom))', md: 72 },
                 right: { xs: 16, md: 72 },
             };
         } else {
