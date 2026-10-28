@@ -1,6 +1,3 @@
-import os
-
-from django.conf import settings
 from django.db.models import Q
 from django.utils import timezone
 from rest_framework.exceptions import PermissionDenied
@@ -19,12 +16,32 @@ from config.throttles import (
 )
 from frame_updates.models import Release
 from frames.auth import FrameTokenAuthentication
-from frames.models import Frame
+from frames.models import Frame, FrameGroup
 from friendships.models import Friendship
 from images.models import Image, ImageVariant
 from sent_images.models import SentImage
 from user_accounts.models import Account
 from utils.request_logging.decorators import no_logging
+
+# Revalidated on every view so revoked access applies at once; nginx answers 304.
+PRIVATE_MEDIA_CACHE_CONTROL = "private, no-cache"
+
+
+def stored_name(prefix, path):
+    """The storage name for a requested media path, or None if it could escape."""
+    if not path or "\x00" in path or "\\" in path or path.startswith("/"):
+        return None
+    if any(part in ("", ".", "..") for part in path.split("/")):
+        return None
+    return prefix + path
+
+
+def protected_file(name, cache_control=None):
+    response = Response(status=200)
+    response["X-Accel-Redirect"] = "/api/media/protected/" + name
+    if cache_control:
+        response["Cache-Control"] = cache_control
+    return response
 
 
 class MediaAccessView(APIView):
@@ -32,26 +49,25 @@ class MediaAccessView(APIView):
     throttle_classes = [MediaBurstRateThrottle, MediaSustainedRateThrottle]
 
     def get(self, request, path: str):
-        user = request.user
+        name = stored_name("private/", path)
+        image = self._find_image(name) if name else None
 
-        if path.strip() == "":
-            raise PermissionDenied("No valid path")
-
-        if not user.is_authenticated:
+        if image is None or not self._check_user_access(
+            image.user, request.user, image
+        ):
             raise PermissionDenied("Media not found or not authorized to access.")
 
-        if self._check_path_access(path, user):
-            response = Response(status=200)
-            # nginx proxy_pass: /app/backend/mediafiles/private/
-            response["X-Accel-Redirect"] = "/api/media/protected/private/" + path
-            return response
-        else:
-            raise PermissionDenied("Media not found or not authorized to access.")
+        return protected_file(name, cache_control=PRIVATE_MEDIA_CACHE_CONTROL)
 
-    def _normalize_path(self, url_path):
-        """Normalize a media URL to a comparable path"""
-        normalized = url_path.replace(settings.MEDIA_URL + "private/", "")
-        return normalized
+    def _find_image(self, name):
+        variant = (
+            ImageVariant.objects.select_related("parent_image__user")
+            .filter(file=name)
+            .first()
+        )
+        if variant is not None:
+            return variant.parent_image
+        return Image.objects.select_related("user").filter(image=name).first()
 
     def _check_user_access(self, owner, user, image):
         """Check if user has access to image owned by owner"""
@@ -74,33 +90,6 @@ class MediaAccessView(APIView):
 
         return sentImage_exists
 
-    def _check_path_access(self, path, user):
-        """Check if user has access to the given path"""
-        variants = ImageVariant.objects.all()
-        for variant in variants:
-            doc_path = self._normalize_path(variant.file.url)
-
-            if path.endswith("/"):
-                doc_path = doc_path + "/"
-
-            if path == doc_path:
-                parent_image = variant.parent_image
-                if self._check_user_access(parent_image.user, user, parent_image):
-                    return True
-
-        images = Image.objects.all()
-        for image in images:
-            doc_path = self._normalize_path(image.image.url)
-
-            if path.endswith("/"):
-                doc_path = doc_path + "/"
-
-            if path == doc_path:
-                if self._check_user_access(image.user, user, image):
-                    return True
-
-        return False
-
 
 class AvatarAccessView(APIView):
     permission_classes = [IsAuthenticated]
@@ -117,9 +106,9 @@ class AvatarAccessView(APIView):
         if account is None or not self._may_see(user, account.user):
             raise PermissionDenied("Media not found or not authorized to access.")
 
-        response = Response(status=200)
-        response["X-Accel-Redirect"] = "/api/media/protected/avatars/" + path
-        return response
+        return protected_file(
+            f"avatars/{path}", cache_control=PRIVATE_MEDIA_CACHE_CONTROL
+        )
 
     def _may_see(self, user, owner):
         if user.is_staff or user == owner:
@@ -154,32 +143,19 @@ class FrameUpdatesAccessView(APIView):
         if not frame or not frame.groups.exists():
             raise PermissionDenied("Frame has no valid groups assigned.")
 
-        frame_groups = frame.groups.all()
-
-        accessible_releases = Release.objects.filter(
-            is_active=True, groups__in=frame_groups
-        ).distinct()
-
-        file_access_granted = False
-        for release in accessible_releases:
-            if release.file and release.file.name:
-                release_filename = os.path.basename(release.file.name)
-                requested_filename = os.path.basename(path)
-
-                if release_filename == requested_filename:
-                    file_access_granted = True
-                    break
-
-        if not file_access_granted:
+        name = stored_name("frame-updates/", path)
+        if (
+            not name
+            or not Release.objects.filter(
+                is_active=True, groups__in=frame.groups.all(), file=name
+            ).exists()
+        ):
             raise PermissionDenied("File not found or not authorized to access.")
 
         frame.last_update_attempt = timezone.now()
         frame.save(update_fields=["last_update_attempt"])
 
-        response = Response(status=200)
-        # nginx proxy_pass: /app/backend/mediafiles/frame-updates/
-        response["X-Accel-Redirect"] = "/api/media/protected/frame-updates/" + path
-        return response
+        return protected_file(name)
 
 
 class ChangelogsAccessView(APIView):
@@ -200,44 +176,26 @@ class ChangelogsAccessView(APIView):
         if not user_frames.exists():
             raise PermissionDenied("User has no connected frames.")
 
-        user_frame_groups = set()
-        for frame in user_frames:
-            user_frame_groups.update(frame.groups.all())
+        user_frame_groups = set(FrameGroup.objects.filter(frames__in=user_frames))
 
         if not user_frame_groups:
             raise PermissionDenied("User's frames have no valid groups assigned.")
 
-        file_access_granted = False
+        name = stored_name("changelogs/", path)
+        changelog_images = (
+            ChangelogImage.objects.filter(image=name, changelog__is_published=True)
+            .select_related("changelog")
+            .prefetch_related("changelog__groups")
+            if name
+            else []
+        )
 
-        changelog_images = ChangelogImage.objects.select_related("changelog").all()
         for changelog_image in changelog_images:
-            if changelog_image.image and changelog_image.image.name:
-                image_filename = os.path.basename(changelog_image.image.name)
-                requested_filename = os.path.basename(path)
+            changelog_groups = set(changelog_image.changelog.groups.all())
+            if not changelog_groups or user_frame_groups & changelog_groups:
+                return protected_file(name, cache_control=PRIVATE_MEDIA_CACHE_CONTROL)
 
-                if image_filename == requested_filename:
-                    changelog = changelog_image.changelog
-
-                    if not changelog.is_published:
-                        continue
-
-                    changelog_groups = set(changelog.groups.all())
-
-                    if not changelog_groups:
-                        file_access_granted = True
-                        break
-
-                    if user_frame_groups.intersection(changelog_groups):
-                        file_access_granted = True
-                        break
-
-        if not file_access_granted:
-            raise PermissionDenied("File not found or not authorized to access.")
-
-        response = Response(status=200)
-        # nginx proxy_pass: /app/backend/mediafiles/changelogs/
-        response["X-Accel-Redirect"] = "/api/media/protected/changelogs/" + path
-        return response
+        raise PermissionDenied("File not found or not authorized to access.")
 
 
 class HealthView(APIView):
