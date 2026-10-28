@@ -132,3 +132,15 @@ describe('side menu on a phone', () => {
     expect(store.getState().ui.navigation.sidebar.open).toBe(false);
   });
 });
+
+describe('start page', () => {
+  it('opens the photo editor from the send button', async () => {
+    server.use(...withFrames([]));
+    const { user, router, store } = renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    await user.click(await screen.findByRole('button', { name: 'Foto senden' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
+    await waitFor(() => expect(store.getState().ui.images.dialogs.create.open).toBe(true));
+  });
+});

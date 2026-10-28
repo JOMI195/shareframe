@@ -1,5 +1,9 @@
-import { Box, Typography } from "@mui/material";
-import { useAppSelector } from "@/store";
+import { Box, Button, Typography } from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
+import { useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { uploadRequested } from "@/store/ui/images/images.slice";
+import { getImageUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import Header from "./header/header";
 import LoadingSkeleton from "./loading/loadingSkeleton";
@@ -10,6 +14,8 @@ import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const Dashboard: React.FC = () => {
     const user = useAppSelector(getUser);
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const dashboardStats = useAppSelector(getDashboardData);
 
     const dashboardLoading = useAppSelector(getDashboardApi).loading;
@@ -39,6 +45,20 @@ const Dashboard: React.FC = () => {
         }}>
             {/* Header Welcome Section */}
             <Header username={user.me.username} />
+
+            {/* The app's main task, one tap from the start page */}
+            <Button
+                variant="contained"
+                size="large"
+                startIcon={<SendIcon />}
+                onClick={() => {
+                    dispatch(uploadRequested());
+                    navigate("/" + getImageUrl());
+                }}
+                sx={{ mb: 3, py: 1.5 }}
+            >
+                Foto senden
+            </Button>
 
             {/* Quick Access Cards */}
             <Typography variant="subtitle1" sx={{

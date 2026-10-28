@@ -123,6 +123,34 @@ describe('photo library', () => {
 
     expect(await screen.findByText('4 Fotos')).toBeInTheDocument();
   });
+
+  it('offers to send the photo right after the upload', async () => {
+    const { user, store } = await openLibrary();
+    server.use(
+      mswHttp.post(apiUrl(imageEndpoints.getImagesUrl()), () =>
+        HttpResponse.json(makeImage({ id: 99, name: 'neu.jpg', display_name: 'neu' }), { status: 201 }),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: /Foto hinzufügen/ }));
+    await user.upload(
+      await waitFor(() => {
+        const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+        expect(input).not.toBeNull();
+        return input!;
+      }),
+      new File(['x'.repeat(64)], 'neu.jpg', { type: 'image/jpeg', lastModified: 1 }),
+    );
+    await screen.findByTestId('cropper');
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
+
+    expect(await screen.findByText('Foto hochgeladen')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Jetzt senden' }));
+
+    await waitFor(() => expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(true));
+    expect(store.getState().ui.images.dialogs.sendToFrame.imagesToSend.map((image) => image.id)).toEqual([99]);
+  });
 });
 
 describe('sending photos to a frame', () => {
@@ -144,6 +172,7 @@ describe('sending photos to a frame', () => {
 
     await user.click(screen.getAllByRole('combobox')[0]);
     await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name: 'bob' }));
+    await user.keyboard('{Escape}');
 
     await user.click(await screen.findByRole('button', { name: /an 1 Empfänger senden/ }));
 

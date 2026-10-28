@@ -7,13 +7,18 @@ import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/ima
 import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
-import { closeSelectionDialog } from "@/store/ui/images/images.slice";
+import { closeSelectionDialog, getUploadRequested, openCreateImageDialog } from "@/store/ui/images/images.slice";
 
 const Images: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const page = useAppSelector(getImagesPaginated).page;
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
+    const uploadRequested = useAppSelector(getUploadRequested);
+
+    useEffect(() => {
+        if (uploadRequested) dispatch(openCreateImageDialog());
+    }, [dispatch, uploadRequested]);
 
     // Reset on leave, not on entry: a reset on entry refetches after the first fetch.
     useEffect(() => () => {
