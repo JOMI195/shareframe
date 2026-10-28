@@ -5,7 +5,7 @@ import * as frameEndpoints from '@/assets/endpoints/api/framesEndpoints';
 import * as imageEndpoints from '@/assets/endpoints/api/imagesEndpoints';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
-import { makeFriendship, makeImage, makeImages, seedUser } from '@tests/fixtures';
+import { makeFriendship, makeImage, makeImages, makePage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withFriendships, withImages } from '@tests/mocks';
 import { clickSpeedDialAction } from '@tests/helpers/speedDial';
@@ -56,6 +56,26 @@ const selectFirstPhoto = async (user: ReturnType<typeof renderRoute>['user']) =>
 
 // The mocked mirror of tests/e2e/imageLifecycle.spec.ts.
 describe('photo library', () => {
+  it('comes back on the first page with a single request', async () => {
+    const pages: string[] = [];
+    server.use(
+      mswHttp.get(apiUrl(imageEndpoints.getImagesUrl()), ({ request }) => {
+        pages.push(new URL(request.url).searchParams.get('page') ?? '');
+        return HttpResponse.json(makePage(makeImages(10), { count: 25 }));
+      }),
+    );
+    const { user, router } = renderRoute('/fotos/', { preloadedState: signedInState() });
+    await user.click(await screen.findByRole('button', { name: 'Go to page 2' }));
+    await waitFor(() => expect(pages).toEqual(['1', '2']));
+
+    await act(() => router.navigate('/aktivitaeten/'));
+    await act(() => router.navigate('/fotos/'));
+
+    await waitFor(() => expect(pages).toHaveLength(3));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(pages).toEqual(['1', '2', '1']);
+  });
+
   it('shows how many photos there are and renders their thumbnails', async () => {
     await openLibrary();
 

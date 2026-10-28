@@ -17,7 +17,7 @@ const SentImageScheduledActionDialog = () => {
     const { scheduledAction: scheduledActionDialog } = useAppSelector(getDialogs);
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const user = useAppSelector(getUser);
-    const loading = useAppSelector(getApi).loading
+    const loading = useAppSelector(getApi).sending
     const sentImage = sentImagesPaginated.results.find((sentImage => sentImage.id === scheduledActionDialog.sentImageId)) as ISentImage | undefined;
     const isSendNow = scheduledActionDialog.action === 'sendNow';
 

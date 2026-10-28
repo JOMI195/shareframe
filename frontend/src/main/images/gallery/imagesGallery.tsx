@@ -17,7 +17,6 @@ import {
     getImagesPaginated,
     getImagesPaginatedPageSize
 } from "@/store/entities/images/images.slice";
-import { getApi as friendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
 import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
@@ -37,8 +36,7 @@ const ImagesGallery: React.FC = () => {
     const imagesPaginated = useAppSelector(getImagesPaginated);
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
-    const friendshipsLoading = useAppSelector(friendshipsApi).loading;
-    const showSkeleton = useMinimumLoading(imagesLoading || friendshipsLoading);
+    const showSkeleton = useMinimumLoading(imagesLoading);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));

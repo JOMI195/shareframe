@@ -12,7 +12,7 @@ const ImageDeleteDialog = () => {
     const dispatch = useAppDispatch();
 
     const { delete: deleteDialog } = useAppSelector(getDialogs);
-    const loading = useAppSelector(imagesApi).loading
+    const loading = useAppSelector(imagesApi).sending
     const imagesToDelete = deleteDialog.imagesToDelete;
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));

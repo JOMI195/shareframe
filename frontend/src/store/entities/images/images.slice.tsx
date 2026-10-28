@@ -165,7 +165,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     deactivateSentImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     deactivateSentImageFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
       replaceSentImage(sliceState, action.payload);
@@ -175,7 +175,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     cancelScheduledSentImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     cancelScheduledSentImageFulfilled: (sliceState, action: PayloadAction<number>) => {
       const sentImages = sliceState.sentImagesPaginated;
@@ -188,7 +188,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     sendScheduledSentImageNowPending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     sendScheduledSentImageNowFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
       replaceSentImage(sliceState, action.payload);

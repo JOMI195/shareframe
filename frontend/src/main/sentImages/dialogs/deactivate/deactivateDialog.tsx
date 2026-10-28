@@ -16,7 +16,7 @@ const SentImageDeactivateDialog = () => {
     const { deactivate: deactivateDialog } = useAppSelector(getDialogs);
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const user = useAppSelector(getUser);
-    const loading = useAppSelector(getApi).loading
+    const loading = useAppSelector(getApi).sending
     const sentImageToDeactivate = sentImagesPaginated.results.find((sentImage => sentImage.id === deactivateDialog.sentImageId)) as ISentImage | undefined;
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));

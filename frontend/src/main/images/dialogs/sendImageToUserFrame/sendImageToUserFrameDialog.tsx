@@ -51,7 +51,7 @@ const SendImageToUserFrameDialog = () => {
     const dispatch = useAppDispatch();
 
     const { sendToFrame: sendDialog } = useAppSelector(getDialogs);
-    const loading = useAppSelector(getApi).loading;
+    const loading = useAppSelector(getApi).sending;
     const imagesToSend = sendDialog.imagesToSend;
 
     const user = useAppSelector(getUser);

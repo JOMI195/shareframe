@@ -4,6 +4,7 @@ import reducer, {
   createImageFulfilled,
   createImagePending,
   cancelScheduledSentImageFulfilled,
+  cancelScheduledSentImagePending,
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
   deactivateSentImagePending,
@@ -22,6 +23,7 @@ import reducer, {
   sendImageToUserFrameFailed,
   sendImageToUserFrameFulfilled,
   sendScheduledSentImageNowFulfilled,
+  sendScheduledSentImageNowPending,
   sendImageToUserFramePending,
   sentImagesFiltersSet,
   sentImagesPageSet,
@@ -41,7 +43,10 @@ describe('images slice api flags', () => {
   it.each([
     ['imagesRequested', imagesRequested, { loading: true, sending: false }],
     ['sentImagesRequested', sentImagesRequested, { loading: true, sending: false }],
-    ['deactivateSentImagePending', deactivateSentImagePending, { loading: true, sending: false }],
+    // Row actions must not raise the list flag, or the grid swaps to the skeleton.
+    ['deactivateSentImagePending', deactivateSentImagePending, { loading: false, sending: true }],
+    ['cancelScheduledSentImagePending', cancelScheduledSentImagePending, { loading: false, sending: true }],
+    ['sendScheduledSentImageNowPending', sendScheduledSentImageNowPending, { loading: false, sending: true }],
     ['createImagePending', createImagePending, { loading: false, sending: true }],
     ['deleteImagePending', deleteImagePending, { loading: false, sending: true }],
     ['sendImageToUserFramePending', sendImageToUserFramePending, { loading: false, sending: true }],

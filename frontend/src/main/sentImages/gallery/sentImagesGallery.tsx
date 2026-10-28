@@ -25,7 +25,6 @@ import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariant } from "@/common/utils/images";
-import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import DataNotFound from "@/common/components/dataNotFound";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -40,8 +39,7 @@ const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
-    const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
-    const showSkeleton = useMinimumLoading(loading || friendshipsLoading);
+    const showSkeleton = useMinimumLoading(loading);
     const theme = useTheme();
 
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);

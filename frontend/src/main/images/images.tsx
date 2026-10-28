@@ -4,26 +4,25 @@ import { Actions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/images.actions";
-import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
+import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
 import { closeSelectionDialog } from "@/store/ui/images/images.slice";
-import { useLocation } from "react-router";
 
 const Images: React.FC = () => {
     const dispatch = useAppDispatch();
-    const { pathname } = useLocation();
 
     const page = useAppSelector(getImagesPaginated).page;
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
 
-    useEffect(() => {
+    // Reset on leave, not on entry: a reset on entry refetches after the first fetch.
+    useEffect(() => () => {
         dispatch(setImagesPaginatedPage(1));
         dispatch(closeSelectionDialog());
-    }, [dispatch, pathname]);
+    }, [dispatch]);
 
     useEffect(() => {
-        dispatch(fetchFriendships());
+        dispatch(fetchFriendshipsIfStale());
     }, [dispatch]);
 
     useEffect(() => {
