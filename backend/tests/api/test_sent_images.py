@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from sent_images.models import SentImage, SentImageStatus
@@ -20,6 +22,17 @@ def alice_user():
 
 def test_requires_authentication(client):
     assert client.get(URL).status_code == 401
+
+
+def test_the_query_count_does_not_grow_with_the_page(alice, alice_user):
+    SentImageFactory.create_batch(5, reciever=alice_user)
+
+    with CaptureQueriesContext(connection) as one:
+        alice.get(URL, {"page_size": 1})
+    with CaptureQueriesContext(connection) as full:
+        alice.get(URL, {"page_size": 5})
+
+    assert len(full) == len(one)
 
 
 def test_lists_the_users_own_traffic(alice, alice_user):

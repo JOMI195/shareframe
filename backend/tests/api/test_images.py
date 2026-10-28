@@ -1,4 +1,6 @@
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from images.models import Image
 from sent_images.models import SentImage
@@ -30,6 +32,14 @@ def test_requires_authentication(client):
 
 
 class TestList:
+    def test_the_query_count_does_not_grow_with_the_page(self, alice):
+        with CaptureQueriesContext(connection) as one:
+            alice.get(URL, {"page_size": 1})
+        with CaptureQueriesContext(connection) as full:
+            alice.get(URL, {"page_size": PAGE_SIZE})
+
+        assert len(full) == len(one)
+
     def test_returns_the_first_page(self, alice):
         response = alice.get(URL)
 

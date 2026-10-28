@@ -13,7 +13,7 @@ from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottl
 from sent_images.models import SentImage
 from user_stats.counters import bump
 
-from .models import Image, TextPreset
+from .models import Image, TextPreset, prefetch_variants
 from .serializers import (
     ImageCreateSerializer,
     ImageDestroySerializer,
@@ -59,9 +59,11 @@ class ImagesViewSet(ModelViewSet):
         return super().get_permissions()
 
     def get_queryset(self):
-        return Image.objects.filter(
-            user=self.request.user, markedAsDeleted=False
-        ).order_by("-created_at")
+        return (
+            Image.objects.filter(user=self.request.user, markedAsDeleted=False)
+            .prefetch_related(prefetch_variants())
+            .order_by("-created_at")
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())

@@ -70,6 +70,12 @@ class ImageVariant(models.Model):
         return f"{self.parent_image.name} - {self.image_size.name}"
 
 
+def prefetch_variants(lookup="variants"):
+    return models.Prefetch(
+        lookup, queryset=ImageVariant.objects.select_related("image_size")
+    )
+
+
 class Image(models.Model):
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
