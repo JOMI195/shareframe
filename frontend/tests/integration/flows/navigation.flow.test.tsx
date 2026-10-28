@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { screen, waitFor } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { server, withFrames, withUser } from '@tests/mocks';
 import { makeFrame, seedUser } from '@tests/fixtures';
 import { renderRoute } from '@tests/helpers/renderRoute';
@@ -39,7 +39,7 @@ describe('contact page', () => {
     renderRoute('/kontakt/', { preloadedState: signedInState() });
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Kontaktiere uns' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'account of current user' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
   });
 
@@ -114,5 +114,21 @@ describe('seo head', () => {
         'noindex, nofollow',
       ),
     );
+  });
+});
+
+describe('side menu on a phone', () => {
+  it('navigates from a menu link and closes the menu', async () => {
+    server.use(...withFrames([]));
+    const { user, router, store } = renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    await user.click(await screen.findByRole('button', { name: 'Menü öffnen' }));
+    const menu = await screen.findByRole('navigation', { name: 'Hauptmenü' });
+    await user.click(within(menu).getByRole('link', { name: /^Fotos$/ }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(router.state.location.pathname).toBe('/fotos/');
+    expect(store.getState().ui.navigation.sidebar.open).toBe(false);
   });
 });

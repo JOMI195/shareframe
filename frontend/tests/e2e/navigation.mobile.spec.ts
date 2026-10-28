@@ -16,8 +16,7 @@ test.describe('navigation on a phone', () => {
     for (const { name, url } of pages) {
       await test.step(name, async () => {
         const link = page.getByRole('link', { name, exact: true });
-        // The menu button's accessible name is a leftover; it toggles the side menu.
-        await page.getByRole('button', { name: 'account of current user' }).click();
+        await page.getByRole('button', { name: 'Menü öffnen' }).click();
         await expect(link).toBeInViewport();
 
         await link.click();

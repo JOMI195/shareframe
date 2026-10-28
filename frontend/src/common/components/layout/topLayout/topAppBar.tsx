@@ -5,11 +5,12 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
-import { Divider, useMediaQuery, useTheme } from '@mui/material';
+import { Divider, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import Logo from '../../logo';
+import { getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 import SeasonalLogoBadge from '../../seasonal/seasonalLogoBadge';
 import SeasonalAppBar from '../../seasonal/seasonalAppBar';
 
@@ -20,7 +21,6 @@ function TopAppBar() {
     const dispatch = useAppDispatch();
     const theme = useTheme();
 
-    const isSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
     const handleSidebarButtonClick = () => {
         dispatch(sidebarOpen ? closeSidebar() : openSidedbar());
@@ -38,25 +38,22 @@ function TopAppBar() {
         >
             <SeasonalAppBar />
             <Toolbar sx={{ height: "100%" }}>
-                <Tooltip title={`Seitenmenü ${sidebarOpen ? "schließen" : "öffnen"}`} placement="bottom">
-                    <IconButton
-                        size="small"
-                        aria-label="account of current user"
-                        aria-haspopup="true"
-                        onClick={handleSidebarButtonClick}
-                        className='ignore-clickaway'
-                        sx={{ mr: 2 }}
-                    >
-                        {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
-                    </IconButton>
-                </Tooltip>
+                <IconButton
+                    aria-label={`Menü ${sidebarOpen ? "schließen" : "öffnen"}`}
+                    aria-expanded={sidebarOpen}
+                    onClick={handleSidebarButtonClick}
+                    className='ignore-clickaway'
+                    sx={{ mr: 1, width: 44, height: 44 }}
+                >
+                    {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+                </IconButton>
                 <SeasonalLogoBadge>
                     <Logo
                         darkLogoSrc="/logo-dark-full-shareframe.svg"
                         lightLogoSrc="/logo-light-full-shareframe.svg"
                         maxWidth={130}
                         marginRight={0}
-                        clickable={false}
+                        linkUrl={getDashboardUrl()}
                     />
                 </SeasonalLogoBadge>
                 <Box
@@ -65,8 +62,12 @@ function TopAppBar() {
                     }}
                 />
                 <Tooltip title={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}>
-                    <IconButton size={isSmallScreen ? "medium" : "medium"} onClick={toggleColorMode}>
-                        <IconComponent fontSize={isSmallScreen ? "medium" : "medium"} />
+                    <IconButton
+                        onClick={toggleColorMode}
+                        aria-label={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}
+                        sx={{ width: 44, height: 44 }}
+                    >
+                        <IconComponent />
                     </IconButton>
                 </Tooltip>
                 <Divider />
