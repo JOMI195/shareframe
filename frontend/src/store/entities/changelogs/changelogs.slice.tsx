@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IChangelog, IChangelogId } from "@/types/types.changelogs";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -69,6 +70,10 @@ const changelogsSlice = createSlice({
         changelogsRequestFailed: (sliceState) => {
             sliceState.api.loading = false;
         },
+    },
+    // Which changelogs a user sees depends on their frames.
+    extraReducers: (builder) => {
+        builder.addCase(signedOut, () => initialState);
     },
 });
 

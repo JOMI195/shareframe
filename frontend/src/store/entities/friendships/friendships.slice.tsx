@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IFriendship } from "@/types";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -84,6 +85,9 @@ const friendshipsSlice = createSlice({
     friendshipDeleteDeleteFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 

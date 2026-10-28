@@ -33,6 +33,7 @@ import reducer, {
   sentImagesRequested,
 } from '@/store/entities/images/images.slice';
 import { rootState } from '@tests/helpers/preloadedState';
+import { signedOut } from '@/store/entities/authentication/authentication.slice';
 import { makeImage, makePage, makeSentImage } from '@tests/fixtures';
 
 const initial = () => reducer(undefined, { type: '@@init' });
@@ -73,6 +74,15 @@ describe('images slice api flags', () => {
     [downloadImageRequested, downloadImageReceived, downloadImageFailed].forEach((action) => {
       expect(reducer(before, action())).toEqual(before);
     });
+  });
+});
+
+describe('signing out', () => {
+  // A shared device: the next user must not see the previous one's photos.
+  it('forgets the loaded photos', () => {
+    const loaded = reducer(initial(), imagesReceived(makePage([makeImage()], { count: 1 })));
+
+    expect(reducer(loaded, signedOut()).imagesPaginated.results).toEqual([]);
   });
 });
 

@@ -229,9 +229,8 @@ const imagesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(signedOut, (sliceState) => {
-      sliceState.textPresets = initialState.textPresets;
-    });
+    // The next user on this device must not see the previous one's photos.
+    builder.addCase(signedOut, () => initialState);
   },
 });
 

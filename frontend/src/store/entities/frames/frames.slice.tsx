@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IFrame } from "@/types";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -76,6 +77,9 @@ const framesSlice = createSlice({
     frameOTPRequestFailed: (sliceState) => {
       sliceState.api.otpLoading = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 

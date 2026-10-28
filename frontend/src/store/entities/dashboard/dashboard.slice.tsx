@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IDashboardData } from "@/types";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -37,6 +38,9 @@ const dashboardSlice = createSlice({
     dashboardStatsRequestFailed: (sliceState) => {
       resetApiState(sliceState);
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 
