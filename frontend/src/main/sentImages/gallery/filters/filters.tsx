@@ -10,9 +10,12 @@ import {
     SelectChangeEvent,
     Switch,
     FormGroup,
-    FormControlLabel
+    FormControlLabel,
+    Badge,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material';
-import HideImageIcon from '@mui/icons-material/HideImage';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
@@ -24,6 +27,7 @@ import {
     setStatusFilter
 } from '@/store/ui/sentImages/sentImages.slice';
 import { ISentImagesFilters, ShippingFilter, StatusFilter } from '@/types';
+import { getSentImagesFilters } from '@/store/entities/images/images.slice';
 
 export interface FilterControlsProps {
     onFiltersChange: (filters: ISentImagesFilters) => void;
@@ -35,7 +39,16 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     disabled = false
 }) => {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
+    const isCompact = useMediaQuery(theme.breakpoints.down('md'));
     const { filter: filterDialog } = useAppSelector(getDialogs);
+    const appliedFilters = useAppSelector(getSentImagesFilters);
+    const activeFilterCount = [
+        appliedFilters.status !== 'all',
+        appliedFilters.shipping !== 'all',
+        Boolean(appliedFilters.sender),
+        Boolean(appliedFilters.receiver),
+    ].filter(Boolean).length;
 
     const statusFilter = filterDialog.statusFilter;
     const shippingFilter = filterDialog.shippingFilter;
@@ -95,6 +108,39 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     const handleOpenExtendedFilters = () => {
         dispatch(openFilterDialog());
     };
+
+    // On phones the five controls would push the photos below the fold; they live in the dialog instead.
+    if (isCompact) {
+        return (
+            <Box sx={{ width: '100%', mb: 2, display: 'flex', gap: 1 }}>
+                <Button
+                    variant="outlined"
+                    onClick={handleOpenExtendedFilters}
+                    disabled={disabled}
+                    aria-label={activeFilterCount > 0 ? `Filter (${activeFilterCount} aktiv)` : 'Filter'}
+                    startIcon={
+                        <Badge badgeContent={activeFilterCount} color="primary">
+                            <FilterListIcon />
+                        </Badge>
+                    }
+                    sx={{ flex: 1, minHeight: 44 }}
+                >
+                    Filter
+                </Button>
+                {activeFilterCount > 0 && (
+                    <Button
+                        variant="text"
+                        onClick={handleClearFilters}
+                        disabled={disabled}
+                        startIcon={<FilterListOffIcon />}
+                        sx={{ minHeight: 44 }}
+                    >
+                        Zurücksetzen
+                    </Button>
+                )}
+            </Box>
+        );
+    }
 
     return (
         <Box sx={{ width: '100%', mb: 2 }}>
@@ -210,7 +256,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         fullWidth
                         variant="outlined"
                         onClick={handleClearFilters}
-                        startIcon={<HideImageIcon />}
+                        startIcon={<FilterListOffIcon />}
                         sx={{ height: '56px' }}
                         disabled={disabled}
                     >

@@ -19,7 +19,8 @@ const render = () =>
   });
 
 // Neither MUI Select exposes an accessible name here; the sender comes first.
-const senderSelect = () => screen.getAllByRole('combobox')[0];
+// Status and direction come first in the dialog.
+const senderSelect = () => screen.getAllByRole('combobox')[2];
 
 describe('FiltersDialog', () => {
   it('shows the picture of every user it offers', async () => {
@@ -49,6 +50,6 @@ describe('FiltersDialog', () => {
     render();
 
     expect(senderSelect()).toHaveTextContent('Alle Sender');
-    expect(screen.getAllByRole('combobox')[1]).toHaveTextContent('Alle Empfänger');
+    expect(screen.getAllByRole('combobox')[3]).toHaveTextContent('Alle Empfänger');
   });
 });

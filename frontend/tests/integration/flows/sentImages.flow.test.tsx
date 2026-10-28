@@ -8,6 +8,7 @@ import { makeImage, makePage, makeSentImage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withSentImages } from '@tests/mocks';
 import { clickSpeedDialAction } from '@tests/helpers/speedDial';
+import { setSmallScreen } from '@tests/setup/vitest.setup';
 
 const ME = seedUser.username;
 
@@ -80,7 +81,7 @@ describe('activity list', () => {
     await openActivity([]);
 
     expect(
-      await screen.findByText('Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden'),
+      await screen.findByText('Noch keine gesendeten oder erhaltenen Fotos'),
     ).toBeInTheDocument();
   });
 
@@ -93,6 +94,25 @@ describe('activity list', () => {
     expect(await screen.findByRole('img', { name: 'bob', hidden: true })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: 'carol', hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('C')).toBeInTheDocument();
+  });
+});
+
+describe('filters on a phone', () => {
+  it('collapse into one button that counts the active filters', async () => {
+    setSmallScreen(true);
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    expect(screen.queryByLabelText('Status Filter')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    await user.click(await screen.findByLabelText('Status'));
+    await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name: 'Abgelaufene' }));
+    await user.click(screen.getByRole('button', { name: 'Filter anwenden' }));
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
+    // The page stays hidden from the accessibility tree until the dialog has faded out.
+    expect(await screen.findByRole('button', { name: 'Filter (1 aktiv)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Zurücksetzen' })).toBeInTheDocument();
   });
 });
 

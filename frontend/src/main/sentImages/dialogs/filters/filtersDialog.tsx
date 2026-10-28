@@ -1,10 +1,11 @@
-import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel, FormControlLabel, Switch } from "@mui/material";
 import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import CloseIcon from '@mui/icons-material/Close';
-import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter } from "@/store/ui/sentImages/sentImages.slice";
+import { closeFilterDialog, getDialogs, resetFilters, setHideToYouFilter, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
+import { ShippingFilter, StatusFilter } from "@/types";
 import { useState } from "react";
 import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
@@ -23,17 +24,23 @@ const FiltersDialog = () => {
     const user = useAppSelector(getUser);
     const friendships = useAppSelector(getFriendships);
 
+    const [statusFilterLocal, setStatusFilterLocal] = useState<StatusFilter>('all');
+    const [shippingFilterLocal, setShippingFilterLocal] = useState<ShippingFilter>('all');
+    const [hideToYouLocal, setHideToYouLocal] = useState(true);
     const [senderFilterLocal, setSenderFilterLocal] = useState('');
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
-    const dialogFilters = `${filterDialog.open}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
+    const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.hideToYouFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
 
     if (dialogFilters !== syncedFilters) {
         setSyncedFilters(dialogFilters);
         if (filterDialog.open) {
+            setStatusFilterLocal(filterDialog.statusFilter);
+            setShippingFilterLocal(filterDialog.shippingFilter);
+            setHideToYouLocal(filterDialog.hideToYouFilter);
             setSenderFilterLocal(filterDialog.senderFilter || '');
             setReceiverFilterLocal(filterDialog.receiverFilter || '');
         }
@@ -44,13 +51,15 @@ const FiltersDialog = () => {
     };
 
     const handleApplyFilters = () => {
-
+        dispatch(setStatusFilter({ statusFilter: statusFilterLocal }));
+        dispatch(setShippingFilter({ shippingFilter: shippingFilterLocal }));
+        dispatch(setHideToYouFilter({ hideToYouFilter: hideToYouLocal }));
         dispatch(setSenderFilter({ senderFilter: senderFilterLocal }));
         dispatch(setRecieverFilter({ receiverFilter: receiverFilterLocal }));
 
         dispatch(setSentImagesFilters({
-            status: filterDialog.statusFilter,
-            shipping: filterDialog.shippingFilter,
+            status: statusFilterLocal,
+            shipping: shippingFilterLocal,
             sender: senderFilterLocal,
             receiver: receiverFilterLocal,
         }));
@@ -107,7 +116,7 @@ const FiltersDialog = () => {
             <AppBar sx={{ position: 'relative' }} color="inherit">
                 <Toolbar>
                     <Typography sx={{ flex: 1 }} variant="h6" component="div">
-                        Mehr Filter
+                        Filter
                     </Typography>
                     <IconButton
                         edge="start"
@@ -130,6 +139,37 @@ const FiltersDialog = () => {
                         Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
                     <Grid container spacing={2}>
+                        <Grid size={12}>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel id="filter-dialog-status-label">Status</InputLabel>
+                                <Select
+                                    labelId="filter-dialog-status-label"
+                                    value={statusFilterLocal}
+                                    label="Status"
+                                    onChange={(e) => setStatusFilterLocal(e.target.value as StatusFilter)}
+                                >
+                                    <MenuItem value="all">Alle Fotos</MenuItem>
+                                    <MenuItem value="active">Aktive</MenuItem>
+                                    <MenuItem value="expired">Abgelaufene</MenuItem>
+                                    <MenuItem value="scheduled">Geplante</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
+                        <Grid size={12}>
+                            <FormControl fullWidth sx={{ mb: 2 }}>
+                                <InputLabel id="filter-dialog-shipping-label">Richtung</InputLabel>
+                                <Select
+                                    labelId="filter-dialog-shipping-label"
+                                    value={shippingFilterLocal}
+                                    label="Richtung"
+                                    onChange={(e) => setShippingFilterLocal(e.target.value as ShippingFilter)}
+                                >
+                                    <MenuItem value="all">Alle Fotos</MenuItem>
+                                    <MenuItem value="sentToYou">An dich gesendete</MenuItem>
+                                    <MenuItem value="sentByYou">Von dir gesendete</MenuItem>
+                                </Select>
+                            </FormControl>
+                        </Grid>
                         <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel shrink>Suche nach Sender</InputLabel>
@@ -181,6 +221,12 @@ const FiltersDialog = () => {
                                     ))}
                                 </Select>
                             </FormControl>
+                        </Grid>
+                        <Grid size={12}>
+                            <FormControlLabel
+                                control={<Switch checked={hideToYouLocal} onChange={(e) => setHideToYouLocal(e.target.checked)} />}
+                                label="Fotos an dich unscharf zeigen"
+                            />
                         </Grid>
                     </Grid>
                 </Box>
