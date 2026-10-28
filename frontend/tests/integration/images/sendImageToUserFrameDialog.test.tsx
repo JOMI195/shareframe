@@ -1,11 +1,12 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, screen, waitFor, waitForElementToBeRemoved, within } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { triggerIntersection } from '@tests/setup/vitest.setup';
 import { HttpResponse, http as mswHttp } from 'msw';
 import SendImageToUserFrameDialog from '@/main/images/dialogs/sendImageToUserFrame/sendImageToUserFrameDialog';
 import * as frameEndpoints from '@/assets/endpoints/api/framesEndpoints';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { signedInState } from '@tests/helpers/preloadedState';
-import { makeFriendship, makeImage, seedUser } from '@tests/fixtures';
+import { makeFrame, makeFriendship, makeImage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server } from '@tests/mocks/server';
 
@@ -17,14 +18,14 @@ const friendships = [
   makeFriendship({ id: 3, sender: 'dave', reciever: seedUser.username, status: 'pending' }),
 ];
 
-const openState = (images = [photo]) =>
+const openState = (images = [photo], frames = [makeFrame()]) =>
   signedInState({
-    entities: { friendships: { friendships } },
+    entities: { friendships: { friendships }, frames: { frames, api: { lastFetch: Date.now() } } },
     ui: { images: { dialogs: { sendToFrame: { open: true, imagesToSend: images } } } },
   });
 
-const render = (images = [photo]) =>
-  renderWithProviders(<SendImageToUserFrameDialog />, { preloadedState: openState(images) });
+const render = (images = [photo], frames = [makeFrame()]) =>
+  renderWithProviders(<SendImageToUserFrameDialog />, { preloadedState: openState(images, frames) });
 
 // Neither MUI Select exposes an accessible name here; the receivers come first.
 const receiverSelect = () => screen.getAllByRole('combobox')[0];
@@ -44,13 +45,15 @@ const recordSends = () => {
   return bodies;
 };
 
+// The picker stays open for several receivers; it blocks the dialog until it is dismissed.
 const chooseReceivers = async (user: ReturnType<typeof render>['user'], ...names: string[]) => {
+  await user.click(receiverSelect());
+  const listbox = await screen.findByRole('listbox');
   for (const name of names) {
-    await user.click(receiverSelect());
-    await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name }));
-    // The menu closes on a short timeout and blocks the rest of the dialog until it does.
-    await waitForElementToBeRemoved(() => screen.queryByRole('listbox'));
+    await user.click(within(listbox).getByRole('option', { name }));
   }
+  await user.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('listbox')).toBeNull());
 };
 
 describe('SendImageToUserFrameDialog', () => {
@@ -65,6 +68,37 @@ describe('SendImageToUserFrameDialog', () => {
     const names = ['bob', 'carol', 'deine eigenen Bilderrahmen'];
     expect(options).toHaveLength(names.length);
     names.forEach((name, i) => expect(options[i]).toHaveAccessibleName(name));
+  });
+
+  it('leaves out my own frames when I have none', async () => {
+    const { user } = render([photo], []);
+
+    await user.click(receiverSelect());
+
+    expect(within(await screen.findByRole('listbox')).queryByRole('option', { name: 'deine eigenen Bilderrahmen' })).toBeNull();
+  });
+
+  it('keeps the picker open to choose several receivers', async () => {
+    const { user } = render();
+
+    await user.click(receiverSelect());
+    const listbox = await screen.findByRole('listbox');
+    await user.click(within(listbox).getByRole('option', { name: 'bob' }));
+
+    expect(screen.getByRole('listbox')).toBeInTheDocument();
+    await user.click(within(listbox).getByRole('option', { name: 'carol' }));
+    await user.keyboard('{Escape}');
+
+    expect(await screen.findByRole('button', { name: '1 Foto an 2 Empfänger senden' })).toBeInTheDocument();
+  });
+
+  it('shows the photos that are about to be sent', async () => {
+    render([makeImage({ id: 5, display_name: 'Strand' }), makeImage({ id: 6, display_name: 'Berge' })]);
+
+    await act(async () => triggerIntersection(true));
+
+    expect(await screen.findByAltText('Strand')).toBeInTheDocument();
+    expect(await screen.findByAltText('Berge')).toBeInTheDocument();
   });
 
   it('leaves out people whose request is still pending', async () => {
@@ -185,5 +219,45 @@ describe('SendImageToUserFrameDialog', () => {
     await user.click(screen.getByRole('button', { name: /an 1 Empfänger senden/ }));
 
     await waitFor(() => expect(store.getState().ui.images.dialogs.selection.open).toBe(false));
+  });
+
+  it('sums all sends up in one message', async () => {
+    let calls = 0;
+    server.use(
+      mswHttp.post(apiUrl(frameEndpoints.getSentImageToFrameUrl()), () => {
+        calls += 1;
+        return calls === 1
+          ? HttpResponse.json({ detail: 'kaputt' }, { status: 500 })
+          : HttpResponse.json({ message: 'Image sent successful.' });
+      }),
+    );
+    const { user, store } = render();
+    await chooseReceivers(user, 'bob', 'carol');
+
+    await user.click(screen.getByRole('button', { name: /an 2 Empfänger senden/ }));
+
+    await waitFor(() =>
+      expect(store.getState().ui.images.snackbar.alert).toMatchObject({
+        message: '1 von 2 Sendungen erfolgreich, 1 fehlgeschlagen',
+        severity: 'warning',
+      }),
+    );
+    expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(false);
+  });
+
+  it('stays open for another try when nothing could be sent', async () => {
+    server.use(
+      mswHttp.post(apiUrl(frameEndpoints.getSentImageToFrameUrl()), () =>
+        HttpResponse.json({ detail: 'kaputt' }, { status: 500 }),
+      ),
+    );
+    const { user, store } = render();
+    await chooseReceivers(user, 'bob');
+
+    await user.click(screen.getByRole('button', { name: /an 1 Empfänger senden/ }));
+
+    await waitFor(() => expect(store.getState().ui.images.snackbar.alert.severity).toBe('error'));
+    expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(true);
+    expect(screen.getByRole('button', { name: /an 1 Empfänger senden/ })).toBeEnabled();
   });
 });

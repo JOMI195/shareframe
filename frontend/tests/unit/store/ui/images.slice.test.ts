@@ -70,11 +70,19 @@ describe('dialogs that consume the selection', () => {
     ['delete', deleteImageDialogOpened, 'imagesToDelete'],
     ['sendToFrame', sendImageToUserFrameDialogOpened, 'imagesToSend'],
   ])('%s copies the current selection on open', (dialog, action, key) => {
-    const state = reducer(withSelection(), action());
+    // Both creators take no payload here; the send one also accepts explicit photos.
+    const state = reducer(withSelection(), (action as () => ReturnType<typeof deleteImageDialogOpened>)());
     const opened = state.dialogs[dialog as 'delete' | 'sendToFrame'] as Record<string, unknown>;
 
     expect(opened.open).toBe(true);
     expect((opened[key] as { id: number }[]).map((i) => i.id)).toEqual([1, 2]);
+  });
+
+  it('sends the given photos instead of the selection, e.g. right after an upload', () => {
+    const uploaded = [makeImage({ id: 9 })];
+    const state = reducer(withSelection(), sendImageToUserFrameDialogOpened({ images: uploaded }));
+
+    expect(state.dialogs.sendToFrame.imagesToSend.map((i) => i.id)).toEqual([9]);
   });
 
   it.each([

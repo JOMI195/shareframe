@@ -1,6 +1,6 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
-import { IImage, ISentImage } from "@/types";
+import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
+import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
@@ -20,6 +20,8 @@ type SliceState = {
     scheduledAction: { open: boolean, sentImageId: number | null, action: ScheduledSentImageAction | null },
     selection: { open: boolean, selectedImages: IImage[] },
   };
+  // Set from another page to open the editor once the photos page is shown.
+  uploadRequested: boolean;
   snackbar: {
     alert: { open: boolean; message: string; severity: AlertColor };
     loading: { open: boolean; message: string; };
@@ -39,6 +41,7 @@ const initialState: SliceState = {
     scheduledAction: { open: false, sentImageId: null, action: null },
     selection: { open: false, selectedImages: [] },
   },
+  uploadRequested: false,
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
     loading: { open: false, message: "", },
@@ -193,30 +196,6 @@ const imagesSlice = createSlice({
           message: "Fotos an Bilderrahmen der Empfänger schicken",
         };
       })
-      .addCase(sendImageToUserFrameFulfilled, (sliceState, action: { payload?: Partial<ISentImage> }) => {
-        sliceState.snackbar.alert = {
-          open: true,
-          message: action.payload?.status === "scheduled"
-            ? "Versand an Bilderrahmen der Empfänger geplant"
-            : "Fotos an Bilderrahmen der Empfänger schicken erfolgreich",
-          severity: "success",
-        };
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
-      .addCase(sendImageToUserFrameFailed, (sliceState) => {
-        sliceState.snackbar.alert = {
-          open: true,
-          message: "Fotos an Bilderrahmen der Empfänger schicken fehlgeschlagen",
-          severity: "error",
-        };
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
       .addCase(deactivateSentImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
@@ -267,6 +246,10 @@ const imagesSlice = createSlice({
   reducers: {
     createImageDialogOpened: (sliceState) => {
       sliceState.dialogs.create.open = true;
+      sliceState.uploadRequested = false;
+    },
+    uploadRequested: (sliceState) => {
+      sliceState.uploadRequested = true;
     },
     createImageDialogClosed: (sliceState) => {
       sliceState.dialogs.create.open = false;
@@ -289,9 +272,12 @@ const imagesSlice = createSlice({
       sliceState.dialogs.preview.selectedImage = null;
       sliceState.dialogs.selection.selectedImages = [];
     },
-    sendImageToUserFrameDialogOpened: (sliceState) => {
-      sliceState.dialogs.sendToFrame.imagesToSend = sliceState.dialogs.selection.selectedImages;
-      sliceState.dialogs.sendToFrame.open = true;
+    sendImageToUserFrameDialogOpened: {
+      reducer: (sliceState, action: PayloadAction<{ images: IImage[] } | undefined>) => {
+        sliceState.dialogs.sendToFrame.imagesToSend = action.payload?.images ?? sliceState.dialogs.selection.selectedImages;
+        sliceState.dialogs.sendToFrame.open = true;
+      },
+      prepare: (payload?: { images: IImage[] }) => ({ payload }),
     },
     sendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.sendToFrame.open = false;
@@ -342,6 +328,9 @@ const imagesSlice = createSlice({
         severity: action.payload.severity,
       };
     },
+    sendToFramesFinished: (images, action: PayloadAction<{ message: string; severity: AlertColor }>) => {
+      showAlert(images, action.payload.message, action.payload.severity);
+    },
     alertSnackbarClosed: (images) => {
       images.snackbar.alert = {
         ...images.snackbar.alert,
@@ -388,8 +377,10 @@ export const closePreviewImageDialog = () => ({
   type: previewImageDialogClosed.type,
 });
 
-export const openSendImageToUserFrameDialog = () => ({
+// Without images it sends the current selection.
+export const openSendImageToUserFrameDialog = (payload?: { images: IImage[] }) => ({
   type: sendImageToUserFrameDialogOpened.type,
+  payload,
 });
 
 export const closeSendImageToUserFrameDialog = () => ({
@@ -450,7 +441,11 @@ export const closeImagesLoadingSnackbar = () => ({
   type: loadingSnackbarClosed.type,
 });
 
+export const getUploadRequested = (state: RootState) => state.ui.images.uploadRequested;
+
 export const {
+  uploadRequested,
+  sendToFramesFinished,
   createImageDialogOpened,
   createImageDialogClosed,
   alertSnackbarOpened,
