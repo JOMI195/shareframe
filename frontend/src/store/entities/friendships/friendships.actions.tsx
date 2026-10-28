@@ -46,6 +46,16 @@ export const rejectFrindshipRequest = (friendshipId: number) =>
     data: {}
   });
 
+// Same endpoint as ending a friendship; only the sender of a pending request uses it this way.
+export const withdrawFriendshipRequest = (friendshipId: number) =>
+  apiRequest({
+    url: friendshipsEndpoints.getFriendshipsDeleteRequestUrl(friendshipId),
+    method: "delete",
+    onStart: friendshipsSlice.friendshipDeleteRequested.type,
+    onSuccess: friendshipsSlice.friendshipRequestWithdrawn.type,
+    onError: friendshipsSlice.friendshipDeleteDeleteFailed.type,
+  });
+
 export const deleteFriendship = (friendshipId: number) =>
   apiRequest({
     url: friendshipsEndpoints.getFriendshipsDeleteRequestUrl(friendshipId),

@@ -37,13 +37,33 @@ describe('friend list', () => {
     await waitFor(() => expect(requestsTab()).toHaveTextContent('1'));
   });
 
-  it('lists the incoming request and not my own outgoing one', async () => {
+  it('lists incoming requests to answer and my own as waiting', async () => {
     const { user } = await openFriendships();
 
     await user.click(requestsTab());
 
     expect(await screen.findByText('dave')).toBeInTheDocument();
-    expect(screen.queryByText('erin')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anfrage annehmen' })).toBeInTheDocument();
+    expect(screen.getByText('Gesendete Anfragen')).toBeInTheDocument();
+    expect(screen.getByText('erin')).toBeInTheDocument();
+    expect(screen.getByText('Wartet auf Antwort')).toBeInTheDocument();
+  });
+
+  it('withdraws my own request', async () => {
+    const calls: string[] = [];
+    server.use(
+      mswHttp.delete(apiUrl(friendshipEndpoints.getFriendshipsDeleteRequestUrl(outgoing.id)), () => {
+        calls.push('withdraw');
+        return HttpResponse.json({ ...outgoing, id: String(outgoing.id) });
+      }),
+    );
+    const { user } = await openFriendships();
+
+    await user.click(requestsTab());
+    await user.click(await screen.findByRole('button', { name: 'Zurückziehen' }));
+
+    await waitFor(() => expect(calls).toEqual(['withdraw']));
+    await waitFor(() => expect(screen.queryByText('erin')).not.toBeInTheDocument());
   });
 
   it('says so when nobody has asked', async () => {
@@ -84,6 +104,8 @@ describe('answering a request', () => {
 
     await user.click(requestsTab());
     await user.click(await screen.findByRole('button', { name: 'Anfrage ablehnen' }));
+    expect(calls).toEqual([]);
+    await user.click(await screen.findByRole('button', { name: 'Ablehnen bestätigen' }));
 
     await waitFor(() => expect(calls).toEqual(['reject']));
   });

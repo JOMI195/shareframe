@@ -100,6 +100,7 @@ describe('friendships ui snackbars', () => {
         "friendshipDeleteDeleteFailed": "error: Freundschaft löschen fehlgeschlagen",
         "friendshipDeleteDeleteFulfilled": "success: Freundschaft löschen erfolgreich",
         "friendshipDeleteRequested": "loading: Freundschaft löschen",
+        "friendshipRequestWithdrawn": "success: Anfrage zurückgezogen",
         "friendshipsRequestFailed": "error: Freundesdaten laden fehlgeschlagen",
         "rejectFriendshipRequestFailed": "error: Freundschaftsanfrage ablehnen fehlgeschlagen",
         "rejectFriendshipRequestFulfilled": "success: Freundschaftsanfrage ablehnen erfolgreich",

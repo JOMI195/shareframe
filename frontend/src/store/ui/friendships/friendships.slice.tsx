@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
+import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipRequestWithdrawn, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
 import { AlertColor } from "@mui/material";
 import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice } from "@reduxjs/toolkit";
@@ -95,6 +95,10 @@ const friendshipsSlice = createSlice({
           open: false,
           message: "",
         };
+      })
+      .addCase(friendshipRequestWithdrawn, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Anfrage zurückgezogen", severity: "success" };
+        sliceState.snackbar.loading = { open: false, message: "" };
       })
       .addCase(friendshipDeleteDeleteFailed, (sliceState) => {
         sliceState.snackbar.alert = {

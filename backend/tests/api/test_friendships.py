@@ -2,6 +2,7 @@ import pytest
 
 from friendships.models import Friendship
 from tests.support import seed
+from tests.support.factories import FriendshipFactory, UserFactory
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -186,6 +187,21 @@ class TestRetrieveAndDestroy:
 
         assert response.status_code == 200
         assert not Friendship.objects.filter(pk=accepted.pk).exists()
+
+    def test_the_sender_can_withdraw_a_pending_request(self, alice):
+        pending = FriendshipFactory(sender=User.objects.get(username=seed.ALICE))
+
+        response = alice.delete(f"{LIST_URL}{pending.pk}/")
+
+        assert response.status_code == 200
+        assert response.data["id"] == str(pending.pk)
+        assert not Friendship.objects.filter(pk=pending.pk).exists()
+
+    def test_someone_elses_pending_request_cannot_be_withdrawn(self, alice):
+        pending = FriendshipFactory(sender=UserFactory())
+
+        assert alice.delete(f"{LIST_URL}{pending.pk}/").status_code == 400
+        assert Friendship.objects.filter(pk=pending.pk).exists()
 
     def test_someone_elses_friendship_cannot_be_ended(self, alice):
         other = friendship_between(seed.BOB, seed.CAROL, "accepted")

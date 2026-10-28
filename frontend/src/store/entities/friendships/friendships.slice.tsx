@@ -67,6 +67,10 @@ const friendshipsSlice = createSlice({
     friendshipDeleteRequested: (sliceState) => {
       sliceState.api.loading = true;
     },
+    friendshipRequestWithdrawn: (sliceState, action) => {
+      sliceState.friendships = sliceState.friendships.filter((friendship) => friendship.id !== Number(action.payload.id));
+      sliceState.api.loading = false;
+    },
     friendshipDeleteDeleteFulfilled: (sliceState, action) => {
       const oldCreation = action.payload;
       const index = sliceState.friendships.findIndex(
@@ -98,7 +102,8 @@ export const {
   rejectFriendshipRequestPending,
   friendshipDeleteDeleteFailed,
   friendshipDeleteDeleteFulfilled,
-  friendshipDeleteRequested
+  friendshipDeleteRequested,
+  friendshipRequestWithdrawn
 } = friendshipsSlice.actions;
 export default friendshipsSlice.reducer;
 
