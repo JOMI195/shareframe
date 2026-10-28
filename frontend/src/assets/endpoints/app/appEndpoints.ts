@@ -6,7 +6,6 @@ export const getImageUrl = () => "fotos/";
 
 export const getContactUrl = () => "kontakt/";
 
-export const getEnterWallUrl = () => "comingSoon/";
 
 export const getFriendsUrl = () => "freunde/";
 
