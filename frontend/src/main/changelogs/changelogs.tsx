@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
     Box,
     Typography,
@@ -7,6 +7,7 @@ import {
     AccordionSummary,
     AccordionDetails,
     Chip,
+    Pagination,
     Skeleton,
     useTheme,
     useMediaQuery,
@@ -18,25 +19,84 @@ import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import DataNotFound from '@/common/components/dataNotFound';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
 
+const ITEMS_PER_PAGE = 10;
+
 const Changelogs: React.FC = () => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const {
         isLoading,
-        changelogIds,
-        listedChangelogs,
-        loadAllChangelogs,
+        changelogs,
+        sortedChangelogIds,
+        loadChangelogsByIds,
         cleanUpdDeactivatedIds
     } = useChangelogs();
 
     const showSkeleton = useMinimumLoading(isLoading);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const totalPages = Math.ceil(sortedChangelogIds.length / ITEMS_PER_PAGE);
+    // A refetch of the ids can shrink the list below the current page.
+    const page = Math.min(currentPage, Math.max(totalPages, 1));
+
+    const pageIds = useMemo(
+        () => sortedChangelogIds
+            .slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE)
+            .map(item => item.id),
+        [sortedChangelogIds, page]
+    );
+
+    const pageChangelogs = useMemo(() => {
+        const byId = new Map(changelogs.map(log => [log.id, log]));
+        return pageIds.flatMap(id => byId.get(id) ?? []);
+    }, [changelogs, pageIds]);
+
     useEffect(() => {
-        if (changelogIds.length > 0) {
-            loadAllChangelogs();
-        }
+        loadChangelogsByIds(pageIds);
+    }, [loadChangelogsByIds, pageIds]);
+
+    useEffect(() => {
         cleanUpdDeactivatedIds();
-    }, [loadAllChangelogs, cleanUpdDeactivatedIds, changelogIds]);
+    }, [cleanUpdDeactivatedIds]);
+
+    const handlePageChange = (
+        _event: React.ChangeEvent<unknown>,
+        newPage: number
+    ) => {
+        setCurrentPage(newPage);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+    };
+
+    const renderPagination = (showCount = false) => (
+        <Box
+            sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                py: 2,
+            }}
+        >
+            {totalPages > 1 && (
+                <Pagination
+                    count={totalPages}
+                    page={page}
+                    onChange={handlePageChange}
+                    color="primary"
+                    size="large"
+                    showFirstButton
+                    showLastButton
+                />
+            )}
+
+            {showCount && (
+                <Typography variant="subtitle2" color="textSecondary" sx={{
+                    textAlign: "center"
+                }}>
+                    {sortedChangelogIds.length} Änderung{sortedChangelogIds.length !== 1 ? "en" : ""}
+                </Typography>
+            )}
+        </Box>
+    );
 
     return (
         <Container maxWidth="md">
@@ -60,97 +120,104 @@ const Changelogs: React.FC = () => {
                 </>
             )}
 
-            {!showSkeleton && listedChangelogs.length === 0 && (
+            {!showSkeleton && isSmallScreen && page > 1 && renderPagination()}
+
+            {!showSkeleton && sortedChangelogIds.length === 0 && (
                 <DataNotFound notFoundMessage={"Keine Änderungen vorhanden"} />
             )}
 
-            {!showSkeleton && listedChangelogs.length > 0 && (
+            {!showSkeleton && pageChangelogs.length > 0 && (
                 <>
-                    {listedChangelogs.map((changelog, index) => (
-                        <Accordion
-                            key={changelog.id}
-                            elevation={1}
-                            square={true}
-                            sx={{
-                                mb: 2,
-                                borderRadius: `${theme.shape.borderRadius}px`,
-                                "&.MuiAccordion-root:before": {
-                                    backgroundColor: "transparent"
-                                }
-                            }}
-                            defaultExpanded={index === 0}
-                        >
-                            <AccordionSummary
-                                expandIcon={<ExpandMoreIcon />}
+                    {pageChangelogs.map((changelog, index) => {
+                        const isNewest = page === 1 && index === 0;
+                        return (
+                            <Accordion
+                                key={changelog.id}
+                                elevation={1}
+                                square={true}
                                 sx={{
-                                    '& .MuiAccordionSummary-content': {
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
+                                    mb: 2,
+                                    borderRadius: `${theme.shape.borderRadius}px`,
+                                    "&.MuiAccordion-root:before": {
+                                        backgroundColor: "transparent"
                                     }
                                 }}
+                                defaultExpanded={isNewest}
                             >
-                                {isSmallScreen ? (
-                                    <>
-                                        <Stack sx={{
-                                            width: "100%"
-                                        }}>
-                                            <Box
-                                                sx={{
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "center",
-                                                    mb: 2
-                                                }}>
+                                <AccordionSummary
+                                    expandIcon={<ExpandMoreIcon />}
+                                    sx={{
+                                        '& .MuiAccordionSummary-content': {
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center'
+                                        }
+                                    }}
+                                >
+                                    {isSmallScreen ? (
+                                        <>
+                                            <Stack sx={{
+                                                width: "100%"
+                                            }}>
+                                                <Box
+                                                    sx={{
+                                                        display: "flex",
+                                                        justifyContent: "space-between",
+                                                        alignItems: "center",
+                                                        mb: 2
+                                                    }}>
+                                                    <Typography variant="subtitle1">
+                                                        {new Date(changelog.date).toLocaleDateString()}
+                                                    </Typography>
+                                                    {isNewest && (
+                                                        <Chip
+                                                            label="Neuste Änderung"
+                                                            size="small"
+                                                            color="primary"
+                                                            variant="filled"
+                                                            sx={{ mx: 1 }}
+                                                        />
+                                                    )}
+                                                </Box>
                                                 <Typography variant="subtitle1">
-                                                    {new Date(changelog.date).toLocaleDateString()}
+                                                    {changelog.title}
                                                 </Typography>
-                                                {index === 0 && (
-                                                    <Chip
-                                                        label="Neuste Änderung"
-                                                        size="small"
-                                                        color="primary"
-                                                        variant="filled"
-                                                        sx={{ mx: 1 }}
-                                                    />
-                                                )}
+                                            </Stack>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Box>
+                                                <Typography variant="subtitle1">
+                                                    {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
+                                                </Typography>
                                             </Box>
-                                            <Typography variant="subtitle1">
-                                                {changelog.title}
-                                            </Typography>
-                                        </Stack>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Box>
-                                            <Typography variant="subtitle1">
-                                                {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
-                                            </Typography>
-                                        </Box>
-                                        {index === 0 && (
-                                            <Chip
-                                                label="Neuste Änderung"
-                                                size="small"
-                                                color="primary"
-                                                variant="filled"
-                                                sx={{ mx: 1 }}
-                                            />
-                                        )}
-                                    </>
-                                )}
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <Box sx={{
-                                    '& img': { maxWidth: '100%', height: 'auto' } // Style for images in markdown
-                                }}>
-                                    <MarkdownImagesIntercept>
-                                        {changelog.content}
-                                    </MarkdownImagesIntercept>
-                                </Box>
-                            </AccordionDetails>
-                        </Accordion>
-                    ))}
+                                            {isNewest && (
+                                                <Chip
+                                                    label="Neuste Änderung"
+                                                    size="small"
+                                                    color="primary"
+                                                    variant="filled"
+                                                    sx={{ mx: 1 }}
+                                                />
+                                            )}
+                                        </>
+                                    )}
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <Box sx={{
+                                        '& img': { maxWidth: '100%', height: 'auto' } // Style for images in markdown
+                                    }}>
+                                        <MarkdownImagesIntercept>
+                                            {changelog.content}
+                                        </MarkdownImagesIntercept>
+                                    </Box>
+                                </AccordionDetails>
+                            </Accordion>
+                        );
+                    })}
                 </>
             )}
+
+            {!showSkeleton && sortedChangelogIds.length > 0 && renderPagination(true)}
         </Container>
     );
 };

@@ -73,6 +73,68 @@ describe('changelog list', () => {
   });
 });
 
+describe('changelog pagination', () => {
+  const entries = Array.from({ length: 11 }, (_, i) =>
+    makeChangelog({
+      id: i + 1,
+      date: `2026-01-${String(i + 1).padStart(2, '0')}`,
+      title: `Eintrag ${i + 1}`,
+    }),
+  );
+
+  const recordRequestedIds = () => {
+    const requested: number[][] = [];
+    server.use(
+      http.post(apiUrl(changelogEndpoints.getChangelogsByIdsUrl()), async ({ request }) => {
+        const { ids } = (await request.json()) as { ids: number[] };
+        requested.push(ids);
+        return HttpResponse.json(entries.filter((entry) => ids.includes(entry.id)));
+      }),
+      ...withChangelogs(entries),
+    );
+    return requested;
+  };
+
+  it('shows the newest page and loads only its content', async () => {
+    const requested = recordRequestedIds();
+    renderRoute('/aenderungen/', {
+      preloadedState: signedInState({
+        ui: { changelogs: { deactivatedIds: entries.map((entry) => entry.id) } },
+      }),
+    });
+
+    expect(await screen.findByText(/- Eintrag 11$/)).toBeInTheDocument();
+    expect(screen.getByText(/- Eintrag 2$/)).toBeInTheDocument();
+    expect(screen.queryByText(/- Eintrag 1$/)).not.toBeInTheDocument();
+    expect(screen.getByText('11 Änderungen')).toBeInTheDocument();
+    expect(requested).not.toHaveLength(0);
+    expect(requested.flat()).not.toContain(1);
+  });
+
+  it('loads the next page on demand', async () => {
+    const requested = recordRequestedIds();
+    const { user } = renderRoute('/aenderungen/', {
+      preloadedState: signedInState({
+        ui: { changelogs: { deactivatedIds: entries.map((entry) => entry.id) } },
+      }),
+    });
+    await screen.findByText(/- Eintrag 11$/);
+
+    await user.click(screen.getByRole('button', { name: 'Go to page 2' }));
+
+    expect(await screen.findByText(/- Eintrag 1$/)).toBeInTheDocument();
+    expect(screen.queryByText(/- Eintrag 11$/)).not.toBeInTheDocument();
+    expect(requested[requested.length - 1]).toEqual([1]);
+  });
+
+  it('hides the page control when everything fits on one page', async () => {
+    await openChangelogs();
+
+    await screen.findByText('2 Änderungen');
+    expect(screen.queryByRole('navigation', { name: 'pagination navigation' })).not.toBeInTheDocument();
+  });
+});
+
 describe('new changelog dialog', () => {
   it('announces the newest entry after signing in', async () => {
     server.use(...withChangelogs([older, newest]));
