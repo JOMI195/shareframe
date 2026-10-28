@@ -50,6 +50,7 @@ constraint-dependencies = [
     "twisted>=26.4.0",
     "oauthlib>=4.0.0",
     "aiohttp>=3.14.4",
+    "msgpack>=1.2.3",
 ]
 # djoser caps social-auth-app-django below 6 (core <5); social auth is unused.
 override-dependencies = [
