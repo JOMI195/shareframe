@@ -2,7 +2,8 @@ import datetime
 import logging
 from datetime import timedelta
 
-from django.db.models import Q
+from django.db.models import Count, Q
+from django.db.models.functions import TruncDate
 from django.utils import timezone
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -53,7 +54,11 @@ class DashboardAPIViewSet(viewsets.ViewSet):
 
             # 3. Latest expiring image sent TO me
             latest_expiring_image = None
-            latest_image_obj = active_images_to_me.order_by("-expires_at").first()
+            latest_image_obj = (
+                active_images_to_me.select_related("sender__account", "image")
+                .order_by("-expires_at")
+                .first()
+            )
             if latest_image_obj:
                 latest_expiring_image = {
                     "id": latest_image_obj.id,
@@ -86,39 +91,33 @@ class DashboardAPIViewSet(viewsets.ViewSet):
                 return days
 
             last_7_days = get_last_7_days()
+            week_start = timezone.make_aware(
+                datetime.datetime.combine(last_7_days[0]["date"], datetime.time.min)
+            )
+            week_end = timezone.make_aware(
+                datetime.datetime.combine(last_7_days[-1]["date"], datetime.time.max)
+            )
+            counts_by_day = {
+                row["day"]: row
+                for row in user_queryset.filter(
+                    sent_at__gte=week_start, sent_at__lte=week_end
+                )
+                .annotate(day=TruncDate("sent_at"))
+                .values("day")
+                .annotate(
+                    sent=Count("id", filter=Q(sender=current_user)),
+                    received=Count("id", filter=Q(reciever=current_user)),
+                )
+            }
+            no_activity = {"sent": 0, "received": 0}
             weekly_activity = []
-
             for day_info in last_7_days:
-                date = day_info["date"]
-                day_name = day_info["day_name"]
-
-                # Get start and end of the day - FIXED: Import datetime properly
-                start_of_day = timezone.make_aware(
-                    datetime.datetime.combine(date, datetime.time.min)
-                )
-                end_of_day = timezone.make_aware(
-                    datetime.datetime.combine(date, datetime.time.max)
-                )
-
-                # Count images sent BY me on this day
-                sent_by_me = user_queryset.filter(
-                    sender=current_user,
-                    sent_at__gte=start_of_day,
-                    sent_at__lte=end_of_day,
-                ).count()
-
-                # Count images received BY me on this day
-                received_by_me = user_queryset.filter(
-                    reciever=current_user,
-                    sent_at__gte=start_of_day,
-                    sent_at__lte=end_of_day,
-                ).count()
-
+                counts = counts_by_day.get(day_info["date"], no_activity)
                 weekly_activity.append(
                     {
-                        "day": day_name,
-                        "sent_count": sent_by_me,
-                        "received_count": received_by_me,
+                        "day": day_info["day_name"],
+                        "sent_count": counts["sent"],
+                        "received_count": counts["received"],
                     }
                 )
 

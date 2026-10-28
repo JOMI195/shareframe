@@ -94,6 +94,18 @@ def test_the_week_carries_both_directions(alice):
     assert sum(day["sent_count"] + day["received_count"] for day in weekly) > 0
 
 
+def test_an_image_sent_today_counts_on_todays_bar(alice, alice_user):
+    today = timezone.localdate().weekday()
+    before = alice.get(URL).data["sent_images"]["weekly_activity"][today]
+
+    SentImageFactory(reciever=alice_user)
+    SentImageFactory(sender=alice_user)
+
+    after = alice.get(URL).data["sent_images"]["weekly_activity"][today]
+    assert after["received_count"] == before["received_count"] + 1
+    assert after["sent_count"] == before["sent_count"] + 1
+
+
 def test_lists_the_users_frames(alice, alice_user):
     frames = alice.get(URL).data["frames"]
 
