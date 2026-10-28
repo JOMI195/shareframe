@@ -11,7 +11,9 @@ import { initStaleChunkReload } from './common/utils/staleChunkReload.ts';
 
 http.apiSetup(store, persistor);
 // Seeds the csrftoken cookie for the first unsafe request.
-http.get(getCsrfUrl()).catch(() => undefined);
+if (!document.cookie.split('; ').some((cookie) => cookie.startsWith('csrftoken='))) {
+  http.get(getCsrfUrl()).catch(() => undefined);
+}
 initInstallPrompt();
 initStaleChunkReload();
 
