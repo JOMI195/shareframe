@@ -1,8 +1,7 @@
 import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
 import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
-import { isIImage } from "@/types";
-import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs, openImagesAlertSnackbar } from "@/store/ui/images/images.slice";
 import { getApi as imagesApi } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
@@ -22,12 +21,17 @@ const ImageDeleteDialog = () => {
     };
 
     const handleConfirmDelete = async () => {
-        imagesToDelete.forEach(async image => {
-            const deletedImage = await dispatch(deleteImage(image.id, image.name));
-            if (!isIImage(deletedImage)) {
-                return;
-            }
-        });
+        const results = await Promise.all(imagesToDelete.map(image => dispatch(deleteImage(image.id, image.name))));
+        // The api middleware resolves a failed request with its error message.
+        const failed = results.filter(result => typeof result === 'string').length;
+        const deleted = results.length - failed;
+
+        // One outcome for the whole selection instead of a snackbar per photo.
+        dispatch(openImagesAlertSnackbar(
+            failed === 0
+                ? { message: `${deleted} ${deleted === 1 ? "Foto" : "Fotos"} gelöscht`, severity: "success" }
+                : { message: `${deleted} von ${results.length} Fotos gelöscht, ${failed} fehlgeschlagen`, severity: deleted === 0 ? "error" : "warning" }
+        ));
         handleDialogClose();
         dispatch(closePreviewImageDialog());
         dispatch(closeSelectionDialog());
