@@ -11,7 +11,7 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getDialogs as imagesDialogs, openPreviewImageDialog, selectImage } from "@/store/ui/images/images.slice";
+import { getDialogs as imagesDialogs, openCreateImageDialog, openPreviewImageDialog, selectImage } from "@/store/ui/images/images.slice";
 import {
     getApi as imagesApi,
     getImagesPaginated,
@@ -19,7 +19,7 @@ import {
 } from "@/store/entities/images/images.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
-import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
 import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
@@ -36,6 +36,7 @@ const ImagesGallery: React.FC = () => {
     const imagesPaginated = useAppSelector(getImagesPaginated);
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
+    const imagesFailed = useAppSelector(imagesApi).imagesFailed;
     const showSkeleton = useMinimumLoading(imagesLoading);
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -101,9 +102,9 @@ const ImagesGallery: React.FC = () => {
                                 page={imagesPaginated.page}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size={"large"}
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -159,7 +160,17 @@ const ImagesGallery: React.FC = () => {
                             ))}
                         </ImageList>
                     ) : (
-                        <DataNotFound notFoundMessage={"Keine Fotos vorhanden"} />
+                        imagesFailed ? (
+                            <DataNotFound
+                                notFoundMessage={"Fotos konnten nicht geladen werden"}
+                                action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchImages(imagesPaginated.page, pageSize)) }}
+                            />
+                        ) : (
+                            <DataNotFound
+                                notFoundMessage={"Keine Fotos vorhanden"}
+                                action={{ label: "Foto hochladen", onClick: () => dispatch(openCreateImageDialog()) }}
+                            />
+                        )
                     )}
 
             {renderPagination(true)}

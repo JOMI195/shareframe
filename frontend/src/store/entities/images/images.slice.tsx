@@ -8,6 +8,9 @@ type SliceState = {
     loading: boolean;
     sending: boolean;
     lastFetch: number | null;
+    // A failed list load, so the gallery can offer a retry instead of looking empty.
+    imagesFailed: boolean;
+    sentImagesFailed: boolean;
   };
   imagesPaginated: IImagesPaginated;
   imagesPaginatedPageSize: number;
@@ -26,6 +29,8 @@ const initialState: SliceState = {
     loading: false,
     sending: false,
     lastFetch: null,
+    imagesFailed: false,
+    sentImagesFailed: false,
   },
   imagesPaginated: {
     count: 0,
@@ -76,6 +81,7 @@ const imagesSlice = createSlice({
   reducers: {
     imagesRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.imagesFailed = false;
     },
     imagesReceived: (sliceState, action) => {
       sliceState.imagesPaginated = {
@@ -87,6 +93,7 @@ const imagesSlice = createSlice({
     },
     imagesRequestFailed: (sliceState) => {
       resetApiState(sliceState);
+      sliceState.api.imagesFailed = true;
     },
     imagesPageSet: (sliceState, action) => {
       sliceState.imagesPaginated.page = action.payload;
@@ -131,6 +138,7 @@ const imagesSlice = createSlice({
     },
     sentImagesRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.sentImagesFailed = false;
     },
     sentImagesReceived: (sliceState, action) => {
       sliceState.sentImagesPaginated = {
@@ -142,6 +150,7 @@ const imagesSlice = createSlice({
     },
     sentImagesRequestFailed: (sliceState) => {
       resetApiState(sliceState);
+      sliceState.api.sentImagesFailed = true;
     },
     sentImagesPageSet: (sliceState, action) => {
       sliceState.sentImagesPaginated.page = action.payload;

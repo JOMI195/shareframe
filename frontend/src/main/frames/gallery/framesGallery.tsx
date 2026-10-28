@@ -23,7 +23,8 @@ import KeyIcon from '@mui/icons-material/Key';
 import WifiIcon from '@mui/icons-material/Wifi';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
-import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { openRegisterFrameDialog, openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { fetchframes } from "@/store/entities/frames/frames.actions";
 import { isFrameActive } from "@/common/utils/frame";
 import DataNotFound from "@/common/components/dataNotFound";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -38,6 +39,7 @@ const FramesGallery: React.FC = () => {
 
     const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
+    const framesFailed = useAppSelector(getApi).failed;
     // Focus refreshes keep the current cards instead of flashing the skeleton.
     const showSkeleton = useMinimumLoading(loading && frames.length === 0);
 
@@ -216,9 +218,9 @@ const FramesGallery: React.FC = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size="large"
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -267,7 +269,17 @@ const FramesGallery: React.FC = () => {
                             ))}
                     </Grid>
                 ) : (
-                    <DataNotFound notFoundMessage={"Keine hinzugefügten Bilderrahmen vorhanden"} />
+                    framesFailed ? (
+                        <DataNotFound
+                            notFoundMessage={"Bilderrahmen konnten nicht geladen werden"}
+                            action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchframes()) }}
+                        />
+                    ) : (
+                        <DataNotFound
+                            notFoundMessage={"Noch kein Bilderrahmen hinzugefügt"}
+                            action={{ label: "Ersten Bilderrahmen hinzufügen", onClick: () => dispatch(openRegisterFrameDialog()) }}
+                        />
+                    )
                 )}
             </Box>
 

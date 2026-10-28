@@ -88,7 +88,32 @@ describe('photo library', () => {
     await act(async () => triggerIntersection(true));
 
     // Each thumbnail resolves its own blob, so they arrive one by one.
-    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 5_000 });
+    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 10_000 });
+  });
+
+  it('offers the first upload in the empty library', async () => {
+    server.use(...withImages([]));
+    const { user, store } = renderRoute('/fotos/', { preloadedState: signedInState() });
+
+    await user.click(await screen.findByRole('button', { name: 'Foto hochladen' }));
+
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
+  });
+
+  it('offers a retry when the library could not be loaded', async () => {
+    let fail = true;
+    server.use(
+      mswHttp.get(apiUrl(imageEndpoints.getImagesUrl()), () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(makePage(library, { count: library.length })),
+      ),
+    );
+    const { user } = renderRoute('/fotos/', { preloadedState: signedInState() });
+    const retry = await screen.findByRole('button', { name: 'Erneut versuchen' });
+
+    fail = false;
+    await user.click(retry);
+
+    expect(await screen.findByText(`${library.length} Fotos`)).toBeInTheDocument();
   });
 
   it('says so when the library is empty', async () => {

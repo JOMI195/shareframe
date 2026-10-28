@@ -16,6 +16,7 @@ import {
     getApi as getImagesApi,
     getSentImagesPaginated,
     getSentImagesPaginatedPageSize,
+    getSentImagesFilters,
 } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -26,7 +27,7 @@ import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
-import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import { fetchSentImagesPaginated, setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import { getSentImageState } from "../sentImageStatus";
 import SentImageStatusLabel from "../sentImageStatusLabel";
@@ -39,6 +40,8 @@ const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
+    const sentImagesFailed = useAppSelector(getImagesApi).sentImagesFailed;
+    const appliedFilters = useAppSelector(getSentImagesFilters);
     const showSkeleton = useMinimumLoading(loading);
     const theme = useTheme();
 
@@ -179,9 +182,9 @@ const SentImagesGallery = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size={"large"}
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -256,7 +259,14 @@ const SentImagesGallery = () => {
                     })}
                 </ImageList>
             ) : (
-                <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden"} />
+                sentImagesFailed ? (
+                    <DataNotFound
+                        notFoundMessage={"Aktivitäten konnten nicht geladen werden"}
+                        action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchSentImagesPaginated(currentPage, pageSize, appliedFilters)) }}
+                    />
+                ) : (
+                    <DataNotFound notFoundMessage={"Noch keine gesendeten oder erhaltenen Fotos"} />
+                )
             )}
 
             {renderPagination(true)}

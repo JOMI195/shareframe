@@ -83,9 +83,9 @@ const Changelogs: React.FC = () => {
                     page={page}
                     onChange={handlePageChange}
                     color="primary"
-                    size="large"
-                    showFirstButton
-                    showLastButton
+                    size="medium"
+                    showFirstButton={!isSmallScreen}
+                    showLastButton={!isSmallScreen}
                 />
             )}
 

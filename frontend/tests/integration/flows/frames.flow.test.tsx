@@ -33,12 +33,29 @@ describe('frame list', () => {
     expect(await screen.findByText('Offline')).toBeInTheDocument();
   });
 
-  it('says so when no frame is registered', async () => {
-    await openFrames([]);
+  it('says so when no frame is registered and offers to add one', async () => {
+    const { user, store } = await openFrames([]);
 
-    expect(
-      await screen.findByText('Keine hinzugefügten Bilderrahmen vorhanden'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Noch kein Bilderrahmen hinzugefügt')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ersten Bilderrahmen hinzufügen' }));
+
+    expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
+  });
+
+  it('offers a retry when the list could not be loaded', async () => {
+    let fail = true;
+    server.use(
+      mswHttp.get(apiUrl(frameEndpoints.getFramesUrl()), () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json([frame]),
+      ),
+    );
+    const { user } = renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
+    const retry = await screen.findByRole('button', { name: 'Erneut versuchen' });
+
+    fail = false;
+    await user.click(retry);
+
+    expect(await screen.findByText(SERIAL)).toBeInTheDocument();
   });
 
   // frames.tsx refetches on window focus so a frame paired elsewhere shows up.

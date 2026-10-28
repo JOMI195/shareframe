@@ -64,7 +64,7 @@ describe('images slice api flags', () => {
     ['sendImageToUserFrameFulfilled', sendImageToUserFrameFulfilled],
     ['deactivateSentImageFailed', deactivateSentImageFailed],
   ])('%s clears loading and sending', (_name, action) => {
-    const busy = { ...initial(), api: { loading: true, sending: true, lastFetch: null } };
+    const busy = { ...initial(), api: { ...initial().api, loading: true, sending: true } };
     expect(reducer(busy, action()).api).toMatchObject({ loading: false, sending: false });
   });
 
@@ -76,6 +76,21 @@ describe('images slice api flags', () => {
   });
 });
 
+describe('list load failures', () => {
+  it('marks a failed photo load until the next request', () => {
+    const failed = reducer(initial(), imagesRequestFailed());
+    expect(failed.api.imagesFailed).toBe(true);
+
+    expect(reducer(failed, imagesRequested()).api.imagesFailed).toBe(false);
+  });
+
+  it('tracks the activity list separately', () => {
+    const failed = reducer(initial(), sentImagesRequestFailed());
+
+    expect(failed.api).toMatchObject({ sentImagesFailed: true, imagesFailed: false });
+  });
+});
+
 describe('getApiState', () => {
   it('is true while either flag is set', () => {
     const state = rootState();
@@ -84,7 +99,7 @@ describe('getApiState', () => {
     state.entities.images.api.sending = true;
     expect(getApiState(state)).toBe(true);
 
-    state.entities.images.api = { loading: true, sending: false, lastFetch: null };
+    state.entities.images.api = { ...state.entities.images.api, loading: true, sending: false };
     expect(getApiState(state)).toBe(true);
   });
 });
