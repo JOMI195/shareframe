@@ -419,7 +419,6 @@ const UploadDialog: React.FC = () => {
                 previewError={previewErrors[currentImage.id]}
                 markPreviewBroken={markPreviewBroken}
                 setCroppedAreaPixels={setCroppedAreaPixels}
-                croppedAreaPixels={croppedAreaPixels}
                 crop={crop}
                 setCrop={setCrop}
                 zoom={zoom}
