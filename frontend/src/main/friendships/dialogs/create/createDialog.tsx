@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
@@ -68,7 +68,7 @@ const FriendshipCreateDialog: React.FC = () => {
   };
 
   return (
-    <Dialog
+    <AppDialog
       fullScreen={matches ? false : true}
       open={open}
       onClose={handleDialogClose}
@@ -82,17 +82,17 @@ const FriendshipCreateDialog: React.FC = () => {
       {!matches && (
         <AppBar sx={{ position: 'relative' }} color='inherit'>
           <Toolbar>
+            <Typography sx={{ flex: 1 }} variant='h6' component='div'>
+              Freund hinzufügen
+            </Typography>
             <IconButton
-              edge='start'
+              edge='end'
               color='inherit'
               onClick={handleDialogClose}
               aria-label='cancel'
             >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-              Freund hinzufügen
-            </Typography>
           </Toolbar>
         </AppBar>
       )}
@@ -248,7 +248,7 @@ const FriendshipCreateDialog: React.FC = () => {
         </Box>
 
       </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 };
 

@@ -1,5 +1,5 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi } from "@/store/entities/authentication/authentication.slice";
 import { deleteMyAvatar } from "@/store/entities/authentication/authentication.actions";
@@ -23,8 +23,7 @@ const DeleteAvatarDialog = ({ open, onClose }: DeleteAvatarDialogProps) => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             maxWidth="sm"
             fullWidth
             open={open}
@@ -34,23 +33,6 @@ const DeleteAvatarDialog = ({ open, onClose }: DeleteAvatarDialogProps) => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={onClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Profilbild entfernen
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>Profilbild wirklich entfernen?</DialogTitle>
             <DialogContent>
                 <Typography id='dialog-delete-avatar' sx={{ mb: 3 }}>
@@ -97,7 +79,7 @@ const DeleteAvatarDialog = ({ open, onClose }: DeleteAvatarDialogProps) => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

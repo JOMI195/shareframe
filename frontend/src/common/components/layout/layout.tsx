@@ -1,5 +1,7 @@
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
-import { Outlet, ScrollRestoration } from "react-router";
+import { Outlet, ScrollRestoration, useLocation } from "react-router";
+import { useAppDispatch } from "@/store";
+import { routeChanged } from "@/store/ui/navigation/navigation.slice";
 import TopAppbar from "./topLayout/topAppBar";
 import Sidebar from "./sidebar/sidebar";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";
@@ -12,6 +14,13 @@ const MainLayout: React.FC = () => {
     const theme = useTheme();
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+    const dispatch = useAppDispatch();
+    const { pathname } = useLocation();
+
+    // On leaving a route, so it runs before the next page's mount effects can open a dialog.
+    useEffect(() => () => {
+        dispatch(routeChanged());
+    }, [dispatch, pathname]);
 
     const {
         changelogIds,

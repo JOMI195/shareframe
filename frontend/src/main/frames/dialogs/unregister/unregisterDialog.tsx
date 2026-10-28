@@ -1,10 +1,10 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IFrame, isIFrameResponse } from "@/types";
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { closeUnregisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.slice";
 import { unregisterFrame } from "@/store/entities/frames/frames.actions";
-import CloseIcon from '@mui/icons-material/Close';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 
 const UnregisterFrameDialog = () => {
@@ -32,8 +32,7 @@ const UnregisterFrameDialog = () => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             open={unregisterDialog.open}
             onClose={handleDialogClose}
             aria-describedby='delete-frame-dialog'
@@ -43,23 +42,6 @@ const UnregisterFrameDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Bilderrahmen löschen
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>{"Möchtest du den Bilderrahmen wirklich löschen?"}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen</Typography>
@@ -105,7 +87,7 @@ const UnregisterFrameDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

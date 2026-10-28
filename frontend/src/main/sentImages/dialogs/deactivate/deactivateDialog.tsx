@@ -1,11 +1,11 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ISentImage } from "@/types";
 import { closeDeactivateSendImageFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
 import { getApi, getSentImagesPaginated } from "@/store/entities/images/images.slice";
 import { deactivateSentImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { closePreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
 
@@ -39,8 +39,7 @@ const SentImageDeactivateDialog = () => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             open={deactivateDialog.open}
             onClose={handleDialogClose}
             aria-describedby='deactivate-image-dialog'
@@ -50,23 +49,6 @@ const SentImageDeactivateDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            Foto deaktivieren
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>{"Gesendetes Foto wirklich deaktivieren?"}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>{`Bei einer Deaktivierung wird das gesendete Foto umgehend von ${sentImageToDeactivate?.reciever === user.me.username ? "deinen" : `${sentImageToDeactivate?.reciever}s`} Bilderrahmen entfernt und dort nicht mehr angezeigt.`}</Typography>
@@ -111,7 +93,7 @@ const SentImageDeactivateDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

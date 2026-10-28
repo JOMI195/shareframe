@@ -1,4 +1,5 @@
-import { Button, Dialog, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
@@ -92,7 +93,7 @@ const FiltersDialog = () => {
     );
 
     return (
-        <Dialog
+        <AppDialog
             fullScreen={!matches}
             open={filterDialog.open}
             onClose={handleDialogClose}
@@ -235,7 +236,7 @@ const FiltersDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

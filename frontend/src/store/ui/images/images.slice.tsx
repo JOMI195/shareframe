@@ -2,6 +2,7 @@ import { RootState } from "@/store";
 import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
 import { IImage, ISentImage } from "@/types";
 import { AlertColor } from "@mui/material";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 export type ScheduledSentImageAction = 'sendNow' | 'cancel';
@@ -58,6 +59,9 @@ const imagesSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
+      .addCase(routeChanged, (sliceState) => {
+        closeOpenDialogs(sliceState.dialogs);
+      })
       // .addCase(imagesRequested, (sliceState) => {
       //   sliceState.snackbar.loading = {
       //     open: true,

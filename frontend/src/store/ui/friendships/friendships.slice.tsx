@@ -1,6 +1,7 @@
 import { RootState } from "@/store";
 import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
 import { AlertColor } from "@mui/material";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -24,6 +25,9 @@ const friendshipsSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
+      .addCase(routeChanged, (sliceState) => {
+        closeOpenDialogs(sliceState.dialogs);
+      })
       // .addCase(friendshipsRequested, (sliceState) => {
       //   sliceState.snackbar.loading = {
       //     open: true,

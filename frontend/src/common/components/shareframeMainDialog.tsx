@@ -1,6 +1,6 @@
 import React from 'react';
+import AppDialog from '@/common/components/appDialog';
 import {
-    Dialog,
     DialogProps,
     Box,
     useMediaQuery,
@@ -47,7 +47,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     return (
-        <Dialog
+        <AppDialog
             maxWidth="xl"
             fullWidth
             fullScreen={isSmallScreen}
@@ -118,7 +118,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                     position={"absolute"}
                 />
             )}
-        </Dialog>
+        </AppDialog>
     );
 };
 

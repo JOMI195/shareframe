@@ -1,11 +1,11 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { ISentImage } from "@/types";
 import { closeScheduledSentImageDialog, getDialogs } from "@/store/ui/images/images.slice";
 import { getApi, getSentImagesPaginated } from "@/store/entities/images/images.slice";
 import { cancelScheduledSentImage, sendScheduledSentImageNow } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import { closePreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
@@ -56,8 +56,7 @@ const SentImageScheduledActionDialog = () => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             open={scheduledActionDialog.open}
             onClose={handleDialogClose}
             aria-describedby='scheduled-image-action-dialog'
@@ -67,23 +66,6 @@ const SentImageScheduledActionDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            {texts.appBar}
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>{texts.title}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>{texts.body}</Typography>
@@ -128,7 +110,7 @@ const SentImageScheduledActionDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

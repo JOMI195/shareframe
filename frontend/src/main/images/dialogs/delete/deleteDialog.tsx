@@ -1,11 +1,11 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { isIImage } from "@/types";
 import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs } from "@/store/ui/images/images.slice";
 import { getApi as imagesApi } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
 
 const ImageDeleteDialog = () => {
     const theme = useTheme();
@@ -34,8 +34,7 @@ const ImageDeleteDialog = () => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             open={deleteDialog.open}
             onClose={handleDialogClose}
             aria-describedby='dedlete-image-dialog'
@@ -45,23 +44,6 @@ const ImageDeleteDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            Foto löschen
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>{`Ausgewählte${imagesToDelete.length === 1 ? "s" : ""} Foto${imagesToDelete.length > 1 ? "s" : ""} wirklich löschen?`}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>{`Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen und nicht mehr gesendet.`}</Typography>
@@ -106,7 +88,7 @@ const ImageDeleteDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

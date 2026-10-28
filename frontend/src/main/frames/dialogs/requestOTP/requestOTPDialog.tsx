@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
+import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { AppBar, Box, DialogTitle, Grid, IconButton, TextField, Toolbar, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
@@ -78,7 +78,7 @@ const RequestOTPDialog: React.FC = () => {
   }, [expiresIn]);
 
   return (
-    <Dialog
+    <AppDialog
       fullScreen={matches ? false : true}
       open={dialog.open}
       onClose={handleDialogClose}
@@ -92,17 +92,17 @@ const RequestOTPDialog: React.FC = () => {
       {!matches ? (
         <AppBar sx={{ position: 'relative' }} color='inherit'>
           <Toolbar>
+            <Typography sx={{ flex: 1 }} variant='h6' component='div'>
+              OTP generieren
+            </Typography>
             <IconButton
-              edge='start'
+              edge='end'
               color='inherit'
               onClick={handleDialogClose}
               aria-label='cancel'
             >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-              OTP generieren
-            </Typography>
           </Toolbar>
         </AppBar>
       ) : (
@@ -198,7 +198,7 @@ const RequestOTPDialog: React.FC = () => {
           </Grid>
         </Box>
       </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 };
 

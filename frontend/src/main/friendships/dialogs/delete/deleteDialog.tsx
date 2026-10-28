@@ -1,11 +1,11 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import { Button, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { deleteFriendship } from "@/store/entities/friendships/friendships.actions";
 import { closeDeleteFriendshipsDialog, getDialogs } from "@/store/ui/friendships/friendships.slice";
 import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { IFriendship } from "@/types";
-import CloseIcon from '@mui/icons-material/Close';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 
 const FriendshipDeleteDialog = () => {
@@ -36,8 +36,7 @@ const FriendshipDeleteDialog = () => {
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <AppDialog
             maxWidth="sm"
             fullWidth
             open={deleteDialog.open}
@@ -47,23 +46,6 @@ const FriendshipDeleteDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Freundschaft beenden
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-            )}
             <DialogTitle>{`Freundschaft mit ${friendToDelete} wirklich beenden?`}</DialogTitle>
             <DialogContent>
                 <Typography sx={{ mb: 3 }}>Die Freundschaft kann mit einer Freundschaftanfrage jederzeit wieder hergestellt werden.</Typography>
@@ -109,7 +91,7 @@ const FriendshipDeleteDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

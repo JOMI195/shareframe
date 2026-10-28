@@ -1,12 +1,17 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react'
+import AppDialog from '@/common/components/appDialog';
 import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  LinearProgress,
-  useMediaQuery,
-  useTheme,
+    Box,
+    Button,
+    CircularProgress,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    LinearProgress,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
 import Slide from '@mui/material/Slide'
@@ -106,6 +111,7 @@ const UploadDialog: React.FC = () => {
   const [overlaysWidth, setOverlaysWidth] = useState<number | null>(null)
   const [finalImage, replaceFinalImage] = useBlobImage()
   const [epaperView, setEpaperView] = useState<EpaperView>('original')
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
 
   const open = useAppSelector(getDialogs).create.open
 
@@ -129,12 +135,22 @@ const UploadDialog: React.FC = () => {
     setTool('crop')
   }, [replaceCroppedImage, replaceAdjustedImage, replaceFinalImage])
 
-  const handleDialogClose = () => {
+  const closeDialog = () => {
+    setConfirmDiscard(false);
     dispatch(closeCreateImageDialog());
     resetQueue();
     setCurrentImageIndex(null);
     setAutoDeleteAfterPeriod(true);
     resetCropperState();
+  }
+
+  // Closing by hand (X, Escape, back) would drop every photo still being edited.
+  const handleDialogClose = () => {
+    if (!busy && !sending && imageStatuses.some(status => status.status !== 'uploaded')) {
+      setConfirmDiscard(true)
+      return
+    }
+    closeDialog()
   }
 
   const selectImageForCropping = useCallback((index: number) => {
@@ -158,7 +174,7 @@ const UploadDialog: React.FC = () => {
   const removeImage = (indexToRemove: number) => {
     const remaining = imageStatuses.filter((_, index) => index !== indexToRemove)
     if (remaining.length > 0 && remaining.every(status => status.status === 'uploaded')) {
-      handleDialogClose()
+      closeDialog()
       return
     }
     setImageStatuses(remaining)
@@ -282,7 +298,7 @@ const UploadDialog: React.FC = () => {
             i === index || status.status === 'uploaded'
           )
           if (allUploaded) {
-            handleDialogClose()
+            closeDialog()
             return
           }
 
@@ -332,7 +348,7 @@ const UploadDialog: React.FC = () => {
     : 'Fotos hochladen'
 
   return (
-    <Dialog
+    <AppDialog
       fullScreen={!matches}
       open={open}
       onClose={handleDialogClose}
@@ -466,7 +482,17 @@ const UploadDialog: React.FC = () => {
           />
         )}
       </EditorLayout>
-    </Dialog>
+      <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)} maxWidth="xs" fullWidth>
+        <DialogTitle>Bearbeitung verwerfen?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>Noch nicht hochgeladene Fotos und ihre Bearbeitung gehen verloren.</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDiscard(false)}>Weiter bearbeiten</Button>
+          <Button color="error" onClick={closeDialog}>Verwerfen</Button>
+        </DialogActions>
+      </Dialog>
+    </AppDialog>
   );
 }
 

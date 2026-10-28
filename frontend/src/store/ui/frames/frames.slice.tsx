@@ -1,6 +1,7 @@
 import { RootState } from "@/store";
 import { framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed, frameOTPRequested, frameOTPRecieved, frameOTPRequestFailed } from "@/store/entities/frames/frames.slice";
 import { AlertColor } from "@mui/material";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -24,6 +25,9 @@ const framesSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
+      .addCase(routeChanged, (sliceState) => {
+        closeOpenDialogs(sliceState.dialogs);
+      })
       // .addCase(framesRequested, (sliceState) => {
       //   sliceState.snackbar.loading = {
       //     open: true,

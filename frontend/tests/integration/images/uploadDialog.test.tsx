@@ -276,13 +276,27 @@ describe('UploadDialog closing', () => {
     expect(store.getState().ui.images.dialogs.create.open).toBe(false);
   });
 
-  it('closes from the header in a later step on larger screens', async () => {
+  it('asks before discarding a photo in edit, then closes', async () => {
     desktop();
     const { user, store } = await goToText();
 
     await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(await screen.findByText('Bearbeitung verwerfen?')).toBeInTheDocument();
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
 
+    await user.click(screen.getByRole('button', { name: 'Verwerfen' }));
     expect(store.getState().ui.images.dialogs.create.open).toBe(false);
+  });
+
+  it('keeps the edit when the discard is declined', async () => {
+    desktop();
+    const { user, store } = await goToText();
+
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter bearbeiten' }));
+
+    await waitFor(() => expect(screen.queryByText('Bearbeitung verwerfen?')).not.toBeInTheDocument());
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });
 
   it('has no other close buttons in the tools', async () => {

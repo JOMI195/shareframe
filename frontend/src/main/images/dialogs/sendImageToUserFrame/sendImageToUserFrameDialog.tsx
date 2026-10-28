@@ -1,7 +1,7 @@
 import { useState } from 'react';
+import AppDialog from '@/common/components/appDialog';
 import {
     Button,
-    Dialog,
     DialogContent,
     Grid,
     Typography,
@@ -17,7 +17,7 @@ import {
     Chip,
     Box,
     OutlinedInput,
-    SelectChangeEvent
+    SelectChangeEvent,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
@@ -141,7 +141,7 @@ const SendImageToUserFrameDialog = () => {
     };
 
     return (
-        <Dialog
+        <AppDialog
             fullScreen={matches ? false : true}
             open={sendDialog.open}
             onClose={handleDialogClose}
@@ -282,7 +282,7 @@ const SendImageToUserFrameDialog = () => {
                     </Grid>
                 </Grid>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 
