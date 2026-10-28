@@ -28,6 +28,8 @@ against a real backend → e2e, and prefer a step in an existing spec.
 - jsdom gaps are patched only in `vitest.config.ts` and `tests/support/setup/`.
 - E2E specs share one database and run alphabetically on one worker, so anything
   destructive uses its own account.
+- `*.mobile.spec.ts` runs in the `mobile` project (Chromium as a Pixel 7) after the
+  desktop project, and must only read or clean up after itself.
 
 ## Backend
 

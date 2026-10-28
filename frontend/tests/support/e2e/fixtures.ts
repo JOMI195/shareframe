@@ -12,7 +12,8 @@ export const dismissChangelogDialog = async (page: Page) => {
 
   await dialog.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => undefined);
   if (await dialog.isVisible()) {
-    await dialog.getByRole('button', { name: 'Schließen' }).click();
+    // Phones hide the text button and leave only the header's X.
+    await dialog.getByRole('button', { name: /^(Schließen|close)$/ }).filter({ visible: true }).first().click();
     await expect(dialog).toBeHidden();
   }
 };

@@ -28,5 +28,9 @@ export default defineConfig({
     timeout: 120_000,
     stdout: 'pipe',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: '**/*.mobile.spec.ts' },
+    // After the desktop run, so its uploads and sends never land between steps that read the newest item.
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: '**/*.mobile.spec.ts', dependencies: ['chromium'] },
+  ],
 });
