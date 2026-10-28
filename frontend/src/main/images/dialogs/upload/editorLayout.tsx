@@ -1,6 +1,7 @@
 import React from 'react';
 import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { FRAME_ASPECT_RATIO } from './frameAspectBox';
 import { CANVAS_MARGIN } from './frameSize';
 
@@ -8,19 +9,27 @@ interface EditorLayoutProps {
     title: string;
     subtitle?: string;
     onClose: () => void;
+    // replaces closing with a step back, e.g. from the preview to the editor
+    onBack?: () => void;
     actions?: React.ReactNode;
     strip?: React.ReactNode;
     footer?: React.ReactNode;
     children: React.ReactNode;
 }
 
-const EditorLayout: React.FC<EditorLayoutProps> = ({ title, subtitle, onClose, actions, strip, footer, children }) => (
+const EditorLayout: React.FC<EditorLayoutProps> = ({ title, subtitle, onClose, onBack, actions, strip, footer, children }) => (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
         <AppBar position="relative" color="inherit" elevation={1}>
             <Toolbar variant="dense" sx={{ gap: 1, minHeight: 56 }}>
-                <IconButton edge="start" color="inherit" onClick={onClose} aria-label="Schließen">
-                    <CloseIcon />
-                </IconButton>
+                {onBack ? (
+                    <IconButton edge="start" color="inherit" onClick={onBack} aria-label="Zurück zum Bearbeiten">
+                        <ArrowBackIcon />
+                    </IconButton>
+                ) : (
+                    <IconButton edge="start" color="inherit" onClick={onClose} aria-label="Schließen">
+                        <CloseIcon />
+                    </IconButton>
+                )}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                     <Typography id="upload-dialog-title" variant="h6" component="h2" noWrap sx={{ lineHeight: 1.2 }}>
                         {title}

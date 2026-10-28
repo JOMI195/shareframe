@@ -11,7 +11,7 @@ interface AutoDeleteOptionProps {
 }
 
 const AutoDeleteOption: React.FC<AutoDeleteOptionProps> = ({ checked, onChange }) => (
-    <Box sx={{ mt: 3 }}>
+    <Box sx={{ mt: 1 }}>
         <FormControlLabel
             control={
                 <Checkbox

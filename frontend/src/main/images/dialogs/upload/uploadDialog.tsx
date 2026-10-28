@@ -1,5 +1,6 @@
 import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react'
 import {
+  Box,
   Button,
   CircularProgress,
   Dialog,
@@ -10,6 +11,7 @@ import {
 import { TransitionProps } from '@mui/material/transitions'
 import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
+import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 
 import { validateImage } from './imageUpload/validation/imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
@@ -350,6 +352,7 @@ const UploadDialog: React.FC = () => {
         title={title}
         subtitle={currentImage?.file.name}
         onClose={handleDialogClose}
+        onBack={previewing ? handleBackToEdit : undefined}
         actions={currentImage && showsEpaperToggle && <EpaperToggle value={epaperView} onChange={setEpaperView} />}
         strip={imageStatuses.length > 0 && (
           <>
@@ -368,7 +371,25 @@ const UploadDialog: React.FC = () => {
             <LinearProgress sx={{ visibility: busy || exportRequested ? 'visible' : 'hidden' }} />
           </>
         )}
-        footer={currentImage && !previewing && (
+        footer={currentImage && (previewing && finalImage ? (
+          <Box sx={{ display: 'flex', gap: 2 }}>
+            {matches && (
+              <Button variant="outlined" size="large" fullWidth onClick={handleBackToEdit} disabled={sending}>
+                Zurück zum Bearbeiten
+              </Button>
+            )}
+            <Button
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={sending}
+              startIcon={sending ? <CircularProgress size={18} color="inherit" /> : <CloudUploadIcon />}
+              onClick={() => handleUpload(finalImage.blob)}
+            >
+              Hochladen
+            </Button>
+          </Box>
+        ) : (
           <Button
             variant="contained"
             size="large"
@@ -379,7 +400,7 @@ const UploadDialog: React.FC = () => {
           >
             Weiter zur Vorschau
           </Button>
-        )}
+        ))}
       >
         {imageStatuses.length === 0 && (
           <StartScreen
@@ -441,9 +462,6 @@ const UploadDialog: React.FC = () => {
             finalImage={finalImage}
             epaper={epaper}
             fileName={currentImage.file.name}
-            handleUpload={handleUpload}
-            handleBackToEdit={handleBackToEdit}
-            sending={sending}
             autoDeleteAfterPeriod={autoDeleteAfterPeriod}
             setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
           />

@@ -285,11 +285,33 @@ describe('UploadDialog closing', () => {
     expect(store.getState().ui.images.dialogs.create.open).toBe(false);
   });
 
-  it('has no other close buttons in the steps', async () => {
+  it('has no other close buttons in the tools', async () => {
     desktop();
-    await goToPreview();
+    await goToText();
 
     expect(screen.getAllByRole('button', { name: /Schließen|Dialog schließen|Abbrechen/ })).toHaveLength(1);
+  });
+
+  it('offers going back next to the upload button on larger screens', async () => {
+    desktop();
+    const { user } = await goToPreview();
+    const [header, footer] = screen.getAllByRole('button', { name: 'Zurück zum Bearbeiten' });
+    expect(header).toBeInTheDocument();
+
+    await user.click(footer);
+
+    expect(await screen.findByRole('button', { name: 'Weiter zur Vorschau' })).toBeInTheDocument();
+  });
+
+  it('steps back from the preview instead of closing', async () => {
+    const { user, store } = await goToPreview();
+    expect(screen.queryByRole('button', { name: 'Schließen' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Zurück zum Bearbeiten' }));
+
+    expect(await screen.findByRole('button', { name: 'Weiter zur Vorschau' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Schließen' })).toBeInTheDocument();
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });
 });
 
