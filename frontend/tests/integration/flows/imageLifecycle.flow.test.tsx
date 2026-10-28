@@ -29,6 +29,12 @@ vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
 
 vi.mock('@/main/images/dialogs/upload/imageText/useLoadedImage', () => import('@tests/mocks/loadedImage'));
 
+// The dialogs are lazy; warming their modules keeps the first open within the default find timeout.
+await Promise.all([
+  import('@/main/images/dialogs/upload/uploadDialog'),
+  import('@/main/images/dialogs/sendImageToUserFrame/sendImageToUserFrameDialog'),
+]);
+
 const library = makeImages(3);
 
 const openLibrary = async (images = library) => {
@@ -101,8 +107,14 @@ describe('photo library', () => {
     );
 
     await user.click(screen.getByRole('button', { name: /Foto hinzufügen/ }));
+    // The editor loads on first open.
+    const fileInput = await waitFor(() => {
+      const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+      expect(input).not.toBeNull();
+      return input!;
+    });
     await user.upload(
-      document.querySelector('input[type="file"]') as HTMLInputElement,
+      fileInput,
       new File(['x'.repeat(64)], 'neu.jpg', { type: 'image/jpeg', lastModified: 1 }),
     );
     await screen.findByTestId('cropper');
@@ -127,6 +139,8 @@ describe('sending photos to a frame', () => {
     await enterSelectionMode(user);
     await selectFirstPhoto(user);
     await clickSpeedDialAction(user, 'Ausgewählte Fotos senden');
+    // The send dialog loads on first open; until then the only combobox is the page size.
+    await screen.findByText(/Wähle die Empfänger/);
 
     await user.click(screen.getAllByRole('combobox')[0]);
     await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name: 'bob' }));

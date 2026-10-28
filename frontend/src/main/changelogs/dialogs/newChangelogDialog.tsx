@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import {
     Box,
     Button,
@@ -6,7 +6,9 @@ import {
 } from '@mui/material';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
-import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
+
+// The markdown renderer loads only when there is something to announce.
+const MarkdownImagesIntercept = lazy(() => import('@/common/utils/markdown/markdownImagesIntercept'));
 
 const NewChangelogDialog: React.FC = () => {
     const {
@@ -44,9 +46,11 @@ const NewChangelogDialog: React.FC = () => {
                 }}
             >
                 <Typography variant='h5'>{newestChangelog.title}</Typography>
-                <MarkdownImagesIntercept>
-                    {newestChangelog.content}
-                </MarkdownImagesIntercept>
+                <Suspense fallback={null}>
+                    <MarkdownImagesIntercept>
+                        {newestChangelog.content}
+                    </MarkdownImagesIntercept>
+                </Suspense>
             </Box>
 
             <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 1, width: '100%', position: 'sticky', bottom: 0, right: 0 }}>
