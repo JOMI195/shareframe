@@ -24,7 +24,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
-import { getVariant } from "@/common/utils/images";
+import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -227,7 +227,7 @@ const SentImagesGallery = () => {
                                 style={{ cursor: "pointer" }}
                             >
                                 <AuthenticatedImage
-                                    url={`${MEDIA_BASE_URL}${getVariant(sentImage.image, "thumbnail")?.url}`}
+                                    url={`${MEDIA_BASE_URL}${getVariantUrl(sentImage.image, "thumbnail")}`}
                                     alt={sentImage.image.name}
                                     style={{
                                         width: "100%",

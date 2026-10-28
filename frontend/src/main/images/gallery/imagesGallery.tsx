@@ -21,7 +21,7 @@ import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
 import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
-import { getVariant } from "@/common/utils/images";
+import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
 import SelectableElement from "../../../common/components/selectableElement";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -145,7 +145,7 @@ const ImagesGallery: React.FC = () => {
                                         selectionEnabled={isSelectionDialogOpen}
                                     >
                                         <AuthenticatedImage
-                                            url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
+                                            url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
                                             alt={image.name}
                                             style={{
                                                 width: "100%",
