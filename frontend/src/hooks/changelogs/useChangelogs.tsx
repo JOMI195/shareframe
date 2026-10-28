@@ -1,6 +1,6 @@
 import { useAppDispatch } from '@/store';
 import { fetchActiveChangelogs, fetchChangelogIds, fetchChangelogsByIds } from '@/store/entities/changelogs/changelogs.actions';
-import { getApi, getChangelogIds, getChangelogs, getListedChangelogs } from '@/store/entities/changelogs/changelogs.slice';
+import { getApi, getChangelogIds, getChangelogs, getSortedChangelogIds } from '@/store/entities/changelogs/changelogs.slice';
 import { clearOutdatedDeactivatedIds, toggleChangelogDeactivation } from '@/store/ui/changelogs/changelogs.actions';
 import { getDeactivatedIds } from '@/store/ui/changelogs/changelogs.slice';
 import { useSelector } from 'react-redux';
@@ -11,7 +11,7 @@ export const useChangelogs = () => {
     const api = useSelector(getApi);
     const changelogIds = useSelector(getChangelogIds);
     const changelogs = useSelector(getChangelogs);
-    const listedChangelogs = useSelector(getListedChangelogs);
+    const sortedChangelogIds = useSelector(getSortedChangelogIds);
     const deactivatedIds = useSelector(getDeactivatedIds);
 
     const loadChangelogIds = useCallback(() => {
@@ -28,10 +28,10 @@ export const useChangelogs = () => {
         dispatch(clearOutdatedDeactivatedIds(changelogIds.map(log => log.id)));
     }, [dispatch, changelogIds]);
 
-    const loadAllChangelogs = useCallback(() => {
-        const allIds = changelogIds.map(item => item.id);
-        dispatch(fetchChangelogsByIds(allIds));
-    }, [dispatch, changelogIds]);
+    const loadChangelogsByIds = useCallback((ids: number[]) => {
+        if (ids.length === 0) return;
+        dispatch(fetchChangelogsByIds(ids));
+    }, [dispatch]);
 
     const toggleChangelogActive = (id: number) => {
         dispatch(toggleChangelogDeactivation(id));
@@ -49,13 +49,9 @@ export const useChangelogs = () => {
 
     // Get the newest changelog that hasn't been deactivated
     const getNewestActiveChangelog = () => {
-        if (changelogIds.length === 0 || changelogs.length === 0) return null;
+        if (sortedChangelogIds.length === 0 || changelogs.length === 0) return null;
 
-        const sortedIds = [...changelogIds].sort((a, b) => {
-            return new Date(b.date).getTime() - new Date(a.date).getTime();
-        });
-
-        const newestId = sortedIds[0];
+        const newestId = sortedChangelogIds[0];
 
         if (!deactivatedIds.includes(newestId.id)) {
             return changelogs.find(log => log.id === newestId.id) || null;
@@ -68,12 +64,12 @@ export const useChangelogs = () => {
         isLoading: api.loading || api.idsLoading,
         changelogIds,
         changelogs,
-        listedChangelogs,
+        sortedChangelogIds,
         deactivatedIds,
 
         loadChangelogIds,
         loadChangelogs,
-        loadAllChangelogs,
+        loadChangelogsByIds,
         toggleChangelogActive,
         deactivateChangelog,
         isChangelogDeactivated,

@@ -73,12 +73,7 @@ export const getApi = (state: RootState) => state.entities.changelogs.api;
 export const getChangelogIds = (state: RootState) => state.entities.changelogs.changelogIds;
 export const getChangelogs = (state: RootState) => state.entities.changelogs.changelogs;
 
-export const getListedChangelogs = createSelector(
-    [getChangelogIds, getChangelogs],
-    (changelogIds, changelogs) => {
-        const byId = new Map(changelogs.map(log => [log.id, log]));
-        return changelogIds
-            .flatMap(item => byId.get(item.id) ?? [])
-            .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-    },
+export const getSortedChangelogIds = createSelector(
+    [getChangelogIds],
+    (changelogIds) => [...changelogIds].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
 );
