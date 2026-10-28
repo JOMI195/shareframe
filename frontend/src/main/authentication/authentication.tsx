@@ -9,13 +9,7 @@ import {
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
 import Layout from "./layout";
-import SignIn from "./signIn/signIn";
-import SignOut from "./signOut/signOut";
-import Activation from "./users/activation";
-import EmailChangeConfirmation from "./users/emailChangeConfirmation";
-import PasswordReset from "./users/passwordReset";
-import PasswordResetConfirmation from "./users/passwordResetConfirmation";
-import SignUpConfirmation from "./signUp/signUpConfirmation";
+import { lazyPage } from "@/routes/lazyPage";
 import NotFound from "@/common/components/error/notFound/notFound";
 
 const authenticationRoutes = [
@@ -28,11 +22,11 @@ const authenticationRoutes = [
     children: [
       {
         path: getSignInUrl(),
-        element: <SignIn />,
+        ...lazyPage(() => import("./signIn/signIn")),
       },
       {
         path: getSignOutUrl(),
-        element: <SignOut />,
+        ...lazyPage(() => import("./signOut/signOut")),
       },
       // {
       //   path: getSignUpUrl(),
@@ -43,23 +37,23 @@ const authenticationRoutes = [
         children: [
           {
             path: getSignUpConfirmationUrl(),
-            element: <SignUpConfirmation />,
+            ...lazyPage(() => import("./signUp/signUpConfirmation")),
           },
           {
             path: getActivationUrl(),
-            element: <Activation />,
+            ...lazyPage(() => import("./users/activation")),
           },
           {
             path: getEmailChangeConfirmationUrl(),
-            element: <EmailChangeConfirmation />,
+            ...lazyPage(() => import("./users/emailChangeConfirmation")),
           },
           {
             path: getResetPasswordUrl(),
-            element: <PasswordReset />,
+            ...lazyPage(() => import("./users/passwordReset")),
           },
           {
             path: getResetPasswordConfirmationUrl(),
-            element: <PasswordResetConfirmation />,
+            ...lazyPage(() => import("./users/passwordResetConfirmation")),
           },
         ],
       },

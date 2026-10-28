@@ -7,6 +7,23 @@ import { setupStore, type RootReducerState, type TestStore } from '@/store/setup
 import { ColorThemeProvider } from '@/context/colorTheme/colorThemeContext';
 import { buildState, type DeepPartial } from './preloadedState';
 
+type RouteNode = { lazy?: () => Promise<object>; children?: RouteNode[] };
+
+// Resolved once up front so specs can query synchronously; e2e covers the real lazy loading.
+const resolveLazyRoutes = async (nodes: RouteNode[]): Promise<void> => {
+  await Promise.all(
+    nodes.map(async (node) => {
+      if (node.lazy) {
+        Object.assign(node, await node.lazy());
+        delete node.lazy;
+      }
+      if (node.children) await resolveLazyRoutes(node.children);
+    }),
+  );
+};
+
+await resolveLazyRoutes(routes as RouteNode[]);
+
 export interface RenderRouteOptions {
   preloadedState?: RootReducerState | DeepPartial<RootReducerState>;
   store?: TestStore;

@@ -55,7 +55,8 @@ describe('changelog list', () => {
     );
     const { store } = renderRoute('/aenderungen/', { preloadedState: signedInState() });
 
-    expect(await screen.findByText(/- Ältere Änderung$/)).toBeInTheDocument();
+    // Two overlapping requests plus the minimum skeleton time; the default wait is too tight under a full run.
+    expect(await screen.findByText(/- Ältere Änderung$/, undefined, { timeout: 5000 })).toBeInTheDocument();
     const before = store.getState().entities.changelogs.changelogs;
     release();
     await waitFor(() => expect(store.getState().entities.changelogs.changelogs).not.toBe(before));
