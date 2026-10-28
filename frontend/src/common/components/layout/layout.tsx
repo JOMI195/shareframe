@@ -1,5 +1,5 @@
 import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
-import { Outlet, ScrollRestoration, useLocation } from "react-router";
+import { Outlet, ScrollRestoration } from "react-router";
 import TopAppbar from "./topLayout/topAppBar";
 import Sidebar from "./sidebar/sidebar";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";
@@ -10,34 +10,34 @@ import SeasonalFlyby from "../seasonal/seasonalFlyby";
 
 const MainLayout: React.FC = () => {
     const theme = useTheme();
-    const location = useLocation();
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const {
         changelogIds,
-        loadChangelogs,
         loadChangelogIds,
+        refreshChangelogIds,
+        loadNewestChangelog,
         cleanUpdDeactivatedIds
     } = useChangelogs();
 
     useEffect(() => {
         loadChangelogIds();
-    }, [loadChangelogIds, location]);
+    }, [loadChangelogIds]);
 
     // A resumed PWA keeps its route, so the effect above would not run again.
     useEffect(() => {
         const onVisible = () => {
-            if (document.visibilityState === 'visible') loadChangelogIds();
+            if (document.visibilityState === 'visible') refreshChangelogIds();
         };
         document.addEventListener('visibilitychange', onVisible);
         return () => document.removeEventListener('visibilitychange', onVisible);
-    }, [loadChangelogIds]);
+    }, [refreshChangelogIds]);
 
     useEffect(() => {
-        loadChangelogs();
+        loadNewestChangelog();
         cleanUpdDeactivatedIds();
-    }, [loadChangelogs, cleanUpdDeactivatedIds, changelogIds]);
+    }, [loadNewestChangelog, cleanUpdDeactivatedIds, changelogIds]);
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>

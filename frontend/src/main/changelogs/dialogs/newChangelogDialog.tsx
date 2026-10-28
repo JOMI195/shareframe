@@ -1,7 +1,6 @@
 import React from 'react';
 import {
     Box,
-    CircularProgress,
     Button,
     Typography,
 } from '@mui/material';
@@ -11,8 +10,6 @@ import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesInter
 
 const NewChangelogDialog: React.FC = () => {
     const {
-        isLoading,
-        changelogs,
         deactivateChangelog,
         getNewestActiveChangelog
     } = useChangelogs();
@@ -25,21 +22,6 @@ const NewChangelogDialog: React.FC = () => {
     };
 
     const newestChangelog = getNewestActiveChangelog();
-    const open = !isLoading && changelogs.length > 0 && Boolean(newestChangelog);
-
-    if (isLoading) {
-        return (
-            <ShareframeMainDialog
-                open={open}
-                onDialogClose={handleClose}
-                dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
-            >
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress />
-                </Box>
-            </ShareframeMainDialog>
-        );
-    }
 
     if (!newestChangelog) {
         return null;
@@ -47,7 +29,7 @@ const NewChangelogDialog: React.FC = () => {
 
     return (
         <ShareframeMainDialog
-            open={open}
+            open
             onDialogClose={handleClose}
             dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
             dialogSubtitle={new Date(newestChangelog.date).toLocaleDateString()}

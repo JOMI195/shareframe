@@ -1,5 +1,5 @@
 import { useAppDispatch } from '@/store';
-import { fetchActiveChangelogs, fetchChangelogIds, fetchChangelogsByIds } from '@/store/entities/changelogs/changelogs.actions';
+import { fetchChangelogIds, fetchChangelogIdsIfStale, fetchMissingChangelogs, fetchNewestChangelog } from '@/store/entities/changelogs/changelogs.actions';
 import { getApi, getChangelogIds, getChangelogs, getSortedChangelogIds } from '@/store/entities/changelogs/changelogs.slice';
 import { clearOutdatedDeactivatedIds, toggleChangelogDeactivation } from '@/store/ui/changelogs/changelogs.actions';
 import { getDeactivatedIds } from '@/store/ui/changelogs/changelogs.slice';
@@ -18,8 +18,12 @@ export const useChangelogs = () => {
         dispatch(fetchChangelogIds());
     }, [dispatch]);
 
-    const loadChangelogs = useCallback(() => {
-        dispatch(fetchActiveChangelogs());
+    const refreshChangelogIds = useCallback(() => {
+        dispatch(fetchChangelogIdsIfStale());
+    }, [dispatch]);
+
+    const loadNewestChangelog = useCallback(() => {
+        dispatch(fetchNewestChangelog());
     }, [dispatch]);
 
     const cleanUpdDeactivatedIds = useCallback(() => {
@@ -29,8 +33,7 @@ export const useChangelogs = () => {
     }, [dispatch, changelogIds]);
 
     const loadChangelogsByIds = useCallback((ids: number[]) => {
-        if (ids.length === 0) return;
-        dispatch(fetchChangelogsByIds(ids));
+        dispatch(fetchMissingChangelogs(ids));
     }, [dispatch]);
 
     const toggleChangelogActive = (id: number) => {
@@ -68,7 +71,8 @@ export const useChangelogs = () => {
         deactivatedIds,
 
         loadChangelogIds,
-        loadChangelogs,
+        refreshChangelogIds,
+        loadNewestChangelog,
         loadChangelogsByIds,
         toggleChangelogActive,
         deactivateChangelog,

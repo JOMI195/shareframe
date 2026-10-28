@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import * as frames from '@/store/entities/frames/frames.actions';
 import * as friendships from '@/store/entities/friendships/friendships.actions';
 import * as auth from '@/store/entities/authentication/authentication.actions';
@@ -7,9 +7,8 @@ import * as changelogs from '@/store/entities/changelogs/changelogs.actions';
 import * as dashboard from '@/store/entities/dashboard/dashboard.actions';
 import * as contact from '@/store/entities/contact/contact.actions';
 import { signedOut } from '@/store/entities/authentication/authentication.slice';
-import { changelogsReceived } from '@/store/entities/changelogs/changelogs.slice';
 import { defaultState } from '@tests/helpers/preloadedState';
-import { makeChangelogId } from '@tests/fixtures';
+import { makeChangelog, makeChangelogId } from '@tests/fixtures';
 
 // Every creator is a pure function returning an api/request action. The snapshot
 // pins url, method, data and the three lifecycle action types in one place.
@@ -297,31 +296,110 @@ describe('plain page actions', () => {
   });
 });
 
-describe('fetchActiveChangelogs', () => {
-  const run = (ids: number[], deactivated: number[]) => {
-    const state = defaultState();
-    state.entities.changelogs.changelogIds = ids.map((id) => makeChangelogId({ id }));
-    state.ui.changelogs.deactivatedIds = deactivated;
+const runThunk = (thunk: (dispatch: never, getState: never) => void, state: ReturnType<typeof defaultState>) => {
+  const dispatched: { payload?: { url?: string; data?: unknown } }[] = [];
+  const dispatch = (action: unknown): unknown =>
+    typeof action === 'function'
+      ? action(dispatch, () => state)
+      : dispatched.push(action as never);
+  thunk(dispatch as never, (() => state) as never);
+  return dispatched;
+};
 
-    const dispatch = vi.fn();
-    changelogs.fetchActiveChangelogs()(dispatch as never, () => state as never);
-    return dispatch;
+describe('fetchNewestChangelog', () => {
+  const run = (ids: { id: number; date: string }[], deactivated: number[] = [], loaded: number[] = []) => {
+    const state = defaultState();
+    state.entities.changelogs.changelogIds = ids.map((id) => makeChangelogId(id));
+    state.entities.changelogs.changelogs = loaded.map((id) => makeChangelog({ id }));
+    state.ui.changelogs.deactivatedIds = deactivated;
+    return runThunk(changelogs.fetchNewestChangelog(), state);
+  };
+  const ids = [
+    { id: 1, date: '2026-01-01' },
+    { id: 2, date: '2026-03-01' },
+    { id: 3, date: '2026-02-01' },
+  ];
+
+  it('requests only the newest entry by date', () => {
+    const dispatched = run(ids);
+
+    expect(dispatched).toHaveLength(1);
+    expect(dispatched[0].payload?.data).toEqual({ ids: [2] });
+  });
+
+  it('requests nothing when the newest entry is dismissed', () => {
+    expect(run(ids, [2])).toHaveLength(0);
+  });
+
+  it('requests nothing when the newest entry is already loaded', () => {
+    expect(run(ids, [], [2])).toHaveLength(0);
+  });
+
+  it('requests nothing before the ids are loaded', () => {
+    expect(run([])).toHaveLength(0);
+  });
+});
+
+describe('fetchMissingChangelogs', () => {
+  const run = (ids: number[], loaded: number[]) => {
+    const state = defaultState();
+    state.entities.changelogs.changelogs = loaded.map((id) => makeChangelog({ id }));
+    return runThunk(changelogs.fetchMissingChangelogs(ids), state);
   };
 
-  it('requests only the non-dismissed ids', () => {
-    const dispatch = run([1, 2, 3], [2]);
-
-    expect(dispatch).toHaveBeenCalledOnce();
-    expect(dispatch.mock.calls[0][0].payload.data).toEqual({ ids: [1, 3] });
+  it('requests only the entries that are not loaded yet', () => {
+    expect(run([1, 2, 3], [2])[0].payload?.data).toEqual({ ids: [1, 3] });
   });
 
-  // Short-circuits instead of firing a request for an empty id list.
-  it('resolves to an empty list when everything is dismissed', () => {
-    const dispatch = run([1, 2], [1, 2]);
-    expect(dispatch).toHaveBeenCalledWith(changelogsReceived([]));
+  it('requests nothing when everything is loaded', () => {
+    expect(run([1, 2], [1, 2])).toHaveLength(0);
+  });
+});
+
+describe('fetch if stale', () => {
+  const MINUTE = 60 * 1000;
+  const cases = [
+    {
+      name: 'changelog ids',
+      thunk: changelogs.fetchChangelogIdsIfStale,
+      maxAge: 5 * MINUTE,
+      setLastFetch: (state: ReturnType<typeof defaultState>, at: number | null) => {
+        state.entities.changelogs.api.idsLastFetch = at;
+      },
+    },
+    {
+      name: 'friendships',
+      thunk: friendships.fetchFriendshipsIfStale,
+      maxAge: MINUTE,
+      setLastFetch: (state: ReturnType<typeof defaultState>, at: number | null) => {
+        state.entities.friendships.api.lastFetch = at;
+      },
+    },
+    {
+      name: 'frames',
+      thunk: frames.fetchFramesIfStale,
+      maxAge: 30 * 1000,
+      setLastFetch: (state: ReturnType<typeof defaultState>, at: number | null) => {
+        state.entities.frames.api.lastFetch = at;
+      },
+    },
+  ];
+
+  const run = (testCase: (typeof cases)[number], lastFetch: number | null) => {
+    const state = defaultState();
+    testCase.setLastFetch(state, lastFetch);
+    return runThunk(testCase.thunk(), state);
+  };
+
+  it.each(cases)('fetches $name that were never loaded', (testCase) => {
+    expect(run(testCase, null)).toHaveLength(1);
   });
 
-  it('resolves to an empty list when no ids are loaded yet', () => {
-    expect(run([], [])).toHaveBeenCalledWith(changelogsReceived([]));
+  it.each(cases)('skips $name that are still fresh', (testCase) => {
+    expect(run(testCase, Date.now() - testCase.maxAge + MINUTE / 60)).toHaveLength(0);
+  });
+
+  it.each(cases)('refetches $name once they are stale', (testCase) => {
+    expect(run(testCase, Date.now() - testCase.maxAge - 1)).toHaveLength(1);
   });
 });

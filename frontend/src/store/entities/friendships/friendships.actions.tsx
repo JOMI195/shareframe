@@ -1,6 +1,7 @@
 import * as friendshipsSlice from "./friendships.slice";
 import { apiRequest } from "@/common/utils/constants/api.constants";
 import * as friendshipsEndpoints from "@/assets/endpoints/api/friendshipsEndpoints";
+import { fetchIfStale } from "@/store/fetchIfStale";
 
 export const fetchFriendships = () =>
   apiRequest({
@@ -9,6 +10,11 @@ export const fetchFriendships = () =>
     onSuccess: friendshipsSlice.friendshipsReceived.type,
     onError: friendshipsSlice.friendshipsRequestFailed.type,
   });
+
+const FRIENDSHIPS_MAX_AGE_MS = 60 * 1000;
+
+export const fetchFriendshipsIfStale = () =>
+  fetchIfStale((state) => friendshipsSlice.getApi(state).lastFetch, FRIENDSHIPS_MAX_AGE_MS, fetchFriendships);
 
 export const sendFrindshipRequest = (reciever_friendship_user_search_code: string) =>
   apiRequest({

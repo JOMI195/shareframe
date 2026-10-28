@@ -38,7 +38,8 @@ const FramesGallery: React.FC = () => {
 
     const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
-    const showSkeleton = useMinimumLoading(loading);
+    // Focus refreshes keep the current cards instead of flashing the skeleton.
+    const showSkeleton = useMinimumLoading(loading && frames.length === 0);
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(frames.length / ITEMS_PER_PAGE);

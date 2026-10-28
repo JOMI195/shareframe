@@ -1,6 +1,7 @@
 import * as framesSlice from "./frames.slice";
 import { apiRequest } from "@/common/utils/constants/api.constants";
 import * as framesEndpoints from "@/assets/endpoints/api/framesEndpoints";
+import { fetchIfStale } from "@/store/fetchIfStale";
 
 export const fetchframes = () =>
   apiRequest({
@@ -9,6 +10,11 @@ export const fetchframes = () =>
     onSuccess: framesSlice.framesReceived.type,
     onError: framesSlice.framesRequestFailed.type,
   });
+
+const FRAMES_MAX_AGE_MS = 30 * 1000;
+
+export const fetchFramesIfStale = () =>
+  fetchIfStale((state) => framesSlice.getApi(state).lastFetch, FRAMES_MAX_AGE_MS, fetchframes);
 
 export const registerFrame = (public_serial_number: string) =>
   apiRequest({

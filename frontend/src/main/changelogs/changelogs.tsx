@@ -32,8 +32,6 @@ const Changelogs: React.FC = () => {
         cleanUpdDeactivatedIds
     } = useChangelogs();
 
-    const showSkeleton = useMinimumLoading(isLoading);
-
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(sortedChangelogIds.length / ITEMS_PER_PAGE);
     // A refetch of the ids can shrink the list below the current page.
@@ -50,6 +48,9 @@ const Changelogs: React.FC = () => {
         const byId = new Map(changelogs.map(log => [log.id, log]));
         return pageIds.flatMap(id => byId.get(id) ?? []);
     }, [changelogs, pageIds]);
+
+    // A background refetch must not swap loaded entries for the skeleton.
+    const showSkeleton = useMinimumLoading(isLoading && pageChangelogs.length === 0);
 
     useEffect(() => {
         loadChangelogsByIds(pageIds);
