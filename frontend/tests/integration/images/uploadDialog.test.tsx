@@ -14,6 +14,7 @@ import { exportStageToBlob } from '@/main/images/dialogs/upload/imageText/export
 import { renderEpaper } from '@/main/images/epaper/renderEpaper';
 import { pixelsToBlob } from '@/common/utils/canvas/pixels';
 import { adjustImage } from '@/main/images/dialogs/upload/imageAdjust/adjustImage';
+import { getCroppedImg } from '@/main/images/dialogs/upload/imageCropping/cropper/utils';
 
 // jsdom has no layout, so react-easy-crop never reports a crop area, and no
 // canvas, so the real getCroppedImg cannot run. Both are unit-tested separately.
@@ -92,8 +93,9 @@ describe('UploadDialog selection step', () => {
 
     await user.upload(fileInput(), [photo('a.jpg'), photo('b.jpg', 2)]);
 
-    expect(screen.getByText('a.jpg')).toBeInTheDocument();
-    expect(screen.getByText('b.jpg')).toBeInTheDocument();
+    const strip = screen.getByRole('list', { name: 'Ausgewählte Fotos' });
+    expect(within(strip).getByRole('button', { name: 'a.jpg' })).toBeInTheDocument();
+    expect(within(strip).getByRole('button', { name: 'b.jpg' })).toBeInTheDocument();
   });
 
   // The key is name+size+lastModified, so the same file picked twice is one photo.
@@ -103,7 +105,7 @@ describe('UploadDialog selection step', () => {
     await user.upload(fileInput(), photo('a.jpg'));
     await user.upload(fileInput(), photo('a.jpg'));
 
-    expect(screen.getAllByText('a.jpg')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'a.jpg' })).toHaveLength(1);
     await waitFor(() =>
       expect(store.getState().ui.images.snackbar.alert.message).toMatch(/bereits ausgewählt/),
     );
@@ -117,7 +119,7 @@ describe('UploadDialog selection step', () => {
 
     await user.upload(fileInput(), many);
 
-    expect(screen.queryByText('p0.jpg')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'p0.jpg' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(store.getState().ui.images.snackbar.alert.message).toMatch(
         /Maximal 15 Foto\(s\) können auf einmal hochgeladen werden/,
@@ -131,47 +133,109 @@ describe('UploadDialog selection step', () => {
 
     await user.upload(fileInput(), many);
 
-    expect(screen.getByText('p14.jpg')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'p14.jpg' })).toBeInTheDocument();
   });
 
-  it('cannot continue without a photo', () => {
+  it('starts with the picker and no editor', () => {
     render();
 
-    expect(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Fotos auswählen' })).toBeInTheDocument();
+    expect(screen.queryByTestId('cropper')).not.toBeInTheDocument();
+  });
+
+  it('opens the first photo for cropping right after picking', async () => {
+    const { user } = render();
+
+    await user.upload(fileInput(), [photo('a.jpg'), photo('b.jpg', 2)]);
+
+    expect(await screen.findByTestId('cropper')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Foto 1 von 2' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'a.jpg' })).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('switches to another photo from the strip with a fresh crop', async () => {
+    const { user } = render();
+    await user.upload(fileInput(), [photo('a.jpg'), photo('b.jpg', 2)]);
+    await user.click(await screen.findByRole('button', { name: 'Ausschnitt verschieben' }));
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
+
+    await user.click(screen.getByRole('button', { name: 'b.jpg' }));
+
+    expect(await screen.findByTestId('cropper')).toHaveAttribute('data-crop', JSON.stringify({ x: 0, y: 0 }));
+    expect(screen.getByRole('heading', { name: 'Foto 2 von 2' })).toBeInTheDocument();
+  });
+
+  it('opens the next photo when the current one is removed', async () => {
+    const { user } = render();
+    await user.upload(fileInput(), [photo('a.jpg'), photo('b.jpg', 2)]);
+    await screen.findByTestId('cropper');
+
+    await user.click(screen.getByRole('button', { name: 'a.jpg entfernen' }));
+
+    expect(screen.queryByRole('button', { name: 'a.jpg' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Foto 1 von 1' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'b.jpg' })).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('returns to the picker when the last photo is removed', async () => {
+    const { user } = render();
+    await user.upload(fileInput(), photo('a.jpg'));
+    await screen.findByTestId('cropper');
+
+    await user.click(screen.getByRole('button', { name: 'a.jpg entfernen' }));
+
+    expect(screen.getByRole('button', { name: 'Fotos auswählen' })).toBeInTheDocument();
+    expect(screen.queryByTestId('cropper')).not.toBeInTheDocument();
+  });
+
+  it('adds more photos from the strip', async () => {
+    const { user } = render();
+    await user.upload(fileInput(), photo('a.jpg'));
+    await screen.findByTestId('cropper');
+    const click = vi.spyOn(fileInput(), 'click').mockImplementation(() => {});
+
+    await user.click(screen.getByRole('button', { name: 'Fotos hinzufügen' }));
+    expect(click).toHaveBeenCalled();
+    await user.upload(fileInput(), photo('b.jpg', 2));
+
+    expect(screen.getByRole('button', { name: 'b.jpg' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'a.jpg' })).toHaveAttribute('aria-current', 'true');
   });
 });
 
 const goToCropping = async (photos = [photo('urlaub.jpg')]) => {
   const view = render();
   await view.user.upload(fileInput(), photos);
-  await view.user.click(screen.getByRole('button', { name: 'Weiter zum Zuschneiden' }));
   await screen.findByTestId('cropper');
   return view;
 };
 
-// A collapsing step stays accessible until its transition ends, and the later steps repeat its controls.
-const leftStep = (nextButton: string) =>
-  waitFor(() => expect(screen.queryByRole('button', { name: nextButton })).not.toBeInTheDocument());
+const tab = (name: 'Zuschnitt' | 'Anpassen' | 'Text') => screen.getByRole('tab', { name });
+
+const adjustOpen = () => screen.findByRole('slider', { name: 'Kontrast' });
+
+const textOpen = () =>
+  waitFor(() => expect(screen.getByRole('button', { name: 'Text hinzufügen' })).toBeEnabled());
 
 const goToAdjust = async (photos?: File[]) => {
   const view = await goToCropping(photos);
-  await view.user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
-  await screen.findByRole('button', { name: 'Weiter zum Text' });
+  await view.user.click(tab('Anpassen'));
+  await adjustOpen();
   return view;
 };
 
 const goToText = async (photos?: File[]) => {
   const view = await goToAdjust(photos);
-  await view.user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
-  await screen.findByRole('button', { name: 'Weiter zur Vorschau' });
-  await leftStep('Weiter zum Text');
+  await view.user.click(tab('Text'));
+  await textOpen();
   return view;
 };
 
 const goToPreview = async (photos?: File[]) => {
   const view = await goToText(photos);
   await view.user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
-  await leftStep('Weiter zur Vorschau');
+  await screen.findByRole('button', { name: 'Hochladen' });
   return view;
 };
 
@@ -195,7 +259,7 @@ const acceptUploads = () =>
     ),
   );
 
-describe('UploadDialog close buttons', () => {
+describe('UploadDialog closing', () => {
   const desktop = () => {
     const matchMedia = window.matchMedia;
     vi.spyOn(window, 'matchMedia').mockImplementation((query: string) => ({
@@ -204,59 +268,86 @@ describe('UploadDialog close buttons', () => {
     }));
   };
 
-  // On phones the dialog is full screen and its header already has the X.
-  it('leaves closing to the header on phones', async () => {
-    const { user } = await goToText();
+  it('closes from the header on the picker', async () => {
+    const { user, store } = render();
 
-    expect(screen.getByRole('button', { name: 'cancel' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Dialog schließen' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
-    await screen.findByRole('button', { name: 'Hochladen' });
-    expect(screen.queryByRole('button', { name: 'Dialog schließen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.images.dialogs.create.open).toBe(false);
   });
 
-  it('hides the cancel button of the selection step on phones', () => {
-    render();
-
-    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
-  });
-
-  it('offers cancel on larger screens without a header', () => {
+  it('closes from the header in a later step on larger screens', async () => {
     desktop();
-    render();
+    const { user, store } = await goToText();
 
-    expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'cancel' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.images.dialogs.create.open).toBe(false);
   });
 
-  it('offers closing in the later steps on larger screens', async () => {
+  it('has no other close buttons in the tools', async () => {
     desktop();
     await goToText();
 
-    // The crop step keeps its own button until it has collapsed.
-    await waitFor(() => expect(screen.getAllByRole('button', { name: 'Dialog schließen' })).toHaveLength(1));
+    expect(screen.getAllByRole('button', { name: /Schließen|Dialog schließen|Abbrechen/ })).toHaveLength(1);
+  });
+
+  it('offers going back next to the upload button on larger screens', async () => {
+    desktop();
+    const { user } = await goToPreview();
+    const [header, footer] = screen.getAllByRole('button', { name: 'Zurück zum Bearbeiten' });
+    expect(header).toBeInTheDocument();
+
+    await user.click(footer);
+
+    expect(await screen.findByRole('button', { name: 'Weiter zur Vorschau' })).toBeInTheDocument();
+  });
+
+  it('steps back from the preview instead of closing', async () => {
+    const { user, store } = await goToPreview();
+    expect(screen.queryByRole('button', { name: 'Schließen' })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Zurück zum Bearbeiten' }));
+
+    expect(await screen.findByRole('button', { name: 'Weiter zur Vorschau' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Schließen' })).toBeInTheDocument();
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });
 });
 
-describe('UploadDialog step navigation', () => {
-  const scrolledToTop = (title: string) =>
-    vi.mocked(Element.prototype.scrollIntoView).mock.contexts.some(
-      (element) => element instanceof Element && within(element as HTMLElement).queryAllByText(title).length > 0,
-    );
+describe('UploadDialog fast path', () => {
+  beforeEach(acceptUploads);
 
-  it('scrolls the title of every newly opened step to the top', async () => {
+  it('uploads the plain crop straight from the crop tool', async () => {
     const { user } = await goToCropping();
-    await waitFor(() => expect(scrolledToTop('Fotos zuschneiden')).toBe(true));
 
-    await user.click(screen.getByRole('button', { name: 'Zuschneiden & weiter' }));
-    await waitFor(() => expect(scrolledToTop('Foto anpassen')).toBe(true));
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
-    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
-    await waitFor(() => expect(scrolledToTop('Text hinzufügen')).toBe(true));
+    expect(await (await uploadedFile()).text()).toBe('cropped');
+    expect(adjustImage).not.toHaveBeenCalled();
+    expect(exportStageToBlob).not.toHaveBeenCalled();
+  });
 
-    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
-    await waitFor(() => expect(scrolledToTop('Vorschau und hochladen')).toBe(true));
-    expect(Element.prototype.scrollIntoView).toHaveBeenLastCalledWith({ behavior: 'smooth', block: 'start' });
+  it('burns in the texts when the preview is opened from another tool', async () => {
+    const { user } = await goToText();
+    await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
+    await user.click(tab('Zuschnitt'));
+    await screen.findByTestId('cropper');
+
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
+
+    expect(await (await uploadedFile()).text()).toBe('with-text');
+  });
+
+  it('offers the e-paper view only once the photo is cropped', async () => {
+    const { user } = await goToCropping();
+    expect(screen.queryByRole('button', { name: 'E-Paper' })).not.toBeInTheDocument();
+
+    await user.click(tab('Anpassen'));
+
+    expect(await screen.findByRole('button', { name: 'E-Paper' })).toBeInTheDocument();
   });
 });
 
@@ -264,11 +355,36 @@ describe('UploadDialog crop step', () => {
   it('keeps the crop when coming back from the adjust step', async () => {
     const { user } = await goToCropping();
     await user.click(screen.getByRole('button', { name: 'Ausschnitt verschieben' }));
-    await user.click(screen.getByRole('button', { name: 'Zuschneiden & weiter' }));
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
 
-    await user.click(await screen.findByRole('button', { name: 'Zurück zum Zuschneiden' }));
+    await user.click(tab('Zuschnitt'));
 
     expect(await screen.findByTestId('cropper')).toHaveAttribute('data-crop', JSON.stringify({ x: 5, y: 7 }));
+  });
+
+  it('crops once while the crop stays the same', async () => {
+    const { user } = await goToAdjust();
+
+    await user.click(tab('Text'));
+    await textOpen();
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
+
+    expect(getCroppedImg).toHaveBeenCalledOnce();
+  });
+
+  it('crops again after a rotation', async () => {
+    const { user } = await goToAdjust();
+    await user.click(tab('Zuschnitt'));
+    await screen.findByTestId('cropper');
+
+    fireEvent.change(screen.getByRole('slider', { name: 'Rotation' }), { target: { value: 90 } });
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
+
+    expect(getCroppedImg).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getCroppedImg).mock.lastCall![2]).toBe(90);
   });
 });
 
@@ -299,13 +415,13 @@ describe('UploadDialog adjust step', () => {
     const { user } = await goToAdjust();
     await user.click(screen.getByRole('button', { name: 'E-Paper' }));
 
-    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
-    await leftStep('Weiter zum Text');
+    await user.click(tab('Text'));
+    await textOpen();
     expect(screen.getByRole('button', { name: 'E-Paper' })).toHaveAttribute('aria-pressed', 'true');
     expect(await screen.findByRole('img', { name: 'E-Paper-Vorschau von urlaub.jpg' })).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
-    await leftStep('Weiter zur Vorschau');
+    await screen.findByRole('button', { name: 'Hochladen' });
     expect(screen.getByRole('button', { name: 'E-Paper' })).toHaveAttribute('aria-pressed', 'true');
     await waitFor(() =>
       expect(screen.getByRole('img', { name: 'Vorschau von urlaub.jpg' })).toHaveAttribute('src', objectUrlOf(epaperBlob)),
@@ -316,14 +432,12 @@ describe('UploadDialog adjust step', () => {
     acceptUploads();
     const { user } = await goToAdjust([photo('a.jpg'), photo('b.jpg', 2)]);
     await user.click(screen.getByRole('button', { name: 'E-Paper' }));
-    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
-    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
-    expect(await screen.findByText('Fotos: 1/2 hochgeladen')).toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
-    await screen.findByRole('button', { name: 'Weiter zum Text' });
-    await leftStep('Hochladen');
+    expect(await screen.findByRole('heading', { name: 'Foto 2 von 2' })).toBeInTheDocument();
+    await user.click(await screen.findByRole('tab', { name: 'Anpassen' }));
+    await adjustOpen();
 
     expect(screen.getByRole('button', { name: 'Original' })).toHaveAttribute('aria-pressed', 'true');
   });
@@ -333,8 +447,7 @@ describe('UploadDialog adjust step', () => {
     const { user } = await goToAdjust();
     move('Helligkeit', 30);
 
-    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
-    await user.click(await screen.findByRole('button', { name: 'Weiter zur Vorschau' }));
+    await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
     expect(await (await uploadedFile()).text()).toBe('adjusted');
@@ -347,8 +460,9 @@ describe('UploadDialog adjust step', () => {
     const { user } = await goToAdjust();
     move('Kontrast', 40);
 
-    await user.click(screen.getByRole('button', { name: 'Weiter zum Text' }));
-    await user.click(await screen.findByRole('button', { name: 'Zurück zum Anpassen' }));
+    await user.click(tab('Text'));
+    await textOpen();
+    await user.click(tab('Anpassen'));
 
     expect(await screen.findByRole('slider', { name: 'Kontrast' })).toHaveValue('40');
   });
@@ -457,8 +571,9 @@ describe('UploadDialog text step', () => {
     await user.clear(textField());
     await user.type(textField(), 'Bleibt');
 
-    await user.click(screen.getByRole('button', { name: 'Zurück zum Anpassen' }));
-    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
+    await user.click(tab('Text'));
 
     expect(await screen.findByRole('button', { name: 'Bleibt' })).toBeInTheDocument();
   });
@@ -651,12 +766,12 @@ describe('UploadDialog preview and upload step', () => {
     expect(vi.mocked(exportStageToBlob).mock.calls[0][1]).toBe(1600);
   });
 
-  it('goes back to the text step with the texts kept', async () => {
+  it('goes back to editing with the texts kept', async () => {
     const { user } = await goToText();
     await user.click(screen.getByRole('button', { name: 'Text hinzufügen' }));
     await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
 
-    await user.click(await screen.findByRole('button', { name: 'Zurück zum Text' }));
+    await user.click(await screen.findByRole('button', { name: 'Zurück zum Bearbeiten' }));
 
     expect(await screen.findByRole('button', { name: 'Text' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Hochladen' })).not.toBeInTheDocument();
@@ -686,10 +801,10 @@ describe('UploadDialog preview and upload step', () => {
     await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
-    expect(await screen.findByText('Fotos: 1/2 hochgeladen')).toBeInTheDocument();
-    await user.click(await screen.findByRole('button', { name: 'Zuschneiden & weiter' }));
-    await user.click(await screen.findByRole('button', { name: 'Weiter zum Text' }));
-    await screen.findByRole('button', { name: 'Weiter zur Vorschau' });
+    expect(await screen.findByRole('heading', { name: 'Foto 2 von 2' })).toBeInTheDocument();
+    expect(await screen.findByTestId('cropper')).toHaveAttribute('data-crop', JSON.stringify({ x: 0, y: 0 }));
+    await user.click(tab('Text'));
+    await textOpen();
     expect(screen.queryByRole('button', { name: 'Text' })).not.toBeInTheDocument();
     expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });

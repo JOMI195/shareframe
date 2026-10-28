@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, Slider, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, Slider, Tooltip, Typography } from '@mui/material';
 import React from 'react';
 
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -129,6 +129,8 @@ interface NavigationProps {
     onCenter: () => void;
     onCropperReset: () => void;
     disabled: boolean;
+    // centering and reset join the position row instead of taking their own
+    compact?: boolean;
     ZOOM_FACTOR: number;
     MIN_ZOOM: number;
     MAX_ZOOM: number;
@@ -142,6 +144,7 @@ export const Navigation: React.FC<NavigationProps> = ({
     onMove,
     onCenter,
     onCropperReset,
+    compact = false,
     ZOOM_FACTOR,
     MIN_ZOOM,
     MAX_ZOOM,
@@ -320,42 +323,58 @@ export const Navigation: React.FC<NavigationProps> = ({
                 >
                     <ArrowForwardIcon fontSize="small" />
                 </IconButton>
+                {compact && (
+                    <>
+                        <Tooltip title="Zentrieren">
+                            <IconButton onClick={onCenter} disabled={disabled} aria-label="Zentrieren" size="small" sx={{ color: 'text.secondary' }}>
+                                <CenterFocusStrongIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Reset">
+                            <IconButton onClick={onCropperReset} disabled={disabled} aria-label="Reset" size="small" sx={{ color: 'text.secondary' }}>
+                                <RestartAltIcon fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                    </>
+                )}
             </Box>
-            <Grid
-                container
-                sx={{
-                    justifyContent: "space-between",
-                    mt: 1
-                }}>
-                <Grid size={5.8}>
-                    <Button
-                        disabled={disabled}
-                        fullWidth
-                        startIcon={<CenterFocusStrongIcon />}
-                        sx={{
-                            bgcolor: (theme) => theme.palette.background.default,
-                            color: (theme) => theme.palette.text.primary,
-                        }}
-                        onClick={onCenter}
-                    >
-                        Zentrieren
-                    </Button>
+            {!compact && (
+                <Grid
+                    container
+                    sx={{
+                        justifyContent: "space-between",
+                        mt: 1
+                    }}>
+                    <Grid size={5.8}>
+                        <Button
+                            disabled={disabled}
+                            fullWidth
+                            startIcon={<CenterFocusStrongIcon />}
+                            sx={{
+                                bgcolor: (theme) => theme.palette.background.default,
+                                color: (theme) => theme.palette.text.primary,
+                            }}
+                            onClick={onCenter}
+                        >
+                            Zentrieren
+                        </Button>
+                    </Grid>
+                    <Grid size={5.8}>
+                        <Button
+                            disabled={disabled}
+                            fullWidth
+                            startIcon={<RestartAltIcon />}
+                            sx={{
+                                bgcolor: (theme) => theme.palette.background.default,
+                                color: (theme) => theme.palette.text.primary,
+                            }}
+                            onClick={onCropperReset}
+                        >
+                            Reset
+                        </Button>
+                    </Grid>
                 </Grid>
-                <Grid size={5.8}>
-                    <Button
-                        disabled={disabled}
-                        fullWidth
-                        startIcon={<RestartAltIcon />}
-                        sx={{
-                            bgcolor: (theme) => theme.palette.background.default,
-                            color: (theme) => theme.palette.text.primary,
-                        }}
-                        onClick={onCropperReset}
-                    >
-                        Reset
-                    </Button>
-                </Grid>
-            </Grid>
+            )}
         </Box>
     );
 };

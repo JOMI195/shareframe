@@ -81,13 +81,12 @@ test.describe('photo lifecycle', () => {
 
     await test.step('select and crop', async () => {
       await page.getByRole('button', { name: 'Foto hinzufügen' }).click();
-      await expect(page.getByRole('heading', { name: 'Fotos hierher ziehen' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Welche Fotos möchtest du hochladen?' })).toBeVisible();
 
       await page.locator('input[type="file"]').setInputFiles(FIXTURE);
-      await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
+      await expect(page.getByRole('button', { name: 'upload-fixture.jpg', exact: true })).toBeVisible();
 
-      await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
-      await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
+      await page.getByRole('tab', { name: 'Anpassen' }).click();
     });
 
     await test.step('raise the contrast and check it on e-paper', async () => {
@@ -101,7 +100,7 @@ test.describe('photo lifecycle', () => {
       await page.getByRole('button', { name: 'E-Paper' }).click();
       await expect.poll(() => isEpaperImage(preview)).toBe(true);
       // The choice carries over, so the texts below are edited in the e-paper view.
-      await page.getByRole('button', { name: 'Weiter zum Text' }).click();
+      await page.getByRole('tab', { name: 'Text' }).click();
     });
 
     // jsdom has no canvas, so this is the only place the konva editor and its export really run.
@@ -277,6 +276,7 @@ test.describe('photo lifecycle', () => {
     });
 
     await expect(page.getByText(/Falsches Dateiformat/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Weiter zum Zuschneiden' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Fotos auswählen' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Weiter zur Vorschau' })).toBeHidden();
   });
 });

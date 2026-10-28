@@ -1,15 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import type Konva from 'konva';
-import { Alert, Box, Button, Grid } from '@mui/material';
+import { Alert } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { openImagesAlertSnackbar } from '@/store/ui/images/images.slice';
 import { getTextPresets } from '@/store/entities/images/images.slice';
 import { createTextPreset, deleteTextPreset, fetchTextPresets } from '@/store/entities/images/images.actions';
 import { BlobImage } from '../useBlobImage';
 import FrameAspectBox from '../frameAspectBox';
-import PassepartoutHint from '../passepartoutHint';
-import StepHeader from '../stepHeader';
-import { EpaperView } from '@/main/images/epaper/epaperToggle';
+import { FramedCanvas, ToolCanvas, ToolControls } from '../editorLayout';
 import { useEpaperPreview } from '@/main/images/epaper/useEpaperPreview';
 import TextEditor from './textEditor';
 import TextToolbar from './textToolbar';
@@ -17,40 +15,41 @@ import { exportStageToBlob } from './exportImage';
 import { MAX_OUTPUT_SIDE } from '../outputSize';
 import { loadFonts } from './fonts';
 import { useLoadedImage } from './useLoadedImage';
-import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, TextOverlay } from './textOverlays';
+import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, scaleOverlays, TextOverlay } from './textOverlays';
 
 interface ImageTextProps {
-    view: EpaperView;
-    onViewChange: (view: EpaperView) => void;
+    epaper: boolean;
     photo: BlobImage;
     fileName: string;
     overlays: TextOverlay[];
     setOverlays: React.Dispatch<React.SetStateAction<TextOverlay[]>>;
+    // pixel width of the photo the overlays were placed on
+    overlaysWidth: number | null;
+    setOverlaysWidth: (width: number) => void;
+    exportRequested: boolean;
     handleTextDone: (blob: Blob) => void;
-    handleBackToAdjust: () => void;
-    handleDialogClose: () => void;
-    showCloseButton: boolean;
+    handleExportFailed: () => void;
 }
 
 const ImageText: React.FC<ImageTextProps> = ({
-    view,
-    onViewChange,
+    epaper,
     photo,
     fileName,
     overlays,
     setOverlays,
+    overlaysWidth,
+    setOverlaysWidth,
+    exportRequested,
     handleTextDone,
-    handleBackToAdjust,
-    handleDialogClose,
-    showCloseButton,
+    handleExportFailed,
 }) => {
     const dispatch = useAppDispatch();
     const stageRef = useRef<Konva.Stage>(null);
     const { image, error } = useLoadedImage(photo.url);
-    const epaperUrl = useEpaperPreview(photo.blob, view === 'epaper');
+    const epaperUrl = useEpaperPreview(photo.blob, epaper);
     const [fontsReady, setFontsReady] = useState(false);
     const [selectedId, setSelectedId] = useState<string | null>(null);
-    const [exporting, setExporting] = useState(false);
+    const exportingRef = useRef(false);
     const presets = useAppSelector(getTextPresets);
 
     useEffect(() => {
@@ -67,7 +66,15 @@ const ImageText: React.FC<ImageTextProps> = ({
         };
     }, []);
 
-    const ready = image !== null && fontsReady;
+    useEffect(() => {
+        if (!image || overlaysWidth === image.width) return;
+        if (overlaysWidth !== null) {
+            setOverlays((prev) => scaleOverlays(prev, image.width / overlaysWidth));
+        }
+        setOverlaysWidth(image.width);
+    }, [image, overlaysWidth, setOverlays, setOverlaysWidth]);
+
+    const ready = image !== null && fontsReady && overlaysWidth === image.width;
     const selected = overlays.find((overlay) => overlay.id === selectedId) ?? null;
 
     const addOverlay = (overlay: TextOverlay) => {
@@ -83,87 +90,67 @@ const ImageText: React.FC<ImageTextProps> = ({
         setSelectedId(null);
     };
 
-    const onNext = async () => {
-        if (!image) return;
-        if (overlays.length === 0) {
-            handleTextDone(photo.blob);
-            return;
-        }
-        setExporting(true);
-        try {
-            // Texts are vectors, so a zoomed-in crop must not cap their resolution at the crop's pixels.
-            handleTextDone(await exportStageToBlob(stageRef.current, Math.max(image.width, MAX_OUTPUT_SIDE)));
-        } catch (exportError) {
-            dispatch(openImagesAlertSnackbar({
-                message: exportError instanceof Error ? exportError.message : 'Text konnte nicht eingefügt werden',
-                severity: 'error',
-            }));
-        } finally {
-            setExporting(false);
-        }
-    };
+    useEffect(() => {
+        if (!exportRequested || !ready || exportingRef.current) return;
+        exportingRef.current = true;
+        // Texts are vectors, so a zoomed-in crop must not cap their resolution at the crop's pixels.
+        exportStageToBlob(stageRef, Math.max(image.width, MAX_OUTPUT_SIDE))
+            .then(handleTextDone)
+            .catch((exportError) => {
+                dispatch(openImagesAlertSnackbar({
+                    message: exportError instanceof Error ? exportError.message : 'Text konnte nicht eingefügt werden',
+                    severity: 'error',
+                }));
+                handleExportFailed();
+            })
+            .finally(() => {
+                exportingRef.current = false;
+            });
+    }, [exportRequested, ready, image, dispatch, handleTextDone, handleExportFailed]);
 
     return (
-        <Box sx={{ my: 2 }}>
-            <StepHeader fileName={fileName} view={view} onViewChange={onViewChange} />
-            {error && (
-                <Alert severity="error">Das zugeschnittene Foto konnte nicht geladen werden.</Alert>
-            )}
-            {!error && !ready && <FrameAspectBox />}
-            {ready && (
-                <TextEditor
-                    image={image}
-                    backdrop={view === 'epaper' && epaperUrl ? { url: epaperUrl, alt: `E-Paper-Vorschau von ${fileName}` } : null}
+        <>
+            <ToolCanvas>
+                {error && (
+                    <Alert severity="error">Das zugeschnittene Foto konnte nicht geladen werden.</Alert>
+                )}
+                {!error && (
+                    <FramedCanvas>
+                        {ready ? (
+                            <TextEditor
+                                image={image}
+                                backdrop={epaper && epaperUrl ? { url: epaperUrl, alt: `E-Paper-Vorschau von ${fileName}` } : null}
+                                overlays={overlays}
+                                selectedId={selectedId}
+                                onSelect={setSelectedId}
+                                onChange={updateOverlay}
+                                onDelete={deleteOverlay}
+                                stageRef={stageRef}
+                            />
+                        ) : (
+                            <FrameAspectBox />
+                        )}
+                    </FramedCanvas>
+                )}
+            </ToolCanvas>
+            <ToolControls>
+                <TextToolbar
                     overlays={overlays}
-                    selectedId={selectedId}
+                    selected={selected}
+                    disabled={!ready}
+                    onAddText={() => image && addOverlay(createTextOverlay(image.width, image.height, overlays.length))}
+                    onAddDate={() => image && addOverlay(createDateOverlay(image.width, image.height, overlays.length))}
                     onSelect={setSelectedId}
                     onChange={updateOverlay}
                     onDelete={deleteOverlay}
-                    stageRef={stageRef}
+                    presets={presets.items}
+                    savingPreset={presets.saving}
+                    onAddPreset={(preset) => image && addOverlay(overlayFromPreset(preset, image.width, image.height))}
+                    onSavePreset={(overlay) => image && dispatch(createTextPreset(overlayToPreset(overlay, image.width, image.height)))}
+                    onDeletePreset={(preset) => dispatch(deleteTextPreset(preset.id))}
                 />
-            )}
-            <TextToolbar
-                overlays={overlays}
-                selected={selected}
-                disabled={!ready}
-                onAddText={() => image && addOverlay(createTextOverlay(image.width, image.height, overlays.length))}
-                onAddDate={() => image && addOverlay(createDateOverlay(image.width, image.height, overlays.length))}
-                onSelect={setSelectedId}
-                onChange={updateOverlay}
-                onDelete={deleteOverlay}
-                presets={presets.items}
-                savingPreset={presets.saving}
-                onAddPreset={(preset) => image && addOverlay(overlayFromPreset(preset, image.width, image.height))}
-                onSavePreset={(overlay) => image && dispatch(createTextPreset(overlayToPreset(overlay, image.width, image.height)))}
-                onDeletePreset={(preset) => dispatch(deleteTextPreset(preset.id))}
-            />
-            {ready && <PassepartoutHint withTextArea />}
-
-            <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>
-                <Grid size={{ xs: 12, md: 6 }} sx={{ order: { xs: 1, md: 3 } }}>
-                    <Button
-                        variant="contained"
-                        fullWidth
-                        disabled={!ready || exporting}
-                        onClick={onNext}
-                    >
-                        Weiter zur Vorschau
-                    </Button>
-                </Grid>
-                <Grid size={{ xs: 12, md: 3 }} sx={{ order: { xs: 2, md: 2 } }}>
-                    <Button fullWidth variant="outlined" onClick={handleBackToAdjust}>
-                        Zurück zum Anpassen
-                    </Button>
-                </Grid>
-                {showCloseButton && (
-                    <Grid size={{ xs: 12, md: 3 }} sx={{ order: { xs: 3, md: 1 } }}>
-                        <Button fullWidth variant="outlined" onClick={handleDialogClose}>
-                            Dialog schließen
-                        </Button>
-                    </Grid>
-                )}
-            </Grid>
-        </Box>
+            </ToolControls>
+        </>
     );
 };
 

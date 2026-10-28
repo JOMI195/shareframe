@@ -1,34 +1,17 @@
 import React from 'react';
-import {
-    Box,
-    Button,
-    List,
-    ListItemText,
-    IconButton,
-    Chip,
-    LinearProgress,
-    ListItemButton,
-    Grid,
-    Typography,
-    useMediaQuery,
-    useTheme,
-    Alert
-} from '@mui/material';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import CropIcon from '@mui/icons-material/Crop';
-import DeleteIcon from '@mui/icons-material/Delete';
+import { Alert } from '@mui/material';
 import { Area, Point } from 'react-easy-crop';
 import Cropper from './cropper/cropper';
 import PassepartoutHint from '../passepartoutHint';
-import { getReadablyFileSize } from '@/common/utils/files/fileSize.helpers';
-import { ImageStatus } from '../uploadDialog';
-import ImagePreviewThumb, { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
+import { ImageStatus } from '../useUploadQueue';
+import { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
+import { ToolCanvas, ToolControls } from '../editorLayout';
 
 interface ImageCroppingProps {
-    imageStatuses: ImageStatus[];
-    currentImageIndex: number | null;
-    selectImageForCropping: (index: number) => void;
-    removeImage: (index: number) => void;
+    currentImage: ImageStatus;
+    preview?: string;
+    previewError?: string;
+    markPreviewBroken: (id: string, reason: string) => void;
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     croppedAreaPixels: Area;
     crop: Point;
@@ -37,22 +20,13 @@ interface ImageCroppingProps {
     setZoom: React.Dispatch<React.SetStateAction<number>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
-    handleCrop: () => Promise<void>;
-    handleDialogClose: () => void;
-    showCloseButton: boolean;
-    handleBack: () => void;
-    allImagesUploaded: boolean;
-    sending: boolean;
-    imagePreviews: { [id: string]: string };
-    previewErrors: { [id: string]: string };
-    markPreviewBroken: (id: string, reason: string) => void;
 }
 
 const ImageCropping: React.FC<ImageCroppingProps> = ({
-    imageStatuses,
-    currentImageIndex,
-    selectImageForCropping,
-    removeImage,
+    currentImage,
+    preview,
+    previewError,
+    markPreviewBroken,
     setCroppedAreaPixels,
     croppedAreaPixels,
     crop,
@@ -61,229 +35,37 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     setZoom,
     rotation,
     setRotation,
-    handleCrop,
-    handleDialogClose,
-    showCloseButton,
-    handleBack,
-    allImagesUploaded,
-    sending,
-    imagePreviews,
-    previewErrors,
-    markPreviewBroken
 }) => {
-    const theme = useTheme();
-    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-    const imageListRef = React.useRef<HTMLUListElement>(null);
+    if (previewError) {
+        return (
+            <>
+                <ToolCanvas>
+                    <Alert severity="error" sx={{ width: '100%' }}>
+                        {`${currentImage.file.name}: ${previewError}`}
+                    </Alert>
+                </ToolCanvas>
+                <ToolControls />
+            </>
+        );
+    }
 
-    const totalImages = imageStatuses.length;
-    const uploadedImagesCount = imageStatuses.filter(status => status.status === 'uploaded').length;
-
-    const currentImage = currentImageIndex !== null ? imageStatuses[currentImageIndex] : null;
-
-    const handleScrollToImages = () => {
-        if (imageListRef.current) {
-            imageListRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    };
+    if (!preview) return <ToolCanvas />;
 
     return (
-        <Box sx={{ my: 2 }}>
-            <Grid container spacing={2}>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 5
-                    }}>
-                    <Box>
-                        <Typography variant="h6" sx={{ mb: 1 }}>
-                            Fotos: {uploadedImagesCount}/{totalImages} hochgeladen
-                        </Typography>
-                        <LinearProgress variant="determinate" value={(uploadedImagesCount / totalImages) * 100} sx={{ mb: 2 }} />
-                        <List component="ul" dense sx={{ maxHeight: 300, overflow: 'auto' }} ref={imageListRef}>
-                            {imageStatuses.map((imageStatus, index) => (
-                                <ListItemButton
-                                    key={imageStatus.id}
-                                    onClick={() => selectImageForCropping(index)}
-                                    selected={currentImageIndex === index}
-                                    disabled={imageStatus.status === 'uploaded'}
-                                    sx={{
-                                        mb: 1,
-                                        borderRadius: 1,
-                                        bgcolor: currentImageIndex === index ? 'primary.light' : (imageStatus.status === 'uploaded' ? 'success.light' : 'background.paper'),
-                                        boxShadow: 1
-                                    }}
-                                >
-                                    <Chip
-                                        label={index + 1}
-                                        size="small"
-                                        sx={{ mr: 1, bgcolor: 'primary.main', color: 'primary.contrastText' }}
-                                    />
-                                    <ImagePreviewThumb
-                                        src={imagePreviews[imageStatus.id]}
-                                        alt={imageStatus.file.name}
-                                        error={previewErrors[imageStatus.id]}
-                                        onError={() => markPreviewBroken(imageStatus.id, PREVIEW_ERROR_MESSAGE)}
-                                    />
-                                    <ListItemText
-                                        primary={imageStatus.file.name}
-                                        secondary={previewErrors[imageStatus.id]
-                                            ? <Typography style={{ color: '#f24444' }}>{previewErrors[imageStatus.id]}</Typography>
-                                            : getReadablyFileSize(imageStatus.file.size)}
-                                    />
-                                    {imageStatus.status === 'uploaded' && (
-                                        <IconButton edge="end" aria-label="uploaded" size="small" color="success">
-                                            <CheckCircleIcon />
-                                        </IconButton>
-                                    )}
-                                    {imageStatus.status === 'cropping' && (
-                                        <IconButton aria-label="cropping" size="small" color="primary">
-                                            <CropIcon />
-                                        </IconButton>
-                                    )}
-                                    {imageStatus.status !== 'uploaded' && (
-                                        <IconButton
-                                            edge="end"
-                                            aria-label="delete"
-                                            size="small"
-                                            onClick={(event) => {
-                                                event.stopPropagation();
-                                                removeImage(index);
-                                            }}
-                                        >
-                                            <DeleteIcon fontSize="small" />
-                                        </IconButton>
-                                    )}
-                                </ListItemButton>
-                            ))}
-                        </List>
-                    </Box>
-                </Grid>
-
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 7
-                    }}>
-                    <Box sx={{ maxHeight: 800, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                        {currentImage && imagePreviews[currentImage.id] && !previewErrors[currentImage.id] && (
-                            <Cropper
-                                src={imagePreviews[currentImage.id]}
-                                crop={crop}
-                                setCrop={setCrop}
-                                zoom={zoom}
-                                setZoom={setZoom}
-                                setCroppedAreaPixels={setCroppedAreaPixels}
-                                rotation={rotation}
-                                setRotation={setRotation}
-                                onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
-                            />
-                        )}
-                        {currentImage && !previewErrors[currentImage.id] && <PassepartoutHint />}
-                        {currentImage && previewErrors[currentImage.id] && (
-                            <Alert severity="error" sx={{ width: '100%' }}>
-                                {`${currentImage.file.name}: ${previewErrors[currentImage.id]}`}
-                            </Alert>
-                        )}
-                        {!currentImage && (
-                            <Typography variant="body2" sx={{
-                                color: "text.secondary"
-                            }}>
-                                Keine Fotos zum Zuschneiden ausgewählt.
-                            </Typography>
-                        )}
-                    </Box>
-                </Grid>
-            </Grid>
-
-            <Grid container spacing={2} sx={{ mt: { xs: 1, md: 3 }, alignItems: "center" }}>
-                {currentImage && (
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 6
-                        }}
-                        sx={{
-                            order: { xs: 1, md: 3 }
-                        }}>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            disabled={sending || croppedAreaPixels.width < 1 || croppedAreaPixels.height < 1}
-                            onClick={handleCrop}
-                        >
-                            Zuschneiden & weiter
-                        </Button>
-                    </Grid>
-                )}
-                {isMobile && (
-                    <Grid size={12} sx={{
-                        order: { xs: 2, md: 1 }
-                    }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={handleScrollToImages}
-                        >
-                            Zur Fotosübersicht scrollen
-                        </Button>
-                    </Grid>
-                )}
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}
-                    sx={{
-                        order: { xs: 3, md: 2 }
-                    }}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={handleBack}
-                    >
-                        Zurück zur Fotoauswahl
-                    </Button>
-                </Grid>
-                {allImagesUploaded && (
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 3
-                        }}
-                        sx={{
-                            order: { xs: 4, md: 1 }
-                        }}>
-                        <Button
-                            fullWidth
-                            variant="contained"
-                            color="success"
-                            onClick={handleDialogClose}
-                        >
-                            Alle Bilder hochgeladen - Fertig
-                        </Button>
-                    </Grid>
-                )}
-                {!allImagesUploaded && showCloseButton && (
-                    <Grid
-                        size={{
-                            xs: 12,
-                            md: 3
-                        }}
-                        sx={{
-                            order: { xs: 5, md: 1 }
-                        }}>
-                        <Button
-                            fullWidth
-                            variant="outlined"
-                            onClick={handleDialogClose}
-                            sx={{ order: { xs: 4, sm: 4 } }}
-                        >
-                            Dialog schließen
-                        </Button>
-                    </Grid>
-                )}
-            </Grid>
-        </Box>
+        <Cropper
+            src={preview}
+            crop={crop}
+            setCrop={setCrop}
+            zoom={zoom}
+            setZoom={setZoom}
+            setCroppedAreaPixels={setCroppedAreaPixels}
+            initialArea={croppedAreaPixels.width >= 1 ? croppedAreaPixels : undefined}
+            rotation={rotation}
+            setRotation={setRotation}
+            onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
+        >
+            <PassepartoutHint />
+        </Cropper>
     );
 };
 

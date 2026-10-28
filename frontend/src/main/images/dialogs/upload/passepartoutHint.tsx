@@ -14,7 +14,7 @@ const HintRow: React.FC<{ swatch: React.ReactNode; children: React.ReactNode }> 
     </Box>
 );
 
-const PassepartoutHint: React.FC<{ withTextArea?: boolean }> = ({ withTextArea = false }) => {
+const PassepartoutHint: React.FC = () => {
     const theme = useTheme();
 
     return (
@@ -34,18 +34,6 @@ const PassepartoutHint: React.FC<{ withTextArea?: boolean }> = ({ withTextArea =
             >
                 Schattierter Rand: wird wahrscheinlich vom Passepartout des Rahmens verdeckt.
             </HintRow>
-            {withTextArea && (
-                <HintRow
-                    swatch={
-                        <Box
-                            aria-hidden
-                            sx={{ ...swatchSx, border: 1, borderStyle: 'dashed', borderColor: 'text.secondary' }}
-                        />
-                    }
-                >
-                    Gestrichelte Linie: sichtbarer Bereich. Texte bleiben darin und brechen dort um.
-                </HintRow>
-            )}
         </Box>
     );
 };

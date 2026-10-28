@@ -95,11 +95,11 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
     return (
         <Box sx={{ width: '100%' }}>
             <Box sx={twoColumnsSx}>
-                <Button startIcon={<TextFieldsIcon />} sx={actionButtonSx} onClick={onAddText} disabled={disabled}>
-                    Text hinzufügen
+                <Button startIcon={<TextFieldsIcon />} sx={actionButtonSx} onClick={onAddText} disabled={disabled} aria-label="Text hinzufügen">
+                    Text
                 </Button>
-                <Button startIcon={<EventIcon />} sx={actionButtonSx} onClick={onAddDate} disabled={disabled}>
-                    Datum hinzufügen
+                <Button startIcon={<EventIcon />} sx={actionButtonSx} onClick={onAddDate} disabled={disabled} aria-label="Datum hinzufügen">
+                    Datum
                 </Button>
             </Box>
 

@@ -87,6 +87,16 @@ export const applyTransform = (
     width: overlay.width === null ? null : Math.round(overlay.width * transform.scale),
 });
 
+// A new crop changes the photo's pixel size; the frame aspect is fixed, so one factor fits both axes.
+export const scaleOverlays = (overlays: TextOverlay[], factor: number): TextOverlay[] =>
+    overlays.map((overlay) => ({
+        ...overlay,
+        x: overlay.x * factor,
+        y: overlay.y * factor,
+        fontSize: Math.max(MIN_FONT_SIZE, Math.round(overlay.fontSize * factor)),
+        width: overlay.width === null ? null : Math.round(overlay.width * factor),
+    }));
+
 export const applyWidthTransform = (
     overlay: TextOverlay,
     transform: { x: number; y: number; width: number }

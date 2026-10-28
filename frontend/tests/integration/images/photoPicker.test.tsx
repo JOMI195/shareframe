@@ -1,7 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import ImageUploadForm from '@/main/images/dialogs/upload/imageUpload/form/imageUploadForm';
+import StartScreen from '@/main/images/dialogs/upload/startScreen';
+import { usePhotoPicker } from '@/main/images/dialogs/upload/usePhotoPicker';
+import type { ImageStatus } from '@/main/images/dialogs/upload/useUploadQueue';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { makePage } from '@tests/fixtures';
 
@@ -12,10 +14,18 @@ const permissiveUser = () => userEvent.setup({ applyAccept: false });
 const file = (name: string, type: string, sizeMb = 1) =>
   new File([new Uint8Array(Math.round(sizeMb * 1024 * 1024))], name, { type });
 
+const Picker = ({ imageStatuses, addImages }: { imageStatuses: ImageStatus[]; addImages: (files: File[]) => void }) => {
+  const { inputProps, openPicker, selectFiles, isPreparing } = usePhotoPicker(imageStatuses, addImages);
+  return (
+    <>
+      <input {...inputProps} />
+      <StartScreen openPicker={openPicker} selectFiles={selectFiles} isPreparing={isPreparing} showCamera />
+    </>
+  );
+};
+
 const setup = (over: { existingCount?: number; selected?: number } = {}) => {
   const addImages = vi.fn();
-  const removeImage = vi.fn();
-  const markPreviewBroken = vi.fn();
   const imageStatuses = Array.from({ length: over.selected ?? 0 }, (_, i) => ({
     id: `id-${i}`,
     file: file(`vorhanden-${i}.jpg`, 'image/jpeg'),
@@ -23,14 +33,7 @@ const setup = (over: { existingCount?: number; selected?: number } = {}) => {
   }));
 
   const rendered = renderWithProviders(
-    <ImageUploadForm
-      addImages={addImages}
-      removeImage={removeImage}
-      imageStatuses={imageStatuses}
-      imagePreviews={{}}
-      previewErrors={{}}
-      markPreviewBroken={markPreviewBroken}
-    />,
+    <Picker imageStatuses={imageStatuses} addImages={addImages} />,
     {
       preloadedState: {
         entities: { images: { imagesPaginated: makePage([], { count: over.existingCount ?? 0 }) } },
@@ -39,10 +42,10 @@ const setup = (over: { existingCount?: number; selected?: number } = {}) => {
   );
 
   const input = rendered.container.querySelector('input[type="file"]') as HTMLInputElement;
-  return { ...rendered, addImages, removeImage, markPreviewBroken, input };
+  return { ...rendered, addImages, input };
 };
 
-describe('ImageUploadForm file input', () => {
+describe('photo picker file input', () => {
   it('accepts only the configured MIME types', () => {
     expect(setup().input).toHaveAttribute('accept', 'image/jpeg,image/png');
   });
@@ -115,7 +118,7 @@ describe('ImageUploadForm file input', () => {
 
 // Android Chrome releases the picker's staged file once the input is touched
 // again, so the bytes have to be copied before that can happen.
-describe('ImageUploadForm android file lifetime', () => {
+describe('photo picker android file lifetime', () => {
   it('hands the parent a detached copy, not the picked file', async () => {
     const { user, addImages, input } = setup();
     const picked = file('a.jpg', 'image/jpeg');
@@ -145,7 +148,7 @@ describe('ImageUploadForm android file lifetime', () => {
 
     await user.upload(input, [file('a.jpg', 'image/jpeg')]);
     const click = vi.spyOn(input, 'click').mockImplementation(() => {});
-    await user.click(getByRole('button', { name: /Fotos auswählen/ }));
+    await user.click(getByRole('button', { name: 'Fotos auswählen' }));
 
     expect(click).toHaveBeenCalled();
     expect(input.files).toHaveLength(0);
@@ -163,5 +166,26 @@ describe('ImageUploadForm android file lifetime', () => {
     await waitFor(() => expect(store.getState().ui.images.snackbar.alert.open).toBe(true));
     expect(store.getState().ui.images.snackbar.alert.message).toContain('kaputt.jpg: NotReadableError');
     expect(addImages).not.toHaveBeenCalled();
+  });
+});
+
+describe('photo picker source', () => {
+  it('asks for the rear camera when taking a photo', async () => {
+    const { user, input, getByRole } = setup();
+    vi.spyOn(input, 'click').mockImplementation(() => {});
+
+    await user.click(getByRole('button', { name: 'Foto aufnehmen' }));
+
+    expect(input).toHaveAttribute('capture', 'environment');
+  });
+
+  it('opens the gallery without capture after the camera was used', async () => {
+    const { user, input, getByRole } = setup();
+    vi.spyOn(input, 'click').mockImplementation(() => {});
+
+    await user.click(getByRole('button', { name: 'Foto aufnehmen' }));
+    await user.click(getByRole('button', { name: 'Fotos auswählen' }));
+
+    expect(input).not.toHaveAttribute('capture');
   });
 });

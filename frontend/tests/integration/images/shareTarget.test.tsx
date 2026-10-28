@@ -14,8 +14,8 @@ describe('photos shared into the app', () => {
     stubSharedFiles([{ name: 'a.jpg' }, { name: 'b.jpg' }]);
     const { store } = renderWithProviders(<UploadDialog />, { preloadedState: signedInState() });
 
-    expect(await screen.findByText('a.jpg')).toBeInTheDocument();
-    expect(screen.getByText('b.jpg')).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'a.jpg' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'b.jpg' })).toBeInTheDocument();
     expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });
 
@@ -24,8 +24,8 @@ describe('photos shared into the app', () => {
     stubSharedFiles(Array.from({ length: 16 }, (_, i) => ({ name: `p${i}.jpg` })));
     const { store } = renderWithProviders(<UploadDialog />, { preloadedState: signedInState() });
 
-    expect(await screen.findByText('p14.jpg')).toBeInTheDocument();
-    expect(screen.queryByText('p15.jpg')).not.toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'p14.jpg' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'p15.jpg' })).not.toBeInTheDocument();
     expect(store.getState().ui.images.snackbar.alert.message).toMatch(/Maximum von 15/);
   });
 

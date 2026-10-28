@@ -52,13 +52,10 @@ test.describe('share target', () => {
     await shareFromGallery(page);
 
     await expect(page).toHaveURL(/\/fotos\/$/);
-    await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'upload-fixture.jpg', exact: true })).toBeVisible();
     // A share is taken exactly once.
     expect(await page.evaluate(() => caches.has('share-target'))).toBe(false);
 
-    await page.getByRole('button', { name: 'Weiter zum Zuschneiden' }).click();
-    await page.getByRole('button', { name: 'Zuschneiden & weiter' }).click();
-    await page.getByRole('button', { name: 'Weiter zum Text' }).click();
     await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
     await page.getByRole('button', { name: 'Hochladen' }).click();
 
@@ -77,7 +74,7 @@ test.describe('share target', () => {
     });
 
     await expect(page).toHaveURL(/\/fotos\/$/);
-    await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'upload-fixture.jpg', exact: true })).toBeVisible();
   });
 
   // Chrome on Android sometimes delivers the share without its files.
@@ -104,7 +101,7 @@ test.describe('share target', () => {
     await expect(page).toHaveURL(/\/fotos\/$/);
     // The changelog and the upload dialog open in either order, and whichever comes second
     // hides the other from the accessibility tree. Nothing is clicked here, so it may stay.
-    await expect(page.getByText('upload-fixture.jpg')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'upload-fixture.jpg', exact: true })).toBeVisible();
   });
 });
 
