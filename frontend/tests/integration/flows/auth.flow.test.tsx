@@ -74,6 +74,35 @@ describe('signing in', () => {
     expect(await screen.findByRole('button', { name: 'anmelden' })).toBeInTheDocument();
   });
 
+  it('returns to the protected page after signing in', async () => {
+    const { user, router } = renderRoute('/fotos/', { preloadedState: buildState() });
+    await screen.findByRole('button', { name: 'anmelden' });
+
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
+  });
+
+  it('explains an expired session and returns to where it ended', async () => {
+    sessionStorage.setItem('sessionExpired', '/freunde/');
+    const { user, router } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
+
+    expect(await screen.findByText(/Sitzung ist abgelaufen/)).toBeInTheDocument();
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/freunde/'));
+  });
+
+  it('ignores a return path that leaves the app', async () => {
+    sessionStorage.setItem('sessionExpired', '//evil.example/');
+    const { user, router } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
+
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/dashboard/'));
+  });
+
+
   it('takes an already signed-in visitor straight to the dashboard', async () => {
     const { router } = renderRoute('/auth/sign-in/', { preloadedState: signedInState() });
 

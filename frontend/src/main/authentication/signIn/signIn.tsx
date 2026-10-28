@@ -12,7 +12,9 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+import { safeReturnPath } from "@/common/utils/safeReturnPath";
+import { SESSION_EXPIRED_KEY } from "@/services/httpService";
 import * as yup from "yup";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -36,6 +38,20 @@ const COOKIES_BLOCKED_MESSAGE = "Dein Browser blockiert Cookies für ShareFrame.
 export default function SignIn() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Set by the forced logout: tells the user why, and where they were.
+  const [expiredAt] = useState<string | null>(() => {
+    try {
+      const value = sessionStorage.getItem(SESSION_EXPIRED_KEY);
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+      return value;
+    } catch {
+      return null;
+    }
+  });
+  const returnTo =
+    safeReturnPath((location.state as { from?: string } | null)?.from ?? expiredAt) ?? getDashboardUrl();
 
   const api = useAppSelector(getApi);
 
@@ -55,15 +71,13 @@ export default function SignIn() {
     };
   }, [errorMessage]);
 
-  // Only for an already-signed-in visitor. The post-login redirect happens in
-  // onSubmit: watching the auth slice here would loop, since loadMyUserProfile
-  // mutates the very slice the effect depends on.
+  // Only for an already-signed-in visitor; the post-login redirect happens in onSubmit.
+  // The protected route loads the profile, so it is not requested here as well.
   useEffect(() => {
     if (localStorage.getItem("loggedIn") === "true" && areCookiesEnabled()) {
-      dispatch(loadMyUserProfile());
-      navigate(getDashboardUrl());
+      navigate(returnTo, { replace: true });
     }
-  }, [dispatch, navigate]);
+  }, [navigate, returnTo]);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -113,8 +127,9 @@ export default function SignIn() {
         setCookiesBlocked(true);
         return;
       }
-      dispatch(loadMyUserProfile());
-      navigate(getDashboardUrl());
+      // Awaited, so the protected route finds the profile and does not request it again.
+      await dispatch(loadMyUserProfile());
+      navigate(returnTo, { replace: true });
     },
   });
 
@@ -125,6 +140,11 @@ export default function SignIn() {
       }}>
         {"Anmelden"}
       </Typography>
+      {expiredAt !== null && (
+        <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
+          Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.
+        </Alert>
+      )}
       {cookiesBlocked && (
         <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
           {COOKIES_BLOCKED_MESSAGE}

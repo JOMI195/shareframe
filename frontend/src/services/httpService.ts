@@ -15,11 +15,17 @@ import {
 } from "@/assets/endpoints/api/authEndpoints";
 import { serverAvailable, serverUnavailable } from "@/store/ui/serverStatus/serverStatus.slice";
 import { classifyServerError } from "./serverStatus";
+import { clearLocalSession } from "@/common/utils/pwa/clearLocalSession";
+import { pushPromptReset } from "@/store/ui/settings/settings.slice";
+
+// Read by the sign-in page to say why the user is there and where to go back to.
+export const SESSION_EXPIRED_KEY = "sessionExpired";
 
 const MAX_AUTH_FAILURES = 2;
 let authFailureCount = 0;
 let isRefreshing = false;
 let serverDown = false;
+let loggingOut = false;
 // Must always settle, else callers awaiting a queued request hang forever.
 let refreshSubscribers: Array<(error?: unknown) => void> = [];
 
@@ -36,11 +42,21 @@ const settleRefreshSubscribers = (error?: unknown) => {
 const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
   const { dispatch } = store;
   serverDown = false;
+  loggingOut = false;
 
   // Only the server can clear the HttpOnly cookies.
   const handleLogout = async () => {
+    if (loggingOut) return;
+    loggingOut = true;
+    try {
+      sessionStorage.setItem(SESSION_EXPIRED_KEY, window.location.pathname + window.location.search);
+    } catch {
+      // Private mode: the sign-in page just shows no hint.
+    }
     // Awaited, else the navigation cancels the request.
     await axiosInstance.post(getTokenLogoutUrl()).catch(() => undefined);
+    await clearLocalSession();
+    dispatch(pushPromptReset());
     dispatch(signedOut());
     await persistor.flush();
     window.location.href = getAuthenticationUrl() + getSignInUrl();

@@ -6,6 +6,7 @@ import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch } from "@/store";
 import { deleteMyUserProfile } from "@/store/entities/authentication/authentication.actions";
+import { clearLocalSession } from "@/common/utils/pwa/clearLocalSession";
 import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import SettingsSection from "@/common/components/settings/settingsSection";
@@ -41,6 +42,7 @@ const Delete = () => {
         setLoading(false);
         setConfirmOpen(false);
         if (response === true) {
+            await clearLocalSession();
             navigate(getHomeUrl(), { replace: true });
         } else {
             form.resetForm();
