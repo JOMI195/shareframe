@@ -102,6 +102,7 @@ export default function PasswordReset() {
             <TextField
               id="email"
               name="email"
+              type="email"
               label={"Email"}
               value={resetPasswordForm.values.email}
               onBlur={resetPasswordForm.handleBlur}

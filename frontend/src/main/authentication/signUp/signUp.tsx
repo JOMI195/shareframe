@@ -206,7 +206,7 @@ export default function SignUp() {
               }
               onChange={signUpForm.handleChange}
               fullWidth
-              autoComplete='password'
+              autoComplete='new-password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
               slotProps={{
@@ -250,7 +250,7 @@ export default function SignUp() {
               }
               onChange={signUpForm.handleChange}
               fullWidth
-              autoComplete='re_password'
+              autoComplete='new-password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
               slotProps={{

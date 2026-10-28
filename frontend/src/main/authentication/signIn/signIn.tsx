@@ -40,16 +40,22 @@ export default function SignIn() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Set by the forced logout: tells the user why, and where they were.
+  // Set by the forced logout: tells the user why, and where they were. Kept until the
+  // sign-in succeeds, since the page can mount more than once on the way here.
   const [expiredAt] = useState<string | null>(() => {
     try {
-      const value = sessionStorage.getItem(SESSION_EXPIRED_KEY);
-      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
-      return value;
+      return sessionStorage.getItem(SESSION_EXPIRED_KEY);
     } catch {
       return null;
     }
   });
+  const forgetExpiry = () => {
+    try {
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+    } catch {
+      // Nothing was stored.
+    }
+  };
   const returnTo =
     safeReturnPath((location.state as { from?: string } | null)?.from ?? expiredAt) ?? getDashboardUrl();
 
@@ -129,6 +135,7 @@ export default function SignIn() {
       }
       // Awaited, so the protected route finds the profile and does not request it again.
       await dispatch(loadMyUserProfile());
+      forgetExpiry();
       navigate(returnTo, { replace: true });
     },
   });
@@ -167,6 +174,7 @@ export default function SignIn() {
             <TextField
               id="email"
               name="email"
+              type="email"
               label={"Email"}
               value={signInForm.values.email}
               onBlur={signInForm.handleBlur}
@@ -216,7 +224,7 @@ export default function SignIn() {
               }
               onChange={signInForm.handleChange}
               fullWidth
-              autoComplete="password"
+              autoComplete="current-password"
               variant="outlined"
               type={showPassword ? "text" : "password"}
               slotProps={{

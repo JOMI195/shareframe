@@ -128,7 +128,7 @@ export default function PasswordResetConfirmation() {
               }
               onChange={resetPasswordForm.handleChange}
               fullWidth
-              autoComplete="new_password"
+              autoComplete="new-password"
               variant="outlined"
               required
               type={showPassword.new_password ? "text" : "password"}
@@ -171,7 +171,7 @@ export default function PasswordResetConfirmation() {
               }
               onChange={resetPasswordForm.handleChange}
               fullWidth
-              autoComplete="re_new_password"
+              autoComplete="new-password"
               variant="outlined"
               required
               type={showPassword.new_password ? "text" : "password"}

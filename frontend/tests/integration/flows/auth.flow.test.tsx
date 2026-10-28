@@ -91,6 +91,7 @@ describe('signing in', () => {
     await signInAs(user);
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/freunde/'));
+    expect(sessionStorage.getItem('sessionExpired')).toBeNull();
   });
 
   it('ignores a return path that leaves the app', async () => {

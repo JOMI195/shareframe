@@ -107,8 +107,9 @@ const RegisterFrameDialog: React.FC = () => {
               <Grid container spacing={2}>
                 <Grid size={12}>
                   <TextField
-                    id='friend_code'
+                    id='frame_serial'
                     name='public_serial_number'
+                    autoComplete="off"
                     label="Seriennummer"
                     value={form.values.public_serial_number}
                     onBlur={form.handleBlur}
@@ -128,7 +129,10 @@ const RegisterFrameDialog: React.FC = () => {
                     variant='outlined'
                     slotProps={{
                       htmlInput: {
-                        style: { textTransform: 'uppercase' }
+                        style: { textTransform: 'uppercase' },
+                        autoCapitalize: 'characters',
+                        autoCorrect: 'off',
+                        spellCheck: false,
                       }
                     }}
                   />
