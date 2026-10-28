@@ -48,7 +48,7 @@ const FriendshipDeleteDialog = () => {
         >
             <DialogTitle>{`Freundschaft mit ${friendToDelete} wirklich beenden?`}</DialogTitle>
             <DialogContent>
-                <Typography sx={{ mb: 3 }}>Die Freundschaft kann mit einer Freundschaftanfrage jederzeit wieder hergestellt werden.</Typography>
+                <Typography sx={{ mb: 3 }}>Die Freundschaft kann mit einer Freundschaftsanfrage jederzeit wieder hergestellt werden.</Typography>
                 <Grid
                     container
                     spacing={2}

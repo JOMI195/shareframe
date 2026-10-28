@@ -113,7 +113,7 @@ describe('answering a request', () => {
 
 describe('sending a request', () => {
   const openDialog = async (user: ReturnType<typeof renderRoute>['user']) => {
-    await user.click(screen.getByRole('button', { name: /Freundschafsanfrage/ }));
+    await user.click(screen.getByRole('button', { name: /Freundschaftsanfrage/ }));
     return screen.findByLabelText('Freundschaftscode');
   };
 

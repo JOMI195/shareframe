@@ -159,10 +159,10 @@ describe('snackbars', () => {
 
 describe('entity actions drive the snackbars', () => {
   it.each([
-    ['imagesRequestFailed', imagesRequestFailed(), 'Bilder laden fehlgeschlagen', 'error'],
-    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Bild hochladen erfolgreich', 'success'],
-    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Bilder löschen erfolgreich', 'success'],
-    ['deleteImageFailed', deleteImageFailed(), 'Bilder löschen fehlgeschlagen', 'error'],
+    ['imagesRequestFailed', imagesRequestFailed(), 'Fotos laden fehlgeschlagen', 'error'],
+    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Foto hochladen erfolgreich', 'success'],
+    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Fotos löschen erfolgreich', 'success'],
+    ['deleteImageFailed', deleteImageFailed(), 'Fotos löschen fehlgeschlagen', 'error'],
   ])('%s shows an alert', (_name, action, message, severity) => {
     const state = reducer(initial(), action);
     expect(state.snackbar.alert).toEqual({ open: true, message, severity });
@@ -172,7 +172,7 @@ describe('entity actions drive the snackbars', () => {
   it('shows a loading snackbar while uploading', () => {
     expect(reducer(initial(), createImagePending()).snackbar.loading).toEqual({
       open: true,
-      message: 'Bild hochladen',
+      message: 'Foto hochladen',
     });
   });
 
@@ -182,10 +182,10 @@ describe('entity actions drive the snackbars', () => {
     const failedWith = (payload?: string) => ({ type: createImageFailed.type, payload });
 
     expect(reducer(initial(), failedWith('Datei zu groß')).snackbar.alert.message).toBe(
-      'Bild hochladen fehlgeschlagen: Datei zu groß',
+      'Foto hochladen fehlgeschlagen: Datei zu groß',
     );
     expect(reducer(initial(), failedWith()).snackbar.alert.message).toBe(
-      'Bild hochladen fehlgeschlagen',
+      'Foto hochladen fehlgeschlagen',
     );
   });
 });

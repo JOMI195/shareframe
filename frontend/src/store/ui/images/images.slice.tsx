@@ -80,7 +80,7 @@ const imagesSlice = createSlice({
       .addCase(imagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder laden fehlgeschlagen",
+          message: "Fotos laden fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -112,13 +112,13 @@ const imagesSlice = createSlice({
       .addCase(createImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bild hochladen",
+          message: "Foto hochladen",
         };
       })
       .addCase(createImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bild hochladen erfolgreich",
+          message: "Foto hochladen erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -130,8 +130,8 @@ const imagesSlice = createSlice({
         sliceState.snackbar.alert = {
           open: true,
           message: action.payload
-            ? `Bild hochladen fehlgeschlagen: ${action.payload}`
-            : "Bild hochladen fehlgeschlagen",
+            ? `Foto hochladen fehlgeschlagen: ${action.payload}`
+            : "Foto hochladen fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -142,13 +142,13 @@ const imagesSlice = createSlice({
       .addCase(deleteImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bilder löschen",
+          message: "Fotos löschen",
         };
       })
       .addCase(deleteImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder löschen erfolgreich",
+          message: "Fotos löschen erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -159,7 +159,7 @@ const imagesSlice = createSlice({
       .addCase(deleteImageFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder löschen fehlgeschlagen",
+          message: "Fotos löschen fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -182,7 +182,7 @@ const imagesSlice = createSlice({
       .addCase(sentImagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendete Bilder laden fehlgeschlagen",
+          message: "Gesendete Fotos laden fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -199,13 +199,13 @@ const imagesSlice = createSlice({
       .addCase(deactivateSentImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Gesendetes Foto deaktiveren",
+          message: "Gesendetes Foto deaktivieren",
         };
       })
       .addCase(deactivateSentImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendetes Foto deaktiveren erfolgreich",
+          message: "Gesendetes Foto deaktivieren erfolgreich",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -216,7 +216,7 @@ const imagesSlice = createSlice({
       .addCase(deactivateSentImageFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendetes Foto deaktiveren fehlgeschlagen",
+          message: "Gesendetes Foto deaktivieren fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
