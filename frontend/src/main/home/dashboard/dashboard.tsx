@@ -1,5 +1,6 @@
-import { Box, Button, Typography } from "@mui/material";
-import SendIcon from "@mui/icons-material/Send";
+import { Box, Typography } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
+import BottomFloatingActions from "@/common/components/bottomFloatingActions";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { uploadRequested } from "@/store/ui/images/images.slice";
@@ -46,20 +47,6 @@ const Dashboard: React.FC = () => {
             {/* Header Welcome Section */}
             <Header username={user.me.username} />
 
-            {/* The app's main task, one tap from the start page */}
-            <Button
-                variant="contained"
-                size="large"
-                startIcon={<SendIcon />}
-                onClick={() => {
-                    dispatch(uploadRequested());
-                    navigate("/" + getImageUrl());
-                }}
-                sx={{ mb: 3, py: 1.5 }}
-            >
-                Foto senden
-            </Button>
-
             {/* Quick Access Cards */}
             <Typography variant="subtitle1" sx={{
                 mb: 1
@@ -85,6 +72,17 @@ const Dashboard: React.FC = () => {
                     activityData={activityData}
                 />
             )}
+            <BottomFloatingActions
+                actionPrimary={{
+                    icon: <AddIcon />,
+                    label: "Foto hinzufügen",
+                    color: "primary",
+                    onClick: () => {
+                        dispatch(uploadRequested());
+                        navigate("/" + getImageUrl());
+                    },
+                }}
+            />
         </Box>
     );
 };

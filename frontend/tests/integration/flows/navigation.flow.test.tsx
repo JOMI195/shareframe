@@ -145,11 +145,11 @@ describe('start page', () => {
   });
 
 
-  it('opens the photo editor from the send button', async () => {
+  it('opens the photo editor from the floating button', async () => {
     server.use(...withFrames([]));
     const { user, router, store } = renderRoute('/dashboard/', { preloadedState: signedInState() });
 
-    await user.click(await screen.findByRole('button', { name: 'Foto senden' }));
+    await user.click(await screen.findByRole('button', { name: 'Foto hinzufügen' }));
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
     await waitFor(() => expect(store.getState().ui.images.dialogs.create.open).toBe(true));
