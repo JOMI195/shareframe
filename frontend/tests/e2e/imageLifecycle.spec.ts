@@ -169,6 +169,8 @@ test.describe('photo lifecycle', () => {
 
     await test.step('upload', async () => {
       await page.getByRole('button', { name: 'Hochladen' }).click();
+      // Uploading ends with an offer to send the photo; this flow sends it later.
+      await page.getByRole('button', { name: 'Später' }).click();
 
       // The dialog closes itself once every selected photo has been uploaded.
       await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });

@@ -125,11 +125,10 @@ test.describe('upload dialog on a phone', () => {
 
     await test.step('upload and clean up', async () => {
       await page.getByRole('button', { name: 'Hochladen' }).click();
+      await page.getByRole('button', { name: 'Später' }).click();
       await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
 
-      // On a phone the success message covers the floating actions until it is gone.
-      await page.getByRole('alert').getByRole('button', { name: 'Close' }).click();
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');

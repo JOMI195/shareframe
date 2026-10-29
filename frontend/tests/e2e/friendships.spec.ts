@@ -71,7 +71,7 @@ test.describe('friendships', () => {
     await friend.getByRole('button', { name: 'Freundschaft beenden' }).click();
 
     await expect(
-      page.getByText('Die Freundschaft kann mit einer Freundschaftanfrage jederzeit wieder hergestellt werden.'),
+      page.getByText('Die Freundschaft kann mit einer Freundschaftsanfrage jederzeit wieder hergestellt werden.'),
     ).toBeVisible();
     await page.getByRole('button', { name: 'Beenden bestätigen' }).click();
 

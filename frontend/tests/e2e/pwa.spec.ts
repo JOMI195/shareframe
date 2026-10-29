@@ -52,6 +52,7 @@ test.describe('share target', () => {
 
     await page.getByRole('button', { name: 'Weiter zur Vorschau' }).click();
     await page.getByRole('button', { name: 'Hochladen' }).click();
+    await page.getByRole('button', { name: 'Später' }).click();
 
     await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
     await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
