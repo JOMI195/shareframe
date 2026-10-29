@@ -94,7 +94,7 @@ describe('avatar settings', () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'me.png', { type: 'image/png' });
     await user.upload(screen.getByLabelText('Profilbild auswählen'), file);
     const dialog = await screen.findByRole('dialog', { name: 'Profilbild zuschneiden' });
-    await user.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Schließen' }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Profilbild zuschneiden' })).not.toBeInTheDocument(),

@@ -171,4 +171,14 @@ describe('sending a request', () => {
     );
     expect(store.getState().ui.friendships.dialogs.create.open).toBe(true);
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = await openFriendships();
+
+    await openDialog(user);
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.friendships.dialogs.create.open).toBe(false);
+  });
 });

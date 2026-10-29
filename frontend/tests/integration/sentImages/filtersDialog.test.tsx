@@ -52,4 +52,13 @@ describe('FiltersDialog', () => {
     expect(senderSelect()).toHaveTextContent('Alle Sender');
     expect(screen.getAllByRole('combobox')[3]).toHaveTextContent('Alle Empfänger');
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = render();
+
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.sentImages.dialogs.filter.open).toBe(false);
+  });
 });

@@ -1,9 +1,10 @@
-import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel, FormControlLabel, Switch } from "@mui/material";
+import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, Box, FormControl, Select, MenuItem, InputLabel, FormControlLabel, Switch } from "@mui/material";
 import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
+import FormActions from '@/common/components/settings/formActions';
 import { closeFilterDialog, getDialogs, resetFilters, setHideToYouFilter, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
 import { ShippingFilter, StatusFilter } from "@/types";
 import { useState } from "react";
@@ -106,28 +107,14 @@ const FiltersDialog = () => {
             fullScreen={!matches}
             open={filterDialog.open}
             onClose={handleDialogClose}
-            aria-describedby="filter-dialog"
+            aria-labelledby="filter-dialog-title"
             maxWidth="sm"
             fullWidth
             slots={{
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            <AppBar sx={{ position: 'relative' }} color="inherit">
-                <Toolbar>
-                    <Typography sx={{ flex: 1 }} variant="h6" component="div">
-                        Filter
-                    </Typography>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={handleDialogClose}
-                        aria-label="cancel"
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
+            <DialogHeader title="Filter" titleId="filter-dialog-title" onClose={handleDialogClose} />
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
                     <Typography
@@ -231,56 +218,24 @@ const FiltersDialog = () => {
                     </Grid>
                 </Box>
 
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{ mt: 2 }}
-                >
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleDialogClose}
-                            color="primary"
-                            variant="outlined"
-                            fullWidth
-                        >
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleClearFilters}
-                            color="inherit"
-                            variant="outlined"
-                            fullWidth
-                            disabled={loading}
-                        >
-                            Filter löschen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleApplyFilters}
-                            color="primary"
-                            variant="contained"
-                            fullWidth
-                            disabled={loading}
-                        >
-                            Filter anwenden
-                        </Button>
-                    </Grid>
-                </Grid>
+                <FormActions>
+                    <Button
+                        onClick={handleClearFilters}
+                        color="inherit"
+                        variant="outlined"
+                        disabled={loading}
+                    >
+                        Filter löschen
+                    </Button>
+                    <Button
+                        onClick={handleApplyFilters}
+                        color="primary"
+                        variant="contained"
+                        disabled={loading}
+                    >
+                        Filter anwenden
+                    </Button>
+                </FormActions>
             </DialogContent>
         </AppDialog>
     );

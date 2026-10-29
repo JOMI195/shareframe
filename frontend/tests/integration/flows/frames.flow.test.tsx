@@ -155,6 +155,16 @@ describe('registering a frame', () => {
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.severity).toBe('error'));
     expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = await openFrames();
+
+    await openDialog(user);
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.frames.dialogs.register.open).toBe(false);
+  });
 });
 
 describe('unregistering a frame', () => {

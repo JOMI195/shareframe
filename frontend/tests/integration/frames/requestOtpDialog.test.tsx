@@ -117,4 +117,13 @@ describe('RequestOTPDialog', () => {
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.open).toBe(true));
     expect(otpField().value).toBe('');
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = render();
+
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.frames.dialogs.requestOTP.open).toBe(false);
+  });
 });

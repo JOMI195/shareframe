@@ -6,10 +6,10 @@ import { useFormik, getIn } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IRegisterFrameForm, isIFrameResponse } from "@/types";
-import { AppBar, Box, DialogTitle, Grid, IconButton, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Grid, Stack, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { closeRegisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.slice";
 import { registerFrame } from "@/store/entities/frames/frames.actions";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 
 const RegisterFrameDialog: React.FC = () => {
@@ -58,32 +58,14 @@ const RegisterFrameDialog: React.FC = () => {
       fullScreen={matches ? false : true}
       open={open}
       onClose={handleDialogClose}
-      aria-describedby='dialog-slide-upload'
+      aria-labelledby='register-frame-title'
       maxWidth="xs"
       fullWidth
       slots={{
         transition: matches ? ZoomTransition : SlideTransition
       }}
     >
-      {!matches ? (
-        <AppBar sx={{ position: 'relative' }} color='inherit'>
-          <Toolbar>
-            <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-              Bilderrahmen hinzufügen
-            </Typography>
-            <IconButton
-              edge='end'
-              color='inherit'
-              onClick={handleDialogClose}
-              aria-label='cancel'
-            >
-              <CloseIcon />
-            </IconButton>
-          </Toolbar>
-        </AppBar>
-      ) : (
-        <DialogTitle>Bilderrahmen hinzufügen</DialogTitle>
-      )}
+      <DialogHeader title="Bilderrahmen hinzufügen" titleId="register-frame-title" onClose={handleDialogClose} />
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -145,21 +127,6 @@ const RegisterFrameDialog: React.FC = () => {
                     variant='contained'
                   >
                     {'Hinzufügen'}
-                  </Button>
-                </Grid>
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 12
-                  }}>
-                  <Button
-                    type="button"
-                    fullWidth
-                    variant="outlined"
-                    color="secondary"
-                    onClick={handleDialogClose}
-                  >
-                    {"abbrechen"}
                   </Button>
                 </Grid>
               </Grid>

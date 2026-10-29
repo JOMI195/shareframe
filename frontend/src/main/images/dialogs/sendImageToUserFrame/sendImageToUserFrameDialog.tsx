@@ -3,13 +3,9 @@ import AppDialog from '@/common/components/appDialog';
 import {
     Button,
     DialogContent,
-    Grid,
     Typography,
     useMediaQuery,
     useTheme,
-    AppBar,
-    Toolbar,
-    IconButton,
     Select,
     MenuItem,
     FormControl,
@@ -26,7 +22,8 @@ import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import UserAvatar from "@/common/components/userAvatar";
 import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
+import FormActions from '@/common/components/settings/formActions';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import ExpirationSelector from './expirationSelector';
@@ -163,31 +160,19 @@ const SendImageToUserFrameDialog = () => {
             fullScreen={matches ? false : true}
             open={sendDialog.open}
             onClose={handleDialogClose}
-            aria-describedby='send-image-dialog'
+            aria-labelledby='send-image-title'
             maxWidth="md"
             fullWidth
             slots={{
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            {`${photoWord} senden`}
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                            disabled={isSendingInProgress}
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
+            <DialogHeader
+                title={`${photoWord} senden`}
+                titleId="send-image-title"
+                onClose={handleDialogClose}
+                closeDisabled={isSendingInProgress}
+            />
             <DialogContent>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
                     {imagesToSend.map((image) => (
@@ -270,51 +255,21 @@ const SendImageToUserFrameDialog = () => {
                     onExpirationHoursChange={setExpirationHours}
                 />
 
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 3
-                    }}>
-                    <Grid
-                        sx={{ order: { xs: 4, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
-                        <Button
-                            onClick={handleDialogClose}
-                            color="primary"
-                            variant="outlined"
-                            fullWidth
-                            disabled={isSendingInProgress}
-                        >
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        sx={{ order: { xs: 3, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
+                <Box sx={{ mt: 3 }}>
+                    <FormActions>
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
                             disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null}
                             variant="contained"
-                            fullWidth
                         >
                             {isSendingInProgress
                                 ? `Sende ${imagesToSend.length} ${photoWord} an ${selectedReceiverUsernames.length} Empfänger...`
                                 : `${imagesToSend.length} ${photoWord} an ${selectedReceiverUsernames.length} Empfänger ${isScheduled ? "planen" : "senden"}`
                             }
                         </Button>
-                    </Grid>
-                </Grid>
+                    </FormActions>
+                </Box>
             </DialogContent>
         </AppDialog>
     );

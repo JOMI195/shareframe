@@ -1,7 +1,6 @@
 import React, { lazy, Suspense } from 'react';
 import {
     Box,
-    Button,
     Typography,
 } from '@mui/material';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
@@ -51,17 +50,6 @@ const NewChangelogDialog: React.FC = () => {
                         {newestChangelog.content}
                     </MarkdownImagesIntercept>
                 </Suspense>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 1, width: '100%', position: 'sticky', bottom: 0, right: 0 }}>
-                <Button
-                    onClick={handleClose}
-                    variant="contained"
-                    color="primary"
-                    sx={{ display: { xs: 'none', sm: 'block' } }}
-                >
-                    Schließen
-                </Button>
             </Box>
         </ShareframeMainDialog>
     );

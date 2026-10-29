@@ -1,7 +1,7 @@
 import React from 'react';
-import { AppBar, Box, IconButton, Toolbar, Typography } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import { Box, IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import DialogHeader from '@/common/components/dialogHeader';
 import { FRAME_ASPECT_RATIO } from './frameAspectBox';
 import { CANVAS_MARGIN } from './frameSize';
 
@@ -19,30 +19,18 @@ interface EditorLayoutProps {
 
 const EditorLayout: React.FC<EditorLayoutProps> = ({ title, subtitle, onClose, onBack, actions, strip, footer, children }) => (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', minHeight: 0 }}>
-        <AppBar position="relative" color="inherit" elevation={1}>
-            <Toolbar variant="dense" sx={{ gap: 1, minHeight: 56 }}>
-                {onBack ? (
-                    <IconButton edge="start" color="inherit" onClick={onBack} aria-label="Zurück zum Bearbeiten">
-                        <ArrowBackIcon />
-                    </IconButton>
-                ) : (
-                    <IconButton edge="start" color="inherit" onClick={onClose} aria-label="Schließen">
-                        <CloseIcon />
-                    </IconButton>
-                )}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography id="upload-dialog-title" variant="h6" component="h2" noWrap sx={{ lineHeight: 1.2 }}>
-                        {title}
-                    </Typography>
-                    {subtitle && (
-                        <Typography variant="caption" component="p" noWrap sx={{ color: 'text.secondary' }}>
-                            {subtitle}
-                        </Typography>
-                    )}
-                </Box>
-                {actions}
-            </Toolbar>
-        </AppBar>
+        <DialogHeader
+            title={title}
+            subtitle={subtitle}
+            titleId="upload-dialog-title"
+            onClose={onBack ? undefined : onClose}
+            start={onBack && (
+                <IconButton edge="start" color="inherit" onClick={onBack} aria-label="Zurück zum Bearbeiten">
+                    <ArrowBackIcon />
+                </IconButton>
+            )}
+            actions={actions}
+        />
         {strip}
         <Box sx={{ flex: 1, minHeight: 0, overflowY: 'auto', display: 'flex', flexDirection: 'column', px: { xs: 1, md: 3 } }}>
             {children}

@@ -260,4 +260,13 @@ describe('SendImageToUserFrameDialog', () => {
     expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(true);
     expect(screen.getByRole('button', { name: /an 1 Empfänger senden/ })).toBeEnabled();
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = render();
+
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(false);
+  });
 });
