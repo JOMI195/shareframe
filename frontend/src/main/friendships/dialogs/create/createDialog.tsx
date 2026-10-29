@@ -144,7 +144,7 @@ const FriendshipCreateDialog: React.FC = () => {
                 <IconButton
                   onClick={handleCopyCode}
                   className="ignore-clickaway"
-                  aria-label="Freundschaftscode kopieren"
+                  aria-label="Meinen Code kopieren"
                   sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
                 >
                   <ContentCopyIcon />
