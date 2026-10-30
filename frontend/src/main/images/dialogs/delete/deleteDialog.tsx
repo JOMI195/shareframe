@@ -43,7 +43,7 @@ const ImageDeleteDialog = () => {
             onConfirm={handleConfirmDelete}
             onCancel={handleDialogClose}
         >
-            {`Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen und nicht mehr gesendet.`}
+            {`${imagesToDelete.length > 1 ? "Die Fotos werden" : "Das Foto wird"} aus deiner Galerie entfernt und kann nicht wiederhergestellt werden. Bereits gesendete Fotos bleiben auf den Rahmen und in deinen Aktivitäten, bis sie ablaufen, und werden 14 Tage danach endgültig gelöscht. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen.`}
         </ConfirmDialog>
     );
 };

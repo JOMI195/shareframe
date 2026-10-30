@@ -254,7 +254,7 @@ describe('deleting photos', () => {
     await selectFirstPhoto(user);
     await clickSpeedDialAction(user, 'Ausgewählte Fotos löschen');
 
-    expect(await screen.findByText(/Das Löschen von Fotos ist unwiderruflich/)).toBeInTheDocument();
+    expect(await screen.findByText(/Bereits gesendete Fotos bleiben auf den Rahmen und in deinen Aktivitäten/)).toBeInTheDocument();
     expect(screen.getByText(/Geplante Sendungen dieses Fotos werden abgebrochen/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Löschen' }));
 
