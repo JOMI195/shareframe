@@ -47,7 +47,7 @@ test.describe('friendships', () => {
 
     // The open dialog marks the rest of the page aria-hidden, so the snackbar is
     // matched by its text rather than its role.
-    await expect(page.getByText('Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Zu diesem Freundescode haben wir niemanden gefunden. Prüfe den Code.')).toBeVisible({ timeout: 30_000 });
     // The dialog stays open so the code can be corrected.
     await expect(page.getByLabel('Freundschaftscode')).toBeVisible();
   });
@@ -59,7 +59,7 @@ test.describe('friendships', () => {
     await page.getByLabel('Freundschaftscode').fill('ZZZZ9999');
     await page.getByRole('button', { name: 'Hinzufügen' }).click();
 
-    await expect(page.getByText('Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.')).toBeVisible({ timeout: 30_000 });
+    await expect(page.getByText('Zu diesem Freundescode haben wir niemanden gefunden. Prüfe den Code.')).toBeVisible({ timeout: 30_000 });
     await expect(page.getByLabel('Freundschaftscode')).toBeVisible();
   });
 

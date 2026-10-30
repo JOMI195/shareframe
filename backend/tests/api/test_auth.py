@@ -77,7 +77,10 @@ def test_unsafe_requests_need_the_csrf_header(alice):
     response = alice.patch(ME_URL, {"username": "nope"}, format="json")
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "CSRF Failed: Request rejected."}
+    assert response.json() == {
+        "detail": "CSRF Failed: Request rejected.",
+        "code": "permission_denied",
+    }
 
 
 def test_a_csrf_rejection_does_not_echo_the_origin(alice):

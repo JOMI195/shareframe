@@ -120,13 +120,13 @@ test.describe('password', () => {
     await signIn(page, dave);
     await openUserSettings(page, 'Passwort');
 
-    await page.getByLabel('Aktuelles Passwort').fill(dave.password);
+    await page.getByLabel('Aktuelles Passwort', { exact: true }).fill(dave.password);
     await page.getByLabel('Neues Passwort', { exact: true }).fill(NEW_PASSWORD);
-    await page.getByLabel('Neues Passwort wiederholen').fill(NEW_PASSWORD);
+    await page.getByLabel('Neues Passwort wiederholen', { exact: true }).fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Speichern' }).click();
 
     // The form empties itself once the backend accepted the change.
-    await expect(page.getByLabel('Aktuelles Passwort')).toHaveValue('', { timeout: 30_000 });
+    await expect(page.getByLabel('Aktuelles Passwort', { exact: true })).toHaveValue('', { timeout: 30_000 });
     await expectMail(dave.email, { subject: 'ShareFrame - Passwort geändert' });
 
     await signOut(page);
@@ -150,10 +150,11 @@ test.describe('password', () => {
     await signIn(page, erin);
     await openUserSettings(page, 'Passwort');
 
-    await page.getByLabel('Aktuelles Passwort').fill('Falsches2026Passwort');
+    await page.getByLabel('Aktuelles Passwort', { exact: true }).fill('Falsches2026Passwort');
     await page.getByLabel('Neues Passwort', { exact: true }).fill('Anderes2026Passwort');
-    await page.getByLabel('Neues Passwort wiederholen').fill('Anderes2026Passwort');
+    await page.getByLabel('Neues Passwort wiederholen', { exact: true }).fill('Anderes2026Passwort');
     await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByText('Das Passwort stimmt nicht.')).toBeVisible();
 
     // The session survives: the old password still gets us back in.
     await signOut(page);
@@ -184,7 +185,7 @@ test.describe('email address', () => {
     const panel = page.getByRole('tabpanel');
     await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
     await panel.getByLabel('Neue E-Mail-Adresse').fill(NEW_EMAIL);
-    await panel.getByLabel('Aktuelles Passwort').fill(frank.password);
+    await panel.getByLabel('Aktuelles Passwort', { exact: true }).fill(frank.password);
     await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
 
     await expect(panel.getByText(`Bestätigungslink an ${NEW_EMAIL}`)).toBeVisible({ timeout: 30_000 });
@@ -228,7 +229,7 @@ test.describe('email address', () => {
     const panel = page.getByRole('tabpanel');
     await panel.getByRole('button', { name: 'E-Mail ändern' }).click();
     await panel.getByLabel('Neue E-Mail-Adresse').fill(dave.email);
-    await panel.getByLabel('Aktuelles Passwort').fill(erin.password);
+    await panel.getByLabel('Aktuelles Passwort', { exact: true }).fill(erin.password);
     await panel.getByRole('button', { name: 'Bestätigungslink senden' }).click();
 
     await expect(page.getByText('Diese E-Mail ist bereits vergeben.')).toBeVisible();
@@ -290,7 +291,7 @@ test.describe('account deletion', () => {
     await panel.getByRole('button', { name: 'Konto löschen', exact: true }).click();
     await page.getByRole('dialog').getByRole('button', { name: 'Endgültig löschen' }).click();
 
-    await expect(page.getByText('Löschen des Nutzerkontos fehlgeschlagen')).toBeVisible();
+    await expect(panel.getByText('Das Passwort stimmt nicht.')).toBeVisible();
     await expect(page).toHaveURL(/\/settings\/user\//);
 
     await page.goto('/dashboard/');

@@ -1,3 +1,4 @@
+import { errorText } from "@/common/utils/errors/errorMessages";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 import {
@@ -162,10 +163,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(passwordResetRejected, (auth) => {
+      .addCase(passwordResetRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Email zum Passwort zurücksetzen fehlgeschlagen",
+          message: errorText(action, "Email zum Passwort zurücksetzen fehlgeschlagen"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -190,10 +191,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(passwordUpdateRejected, (auth) => {
+      .addCase(passwordUpdateRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Vergabe eines neuen Passwort fehlgeschlagen",
+          message: errorText(action, "Vergabe eines neuen Passwort fehlgeschlagen"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -302,10 +303,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(userUpdateRejected, (auth) => {
+      .addCase(userUpdateRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzerupdate fehlgeschlagen",
+          message: errorText(action, "Nutzerupdate fehlgeschlagen"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -330,10 +331,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(userDeleteRejected, (auth) => {
+      .addCase(userDeleteRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Löschen des Nutzerkontos fehlgeschlagen",
+          message: errorText(action, "Löschen des Nutzerkontos fehlgeschlagen"),
           severity: "error",
         };
         auth.snackbar.loading = {

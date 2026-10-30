@@ -126,7 +126,7 @@ class TestGetVersion:
         response = board.get(self.url("9.9.9"))
 
         assert response.status_code == 404
-        assert response.json() == {"detail": "Not found."}
+        assert response.json() == {"detail": "Not found.", "code": "not_found"}
 
     def test_a_release_for_another_group_is_a_404(self, board, releases):
         ReleaseFactory(version="4.0.0", groups=[FrameGroupFactory()])

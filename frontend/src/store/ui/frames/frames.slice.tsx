@@ -1,3 +1,4 @@
+import { errorText } from "@/common/utils/errors/errorMessages";
 import { RootState } from "@/store";
 import { framesRequestFailed, registerFramePending, registerFrameFailed, registerFrameFulfilled, unregisterFramePending, unregisterFrameFulfilled, unregisterFrameFailed, frameOTPRequested, frameOTPRecieved, frameOTPRequestFailed } from "@/store/entities/frames/frames.slice";
 import { AlertColor } from "@mui/material";
@@ -68,10 +69,10 @@ const framesSlice = createSlice({
           message: "",
         };
       })
-      .addCase(registerFrameFailed, (sliceState) => {
+      .addCase(registerFrameFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilderrahmen registrieren fehlgeschlagen",
+          message: errorText(action, "Bilderrahmen registrieren fehlgeschlagen"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -96,10 +97,10 @@ const framesSlice = createSlice({
           message: "",
         };
       })
-      .addCase(unregisterFrameFailed, (sliceState) => {
+      .addCase(unregisterFrameFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilderrahmen vom Nutzer lösen fehlgeschlagen",
+          message: errorText(action, "Bilderrahmen vom Nutzer lösen fehlgeschlagen"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -124,10 +125,10 @@ const framesSlice = createSlice({
           message: "",
         };
       })
-      .addCase(frameOTPRequestFailed, (sliceState) => {
+      .addCase(frameOTPRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Generierung von OTP fehlgeschlagen",
+          message: errorText(action, "Generierung von OTP fehlgeschlagen"),
           severity: "error",
         };
         sliceState.snackbar.loading = {

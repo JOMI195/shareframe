@@ -136,6 +136,23 @@ describe('sending a request', () => {
     );
   });
 
+  it('says why a request was refused', async () => {
+    server.use(
+      mswHttp.post(apiUrl(friendshipEndpoints.getFriendshipsSendRequestUrl()), () =>
+        HttpResponse.json({ detail: 'Friendship request already sent', code: 'friend_request_pending' }, { status: 400 }),
+      ),
+    );
+    const { user, store } = await openFriendships();
+
+    const field = await openDialog(user);
+    await user.type(field, 'SEEDB001');
+    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+
+    await waitFor(() =>
+      expect(store.getState().ui.friendships.snackbar.alert.message).toBe('Du hast dieser Person schon eine Anfrage geschickt.'),
+    );
+  });
+
   it('insists on an eight character code', async () => {
     const bodies: unknown[] = [];
     server.use(

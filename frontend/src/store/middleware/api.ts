@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import http from "@/services/httpService.ts";
 import * as actions from "@/common/utils/constants/api.constants.tsx";
 import { ApiRequestPayload } from "@/common/utils/constants/api.constants.tsx";
+import { errorMessageFor } from "@/common/utils/errors/errorMessages";
 
 interface ApiRequestAction {
   type: string;
@@ -45,6 +46,14 @@ const getErrorMessage = (error: unknown): string => {
   }
 
   return error.message ?? "Unbekannter Fehler";
+};
+
+const getErrorCode = (error: unknown): string | undefined => {
+  if (!isAxiosError(error)) return undefined;
+  const data: unknown = error.response?.data;
+  if (!data || typeof data !== "object") return undefined;
+  const code = (data as Record<string, unknown>).code;
+  return typeof code === "string" ? code : undefined;
 };
 
 const apiMiddleware: Middleware =
@@ -91,12 +100,14 @@ const apiMiddleware: Middleware =
           }
           return onSuccessPayload ?? response.data;
         } catch (error) {
-          const message = getErrorMessage(error);
+          const code = getErrorCode(error);
+          const message = errorMessageFor(code) ?? getErrorMessage(error);
           dispatch(actions.apiFailed(message));
           if (onError) {
             dispatch({
               type: onError,
               payload: onErrorPayload ?? message,
+              meta: { code },
             });
           }
           return onErrorPayload ?? message;

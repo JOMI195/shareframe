@@ -59,6 +59,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_code_unknown"
 
     def test_a_user_who_is_not_searchable_cannot_be_found(self, alice):
         response = alice.post(
@@ -68,6 +69,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_code_unknown"
 
     def test_a_request_to_yourself_is_rejected(self, alice):
         response = alice.post(
@@ -78,6 +80,7 @@ class TestSendRequest:
 
         assert response.status_code == 400
         assert "yourself" in response.data["detail"]
+        assert response.data["code"] == "friend_request_self"
 
     def test_a_second_pending_request_is_rejected(self, alice):
         response = alice.post(
@@ -88,6 +91,7 @@ class TestSendRequest:
 
         assert response.status_code == 400
         assert "already sent" in response.data["detail"]
+        assert response.data["code"] == "friend_request_pending"
 
     def test_an_existing_friendship_blocks_a_new_request(self, alice):
         response = alice.post(
@@ -97,6 +101,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friendship_exists"
 
 
 class TestAcceptRequest:
@@ -119,6 +124,7 @@ class TestAcceptRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_request_gone"
 
     def test_an_already_accepted_request_cannot_be_accepted_again(self, alice):
         accepted = friendship_between(seed.ALICE, seed.BOB, "accepted")

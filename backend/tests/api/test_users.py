@@ -146,6 +146,7 @@ class TestDeleteAccount:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "wrong_password"
         assert User.objects.filter(pk=user.pk).exists()
 
     def test_a_wrong_password_sends_no_mail(self, client_as):
@@ -242,6 +243,7 @@ class TestSetPassword:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "wrong_password"
 
     def test_the_two_new_passwords_must_agree(self, client_as):
         user = UserFactory(is_active=True)
@@ -257,6 +259,7 @@ class TestSetPassword:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "password_mismatch"
 
 
 class TestResetPasswordConfirm:
@@ -277,6 +280,15 @@ class TestResetPasswordConfirm:
 
         assert self.confirm(client, user).status_code == 204
         assert User.objects.get(pk=user.pk).check_password("brand-new-pass1")
+
+    def test_a_spent_token_is_coded(self, client):
+        user = UserFactory(is_active=True)
+        self.confirm(client, user)
+
+        response = self.confirm(client, user)
+
+        assert response.status_code == 400
+        assert response.data["code"] == "reset_link_invalid"
 
     def test_the_reset_is_audited(self, client, caplog):
         user = UserFactory(is_active=True)

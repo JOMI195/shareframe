@@ -105,7 +105,7 @@ describe('friendships ui snackbars', () => {
         "rejectFriendshipRequestFailed": "error: Freundschaftsanfrage ablehnen fehlgeschlagen",
         "rejectFriendshipRequestFulfilled": "success: Freundschaftsanfrage ablehnen erfolgreich",
         "rejectFriendshipRequestPending": "loading: Freundschaftsanfrage ablehnen",
-        "sendFriendshipRequestFailed": "error: Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.",
+        "sendFriendshipRequestFailed": "error: Die Anfrage konnte nicht gesendet werden.",
         "sendFriendshipRequestFulfilled": "success: Freundschaftsanfrage erfolgreich",
         "sendFriendshipRequestPending": "loading: Freundschaftsanfrage",
       }

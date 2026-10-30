@@ -50,3 +50,10 @@ def test_the_api_root_does_not_list_endpoints(client):
 
     assert response.status_code == 404
     assert response.json() == {"detail": "Not found."}
+
+
+def test_a_drf_error_carries_its_code(client):
+    response = client.get("/api/frames/")
+
+    assert response.status_code == 401
+    assert response.json()["code"] == "not_authenticated"

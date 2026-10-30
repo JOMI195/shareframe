@@ -178,4 +178,19 @@ describe('failed requests', () => {
     expect(dispatch.mock.calls[0][0].type).toBe(apiFailed.type);
     expect(dispatch.mock.calls[0][0].payload).toBeTruthy();
   });
+
+  it('translates a known error code and passes it on as meta', async () => {
+    const { dispatch, result } = await fail(
+      HttpResponse.json({ detail: 'Friendship request already sent', code: 'friend_request_pending' }, { status: 400 }),
+    );
+
+    expect(result).toBe('Du hast dieser Person schon eine Anfrage geschickt.');
+    expect(dispatch.mock.calls[1][0].meta).toEqual({ code: 'friend_request_pending' });
+  });
+
+  it('keeps the backend text for an unknown code', async () => {
+    const { result } = await fail(HttpResponse.json({ detail: 'Kaputt', code: 'something_new' }, { status: 400 }));
+
+    expect(result).toBe('Kaputt');
+  });
 });

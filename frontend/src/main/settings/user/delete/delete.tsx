@@ -12,6 +12,7 @@ import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import SettingsSection from "@/common/components/settings/settingsSection";
 import FormActions from "@/common/components/settings/formActions";
+import { errorMessageFor } from "@/common/utils/errors/errorMessages";
 
 const validationSchema = yup.object({
     password: yup.string().required("Dieses Feld wird benötigt"),
@@ -25,6 +26,7 @@ const Delete = () => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [failure, setFailure] = useState<string | null>(null);
 
     const form = useFormik({
         initialValues: { password: "" },
@@ -34,6 +36,7 @@ const Delete = () => {
 
     const handleCancel = () => {
         setEditing(false);
+        setFailure(null);
         form.resetForm();
     };
 
@@ -46,7 +49,9 @@ const Delete = () => {
             await clearLocalSession();
             navigate(getHomeUrl(), { replace: true });
         } else {
-            form.resetForm();
+            const wrongPassword = errorMessageFor("wrong_password");
+            form.setFieldValue("password", "", false);
+            setFailure(wrongPassword && response === wrongPassword ? wrongPassword : "Dein Konto konnte nicht gelöscht werden. Versuch es später noch einmal.");
         }
     };
 
@@ -84,10 +89,13 @@ const Delete = () => {
                             name="password"
                             label="Passwort"
                             value={form.values.password}
-                            onChange={form.handleChange}
+                            onChange={(event) => {
+                                setFailure(null);
+                                form.handleChange(event);
+                            }}
                             onBlur={form.handleBlur}
-                            error={form.touched.password && Boolean(form.errors.password)}
-                            helperText={getIn(form.touched, "password") && getIn(form.errors, "password")}
+                            error={Boolean(failure) || (form.touched.password && Boolean(form.errors.password))}
+                            helperText={failure ?? (getIn(form.touched, "password") && getIn(form.errors, "password"))}
                             fullWidth
                             autoComplete="current-password"
                             variant="outlined"
@@ -97,7 +105,7 @@ const Delete = () => {
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             <IconButton
-                                                aria-label="Passwort anzeigen"
+                                                aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 onMouseDown={(event) => event.preventDefault()}
                                                 edge="end"
