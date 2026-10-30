@@ -9,6 +9,7 @@ import { signedInState } from '@tests/helpers/preloadedState';
 import { makeFrame, makeFriendship, makeImage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server } from '@tests/mocks/server';
+import { openSendImageToUserFrameDialog } from '@/store/ui/images/images.slice';
 
 const photo = makeImage({ id: 5 });
 
@@ -268,5 +269,42 @@ describe('SendImageToUserFrameDialog', () => {
     await user.click(screen.getByRole('button', { name: 'Schließen' }));
 
     expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(false);
+  });
+
+  it('links to the activity page once something went out', async () => {
+    recordSends();
+    const { user, store } = render();
+    await chooseReceivers(user, 'bob');
+
+    await user.click(screen.getByRole('button', { name: /an 1 Empfänger senden/ }));
+
+    await waitFor(() =>
+      expect(store.getState().ui.images.snackbar.alert.link).toEqual({ label: 'Ansehen', to: '/aktivitaeten/' }),
+    );
+  });
+
+  it('refuses a custom duration that is not a positive whole number', async () => {
+    const { user } = render();
+    await chooseReceivers(user, 'bob');
+
+    await user.click(screen.getByRole('radio', { name: 'Eigene Dauer' }));
+    await user.clear(screen.getByLabelText('Dauer'));
+    await user.type(screen.getByLabelText('Dauer'), '0');
+
+    expect(screen.getByText(/Eine ganze Zahl von 1 bis/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /an 1 Empfänger senden/ })).toBeDisabled();
+  });
+
+  // The selector keeps its own mode, so it must not show a custom value the next send ignores.
+  it('starts with the preset duration again after closing', async () => {
+    const { user, store } = render();
+    await user.click(screen.getByRole('radio', { name: 'Eigene Dauer' }));
+
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    act(() => {
+      store.dispatch(openSendImageToUserFrameDialog({ images: [photo] }));
+    });
+
+    expect(await screen.findByRole('radio', { name: 'Vorgaben' })).toBeChecked();
   });
 });

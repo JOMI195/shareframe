@@ -35,6 +35,7 @@ import { fetchFramesIfStale } from '@/store/entities/frames/frames.actions';
 import { getApi as getFramesApi, getFrames } from '@/store/entities/frames/frames.slice';
 import AuthenticatedImage from '@/common/components/authenticatedImage';
 import { getVariantUrl } from '@/common/utils/images';
+import { getActivityUrl } from '@/assets/endpoints/app/appEndpoints';
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -64,7 +65,7 @@ const SendImageToUserFrameDialog = () => {
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
-    const [expirationHours, setExpirationHours] = useState<number>(DEFAULT_EXPIRATION_HOURS);
+    const [expirationHours, setExpirationHours] = useState<number | null>(DEFAULT_EXPIRATION_HOURS);
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
     const [scheduledError, setScheduledError] = useState<string | null>(null);
@@ -110,7 +111,7 @@ const SendImageToUserFrameDialog = () => {
     };
 
     const handleConfirmSend = async () => {
-        if (imagesToSend.length === 0 || selectedReceiverUsernames.length === 0) {
+        if (imagesToSend.length === 0 || selectedReceiverUsernames.length === 0 || expirationHours === null) {
             return;
         }
 
@@ -142,7 +143,11 @@ const SendImageToUserFrameDialog = () => {
 
         // One summary instead of a snackbar per photo and receiver, where a late success hid a failure.
         const summary = sendSummary(results, imagesToSend.length, selectedReceiverUsernames.length, isScheduled);
-        dispatch(sendToFramesFinished({ message: summary.message, severity: summary.severity }));
+        dispatch(sendToFramesFinished({
+            message: summary.message,
+            severity: summary.severity,
+            ...(!summary.allFailed && { link: { label: "Ansehen", to: "/" + getActivityUrl() } }),
+        }));
         setIsSendingInProgress(false);
 
         // Nothing went out, so the choices stay for another try.
@@ -185,7 +190,7 @@ const SendImageToUserFrameDialog = () => {
                     ))}
                 </Box>
                 <Typography sx={{ mb: 3 }}>
-                    {`Wähle die Empfänger. ${imagesToSend.length === 1 ? "Das Foto erscheint" : "Die Fotos erscheinen"} auf allen ihren Bilderrahmen, bis die Ablaufzeit endet oder der Empfänger ${imagesToSend.length === 1 ? "es" : "sie"} deaktiviert.`}
+                    {`Wähle die Empfänger. ${imagesToSend.length === 1 ? "Das Foto erscheint" : "Die Fotos erscheinen"} auf allen ihren Bilderrahmen, bis die Anzeigedauer endet oder der Empfänger ${imagesToSend.length === 1 ? "es" : "sie"} deaktiviert.`}
                 </Typography>
 
                 {availableReceivers.length === 0 && (
@@ -250,9 +255,12 @@ const SendImageToUserFrameDialog = () => {
                     disabled={isSendingInProgress}
                 />
 
+                {/* Remounted per opening, so its own mode and value start fresh with the parent's. */}
                 <ExpirationSelector
+                    key={String(sendDialog.open)}
                     expirationHours={expirationHours}
                     onExpirationHoursChange={setExpirationHours}
+                    disabled={isSendingInProgress}
                 />
 
                 <Box sx={{ mt: 3 }}>
@@ -260,7 +268,7 @@ const SendImageToUserFrameDialog = () => {
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
-                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null}
+                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null || expirationHours === null}
                             variant="contained"
                         >
                             {isSendingInProgress

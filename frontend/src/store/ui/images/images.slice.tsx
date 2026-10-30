@@ -4,6 +4,7 @@ import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { SnackbarLink } from "@/common/components/snackbars/alertSnackbar";
 
 export type ScheduledSentImageAction = 'sendNow' | 'cancel';
 
@@ -23,7 +24,7 @@ type SliceState = {
   // Set from another page to open the editor once the photos page is shown.
   uploadRequested: boolean;
   snackbar: {
-    alert: { open: boolean; message: string; severity: AlertColor };
+    alert: { open: boolean; message: string; severity: AlertColor; link?: SnackbarLink };
     loading: { open: boolean; message: string; };
   };
 };
@@ -52,8 +53,8 @@ const showLoading = (sliceState: SliceState, message: string) => {
   sliceState.snackbar.loading = { open: true, message };
 };
 
-const showAlert = (sliceState: SliceState, message: string, severity: AlertColor) => {
-  sliceState.snackbar.alert = { open: true, message, severity };
+const showAlert = (sliceState: SliceState, message: string, severity: AlertColor, link?: SnackbarLink) => {
+  sliceState.snackbar.alert = { open: true, message, severity, ...(link && { link }) };
   sliceState.snackbar.loading = { open: false, message: "" };
 };
 
@@ -328,8 +329,8 @@ const imagesSlice = createSlice({
         severity: action.payload.severity,
       };
     },
-    sendToFramesFinished: (images, action: PayloadAction<{ message: string; severity: AlertColor }>) => {
-      showAlert(images, action.payload.message, action.payload.severity);
+    sendToFramesFinished: (images, action: PayloadAction<{ message: string; severity: AlertColor; link?: SnackbarLink }>) => {
+      showAlert(images, action.payload.message, action.payload.severity, action.payload.link);
     },
     alertSnackbarClosed: (images) => {
       images.snackbar.alert = {

@@ -9,16 +9,20 @@ describe('toExpirationHours', () => {
   it.each([
     ['hours stay as they are', '5', 'hours' as const, 5],
     ['days become hours', '3', 'days' as const, 72],
-    ['a blank value falls back to one', '', 'hours' as const, 1],
-    ['a non-numeric value falls back to one', 'abc', 'days' as const, 24],
-    ['a decimal is truncated', '2.9', 'hours' as const, 2],
+    ['the upper bound is allowed', '365', 'days' as const, 365 * 24],
   ])('%s', (_name, value, unit, expected) => {
     expect(toExpirationHours(value, unit)).toBe(expected);
   });
 
-  // The number input allows 0, which parseInt keeps but `|| 1` rewrites.
-  it('treats zero as one hour', () => {
-    expect(toExpirationHours('0', 'hours')).toBe(1);
+  it.each([
+    ['blank', ''],
+    ['not a number', 'abc'],
+    ['zero', '0'],
+    ['negative', '-2'],
+    ['a fraction', '2.9'],
+    ['above the limit', '366'],
+  ])('refuses a value that is %s', (_name, value) => {
+    expect(toExpirationHours(value, 'hours')).toBeNull();
   });
 });
 

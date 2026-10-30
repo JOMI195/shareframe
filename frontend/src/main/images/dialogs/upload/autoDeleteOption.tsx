@@ -23,12 +23,12 @@ const AutoDeleteOption: React.FC<AutoDeleteOptionProps> = ({ checked, onChange }
             label={
                 <Box>
                     <Typography variant="body1">
-                        Kurze Verwendungszeit aktivieren
+                        Nach {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Std. aus der Galerie löschen
                     </Typography>
                     <Typography variant="body2" sx={{
                         color: "text.secondary"
                     }}>
-                        Das Bild muss innerhalb von {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Stunden an deine Freunde gesendet werden und wird anschließend automatisch gelöscht. Gesendete Bilder werden trotz der Löschung weiterhin bis zum Ablauf normal angezeigt.
+                        Das Foto verschwindet nach {IMAGES_AUTO_DELETE_INTERVAL_HOURS} Stunden nur aus deiner Galerie. Bereits gesendete und geplante Fotos bleiben in der Aktivität und auf den Bilderrahmen, bis ihre Anzeigedauer endet.
                     </Typography>
                 </Box>
             }

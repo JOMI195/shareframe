@@ -200,7 +200,7 @@ test.describe('photo lifecycle', () => {
       // Real tiles only: the loading skeletons share the class but take no clicks.
       await page.locator('.MuiImageListItem-root[role="button"]').first().click();
       await expect(page.getByRole('dialog').filter({ hasText: 'Gesendetes Foto' })).toBeVisible();
-      await runSpeedDialAction(page, 'Foto deaktivieren');
+      await page.getByRole('button', { name: 'Foto deaktivieren' }).click();
       await page.getByRole('button', { name: 'Deaktivieren', exact: true }).click();
 
       await expect(page.getByRole('button', { name: 'Deaktivieren', exact: true })).toBeHidden({
@@ -228,7 +228,7 @@ test.describe('photo lifecycle', () => {
       await expect(newest.getByText('Geplant')).toBeVisible({ timeout: 30_000 });
 
       await newest.click();
-      await runSpeedDialAction(page, 'Vorzeitig, sofort senden');
+      await runSpeedDialAction(page, 'Jetzt senden');
       await page.getByRole('button', { name: 'Jetzt senden', exact: true }).click();
 
       await expect(newest.getByText('Aktiv')).toBeVisible({ timeout: 30_000 });

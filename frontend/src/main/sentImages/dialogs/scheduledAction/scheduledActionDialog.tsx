@@ -38,17 +38,13 @@ const SentImageScheduledActionDialog = () => {
         dispatch(closeScheduledSentImageDialog());
     };
 
+    // A failed request resolves with its error message; the preview then stays open.
     const handleConfirm = async () => {
-        try {
-            if (sentImage !== undefined) {
-                await dispatch(isSendNow ? sendScheduledSentImageNow(sentImage.id) : cancelScheduledSentImage(sentImage.id));
-                dispatch(closePreviewSentImageDialog());
-            }
-        } catch {
-            // cleanup happens in finally
-        } finally {
-            handleDialogClose();
+        if (sentImage !== undefined) {
+            const result: unknown = await dispatch(isSendNow ? sendScheduledSentImageNow(sentImage.id) : cancelScheduledSentImage(sentImage.id));
+            if (typeof result !== "string") dispatch(closePreviewSentImageDialog());
         }
+        handleDialogClose();
     };
 
     return (

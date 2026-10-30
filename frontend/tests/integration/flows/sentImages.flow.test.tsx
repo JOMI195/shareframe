@@ -195,7 +195,7 @@ describe('deactivating a shared photo', () => {
     const { user } = await openActivity();
 
     await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
-    await clickSpeedDialAction(user, 'Foto deaktivieren');
+    await user.click(await screen.findByRole('button', { name: 'Foto deaktivieren' }));
     await user.click(await screen.findByRole('button', { name: 'Deaktivieren' }));
 
     await waitFor(() => expect(calls).toEqual(['deactivate']));
@@ -241,7 +241,7 @@ describe('a scheduled photo', () => {
     );
     const { user } = await openScheduled();
 
-    await clickSpeedDialAction(user, 'Vorzeitig, sofort senden');
+    await clickSpeedDialAction(user, 'Jetzt senden');
     expect(calls).toEqual([]);
     await user.click(await screen.findByRole('button', { name: 'Jetzt senden' }));
 
@@ -258,7 +258,7 @@ describe('a scheduled photo', () => {
     );
     const { user } = await openScheduled();
 
-    await clickSpeedDialAction(user, 'Geplantes Senden abbrechen');
+    await user.click(await screen.findByRole('button', { name: 'Geplantes Senden abbrechen' }));
     await user.click(await screen.findByRole('button', { name: 'Sendung abbrechen' }));
 
     await waitFor(() => expect(calls).toEqual(['cancel']));
@@ -269,7 +269,7 @@ describe('a scheduled photo', () => {
     const { user } = await openScheduled();
     await user.hover(await screen.findByRole('button', { name: 'Aktionen' }));
 
-    await screen.findByText('Geplantes Senden abbrechen');
+    await screen.findByText('Jetzt senden');
     expect(screen.queryByText('Foto deaktivieren')).not.toBeInTheDocument();
   });
 });

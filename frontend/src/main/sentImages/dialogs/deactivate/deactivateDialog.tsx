@@ -20,17 +20,13 @@ const SentImageDeactivateDialog = () => {
         dispatch(closeDeactivateSendImageFrameDialog());
     };
 
+    // A failed request resolves with its error message; the preview then stays open.
     const handleConfirmDeactivate = async () => {
-        try {
-            if (sentImageToDeactivate !== undefined) {
-                await dispatch(deactivateSentImage(sentImageToDeactivate.id));
-                dispatch(closePreviewSentImageDialog());
-            }
-        } catch {
-            // cleanup happens in finally
-        } finally {
-            handleDialogClose();
+        if (sentImageToDeactivate !== undefined) {
+            const result: unknown = await dispatch(deactivateSentImage(sentImageToDeactivate.id));
+            if (typeof result !== "string") dispatch(closePreviewSentImageDialog());
         }
+        handleDialogClose();
     };
 
     return (

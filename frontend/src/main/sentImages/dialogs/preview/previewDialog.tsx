@@ -48,34 +48,37 @@ const ImagePreviewDialog = () => {
         }
     }
 
-    const dialogActions: DialogAction[] = isScheduled ? [
-        {
-            icon: <SendIcon />,
-            onClick: () => openScheduledActionDialog('sendNow'),
-            label: 'Vorzeitig, sofort senden',
-            color: 'primary'
-        },
+    const downloadAction: DialogAction = {
+        icon: <DownloadIcon />,
+        onClick: handleDownloadFileButtonClick,
+        label: 'Foto herunterladen',
+        color: 'primary',
+    };
+
+    // What can still change comes first; downloading is always possible.
+    const [primaryAction, ...dialogActions]: DialogAction[] = isScheduled ? [
         {
             icon: <CancelScheduleSendIcon />,
             onClick: () => openScheduledActionDialog('cancel'),
             label: 'Geplantes Senden abbrechen',
             color: 'error'
-        }
+        },
+        {
+            icon: <SendIcon />,
+            onClick: () => openScheduledActionDialog('sendNow'),
+            label: 'Jetzt senden',
+            color: 'primary'
+        },
+        downloadAction,
     ] : state === 'active' ? [
         {
             icon: <HideImageIcon />,
             onClick: disableSentImageButtonClickHandle,
             label: 'Foto deaktivieren',
             color: 'error'
-        }
-    ] : [];
-
-    const primaryAction: DialogAction = {
-        icon: <DownloadIcon />,
-        onClick: handleDownloadFileButtonClick,
-        label: 'Foto herunterladen',
-        color: 'primary',
-    };
+        },
+        downloadAction,
+    ] : [downloadAction];
 
     return (
         <ShareframeMainDialog
