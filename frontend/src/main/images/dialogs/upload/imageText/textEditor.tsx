@@ -1,6 +1,8 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Image as KonvaImage, Label, Layer, Rect, Stage, Tag, Text, Transformer } from 'react-konva';
+import { Box as MuiBox } from '@mui/material';
+import { visuallyHidden } from '@mui/utils';
 import { useTheme } from '@mui/material/styles';
 import type { Box } from 'konva/lib/shapes/Transformer';
 import { Bounds, passepartoutShade, safeArea } from '../passepartout';
@@ -25,6 +27,12 @@ const CLAMP_TOLERANCE = 0.5;
 // Konva subtracts the padding again before wrapping, rounding noise must not break a line that fits.
 const WRAP_TOLERANCE = 0.5;
 const EDITOR_ONLY = 'editor-only';
+const ARROW_KEYS: Record<string, { x: number; y: number }> = {
+    ArrowLeft: { x: -1, y: 0 },
+    ArrowRight: { x: 1, y: 0 },
+    ArrowUp: { x: 0, y: -1 },
+    ArrowDown: { x: 0, y: 1 },
+};
 export const PHOTO = 'photo';
 
 const textStyle = (overlay: Pick<TextOverlay, 'text' | 'fontSize' | 'font' | 'bold'>) => ({
@@ -199,6 +207,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
     const transformerRef = useRef<Konva.Transformer>(null);
     const nodesRef = useRef(new Map<string, Konva.Label>());
     const [displayWidth, setDisplayWidth] = useState(0);
+    const hintId = useId();
 
     useEffect(() => {
         const container = containerRef.current;
@@ -254,27 +263,42 @@ const TextEditor: React.FC<TextEditorProps> = ({
     };
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (selectedId && (e.key === 'Delete' || e.key === 'Backspace')) {
+        const selected = overlays.find((overlay) => overlay.id === selectedId);
+        if (!selected) return;
+        if (e.key === 'Delete' || e.key === 'Backspace') {
             e.preventDefault();
-            onDelete(selectedId);
+            onDelete(selected.id);
+            return;
         }
+        const direction = ARROW_KEYS[e.key];
+        if (!direction) return;
+        e.preventDefault();
+        // The clamp in OverlayText keeps the text inside the passepartout.
+        const step = Math.max(1, Math.round(image.width / 100)) * (e.shiftKey ? 10 : 1);
+        onChange({ ...selected, x: selected.x + direction.x * step, y: selected.y + direction.y * step });
     };
 
     return (
-        <div
+        <MuiBox
             ref={containerRef}
             tabIndex={0}
             onKeyDown={handleKeyDown}
+            role="application"
             aria-label="Text-Editor"
-            style={{
+            aria-describedby={hintId}
+            sx={{
                 width: '100%',
                 aspectRatio: `${image.width} / ${image.height}`,
                 position: 'relative',
                 outline: 'none',
+                '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
                 backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
                 touchAction: 'none',
             }}
         >
+            <span id={hintId} style={visuallyHidden}>
+                Pfeiltasten verschieben den ausgewählten Text, mit Umschalt in größeren Schritten. Entf löscht ihn.
+            </span>
             {backdrop && (
                 <img
                     src={backdrop.url}
@@ -322,7 +346,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                     </Layer>
                 </Stage>
             )}
-        </div>
+        </MuiBox>
     );
 };
 

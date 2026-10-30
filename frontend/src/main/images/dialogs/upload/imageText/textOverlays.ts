@@ -41,7 +41,7 @@ export const FONTS: Record<TextFont, { label: string; family: string }> = {
 };
 
 const FONT_SIZE_RATIO = 1 / 8;
-const MIN_FONT_SIZE = 8;
+export const MIN_FONT_SIZE = 8;
 const BACKGROUND_PADDING_RATIO = 0.2;
 const BACKGROUND_RADIUS_RATIO = 0.15;
 const CASCADE_STEPS = 4;
