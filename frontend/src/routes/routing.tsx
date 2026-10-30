@@ -5,10 +5,7 @@ import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
 import { getActivityUrl, getChangelogsUrl, getContactUrl, getDashboardUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
-import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
-import PrivacyPolicy from '@/main/legals/privacyPolicy';
-import Impressum from '@/main/legals/impressum';
 import FeatureSelectorWrapper from '@/common/components/featureSelectorWrapper';
 import authenticationRoutes from '@/main/authentication/authentication';
 import settingsRoutes from '@/main/settings/settings';
@@ -59,11 +56,11 @@ export const routes = [
                 children: [
                   {
                     path: getPrivacyPolicyUrl(),
-                    element: <PrivacyPolicy />,
+                    ...lazyPage(() => import('@/main/legals/privacyPolicy')),
                   },
                   {
                     path: getImprintUrl(),
-                    element: <Impressum />,
+                    ...lazyPage(() => import('@/main/legals/impressum')),
                   },
                   {
                     path: getUnsubscribePageUrl() + ":token",
@@ -81,7 +78,7 @@ export const routes = [
                 children: [
                   {
                     path: getContactUrl(),
-                    element: <ContactForm />,
+                    ...lazyPage(() => import('@/main/contact/contactForm')),
                   },
                 ],
               },
