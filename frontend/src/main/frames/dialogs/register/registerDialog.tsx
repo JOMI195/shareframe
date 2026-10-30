@@ -11,6 +11,7 @@ import { closeRegisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.s
 import { registerFrame } from "@/store/entities/frames/frames.actions";
 import DialogHeader from '@/common/components/dialogHeader';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
+import { formatSerial } from "./serial";
 
 const RegisterFrameDialog: React.FC = () => {
   const theme = useTheme();
@@ -77,7 +78,7 @@ const RegisterFrameDialog: React.FC = () => {
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Bitte gebe hier die Seriennummer des Bilderrahmens ein, welchen du hinzufügen möchtest
+              Gib die Seriennummer ein, die du zusammen mit deinem Bilderrahmen bekommen hast.
             </Typography>
             <Box
               component='form'
@@ -95,17 +96,14 @@ const RegisterFrameDialog: React.FC = () => {
                     label="Seriennummer"
                     value={form.values.public_serial_number}
                     onBlur={form.handleBlur}
-                    onChange={(e) => {
-                      const uppercaseValue = e.target.value.toUpperCase();
-                      form.setFieldValue('public_serial_number', uppercaseValue);
-                    }}
+                    onChange={(e) => form.setFieldValue('public_serial_number', formatSerial(e.target.value))}
                     error={
                       form.touched.public_serial_number &&
                       Boolean(form.errors.public_serial_number)
                     }
                     helperText={
-                      getIn(form.touched, "public_serial_number") &&
-                      getIn(form.errors, "public_serial_number")
+                      (getIn(form.touched, "public_serial_number") &&
+                        getIn(form.errors, "public_serial_number")) || "Format XXXX-XXXX-XXXX-XXXX, die Bindestriche kommen von selbst"
                     }
                     fullWidth
                     variant='outlined'

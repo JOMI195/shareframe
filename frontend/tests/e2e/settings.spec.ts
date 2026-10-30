@@ -53,7 +53,7 @@ test.describe('personal information', () => {
 
     await dialog.getByRole('button', { name: 'Vergrößern' }).click();
     await dialog.getByRole('button', { name: 'Nach rechts verschieben' }).click();
-    await dialog.getByRole('button', { name: 'Reset' }).click();
+    await dialog.getByRole('button', { name: 'Zurücksetzen' }).click();
     await expect(zoom).toHaveAttribute('aria-valuenow', '1');
 
     for (let i = 0; i < 5; i++) await dialog.getByRole('button', { name: 'Vergrößern' }).click();

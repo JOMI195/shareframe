@@ -57,7 +57,7 @@ test.describe('upload dialog on a phone', () => {
         page.getByRole('button', { name: 'Nach unten verschieben' }),
         page.getByRole('button', { name: 'Nach rechts verschieben' }),
         page.getByRole('button', { name: 'Zentrieren' }),
-        page.getByRole('button', { name: 'Reset' }),
+        page.getByRole('button', { name: 'Zurücksetzen' }),
         page.getByRole('button', { name: 'Weiter zur Vorschau' }),
       ]) {
         await expect(control).toBeInViewport({ ratio: 1 });

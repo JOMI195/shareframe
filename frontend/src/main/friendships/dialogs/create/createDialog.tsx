@@ -10,6 +10,7 @@ import { IFriendshipCreateForm, isIFriendship } from "@/types";
 import { sendFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
 import { Box, Divider, Grid, IconButton, Paper, Stack, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
+import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import DialogHeader from '@/common/components/dialogHeader';
@@ -65,6 +66,16 @@ const FriendshipCreateDialog: React.FC = () => {
         ? { message: "Eigener Freundescode in die Zwischenablage kopiert", severity: "success" }
         : { message: "Kopieren fehlgeschlagen", severity: "error" }
     ));
+  };
+
+  const canShare = typeof navigator.share === "function";
+
+  const handleShareCode = async () => {
+    try {
+      await navigator.share({ title: "ShareFrame", text: `Mein Freundescode für ShareFrame: ${friendshipCode}` });
+    } catch {
+      // Closing the share sheet rejects as well.
+    }
   };
 
   return (
@@ -125,14 +136,25 @@ const FriendshipCreateDialog: React.FC = () => {
                 >
                   {friendshipCode}
                 </Typography>
-                <IconButton
-                  onClick={handleCopyCode}
-                  className="ignore-clickaway"
-                  aria-label="Meinen Code kopieren"
-                  sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
-                >
-                  <ContentCopyIcon />
-                </IconButton>
+                <Box sx={{ display: 'flex' }}>
+                  {canShare && (
+                    <IconButton
+                      onClick={handleShareCode}
+                      aria-label="Meinen Code teilen"
+                      sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  )}
+                  <IconButton
+                    onClick={handleCopyCode}
+                    className="ignore-clickaway"
+                    aria-label="Meinen Code kopieren"
+                    sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Box>
               </Box>
             </Stack>
           </Paper>

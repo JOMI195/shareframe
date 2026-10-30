@@ -83,6 +83,8 @@ const ThumbStrip: React.FC<ThumbStripProps> = ({
                                 bgcolor: 'background.paper',
                                 boxShadow: 1,
                                 '&:hover': { bgcolor: 'background.paper' },
+                                // A 44px touch target around the small visible button.
+                                '&::after': { content: '""', position: 'absolute', inset: -11 },
                             }}
                         >
                             <CloseIcon sx={{ fontSize: 14 }} />

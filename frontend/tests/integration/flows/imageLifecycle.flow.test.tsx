@@ -51,8 +51,7 @@ const openLibrary = async (images = library) => {
 
 const enterSelectionMode = async (user: ReturnType<typeof renderRoute>['user']) => {
   await user.click((await screen.findByTestId('HighlightAltIcon')).closest('button')!);
-  // The intro backdrop covers the gallery until it is dismissed.
-  await user.click(document.querySelector('.MuiBackdrop-root')!);
+  await screen.findByText('Tippe Fotos an, um sie auszuwählen');
 };
 
 const selectFirstPhoto = async (user: ReturnType<typeof renderRoute>['user']) => {
@@ -215,6 +214,21 @@ describe('sending photos to a frame', () => {
     expect(bodies[0].reciever_username).toBe('bob');
     expect(bodies[0].image_id).toBe(library[0].id);
     await waitFor(() => expect(store.getState().ui.images.dialogs.selection.open).toBe(false));
+  });
+
+  it('counts the selection and selects the whole page at once', async () => {
+    const { user, store } = await openLibrary();
+    await enterSelectionMode(user);
+
+    await selectFirstPhoto(user);
+    expect(screen.getByText('1 ausgewählt')).toBeInTheDocument();
+    expect(document.querySelectorAll('.MuiImageListItem-root')[0]).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(screen.getByRole('button', { name: 'Alle auswählen' }));
+    expect(store.getState().ui.images.dialogs.selection.selectedImages).toHaveLength(library.length);
+
+    await user.click(screen.getByRole('button', { name: 'Auswahl aufheben' }));
+    expect(screen.getByText('Nichts ausgewählt')).toBeInTheDocument();
   });
 
   it('cannot act on an empty selection', async () => {

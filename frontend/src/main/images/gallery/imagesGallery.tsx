@@ -26,6 +26,7 @@ import DataNotFound from "@/common/components/dataNotFound";
 import { onActivateKey } from "@/common/utils/keyboard";
 import SelectableElement from "../../../common/components/selectableElement";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import SelectionBar from "./selectionBar";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -129,6 +130,7 @@ const ImagesGallery: React.FC = () => {
     return (
         <Stack spacing={2}>
             <FilterControls />
+            {isSelectionDialogOpen && <SelectionBar />}
             {isSmallScreen && imagesPaginated.page > 1 && renderPagination()}
             {showSkeleton ? renderLoadingSkeleton() :
                 imagesPaginated.results.length !== 0 ?
@@ -141,6 +143,7 @@ const ImagesGallery: React.FC = () => {
                                     role="button"
                                     tabIndex={0}
                                     aria-label={image.display_name || image.name}
+                                    aria-pressed={isSelectionDialogOpen ? selectedImages.some((selected) => selected.id === image.id) : undefined}
                                     onKeyDown={(event) => onActivateKey(event, () => handleImageClick(image))}
                                     style={{ cursor: "pointer" }}
                                 >

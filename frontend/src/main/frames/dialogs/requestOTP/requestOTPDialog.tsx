@@ -54,7 +54,7 @@ const RequestOTPDialog: React.FC = () => {
     const ok = await copyToClipboard(otp);
     dispatch(openFramesAlertSnackbar(
       ok
-        ? { message: "OTP in die Zwischenablage kopiert", severity: "success" }
+        ? { message: "Einmal-Code kopiert", severity: "success" }
         : { message: "Kopieren fehlgeschlagen", severity: "error" }
     ));
   };
@@ -71,7 +71,7 @@ const RequestOTPDialog: React.FC = () => {
         return;
       }
       setExpiresIn(remaining);
-      setExpiresDisplay(`${Math.ceil(expiresIn / 60)}`);
+      setExpiresDisplay(`${Math.ceil(remaining / 60)}`);
     }, 60000);
 
     return () => clearInterval(timer);
@@ -89,7 +89,7 @@ const RequestOTPDialog: React.FC = () => {
         transition: matches ? ZoomTransition : SlideTransition
       }}
     >
-      <DialogHeader title="OTP generieren" titleId="request-otp-title" onClose={handleDialogClose} />
+      <DialogHeader title="Einmal-Code für die Einstellungen" titleId="request-otp-title" onClose={handleDialogClose} />
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -100,17 +100,12 @@ const RequestOTPDialog: React.FC = () => {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Generiere ein OTP (One-Time-Password), welches du für bestimmte Authentifizierungen mit deinem Bilderrahmen nutzen kannst.
+            Mit diesem Code meldest du dich in den Einstellungen deines Bilderrahmens an. Öffne sie über „Öffnen“ auf der Karte des Rahmens, im selben WLAN.
           </Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Beachte, dass das OTP nur eine kurze Zeit gültig und nur während der Öffnung dieses Dialogs sichtbar ist.
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            Du kannst jederzeit ein neues OTP generieren.
+            Der Code gilt nur kurz und ist nur sichtbar, solange dieses Fenster offen ist. Du kannst jederzeit einen neuen erstellen.
           </Typography>
           <Grid
             container
@@ -122,7 +117,7 @@ const RequestOTPDialog: React.FC = () => {
             {otp && expiresDisplay && (
               <Grid size={12}>
                 <Typography variant="body1" color="error">
-                  gültig für: {expiresDisplay} Minuten
+                  Noch {expiresDisplay} {expiresDisplay === "1" ? "Minute" : "Minuten"} gültig
                 </Typography>
               </Grid>
             )}
@@ -130,19 +125,19 @@ const RequestOTPDialog: React.FC = () => {
               <TextField
                 id='otp'
                 name='otp'
-                label='OTP'
-                disabled
+                label='Einmal-Code'
                 value={otp}
+                slotProps={{ htmlInput: { readOnly: true } }}
                 fullWidth
                 variant='outlined'
               />
             </Grid>
             <Grid size={2}>
               <Tooltip
-                title='OTP in die Zwischenablage kopieren'
+                title='Code kopieren'
               >
                 <span>
-                  <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="copy otp" className="ignore-clickaway">
+                  <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="Code kopieren" className="ignore-clickaway">
                     <ContentCopyIcon />
                   </IconButton>
                 </span>
@@ -163,7 +158,7 @@ const RequestOTPDialog: React.FC = () => {
                 disabled={loading}
                 onClick={async () => frame !== undefined ? await handleGenerateFrameOtp(frame.id) : null}
               >
-                {'Generieren'}
+                {otp ? 'Neuen Code erstellen' : 'Code erstellen'}
               </Button>
             </Grid>
           </Grid>

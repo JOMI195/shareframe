@@ -147,21 +147,28 @@ const FramesGallery: React.FC = () => {
                                     justifyContent: "space-between",
                                     alignItems: "center"
                                 }}>
-                                <Typography>
-                                    Einstellungen:
-                                </Typography>
-                                <Tooltip title={"Öffne Bilderrahmen Einstellungen"}>
+                                <Box>
+                                    <Typography>
+                                        Einstellungen
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                        {ipAddress ? "Nur im selben WLAN erreichbar" : "Der Rahmen hat noch keine Adresse gemeldet"}
+                                    </Typography>
+                                </Box>
+                                <Tooltip title={"Einstellungen des Bilderrahmens öffnen"}>
+                                    <span>
                                     <Button
                                         variant="contained"
                                         color={"secondary"}
                                         size="small"
-                                        onClick={() => window.open(`http://${ipAddress}`, "_blank")}
+                                        onClick={() => window.open(`http://${ipAddress}`, "_blank", "noopener")}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
                                         startIcon={<OpenInNewIcon />}
                                         sx={{ minHeight: 36 }}
                                     >
                                         {"Öffnen"}
                                     </Button>
+                                    </span>
                                 </Tooltip>
                             </Stack>
                             <Stack
@@ -181,9 +188,9 @@ const FramesGallery: React.FC = () => {
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={"Einmalcode für den Rahmen anzeigen"}>
+                                <Tooltip title={"Einmal-Code für den Rahmen anzeigen"}>
                                     <IconButton
-                                        aria-label="Einmalcode anzeigen"
+                                        aria-label="Einmal-Code anzeigen"
                                         sx={{ width: 44, height: 44 }}
                                         onClick={() => dispatch(openRequestOTPDialog({ frameId: frame.id }))}
                                     >

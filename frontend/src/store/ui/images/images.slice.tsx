@@ -322,6 +322,14 @@ const imagesSlice = createSlice({
       }
       // If keepImageOnReSelect is true and image is found, do nothing (keep it selected)
     },
+    imagesSelected: (sliceState, action: PayloadAction<IImage[]>) => {
+      const selected = sliceState.dialogs.selection.selectedImages;
+      const ids = new Set(selected.map((image) => image.id));
+      selected.push(...action.payload.filter((image) => !ids.has(image.id)));
+    },
+    selectionCleared: (sliceState) => {
+      sliceState.dialogs.selection.selectedImages = [];
+    },
     alertSnackbarOpened: (images, action) => {
       images.snackbar.alert = {
         open: true,
@@ -438,6 +446,15 @@ export const openImagesLoadingSnackbar = (payload: {
   payload,
 });
 
+export const selectImages = (images: IImage[]) => ({
+  type: imagesSelected.type,
+  payload: images,
+});
+
+export const clearSelection = () => ({
+  type: selectionCleared.type,
+});
+
 export const closeImagesLoadingSnackbar = () => ({
   type: loadingSnackbarClosed.type,
 });
@@ -465,7 +482,9 @@ export const {
   scheduledSentImageDialogOpened,
   selectionDialogOpened,
   selectionDialogClosed,
-  imageSelected
+  imageSelected,
+  imagesSelected,
+  selectionCleared,
 } = imagesSlice.actions;
 
 export default imagesSlice.reducer;

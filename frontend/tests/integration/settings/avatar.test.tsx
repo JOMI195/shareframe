@@ -118,7 +118,7 @@ describe('avatar settings', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Nach unten verschieben' }));
     expect(JSON.parse(cropper.dataset.crop!)).toEqual({ x: 10, y: 10 });
 
-    await user.click(within(dialog).getByRole('button', { name: 'Reset' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Zurücksetzen' }));
     expect(JSON.parse(cropper.dataset.crop!)).toEqual({ x: 0, y: 0 });
     expect(cropper.dataset.zoom).toBe('1');
     expect(within(dialog).queryByRole('slider', { name: 'Rotation' })).not.toBeInTheDocument();
