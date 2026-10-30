@@ -27,6 +27,7 @@ import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest, withd
 import DataNotFound from "@/common/components/dataNotFound";
 import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -74,7 +75,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
@@ -120,7 +121,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                     }}
                 >
                     <UserAvatar username={friend} url={friendAvatar} size={80} />
-                    <Typography variant="h6" noWrap sx={{ mt: 1, maxWidth: "100%" }}>
+                    <Typography variant="h6" component="p" noWrap sx={{ mt: 1, maxWidth: "100%" }}>
                         {friend}
                     </Typography>
                 </CardContent>

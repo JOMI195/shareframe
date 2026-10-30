@@ -131,6 +131,7 @@ const FriendshipCreateDialog: React.FC = () => {
               >
                 <Typography
                   variant="h6"
+                  component="p"
                   color="primary"
                   sx={{ fontWeight: 'bold', letterSpacing: 2 }}
                 >

@@ -23,6 +23,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import DataNotFound from "@/common/components/dataNotFound";
 import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -55,7 +56,7 @@ const FriendshipsGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
@@ -99,7 +100,7 @@ const FriendshipsGallery: React.FC = () => {
                     }}
                 >
                     <UserAvatar username={friend} url={friendAvatar} size={80} />
-                    <Typography variant="h6" sx={{ mt: 1 }}>
+                    <Typography variant="h6" component="p" sx={{ mt: 1 }}>
                         {friend}
                     </Typography>
                 </CardContent>
