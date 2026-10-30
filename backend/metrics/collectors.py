@@ -165,6 +165,62 @@ class ShareframeBusinessCollector:
                 )
 
 
+class ShareframeAuthCollector:
+    """Session and account gauges, queried from the DB at scrape time."""
+
+    def collect(self):
+        try:
+            yield from self._collect()
+        except Exception:
+            logger.exception("Failed to collect ShareFrame auth metrics")
+
+    def _collect(self):
+        from rest_framework_simplejwt.token_blacklist.models import (
+            BlacklistedToken,
+            OutstandingToken,
+        )
+
+        from user_core.models import User
+
+        now = timezone.now()
+        day_ago = now - timedelta(days=1)
+
+        # One refresh token per signed-in browser; rotation blacklists the old one.
+        sessions = OutstandingToken.objects.filter(
+            expires_at__gt=now, blacklistedtoken__isnull=True
+        )
+        yield _gauge(
+            "shareframe_auth_sessions_active",
+            "Unexpired, non-blacklisted refresh tokens",
+            sessions.count(),
+        )
+        yield _gauge(
+            "shareframe_auth_session_users",
+            "Users holding at least one active refresh token",
+            sessions.exclude(user=None).values("user").distinct().count(),
+        )
+        yield _gauge(
+            "shareframe_auth_tokens_issued_24h",
+            "Refresh tokens issued in the last 24 hours, by sign-in or rotation",
+            OutstandingToken.objects.filter(created_at__gte=day_ago).count(),
+        )
+        yield _gauge(
+            "shareframe_auth_tokens_blacklisted_24h",
+            "Refresh tokens blacklisted in the last 24 hours, by rotation or logout",
+            BlacklistedToken.objects.filter(blacklisted_at__gte=day_ago).count(),
+        )
+        yield _gauge(
+            "shareframe_users_admins",
+            "Accounts with admin site access",
+            User.objects.filter(is_admin=True).count(),
+        )
+        yield _gauge(
+            "shareframe_users_inactive",
+            "Accounts not activated or deactivated",
+            User.objects.filter(is_active=False).count(),
+        )
+
+
 _FRAME_TIMESTAMPS = (
     (
         "shareframe_frame_last_seen_timestamp_seconds",
