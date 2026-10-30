@@ -27,6 +27,7 @@ import { onActivateKey } from "@/common/utils/keyboard";
 import SelectableElement from "../../../common/components/selectableElement";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import SelectionBar from "./selectionBar";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -68,7 +69,7 @@ const ImagesGallery: React.FC = () => {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
         dispatch(setImagesPaginatedPage(page));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollToTop();
     };
 
     const renderLoadingSkeleton = () => (
@@ -138,16 +139,17 @@ const ImagesGallery: React.FC = () => {
                     (
                         <ImageList cols={cols} gap={8}>
                             {imagesPaginated.results.map((image) => (
-                                <ImageListItem
-                                    key={image.id}
-                                    onClick={() => handleImageClick(image)}
-                                    role="button"
-                                    tabIndex={0}
-                                    aria-label={image.display_name || image.name}
-                                    aria-pressed={isSelectionDialogOpen ? selectedImages.some((selected) => selected.id === image.id) : undefined}
-                                    onKeyDown={(event) => onActivateKey(event, () => handleImageClick(image))}
-                                    style={{ cursor: "pointer" }}
-                                >
+                                <ImageListItem key={image.id}>
+                                    {/* The button sits inside the li, so the list keeps its list semantics. */}
+                                    <Box
+                                        onClick={() => handleImageClick(image)}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={image.display_name || image.name}
+                                        aria-pressed={isSelectionDialogOpen ? selectedImages.some((selected) => selected.id === image.id) : undefined}
+                                        onKeyDown={(event) => onActivateKey(event, () => handleImageClick(image))}
+                                        sx={{ cursor: "pointer", height: "100%", borderRadius: 1, display: "flex", flexDirection: "column" }}
+                                    >
                                     <SelectableElement
                                         elementToSelect={image}
                                         selectedElements={selectedImages}
@@ -164,6 +166,7 @@ const ImagesGallery: React.FC = () => {
                                             }}
                                         />
                                     </SelectableElement>
+                                    </Box>
                                 </ImageListItem>
                             ))}
                         </ImageList>

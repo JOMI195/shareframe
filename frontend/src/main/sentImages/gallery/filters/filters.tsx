@@ -189,11 +189,13 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         variant="outlined"
                         onClick={handleOpenExtendedFilters}
                         disabled={disabled}
-                        aria-label={activeFilterCount > 0 ? `Filter (${activeFilterCount} aktiv)` : 'Filter'}
+                        aria-label={activeFilterCount > 0 ? `Filter (${activeFilterCount} aktiv)` : undefined}
                         startIcon={
-                            <Badge badgeContent={activeFilterCount} color="primary">
-                                <FilterListIcon />
-                            </Badge>
+                            <Box component="span" aria-hidden="true" sx={{ display: 'inline-flex' }}>
+                                <Badge badgeContent={activeFilterCount} color="primary">
+                                    <FilterListIcon />
+                                </Badge>
+                            </Box>
                         }
                         sx={{ flex: 1, minHeight: 44 }}
                     >

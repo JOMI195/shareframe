@@ -55,7 +55,7 @@ const enterSelectionMode = async (user: ReturnType<typeof renderRoute>['user']) 
 };
 
 const selectFirstPhoto = async (user: ReturnType<typeof renderRoute>['user']) => {
-  const items = document.querySelectorAll('.MuiImageListItem-root');
+  const items = document.querySelectorAll('.MuiImageListItem-root [role="button"]');
   await user.click(items[0] as HTMLElement);
 };
 
@@ -222,7 +222,7 @@ describe('sending photos to a frame', () => {
 
     await selectFirstPhoto(user);
     expect(screen.getByText('1 ausgewählt')).toBeInTheDocument();
-    expect(document.querySelectorAll('.MuiImageListItem-root')[0]).toHaveAttribute('aria-pressed', 'true');
+    expect(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0]).toHaveAttribute('aria-pressed', 'true');
 
     await user.click(screen.getByRole('button', { name: 'Alle auswählen' }));
     expect(store.getState().ui.images.dialogs.selection.selectedImages).toHaveLength(library.length);

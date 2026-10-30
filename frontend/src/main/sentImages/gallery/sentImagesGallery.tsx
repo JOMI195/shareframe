@@ -33,6 +33,7 @@ import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import { getSentImageState } from "../sentImageStatus";
 import SentImageStatusLabel from "../sentImageStatusLabel";
 import UserAvatar from "@/common/components/userAvatar";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -73,7 +74,7 @@ const SentImagesGallery = () => {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
         dispatch(setSentImagesPaginatedPage(page));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollToTop();
     };
 
     const handleFiltersChange = (newFilters: ISentImagesFilters) => {
@@ -226,15 +227,15 @@ const SentImagesGallery = () => {
                             (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username);
 
                         return (
-                            <ImageListItem
-                                key={sentImage.id}
-                                onClick={() => handleImageClick(sentImage)}
-                                role="button"
-                                tabIndex={0}
-                                aria-label={`${sentImage.image.display_name || sentImage.image.name}, ${sentImage.sender === user.me.username ? `an ${sentImage.reciever === user.me.username ? "dich" : sentImage.reciever}` : `von ${sentImage.sender}`}`}
-                                onKeyDown={(event) => onActivateKey(event, () => handleImageClick(sentImage))}
-                                style={{ cursor: "pointer" }}
-                            >
+                            <ImageListItem key={sentImage.id}>
+                                {/* Named by its visible text: photo, sender or receiver, date and status. */}
+                                <Box
+                                    onClick={() => handleImageClick(sentImage)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(event) => onActivateKey(event, () => handleImageClick(sentImage))}
+                                    sx={{ cursor: "pointer", height: "100%", borderRadius: 1, display: "flex", flexDirection: "column" }}
+                                >
                                 <AuthenticatedImage
                                     url={`${MEDIA_BASE_URL}${getVariantUrl(sentImage.image, "thumbnail")}`}
                                     alt={sentImage.image.name}
@@ -260,6 +261,7 @@ const SentImagesGallery = () => {
                                         </Box>
                                     }
                                 />
+                                </Box>
                             </ImageListItem>
                         );
                     })}

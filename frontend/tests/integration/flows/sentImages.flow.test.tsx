@@ -235,7 +235,7 @@ describe('deactivating a shared photo', () => {
     );
     const { user } = await openActivity();
 
-    await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    await user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
     await user.click(await screen.findByRole('button', { name: 'Foto deaktivieren' }));
     await user.click(await screen.findByRole('button', { name: 'Deaktivieren' }));
 
@@ -245,7 +245,7 @@ describe('deactivating a shared photo', () => {
   it('offers no actions menu for a photo that already expired', async () => {
     const { user } = await openActivity([sentByMe]);
 
-    await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    await user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
 
     expect(await screen.findByRole('button', { name: 'Foto herunterladen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aktionen' })).not.toBeInTheDocument();
@@ -255,7 +255,7 @@ describe('deactivating a shared photo', () => {
 describe('a scheduled photo', () => {
   const openScheduled = async () => {
     const view = await openActivity([scheduled]);
-    await view.user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    await view.user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
     return view;
   };
 
