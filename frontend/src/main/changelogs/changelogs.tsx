@@ -19,6 +19,7 @@ import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import DataNotFound from '@/common/components/dataNotFound';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
 import { formatDateNumeric } from "@/common/utils/date/date";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -66,7 +67,7 @@ const Changelogs: React.FC = () => {
         newPage: number
     ) => {
         setCurrentPage(newPage);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderPagination = (showCount = false) => (

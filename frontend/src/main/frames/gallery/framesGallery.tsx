@@ -28,6 +28,7 @@ import { fetchframes } from "@/store/entities/frames/frames.actions";
 import { isFrameActive } from "@/common/utils/frame";
 import DataNotFound from "@/common/components/dataNotFound";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -59,7 +60,7 @@ const FramesGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
