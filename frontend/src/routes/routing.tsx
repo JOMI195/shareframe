@@ -20,6 +20,7 @@ import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
 import { getUnsubscribePageUrl } from '@/assets/endpoints/app/notificationEndpoints';
 import { lazyPage } from './lazyPage';
+import RouteError from '@/common/components/error/routeError/routeError';
 
 // Exported so tests can mount the real route tree with createMemoryRouter.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -27,6 +28,7 @@ export const routes = [
   {
     element: <SeoHead />,
     HydrateFallback: LoadingFallback,
+    errorElement: <RouteError />,
     children: [
       {
         element: <Snackbars />,
@@ -94,6 +96,7 @@ export const routes = [
               },
               {
                 element: <ProtectedRoute />,
+                errorElement: <RouteError />,
                 children: [
                   {
                     element: <FeatureSelectorWrapper feature="app" />,

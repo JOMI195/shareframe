@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router';
-import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
+import { useTheme } from '@mui/material';
 
 interface LogoProps {
     darkLogoSrc: string;
@@ -27,8 +27,7 @@ const Logo: React.FC<LogoProps> = ({
     width,
     height,
 }) => {
-    const { colorMode } = useColorThemeContext();
-    const isDarkMode = colorMode === 'dark';
+    const isDarkMode = useTheme().palette.mode === 'dark';
     const logoSrc = isDarkMode ? darkLogoSrc : lightLogoSrc;
 
     return clickable ? (

@@ -6,6 +6,7 @@ import '@fontsource/inter';
 import { Suspense } from 'react';
 import AppWrapper from './appWrapper.tsx';
 import LoadingFallback from './common/components/loadingFallback.tsx';
+import StandaloneTheme from './common/components/error/standaloneTheme.tsx';
 import { initInstallPrompt } from './common/utils/pwa/installPrompt.ts';
 import { initStaleChunkReload } from './common/utils/staleChunkReload.ts';
 
@@ -32,7 +33,7 @@ const container = document.getElementById("root");
 const root = createRoot(container!);
 
 root.render(
-  <Suspense fallback={<LoadingFallback />}>
+  <Suspense fallback={<StandaloneTheme><LoadingFallback /></StandaloneTheme>}>
     <AppWrapper />
   </Suspense>
 );
