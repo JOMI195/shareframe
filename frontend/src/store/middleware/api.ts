@@ -22,6 +22,25 @@ const getErrorMessage = (error: unknown): string => {
     return error instanceof Error ? error.message : "Unbekannter Fehler";
   }
 
+  if (!error.response) {
+    return navigator.onLine
+      ? "Der Server ist gerade nicht erreichbar."
+      : "Du bist offline. Prüfe deine Internetverbindung.";
+  }
+
+  if (error.response.status >= 500) {
+    return "Auf dem Server ist ein Fehler aufgetreten.";
+  }
+
+  // DRF's own texts for these are English.
+  if (error.response.status === 403) {
+    return "Dafür fehlt dir die Berechtigung.";
+  }
+
+  if (error.response.status === 404) {
+    return "Das gibt es nicht mehr.";
+  }
+
   if (error.response?.status === 413) {
     return "Die Datei ist zu groß.";
   }
@@ -45,7 +64,7 @@ const getErrorMessage = (error: unknown): string => {
     if (typeof firstValue === "string") return firstValue;
   }
 
-  return error.message ?? "Unbekannter Fehler";
+  return "Unbekannter Fehler";
 };
 
 const getErrorCode = (error: unknown): string | undefined => {
@@ -70,6 +89,7 @@ const apiMiddleware: Middleware =
           onStart,
           onSuccess,
           onError,
+          onUploadProgress,
           onStartPayload,
           onSuccessPayload,
           onErrorPayload,
@@ -85,11 +105,21 @@ const apiMiddleware: Middleware =
         next(action);
 
         try {
+          let lastPercent = -1;
           const response = await http.request({
             url,
             method,
             data,
             headers,
+            onUploadProgress: onUploadProgress
+              ? ({ loaded, total }) => {
+                if (!total) return;
+                const percent = Math.round((loaded * 100) / total);
+                if (percent === lastPercent) return;
+                lastPercent = percent;
+                dispatch({ type: onUploadProgress, payload: percent });
+              }
+              : undefined,
           });
           dispatch(actions.apiSuccess(response.data));
           if (onSuccess) {

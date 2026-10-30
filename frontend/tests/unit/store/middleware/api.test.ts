@@ -142,7 +142,10 @@ describe('failed requests', () => {
       HttpResponse.json({ detail: 'Request was throttled.' }, { status: 429 }),
       'Zu viele Versuche. Bitte warte kurz.',
     ],
-    ['a detail field', HttpResponse.json({ detail: 'Kein Zugriff' }, { status: 403 }), 'Kein Zugriff'],
+    ['a detail field', HttpResponse.json({ detail: 'Kein Zugriff' }, { status: 400 }), 'Kein Zugriff'],
+    // DRF's English defaults for these never reach the user.
+    ['a 403', HttpResponse.json({ detail: 'You do not have permission.' }, { status: 403 }), 'Dafür fehlt dir die Berechtigung.'],
+    ['a 404', HttpResponse.json({ detail: 'Not found.' }, { status: 404 }), 'Das gibt es nicht mehr.'],
     ['a plain string body', HttpResponse.text('Kaputt', { status: 400 }), 'Kaputt'],
     [
       'the first field of a DRF error object',
@@ -156,10 +159,10 @@ describe('failed requests', () => {
   });
 
   // An HTML error page must not be shown to the user verbatim.
-  it('ignores an html string body and falls back to the axios message', async () => {
+  it('reports a server error in German instead of its html page', async () => {
     const { dispatch } = await fail(HttpResponse.text('<html>nginx</html>', { status: 502 }));
 
-    expect(dispatch.mock.calls[0][0].payload).toMatch(/502/);
+    expect(dispatch.mock.calls[0][0].payload).toBe('Auf dem Server ist ein Fehler aufgetreten.');
   });
 
   it('prefers detail over the other fields', async () => {
@@ -176,7 +179,16 @@ describe('failed requests', () => {
     const { dispatch } = await run(apiRequest({ url: URL, onError: 'frames/framesRequestFailed' }));
 
     expect(dispatch.mock.calls[0][0].type).toBe(apiFailed.type);
-    expect(dispatch.mock.calls[0][0].payload).toBeTruthy();
+    expect(dispatch.mock.calls[0][0].payload).toBe('Der Server ist gerade nicht erreichbar.');
+  });
+
+  it('tells an offline device that it is offline', async () => {
+    server.use(mswHttp.get(apiUrl(URL), () => HttpResponse.error()));
+    vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+
+    const { dispatch } = await run(apiRequest({ url: URL, onError: 'frames/framesRequestFailed' }));
+
+    expect(dispatch.mock.calls[0][0].payload).toBe('Du bist offline. Prüfe deine Internetverbindung.');
   });
 
   it('translates a known error code and passes it on as meta', async () => {
