@@ -256,11 +256,26 @@ class LoggingMiddleware:
         # cache in a local reference (instead of a member reference) and then pass in as argument
         # in order to avoid other threads overwriting the original self.cached_request_body reference,
         # is this done to preserve the original value in case it is mutated during the get_response invocation?
-        cached_request_body = request.body
+        cached_request_body = self._read_body(request)
         response = self.get_response(request)
         self.process_request(request, response, cached_request_body)
         self.process_response(request, response)
         return response
+
+    def _read_body(self, request):
+        skip_logging, _ = self._should_log_route(request)
+        log_body, _ = self._should_log_body(request)
+        if skip_logging or not log_body or self._is_large_multipart(request):
+            return None
+        return request.body
+
+    # Uploads would otherwise sit in RAM twice; their size cap is UploadSizeLimitMiddleware's job.
+    def _is_large_multipart(self, request):
+        content_length = int(request.META.get("CONTENT_LENGTH") or 0)
+        return (
+            request.content_type == "multipart/form-data"
+            and content_length > self.max_body_length
+        )
 
     def process_request(self, request, response, cached_request_body):
         skip_logging, because = self._should_log_route(request)
@@ -271,6 +286,11 @@ class LoggingMiddleware:
             return self._log_request(request, response, cached_request_body)
 
     def _get_func(self, request):
+        if not hasattr(request, "_request_logging_func"):
+            request._request_logging_func = self._resolve_func(request)
+        return request._request_logging_func
+
+    def _resolve_func(self, request):
         # request.urlconf may be set by middleware or application level code.
         # Use this urlconf if present or default to None.
         # https://docs.djangoproject.com/en/2.1/topics/http/urls/#how-django-processes-a-request
@@ -391,7 +411,13 @@ class LoggingMiddleware:
                 )
             return None
 
-        if cached_request_body is not None:
+        if cached_request_body is None and self._is_large_multipart(request):
+            self.logger.log(
+                log_level,
+                f"(multipart/form-data, {request.META['CONTENT_LENGTH']} bytes)",
+                logging_context,
+            )
+        elif cached_request_body is not None:
             content_type = request.META.get("CONTENT_TYPE", "")
             is_multipart = content_type.startswith("multipart/form-data")
             if is_multipart:

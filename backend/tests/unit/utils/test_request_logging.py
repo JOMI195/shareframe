@@ -1,9 +1,12 @@
 import json
 import logging
+from unittest.mock import patch
 
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.http import HttpResponse
 from django.test import RequestFactory
 
+from utils.request_logging import middleware
 from utils.request_logging.decorators import no_logging
 from utils.request_logging.middleware import (
     LOG_BODY_ATTR,
@@ -210,3 +213,29 @@ def test_client_errors_are_warnings(caplog):
 
 def test_server_errors_stay_errors(caplog):
     assert logging.ERROR in levels_for(caplog, 500)
+
+
+def test_a_large_upload_body_is_not_read(caplog, settings):
+    settings.REQUEST_LOGGING_MAX_BODY_LENGTH = 100
+    request = RequestFactory().post(
+        "/api/images/",
+        {"title": "kept-out", "image": SimpleUploadedFile("a.jpg", b"x" * 500)},
+    )
+
+    text = logged(caplog, request)
+
+    assert "kept-out" not in text
+    assert "(multipart/form-data," in text
+    assert not hasattr(request, "_body")
+
+
+def test_the_route_is_resolved_once(caplog):
+    request = RequestFactory().post(
+        LOGIN_PATH, json.dumps({"email": "x"}), content_type="application/json"
+    )
+    with patch(
+        "utils.request_logging.middleware.resolve", wraps=middleware.resolve
+    ) as resolve:
+        logged(caplog, request)
+
+    assert resolve.call_count == 1
