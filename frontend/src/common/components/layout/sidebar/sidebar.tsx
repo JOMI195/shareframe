@@ -30,6 +30,7 @@ import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/auth
 import { getChangelogsUrl, getContactUrl, getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
 import { useBackToClose } from '@/hooks/navigation/useBackToClose';
+import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from './sidebarWidth';
 
 const Sidebar: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -40,10 +41,8 @@ const Sidebar: React.FC = () => {
     const user = useAppSelector(getUser);
 
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
-    const fullWidth = 240;
-    const iconOnlyWidth = 75;
     const shouldShowIconsOnly = isDesktop && !open;
-    const currentWidth = shouldShowIconsOnly ? iconOnlyWidth : fullWidth;
+    const currentWidth = shouldShowIconsOnly ? SIDEBAR_ICON_WIDTH : SIDEBAR_WIDTH;
 
     useEffect(() => {
         if (isDesktop) {

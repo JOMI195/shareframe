@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import Lifecycle from "../lifecycle/lifecycle";
 import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
+import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from "./sidebar/sidebarWidth";
 
 const MainLayout: React.FC = () => {
     const theme = useTheme();
@@ -98,6 +99,9 @@ const MainLayout: React.FC = () => {
                 disableGutters
                 sx={{
                     outline: 'none',
+                    // The desktop sidebar is fixed, so the page has to make room for it itself.
+                    pl: isDesktop ? `${sidebarOpen ? SIDEBAR_WIDTH : SIDEBAR_ICON_WIDTH}px` : 0,
+                    transition: theme.transitions.create('padding-left', { duration: theme.transitions.duration.standard }),
                     flex: '1 1 auto',
                     display: 'flex',
                     alignItems: "center",
