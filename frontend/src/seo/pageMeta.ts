@@ -37,7 +37,7 @@ export const pages: PageMeta[] = [
     path: "/impressum/",
     title: "Impressum – ShareFrame",
     description:
-      "Anbieterkennzeichnung nach § 5 TMG: Herausgeber, Kontaktdaten und Urheberrechtshinweise zu shareframe.de.",
+      "Anbieterkennzeichnung nach § 5 DDG: Herausgeber, Kontaktdaten und Urheberrechtshinweise zu shareframe.de.",
     prerender: true,
   },
   { path: "/auth/", title: "Anmelden – ShareFrame", noindex: true, matchPrefix: true },
