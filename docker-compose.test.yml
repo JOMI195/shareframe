@@ -23,7 +23,7 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-      mailhog:
+      mailpit:
         condition: service_started
     healthcheck:
       # The slim image has no curl; migrations and seeding run before the server binds.
@@ -81,9 +81,9 @@ services:
   # Account deletion and the account mails go through SMTP, and a refused
   # connection turns into a 500 that rolls the whole request back. The API is
   # published for the e2e specs that follow a link from a mail.
-  mailhog:
-    container_name: mailhog-test
-    image: mailhog/mailhog
+  mailpit:
+    container_name: mailpit-test
+    image: axllent/mailpit:v1.32
     ports:
       - 127.0.0.1:8125:8025
     networks:

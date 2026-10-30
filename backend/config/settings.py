@@ -539,7 +539,7 @@ if PRODUCTION:
     EMAIL_USE_SSL = False
     DEFAULT_FROM_EMAIL = os.environ.get("EMAIL_HOST_USER")
 else:
-    EMAIL_HOST = os.environ.get("EMAIL_HOST", "mailhog")
+    EMAIL_HOST = os.environ.get("EMAIL_HOST", "mailpit")
     EMAIL_PORT = int(os.environ.get("EMAIL_PORT", 1025))
     EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER", "")
     EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD", "")
