@@ -12,11 +12,16 @@ import LoadingFallback from './common/components/loadingFallback.tsx';
 import StandaloneTheme from './common/components/error/standaloneTheme.tsx';
 import { initInstallPrompt } from './common/utils/pwa/installPrompt.ts';
 import { initStaleChunkReload } from './common/utils/staleChunkReload.ts';
+import { loadMyUserProfileShared } from './store/entities/authentication/authentication.actions.tsx';
 
 http.apiSetup(store, persistor);
 // Seeds the csrftoken cookie for the first unsafe request.
 if (!document.cookie.split('; ').some((cookie) => cookie.startsWith('csrftoken='))) {
   http.get(getCsrfUrl()).catch(() => undefined);
+}
+// Starts while the route chunks download instead of after the guard mounts.
+if (localStorage.getItem('loggedIn') === 'true') {
+  store.dispatch(loadMyUserProfileShared());
 }
 initInstallPrompt();
 initStaleChunkReload();

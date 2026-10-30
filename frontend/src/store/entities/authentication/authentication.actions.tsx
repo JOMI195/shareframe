@@ -2,6 +2,7 @@ import * as userSlice from "./authentication.slice";
 import * as authEndpoints from "@/assets/endpoints/api/authEndpoints";
 import { apiRequest } from "@/common/utils/constants/api.constants";
 import { INotificationKindPatch, IPatchUserForm } from "@/types";
+import type { AppDispatch } from "@/store";
 
 export const signUpUser = (userData: {
   username: string;
@@ -146,6 +147,16 @@ export const loadMyUserProfile = () =>
     onSuccess: userSlice.getUserDataFulfilled.type,
     onError: userSlice.getUserDataRejected.type,
   });
+
+let profileRequest: Promise<unknown> | null = null;
+
+// Boot and the route guards ask at almost the same time; they share one request.
+export const loadMyUserProfileShared = () => (dispatch: AppDispatch) => {
+  profileRequest ??= Promise.resolve(dispatch(loadMyUserProfile())).finally(() => {
+    profileRequest = null;
+  });
+  return profileRequest;
+};
 
 export const deleteMyUserProfile = (password: string) =>
   apiRequest({

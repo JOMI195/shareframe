@@ -5,7 +5,7 @@ import { Navigate, Outlet, useLocation } from "react-router";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
-import { loadMyUserProfile } from "@/store/entities/authentication/authentication.actions";
+import { loadMyUserProfileShared } from "@/store/entities/authentication/authentication.actions";
 
 interface ProtectedRouteProps {
   redirectPath?: string;
@@ -28,7 +28,7 @@ const ProtectedRoute = ({
     requested.current = true;
 
     (async () => {
-      await dispatch(loadMyUserProfile());
+      await dispatch(loadMyUserProfileShared());
       setAttempted(true);
     })();
   }, [loggedIn, me.id, dispatch]);

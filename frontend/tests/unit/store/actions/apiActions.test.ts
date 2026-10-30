@@ -403,4 +403,32 @@ describe('fetch if stale', () => {
   it.each(cases)('refetches $name once they are stale', (testCase) => {
     expect(run(testCase, Date.now() - testCase.maxAge - 1)).toHaveLength(1);
   });
+
+  it.each(cases)('asks for $name once while a request is under way', (testCase) => {
+    const state = defaultState();
+    testCase.setLastFetch(state, null);
+    const dispatched: unknown[] = [];
+    const pending = new Promise(() => undefined);
+    const dispatch = (action: unknown): unknown =>
+      typeof action === 'function' ? action(dispatch, () => state) : (dispatched.push(action), pending);
+
+    dispatch(testCase.thunk());
+    dispatch(testCase.thunk());
+
+    expect(dispatched).toHaveLength(1);
+  });
+});
+
+describe('loadMyUserProfileShared', () => {
+  it('shares one request between callers', () => {
+    const dispatched: unknown[] = [];
+    const pending = new Promise(() => undefined);
+    const dispatch = (action: unknown): unknown =>
+      typeof action === 'function' ? action(dispatch) : (dispatched.push(action), pending);
+
+    dispatch(auth.loadMyUserProfileShared());
+    dispatch(auth.loadMyUserProfileShared());
+
+    expect(dispatched).toHaveLength(1);
+  });
 });
