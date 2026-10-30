@@ -2,7 +2,7 @@ import { Button, Divider, Stack, Switch, TextField } from "@mui/material";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { getIn, useFormik } from "formik";
 import { IUser } from "@/types";
 import { updateMyUserData } from "@/store/entities/authentication/authentication.actions";
@@ -36,7 +36,15 @@ const Profile = () => {
         },
     });
 
-    const searchable = me.account.friendship_user_searchable;
+    // Shown right away; the stored value takes over again once the server answered.
+    const [pendingSearchable, setPendingSearchable] = useState<boolean | null>(null);
+    const searchable = pendingSearchable ?? me.account.friendship_user_searchable;
+
+    const handleSearchableChange = async (checked: boolean) => {
+        setPendingSearchable(checked);
+        await dispatch(updateMyUserData({ account: { friendship_user_searchable: checked } }));
+        setPendingSearchable(null);
+    };
 
     return (
         <>
@@ -97,10 +105,8 @@ const Profile = () => {
                 action={
                     <Switch
                         checked={searchable}
-                        disabled={getAuthApi.loading}
-                        onChange={(event) =>
-                            dispatch(updateMyUserData({ account: { friendship_user_searchable: event.target.checked } }))
-                        }
+                        disabled={pendingSearchable !== null}
+                        onChange={(event) => handleSearchableChange(event.target.checked)}
                         slotProps={{ input: { 'aria-label': 'Freundschaftsanfragen erhalten' } }}
                     />
                 }
