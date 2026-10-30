@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IChangelog, IChangelogId } from "@/types/types.changelogs";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSelector, createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -7,6 +8,7 @@ type SliceState = {
         loading: boolean;
         idsLoading: boolean;
         lastFetch: number | null;
+        idsLastFetch: number | null;
     };
     changelogIds: IChangelogId[];
     changelogs: IChangelog[];
@@ -17,10 +19,20 @@ const initialState: SliceState = {
         loading: false,
         idsLoading: false,
         lastFetch: null,
+        idsLastFetch: null,
     },
     changelogIds: [],
     changelogs: [],
 };
+
+const sameIds = (current: IChangelogId[], received: IChangelogId[]) =>
+    current.length === received.length &&
+    current.every((item, i) =>
+        item.id === received[i].id &&
+        item.date === received[i].date &&
+        item.title === received[i].title &&
+        item.is_published === received[i].is_published
+    );
 
 const changelogsSlice = createSlice({
     name: "changelogs",
@@ -30,10 +42,13 @@ const changelogsSlice = createSlice({
             sliceState.api.idsLoading = true;
         },
         changelogIdsReceived: (sliceState, action: PayloadAction<IChangelogId[]>) => {
+            sliceState.api.idsLoading = false;
+            sliceState.api.idsLastFetch = Date.now();
+            // Same list keeps its reference, so effects keyed on it don't refetch.
+            if (sameIds(sliceState.changelogIds, action.payload)) return;
             sliceState.changelogIds = action.payload;
             const listed = new Set(action.payload.map(item => item.id));
             sliceState.changelogs = sliceState.changelogs.filter(log => listed.has(log.id));
-            sliceState.api.idsLoading = false;
         },
         changelogIdsRequestFailed: (sliceState) => {
             sliceState.api.idsLoading = false;
@@ -55,6 +70,10 @@ const changelogsSlice = createSlice({
         changelogsRequestFailed: (sliceState) => {
             sliceState.api.loading = false;
         },
+    },
+    // Which changelogs a user sees depends on their frames.
+    extraReducers: (builder) => {
+        builder.addCase(signedOut, () => initialState);
     },
 });
 

@@ -1,5 +1,6 @@
 import React from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { DialogContentText } from '@mui/material';
+import ConfirmDialog from '@/common/components/confirmDialog';
 import { ITextPreset } from '@/types';
 
 interface DeletePresetDialogProps {
@@ -9,20 +10,18 @@ interface DeletePresetDialogProps {
 }
 
 const DeletePresetDialog: React.FC<DeletePresetDialogProps> = ({ preset, onCancel, onConfirm }) => (
-    <Dialog open={preset !== null} onClose={onCancel} maxWidth="xs" fullWidth aria-labelledby="delete-preset-title">
-        <DialogTitle id="delete-preset-title">Vorlage löschen?</DialogTitle>
-        <DialogContent>
-            <DialogContentText sx={{ whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
-                {preset?.text}
-            </DialogContentText>
-        </DialogContent>
-        <DialogActions>
-            <Button onClick={onCancel}>Abbrechen</Button>
-            <Button color="error" variant="contained" onClick={() => preset && onConfirm(preset)}>
-                Löschen
-            </Button>
-        </DialogActions>
-    </Dialog>
+    <ConfirmDialog
+        open={preset !== null}
+        title="Vorlage löschen?"
+        confirmLabel="Löschen"
+        destructive
+        onConfirm={() => preset && onConfirm(preset)}
+        onCancel={onCancel}
+    >
+        <DialogContentText sx={{ whiteSpace: 'pre-line', overflowWrap: 'anywhere' }}>
+            {preset?.text}
+        </DialogContentText>
+    </ConfirmDialog>
 );
 
 export default DeletePresetDialog;

@@ -1,112 +1,50 @@
-import { Button, Dialog, DialogContent, Grid, DialogTitle, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton } from "@mui/material";
+import ConfirmDialog from '@/common/components/confirmDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
-import { isIImage } from "@/types";
-import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { closeDeleteImageDialog, closePreviewImageDialog, closeSelectionDialog, getDialogs, openImagesAlertSnackbar } from "@/store/ui/images/images.slice";
 import { getApi as imagesApi } from "@/store/entities/images/images.slice";
 import { deleteImage } from "@/store/entities/images/images.actions";
-import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
 
 const ImageDeleteDialog = () => {
-    const theme = useTheme();
     const dispatch = useAppDispatch();
 
     const { delete: deleteDialog } = useAppSelector(getDialogs);
-    const loading = useAppSelector(imagesApi).loading
+    const loading = useAppSelector(imagesApi).sending
     const imagesToDelete = deleteDialog.imagesToDelete;
-
-    const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const handleDialogClose = () => {
         dispatch(closeDeleteImageDialog());
     };
 
     const handleConfirmDelete = async () => {
-        imagesToDelete.forEach(async image => {
-            const deletedImage = await dispatch(deleteImage(image.id, image.name));
-            if (!isIImage(deletedImage)) {
-                return;
-            }
-        });
+        const results = await Promise.all(imagesToDelete.map(image => dispatch(deleteImage(image.id, image.name))));
+        // The api middleware resolves a failed request with its error message.
+        const failed = results.filter(result => typeof result === 'string').length;
+        const deleted = results.length - failed;
+
+        // One outcome for the whole selection instead of a snackbar per photo.
+        dispatch(openImagesAlertSnackbar(
+            failed === 0
+                ? { message: `${deleted} ${deleted === 1 ? "Foto" : "Fotos"} gelöscht`, severity: "success" }
+                : { message: `${deleted} von ${results.length} Fotos gelöscht, ${failed} fehlgeschlagen`, severity: deleted === 0 ? "error" : "warning" }
+        ));
         handleDialogClose();
         dispatch(closePreviewImageDialog());
         dispatch(closeSelectionDialog());
     };
 
     return (
-        <Dialog
-            fullScreen={matches ? false : true}
+        <ConfirmDialog
             open={deleteDialog.open}
-            onClose={handleDialogClose}
-            aria-describedby='dedlete-image-dialog'
-            maxWidth="sm"
-            fullWidth
-            slots={{
-                transition: matches ? ZoomTransition : SlideTransition
-            }}
+            title={`Ausgewählte${imagesToDelete.length === 1 ? "s" : ""} Foto${imagesToDelete.length > 1 ? "s" : ""} wirklich löschen?`}
+            confirmLabel="Löschen"
+            destructive
+            loading={loading}
+            confirmDisabled={imagesToDelete.length === 0}
+            onConfirm={handleConfirmDelete}
+            onCancel={handleDialogClose}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            Foto löschen
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
-            <DialogTitle>{`Ausgewählte${imagesToDelete.length === 1 ? "s" : ""} Foto${imagesToDelete.length > 1 ? "s" : ""} wirklich löschen?`}</DialogTitle>
-            <DialogContent>
-                <Typography sx={{ mb: 3 }}>{`Das Löschen von Fotos ist unwiderruflich. Sie können nicht wieder hergestellt werden und müssen erneut hochgeladen werden. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen und nicht mehr gesendet.`}</Typography>
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                    }}>
-                    <Grid
-                        sx={{ order: { xs: 4, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
-                        <Button
-                            onClick={handleDialogClose}
-                            color="primary"
-                            variant="outlined"
-                            fullWidth
-                        >
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        sx={{ order: { xs: 3, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
-                        <Button
-                            onClick={handleConfirmDelete}
-                            color="error"
-                            disabled={loading || imagesToDelete.length === 0}
-                            variant="contained"
-                            fullWidth
-                        >
-                            {"Löschen bestätigen"}
-                        </Button>
-                    </Grid>
-                </Grid>
-            </DialogContent>
-        </Dialog>
+            {`${imagesToDelete.length > 1 ? "Die Fotos werden" : "Das Foto wird"} aus deiner Galerie entfernt und kann nicht wiederhergestellt werden. Bereits gesendete Fotos bleiben auf den Rahmen und in deinen Aktivitäten, bis sie ablaufen, und werden 14 Tage danach endgültig gelöscht. Geplante Sendungen ${imagesToDelete.length > 1 ? "dieser Fotos" : "dieses Fotos"} werden abgebrochen.`}
+        </ConfirmDialog>
     );
 };
 

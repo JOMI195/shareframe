@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       react(),
       imagetools(),
       compression({
-        algorithms: [defineAlgorithm('brotliCompress')],
+        algorithms: [defineAlgorithm('gzip')],
         include: /\.(js|css|html|svg|json|txt|ico|xml)$/,
         deleteOriginalAssets: false,
       }),
@@ -30,7 +30,17 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: './build',
       emptyOutDir: true,
-      sourcemap: false
+      sourcemap: false,
+      rollupOptions: {
+        output: {
+          // Vendor code changes less often than app code, so a deploy keeps these hashes cached.
+          manualChunks: (id: string) => {
+            if (!id.includes('node_modules')) return undefined;
+            if (/node_modules\/(react|react-dom|scheduler|react-router|react-redux|@reduxjs|redux|redux-persist|immer|reselect)\//.test(id)) return 'vendor-react';
+            return undefined;
+          },
+        },
+      },
     },
     resolve: {
       alias: {

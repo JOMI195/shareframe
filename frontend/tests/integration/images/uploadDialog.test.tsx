@@ -107,7 +107,7 @@ describe('UploadDialog selection step', () => {
 
     expect(screen.getAllByRole('button', { name: 'a.jpg' })).toHaveLength(1);
     await waitFor(() =>
-      expect(store.getState().ui.images.snackbar.alert.message).toMatch(/bereits ausgewählt/),
+      expect(store.getState().ui.images.snackbar.alert.message).toMatch(/schon ausgewählt/),
     );
   });
 
@@ -122,7 +122,7 @@ describe('UploadDialog selection step', () => {
     expect(screen.queryByRole('button', { name: 'p0.jpg' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(store.getState().ui.images.snackbar.alert.message).toMatch(
-        /Maximal 15 Foto\(s\) können auf einmal hochgeladen werden/,
+        /höchstens 15 Fotos auf einmal hochladen/,
       ),
     );
   });
@@ -276,13 +276,27 @@ describe('UploadDialog closing', () => {
     expect(store.getState().ui.images.dialogs.create.open).toBe(false);
   });
 
-  it('closes from the header in a later step on larger screens', async () => {
+  it('asks before discarding a photo in edit, then closes', async () => {
     desktop();
     const { user, store } = await goToText();
 
     await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    expect(await screen.findByText('Bearbeitung verwerfen?')).toBeInTheDocument();
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
 
+    await user.click(screen.getByRole('button', { name: 'Verwerfen' }));
     expect(store.getState().ui.images.dialogs.create.open).toBe(false);
+  });
+
+  it('keeps the edit when the discard is declined', async () => {
+    desktop();
+    const { user, store } = await goToText();
+
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+    await user.click(await screen.findByRole('button', { name: 'Weiter bearbeiten' }));
+
+    await waitFor(() => expect(screen.queryByText('Bearbeitung verwerfen?')).not.toBeInTheDocument());
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
   });
 
   it('has no other close buttons in the tools', async () => {
@@ -379,7 +393,7 @@ describe('UploadDialog crop step', () => {
     await user.click(tab('Zuschnitt'));
     await screen.findByTestId('cropper');
 
-    fireEvent.change(screen.getByRole('slider', { name: 'Rotation' }), { target: { value: 90 } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Drehen' }), { target: { value: 90 } });
     await user.click(tab('Anpassen'));
     await adjustOpen();
 
@@ -407,8 +421,10 @@ describe('UploadDialog adjust step', () => {
 
     await user.click(screen.getByRole('button', { name: 'E-Paper' }));
 
-    await waitFor(() => expect(painted().width).toBe(800));
-    expect(painted().data.every((value) => value === 0 || value === 255)).toBe(true);
+    await waitFor(() => {
+      expect(painted().width).toBe(800);
+      expect(painted().data.every((value) => value === 0 || value === 255)).toBe(true);
+    });
   });
 
   it('keeps the e-paper view through the following steps', async () => {

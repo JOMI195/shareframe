@@ -1,6 +1,8 @@
+import { errorText } from "@/common/utils/errors/errorMessages";
 import { RootState } from "@/store";
-import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
+import { acceptFriendshipRequestFailed, acceptFriendshipRequestFulfilled, acceptFriendshipRequestPending, friendshipDeleteDeleteFailed, friendshipDeleteDeleteFulfilled, friendshipDeleteRequested, friendshipRequestWithdrawn, friendshipsRequestFailed, rejectFriendshipRequestFailed, rejectFriendshipRequestFulfilled, rejectFriendshipRequestPending, sendFriendshipRequestFailed, sendFriendshipRequestFulfilled, sendFriendshipRequestPending } from "@/store/entities/friendships/friendships.slice";
 import { AlertColor } from "@mui/material";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -24,6 +26,9 @@ const friendshipsSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
+      .addCase(routeChanged, (sliceState) => {
+        closeOpenDialogs(sliceState.dialogs);
+      })
       // .addCase(friendshipsRequested, (sliceState) => {
       //   sliceState.snackbar.loading = {
       //     open: true,
@@ -39,7 +44,7 @@ const friendshipsSlice = createSlice({
       .addCase(friendshipsRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundesdaten laden fehlgeschlagen",
+          message: "Freunde konnten nicht geladen werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -50,13 +55,13 @@ const friendshipsSlice = createSlice({
       .addCase(sendFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage",
+          message: "Anfrage wird gesendet",
         };
       })
       .addCase(sendFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage erfolgreich",
+          message: "Anfrage gesendet",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -64,10 +69,10 @@ const friendshipsSlice = createSlice({
           message: "",
         };
       })
-      .addCase(sendFriendshipRequestFailed, (sliceState) => {
+      .addCase(sendFriendshipRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.",
+          message: errorText(action, "Die Anfrage konnte nicht gesendet werden."),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -78,13 +83,13 @@ const friendshipsSlice = createSlice({
       .addCase(friendshipDeleteRequested, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaft löschen",
+          message: "Freundschaft wird beendet",
         };
       })
       .addCase(friendshipDeleteDeleteFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaft löschen erfolgreich",
+          message: "Freundschaft beendet",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -92,10 +97,14 @@ const friendshipsSlice = createSlice({
           message: "",
         };
       })
-      .addCase(friendshipDeleteDeleteFailed, (sliceState) => {
+      .addCase(friendshipRequestWithdrawn, (sliceState) => {
+        sliceState.snackbar.alert = { open: true, message: "Anfrage zurückgezogen", severity: "success" };
+        sliceState.snackbar.loading = { open: false, message: "" };
+      })
+      .addCase(friendshipDeleteDeleteFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaft löschen fehlgeschlagen",
+          message: errorText(action, "Freundschaft konnte nicht beendet werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -106,13 +115,13 @@ const friendshipsSlice = createSlice({
       .addCase(acceptFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage annehmen",
+          message: "Anfrage wird angenommen",
         };
       })
       .addCase(acceptFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage annehmen erfolgreich",
+          message: "Anfrage angenommen",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -120,10 +129,10 @@ const friendshipsSlice = createSlice({
           message: "",
         };
       })
-      .addCase(acceptFriendshipRequestFailed, (sliceState) => {
+      .addCase(acceptFriendshipRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage annehmen fehlgeschlagen",
+          message: errorText(action, "Anfrage konnte nicht angenommen werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -134,13 +143,13 @@ const friendshipsSlice = createSlice({
       .addCase(rejectFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage ablehnen",
+          message: "Anfrage wird abgelehnt",
         };
       })
       .addCase(rejectFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage ablehnen erfolgreich",
+          message: "Anfrage abgelehnt",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -148,10 +157,10 @@ const friendshipsSlice = createSlice({
           message: "",
         };
       })
-      .addCase(rejectFriendshipRequestFailed, (sliceState) => {
+      .addCase(rejectFriendshipRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage ablehnen fehlgeschlagen",
+          message: errorText(action, "Anfrage konnte nicht abgelehnt werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {

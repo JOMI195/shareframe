@@ -1,7 +1,6 @@
 import logging
 
 from config.celery import celery
-from sent_images.models import SentImage
 
 from .models import Image
 
@@ -13,18 +12,15 @@ def delete_marked_as_deleted_images_without_sent_images():
     """Delete images which are marked as deleted and dont have corresponding sentImages"""
     logger.info("Starting cleanup of deleted images")
 
-    images_marked_as_deleted = Image.objects.filter(markedAsDeleted=True)
-    logger.info(f"Found {images_marked_as_deleted.count()} images marked as deleted")
+    unsent_images = Image.objects.filter(markedAsDeleted=True, sent_image__isnull=True)
 
     deleteCount = 0
-    for image in images_marked_as_deleted:
-        corresp_sent_images = SentImage.objects.filter(image=image)
-        if not corresp_sent_images.exists():
-            logger.info(
-                f"Permanently deleting image ID {image.id} - no associated SentImages"
-            )
-            image.delete()
-            deleteCount += 1
+    for image in unsent_images:
+        logger.info(
+            f"Permanently deleting image ID {image.id} - no associated SentImages"
+        )
+        image.delete()
+        deleteCount += 1
 
     logger.info(f"Cleanup completed: {deleteCount} images permanently deleted")
     return f"Deleted {deleteCount} images which are marked as deleted and dont have corresponding sentImages."
@@ -35,22 +31,14 @@ def mark_expired_images_to_be_deleted():
     """Mark images for deletion if they have auto_delete_after_period=True and have expired"""
     logger.info("Starting check for expired images which can be marked as deleted")
 
-    # Get all images that are marked for auto-deletion but not yet deleted
-    images_to_check = Image.objects.filter(
-        auto_delete_after_period=True, markedAsDeleted=False
-    )
-
-    logger.info(f"Found {images_to_check.count()} images to check for auto-deletion")
-
+    cutoff = Image.auto_delete_cutoff()
     marked_count = 0
-    for image in images_to_check:
-        if image.should_be_auto_deleted():
-            logger.info(
-                f"Auto-marking image ID {image.id} for deletion - expired after auto-delete period"
-            )
-            image.markedAsDeleted = True
-            image.save(update_fields=["markedAsDeleted"])
-            marked_count += 1
+    if cutoff is not None:
+        marked_count = Image.objects.filter(
+            auto_delete_after_period=True,
+            markedAsDeleted=False,
+            created_at__lte=cutoff,
+        ).update(markedAsDeleted=True)
 
     logger.info(
         f"Auto-deletion check completed: {marked_count} images marked for deletion"

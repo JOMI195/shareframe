@@ -33,7 +33,7 @@ const StatCard: FC<StatCardProps> = ({ icon, title, value, customContent }) => {
                         {customContent ? (
                             customContent
                         ) : (
-                            <Typography variant="h6">
+                            <Typography variant="h6" component="p">
                                 {value}
                             </Typography>
                         )}

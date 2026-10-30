@@ -12,8 +12,7 @@ test.describe('sending on a phone', () => {
       await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
 
       const dialog = page.getByRole('dialog');
-      // Neither select in this dialog exposes an accessible name; receivers come first.
-      await dialog.getByRole('combobox').first().click();
+      await dialog.getByRole('combobox', { name: 'Empfänger' }).click();
       await page.getByRole('option', { name: 'seed_bob' }).click();
       await page.keyboard.press('Escape');
 
@@ -30,11 +29,12 @@ test.describe('sending on a phone', () => {
       await expect(page.getByText(/geteilte/)).toBeVisible({ timeout: 30_000 });
       await expectNoHorizontalScroll(page);
 
-      await page.locator('.MuiImageListItem-root').first().click();
-      await expect(page.getByRole('dialog').filter({ hasText: 'Gesendetes Foto' })).toBeVisible();
-      await runSpeedDialAction(page, 'Foto deaktivieren');
-      await page.getByRole('button', { name: 'Deaktivieren bestätigen' }).click();
-      await expect(page.getByRole('button', { name: 'Deaktivieren bestätigen' })).toBeHidden({ timeout: 30_000 });
+      // Real tiles only: the loading skeletons share the class but take no clicks.
+      await page.locator('.MuiImageListItem-root [role="button"]').first().click();
+      await expect(page.getByRole('dialog').filter({ hasText: /(Gesendetes|Erhaltenes) Foto/ })).toBeVisible();
+      await page.getByRole('button', { name: 'Foto deaktivieren' }).click();
+      await page.getByRole('button', { name: 'Deaktivieren', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Deaktivieren', exact: true })).toBeHidden({ timeout: 30_000 });
     });
   });
 });

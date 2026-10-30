@@ -12,7 +12,7 @@ const MOVE_STEP = 5;
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 4;
 
-const ROTATION_DEGREE = 30;
+const ROTATION_DEGREE = 22.5;
 const MIN_ROTATION = 0;
 const MAX_ROTATION = 360;
 

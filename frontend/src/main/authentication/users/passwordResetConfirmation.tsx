@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { Link as RouterLink, useNavigate, useParams } from "react-router";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
@@ -14,11 +14,16 @@ import * as yup from "yup";
 
 import {
   getAuthenticationUrl,
+  getResetPasswordUrl,
   getSignInUrl,
+  getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
-import { useAppDispatch } from "@/store";
+import Alert from "@mui/material/Alert";
+import Link from "@mui/material/Link";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { resetPasswordConfirm } from "@/store/entities/authentication/authentication.actions";
-import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getApi } from "@/store/entities/authentication/authentication.slice";
+import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 export default function PasswordResetConfirmation() {
   const { uid, token } = useParams();
@@ -30,8 +35,11 @@ export default function PasswordResetConfirmation() {
     re_new_password: false,
   });
 
+  const { loading } = useAppSelector(getApi);
+  const [failed, setFailed] = useState(false);
+
   const handleCancel = () => {
-    navigate(getDashboardUrl(), { replace: true });
+    navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
   };
 
   const handleClickShowPassword = (key: keyof typeof showPassword) => {
@@ -44,7 +52,7 @@ export default function PasswordResetConfirmation() {
     event.preventDefault();
   };
 
-  const [initialValues, setInitialValues] = useState({
+  const [initialValues] = useState({
     uid: uid as string,
     token: token as string,
     new_password: "",
@@ -76,16 +84,14 @@ export default function PasswordResetConfirmation() {
   const resetPasswordForm = useFormik({
     initialValues: initialValues,
     validationSchema: validationSchema,
-    enableReinitialize: true,
-    onSubmit: (values) => {
-      navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
-      dispatch(resetPasswordConfirm(values));
-      setInitialValues({
-        uid: "",
-        token: "",
-        new_password: "",
-        re_new_password: "",
-      });
+    onSubmit: async (values) => {
+      setFailed(false);
+      const changed: unknown = await dispatch(resetPasswordConfirm(values));
+      if (changed === true) {
+        navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
+      } else {
+        setFailed(true);
+      }
     },
   });
 
@@ -108,9 +114,19 @@ export default function PasswordResetConfirmation() {
             <Typography variant="body1" sx={{
               textAlign: "center"
             }}>
-              {"Bitte vergebe ein neues Passwort um dein altes zurückzusetzen"}
+              {"Vergib ein neues Passwort für dein Konto."}
             </Typography>
           </Grid>
+          {failed && (
+            <Grid size={12}>
+              <Alert severity="error">
+                Das neue Passwort konnte nicht gespeichert werden. Vielleicht ist der Link abgelaufen.{" "}
+                <Link component={RouterLink} to={getAuthenticationUrl() + getUsersUrl() + getResetPasswordUrl()}>
+                  Neuen Link anfordern
+                </Link>
+              </Alert>
+            </Grid>
+          )}
           <Grid size={12}>
             <TextField
               id="new_password"
@@ -123,12 +139,12 @@ export default function PasswordResetConfirmation() {
                 Boolean(resetPasswordForm.errors.new_password)
               }
               helperText={
-                getIn(resetPasswordForm.touched, "new_password") &&
-                getIn(resetPasswordForm.errors, "new_password")
+                (getIn(resetPasswordForm.touched, "new_password") &&
+                  getIn(resetPasswordForm.errors, "new_password")) || PASSWORD_RULES
               }
               onChange={resetPasswordForm.handleChange}
               fullWidth
-              autoComplete="new_password"
+              autoComplete="new-password"
               variant="outlined"
               required
               type={showPassword.new_password ? "text" : "password"}
@@ -137,7 +153,7 @@ export default function PasswordResetConfirmation() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle current new_password visibility"
+                        aria-label={`Neues Passwort ${showPassword.new_password ? "verbergen" : "anzeigen"}`}
                         onClick={() => handleClickShowPassword("new_password")}
                         onMouseDown={handleMouseDownPassword}
                         edge="end"
@@ -171,21 +187,21 @@ export default function PasswordResetConfirmation() {
               }
               onChange={resetPasswordForm.handleChange}
               fullWidth
-              autoComplete="re_new_password"
+              autoComplete="new-password"
               variant="outlined"
               required
-              type={showPassword.new_password ? "text" : "password"}
+              type={showPassword.re_new_password ? "text" : "password"}
               slotProps={{
                 input: {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle current new_password visibility"
-                        onClick={() => handleClickShowPassword("new_password")}
+                        aria-label={`Passwort wiederholen ${showPassword.re_new_password ? "verbergen" : "anzeigen"}`}
+                        onClick={() => handleClickShowPassword("re_new_password")}
                         onMouseDown={handleMouseDownPassword}
                         edge="end"
                       >
-                        {showPassword.new_password ? (
+                        {showPassword.re_new_password ? (
                           <VisibilityOff />
                         ) : (
                           <Visibility />
@@ -207,6 +223,7 @@ export default function PasswordResetConfirmation() {
               fullWidth
               form="password-reset-form"
               variant="contained"
+              loading={loading}
             >
               {"Passwort neu vergeben"}
             </Button>
@@ -223,7 +240,7 @@ export default function PasswordResetConfirmation() {
               color="secondary"
               onClick={handleCancel}
             >
-              {"abbrechen"}
+              {"Abbrechen"}
             </Button>
           </Grid>
         </Grid>

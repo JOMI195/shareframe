@@ -78,6 +78,24 @@ describe('changelogs entity slice', () => {
     expect(changelogsReducer(initial(), changelogIdsReceived(ids)).changelogIds).toEqual(ids);
   });
 
+  // Effects key on the id list; a fresh but equal array would refetch on every poll.
+  it('keeps the id list reference when nothing changed', () => {
+    const ids = [makeChangelogId({ id: 1 }), makeChangelogId({ id: 2 })];
+    const first = changelogsReducer(initial(), changelogIdsReceived(ids));
+
+    const second = changelogsReducer(first, changelogIdsReceived(ids.map((id) => ({ ...id }))));
+
+    expect(second.changelogIds).toBe(first.changelogIds);
+    expect(second.api.idsLastFetch).not.toBeNull();
+  });
+
+  it('takes a changed id list', () => {
+    const first = changelogsReducer(initial(), changelogIdsReceived([makeChangelogId({ id: 1, title: 'alt' })]));
+
+    const changed = [makeChangelogId({ id: 1, title: 'neu' })];
+    expect(changelogsReducer(first, changelogIdsReceived(changed)).changelogIds).toEqual(changed);
+  });
+
   it('merges received content by id', () => {
     const stale = makeChangelog({ id: 1, title: 'alt' });
     const fresh = makeChangelog({ id: 1, title: 'neu' });

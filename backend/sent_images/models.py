@@ -54,5 +54,19 @@ class SentImage(models.Model):
 
     objects = SentImageQuerySet.as_manager()
 
+    class Meta:
+        indexes = [
+            models.Index(
+                fields=["reciever", "status", "expires_at"],
+                name="sentimage_reciever_status_exp",
+            ),
+            models.Index(fields=["expires_at"], name="sentimage_expires_at"),
+            models.Index(
+                fields=["scheduled_for"],
+                name="sentimage_scheduled_for",
+                condition=models.Q(status="scheduled"),
+            ),
+        ]
+
     def __str__(self):
         return f"{self.sender.username}->{self.reciever.username}"

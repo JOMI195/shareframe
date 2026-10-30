@@ -12,7 +12,9 @@ import Button from "@mui/material/Button";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
-import { useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+import { safeReturnPath } from "@/common/utils/safeReturnPath";
+import { SESSION_EXPIRED_KEY } from "@/services/httpService";
 import * as yup from "yup";
 import IconButton from "@mui/material/IconButton";
 import InputAdornment from "@mui/material/InputAdornment";
@@ -36,34 +38,39 @@ const COOKIES_BLOCKED_MESSAGE = "Dein Browser blockiert Cookies für ShareFrame.
 export default function SignIn() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Set by the forced logout: tells the user why, and where they were. Kept until the
+  // sign-in succeeds, since the page can mount more than once on the way here.
+  const [expiredAt] = useState<string | null>(() => {
+    try {
+      return sessionStorage.getItem(SESSION_EXPIRED_KEY);
+    } catch {
+      return null;
+    }
+  });
+  const forgetExpiry = () => {
+    try {
+      sessionStorage.removeItem(SESSION_EXPIRED_KEY);
+    } catch {
+      // Nothing was stored.
+    }
+  };
+  const returnTo =
+    safeReturnPath((location.state as { from?: string } | null)?.from ?? expiredAt) ?? getDashboardUrl();
 
   const api = useAppSelector(getApi);
 
   const [errorMessage, setErrorMessage] = useState("");
   const [cookiesBlocked, setCookiesBlocked] = useState(() => !areCookiesEnabled());
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-
-    if (errorMessage) {
-      timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 10000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [errorMessage]);
-
-  // Only for an already-signed-in visitor. The post-login redirect happens in
-  // onSubmit: watching the auth slice here would loop, since loadMyUserProfile
-  // mutates the very slice the effect depends on.
+  // Only for an already-signed-in visitor; the post-login redirect happens in onSubmit.
+  // The protected route loads the profile, so it is not requested here as well.
   useEffect(() => {
     if (localStorage.getItem("loggedIn") === "true" && areCookiesEnabled()) {
-      dispatch(loadMyUserProfile());
-      navigate(getDashboardUrl());
+      navigate(returnTo, { replace: true });
     }
-  }, [dispatch, navigate]);
+  }, [navigate, returnTo]);
 
   const [showPassword, setShowPassword] = useState(false);
 
@@ -100,10 +107,12 @@ export default function SignIn() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setErrorMessage("");
       await dispatch(authenticateUser(values));
       if (localStorage.getItem("loggedIn") !== "true") {
-        setErrorMessage("Bitte überprüfe deine E-Mail-Adresse und dein Passwort auf Tippfehler (Groß-/ Kleinschreibung beachten). Falls dein Konto noch nicht aktiviert wurde, prüfe bitte deine E-Mails auf die Aktivierungsmail. Versuche es anschließend erneut. Bei wiederholten Problemen kontaktiere bitte unseren Support.");
-        signInForm.resetForm();
+        setErrorMessage("E-Mail-Adresse oder Passwort stimmen nicht. Achte auf Groß- und Kleinschreibung.");
+        signInForm.setFieldValue("password", "", false);
+        signInForm.setFieldTouched("password", false, false);
         return;
       }
       signInForm.resetForm();
@@ -113,8 +122,10 @@ export default function SignIn() {
         setCookiesBlocked(true);
         return;
       }
-      dispatch(loadMyUserProfile());
-      navigate(getDashboardUrl());
+      // Awaited, so the protected route finds the profile and does not request it again.
+      await dispatch(loadMyUserProfile());
+      forgetExpiry();
+      navigate(returnTo, { replace: true });
     },
   });
 
@@ -125,6 +136,11 @@ export default function SignIn() {
       }}>
         {"Anmelden"}
       </Typography>
+      {expiredAt !== null && (
+        <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
+          Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.
+        </Alert>
+      )}
       {cookiesBlocked && (
         <Alert severity="warning" sx={{ mt: 2, mb: 2 }}>
           {COOKIES_BLOCKED_MESSAGE}
@@ -147,7 +163,8 @@ export default function SignIn() {
             <TextField
               id="email"
               name="email"
-              label={"Email"}
+              type="email"
+              label={"E-Mail-Adresse"}
               value={signInForm.values.email}
               onBlur={signInForm.handleBlur}
               error={
@@ -166,7 +183,7 @@ export default function SignIn() {
                   endAdornment: signInForm.values.email ? (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="clear email field"
+                        aria-label="E-Mail-Adresse leeren"
                         onClick={handleClearEmail}
                         onMouseDown={handleMouseDownButton}
                         edge="end"
@@ -196,7 +213,7 @@ export default function SignIn() {
               }
               onChange={signInForm.handleChange}
               fullWidth
-              autoComplete="password"
+              autoComplete="current-password"
               variant="outlined"
               type={showPassword ? "text" : "password"}
               slotProps={{
@@ -204,7 +221,7 @@ export default function SignIn() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle current password visibility"
+                        aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                         onClick={() => handleClickShowPassword()}
                         onMouseDown={handleMouseDownButton}
                         edge="end"
@@ -223,9 +240,9 @@ export default function SignIn() {
               form="sign-in-form"
               fullWidth
               variant="contained"
-              disabled={api.loading}
+              loading={api.loading}
             >
-              {"anmelden"}
+              {"Anmelden"}
             </Button>
           </Grid>
           <Grid

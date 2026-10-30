@@ -1,11 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import reducer, {
-  closeLoginOptionsDialog,
+  closeOpenDialogs,
   closeSidebar,
   featureSelected,
-  loginOptionsDialogClosed,
-  loginOptionsDialogOpened,
-  openLoginOptionsDialog,
   openSidedbar,
   setSelectedFeature,
   sidebarClosed,
@@ -15,10 +12,9 @@ import reducer, {
 const initial = () => reducer(undefined, { type: '@@init' });
 
 describe('navigation slice', () => {
-  it('starts on the welcome feature with everything closed', () => {
+  it('starts on the welcome feature with the sidebar closed', () => {
     expect(initial()).toEqual({
       selectedFeature: { title: 'welcome' },
-      dialogs: { loginOptions: { open: false } },
       sidebar: { open: false },
     });
   });
@@ -27,20 +23,27 @@ describe('navigation slice', () => {
     expect(reducer(initial(), featureSelected('app')).selectedFeature.title).toBe('app');
   });
 
-  it('toggles the sidebar and login dialog independently', () => {
-    const open = reducer(reducer(initial(), sidebarOpened()), loginOptionsDialogOpened());
+  it('toggles the sidebar', () => {
+    const open = reducer(initial(), sidebarOpened());
     expect(open.sidebar.open).toBe(true);
-    expect(open.dialogs.loginOptions.open).toBe(true);
 
-    const closed = reducer(reducer(open, sidebarClosed()), loginOptionsDialogClosed());
-    expect(closed).toEqual(initial());
+    expect(reducer(open, sidebarClosed())).toEqual(initial());
   });
 
   it('exposes matching plain action creators', () => {
     expect(setSelectedFeature('settings')).toEqual({ type: featureSelected.type, payload: 'settings' });
     expect(openSidedbar()).toEqual({ type: sidebarOpened.type });
     expect(closeSidebar()).toEqual({ type: sidebarClosed.type });
-    expect(openLoginOptionsDialog()).toEqual({ type: loginOptionsDialogOpened.type });
-    expect(closeLoginOptionsDialog()).toEqual({ type: loginOptionsDialogClosed.type });
+  });
+});
+
+describe('closeOpenDialogs', () => {
+  // Keeps everything but the open flags, e.g. the activity filter values.
+  it('closes every dialog and leaves their data alone', () => {
+    const dialogs = { filter: { open: true, statusFilter: 'expired' }, preview: { open: false } };
+
+    closeOpenDialogs(dialogs);
+
+    expect(dialogs).toEqual({ filter: { open: false, statusFilter: 'expired' }, preview: { open: false } });
   });
 });

@@ -1,15 +1,18 @@
 import { useState } from "react";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
+import { Button, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch } from "@/store";
 import { deleteMyUserProfile } from "@/store/entities/authentication/authentication.actions";
+import { clearLocalSession } from "@/common/utils/pwa/clearLocalSession";
+import ConfirmDialog from "@/common/components/confirmDialog";
 import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import SettingsSection from "@/common/components/settings/settingsSection";
 import FormActions from "@/common/components/settings/formActions";
+import { errorMessageFor } from "@/common/utils/errors/errorMessages";
 
 const validationSchema = yup.object({
     password: yup.string().required("Dieses Feld wird benötigt"),
@@ -23,6 +26,7 @@ const Delete = () => {
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [failure, setFailure] = useState<string | null>(null);
 
     const form = useFormik({
         initialValues: { password: "" },
@@ -32,6 +36,7 @@ const Delete = () => {
 
     const handleCancel = () => {
         setEditing(false);
+        setFailure(null);
         form.resetForm();
     };
 
@@ -41,9 +46,12 @@ const Delete = () => {
         setLoading(false);
         setConfirmOpen(false);
         if (response === true) {
+            await clearLocalSession();
             navigate(getHomeUrl(), { replace: true });
         } else {
-            form.resetForm();
+            const wrongPassword = errorMessageFor("wrong_password");
+            form.setFieldValue("password", "", false);
+            setFailure(wrongPassword && response === wrongPassword ? wrongPassword : "Dein Konto konnte nicht gelöscht werden. Versuch es später noch einmal.");
         }
     };
 
@@ -81,10 +89,13 @@ const Delete = () => {
                             name="password"
                             label="Passwort"
                             value={form.values.password}
-                            onChange={form.handleChange}
+                            onChange={(event) => {
+                                setFailure(null);
+                                form.handleChange(event);
+                            }}
                             onBlur={form.handleBlur}
-                            error={form.touched.password && Boolean(form.errors.password)}
-                            helperText={getIn(form.touched, "password") && getIn(form.errors, "password")}
+                            error={Boolean(failure) || (form.touched.password && Boolean(form.errors.password))}
+                            helperText={failure ?? (getIn(form.touched, "password") && getIn(form.errors, "password"))}
                             fullWidth
                             autoComplete="current-password"
                             variant="outlined"
@@ -94,7 +105,7 @@ const Delete = () => {
                                     endAdornment: (
                                         <InputAdornment position="end">
                                             <IconButton
-                                                aria-label="Passwort anzeigen"
+                                                aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                                                 onClick={() => setShowPassword(!showPassword)}
                                                 onMouseDown={(event) => event.preventDefault()}
                                                 edge="end"
@@ -118,28 +129,17 @@ const Delete = () => {
                 )}
             </SettingsSection>
 
-            <Dialog
+            <ConfirmDialog
                 open={confirmOpen}
-                onClose={() => !loading && setConfirmOpen(false)}
-                aria-labelledby="delete-user-confirm-title"
+                title="Konto endgültig löschen?"
+                confirmLabel="Endgültig löschen"
+                destructive
+                loading={loading}
+                onConfirm={handleConfirm}
+                onCancel={() => !loading && setConfirmOpen(false)}
             >
-                <DialogTitle id="delete-user-confirm-title">Konto endgültig löschen?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Dein Konto und alle deine Daten werden sofort gelöscht. Das kann nicht rückgängig gemacht werden.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <FormActions fill>
-                        <Button onClick={() => setConfirmOpen(false)} variant="outlined" disabled={loading}>
-                            Abbrechen
-                        </Button>
-                        <Button onClick={handleConfirm} color="error" variant="contained" disabled={loading}>
-                            Endgültig löschen
-                        </Button>
-                    </FormActions>
-                </DialogActions>
-            </Dialog>
+                Dein Konto und alle deine Daten werden sofort gelöscht. Das kann nicht rückgängig gemacht werden.
+            </ConfirmDialog>
         </>
     );
 };

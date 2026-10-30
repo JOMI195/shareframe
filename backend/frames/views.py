@@ -15,6 +15,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from config import error_codes
 from config.throttles import (
     BurstRateThrottle,
     FrameBurstRateThrottle,
@@ -28,6 +29,7 @@ from sent_images.models import SentImage, SentImageStatus
 from sent_images.serializers import SentImagesRetrieveSerializer
 from user_core.models import User
 from user_stats.counters import record_send
+from utils.api_errors import error_response
 from utils.request_logging.decorators import no_logging
 
 from .auth import (
@@ -140,11 +142,13 @@ class FramesViewSet(viewsets.ModelViewSet):
         public_serial_number = request.data.get("public_serial_number")
 
         if not public_serial_number:
-            return Response(
-                {"error": "Public serial number is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.SERIAL_REQUIRED,
+                "Public serial number is required.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
+        # One answer for unknown and taken serials, so nobody can probe which exist.
         error_mess = "Frame not found because of invalid serial number or already registered to a user."
 
         try:
@@ -152,15 +156,13 @@ class FramesViewSet(viewsets.ModelViewSet):
                 public_serial_number=public_serial_number, is_active=True
             )
         except Frame.DoesNotExist:
-            return Response(
-                {"error": error_mess},
-                status=status.HTTP_404_NOT_FOUND,
+            return error_response(
+                error_codes.FRAME_UNAVAILABLE, error_mess, status.HTTP_404_NOT_FOUND
             )
 
         if frame.user:
-            return Response(
-                {"error": error_mess},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRAME_UNAVAILABLE, error_mess, status.HTTP_400_BAD_REQUEST
             )
 
         frame.user = request.user
@@ -183,9 +185,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         public_serial_number = request.data.get("public_serial_number")
 
         if not public_serial_number:
-            return Response(
-                {"error": "Public serial number is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.SERIAL_REQUIRED,
+                "Public serial number is required.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         try:
@@ -195,9 +198,10 @@ class FramesViewSet(viewsets.ModelViewSet):
                 is_active=True,
             )
         except Frame.DoesNotExist:
-            return Response(
-                {"error": "Frame not found or invalid serial number."},
-                status=status.HTTP_404_NOT_FOUND,
+            return error_response(
+                error_codes.FRAME_NOT_FOUND,
+                "Frame not found or invalid serial number.",
+                status.HTTP_404_NOT_FOUND,
             )
 
         frame.user = None
@@ -224,29 +228,33 @@ class FramesViewSet(viewsets.ModelViewSet):
         user = request.user
 
         if not reciever_username:
-            return Response(
-                {"error": "Reciever username is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.RECEIVER_REQUIRED,
+                "Reciever username is required.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if not image_id:
-            return Response(
-                {"error": "Image id is required."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.IMAGE_REQUIRED,
+                "Image id is required.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         try:
             expiry_datetime = _parse_future_unix_timestamp(expiry_unix_timestamp)
             scheduled_for = _parse_future_unix_timestamp(scheduled_unix_timestamp)
         except _InvalidTimestamp:
-            return Response(
-                {"error": "Invalid Unix timestamp provided."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.TIMESTAMP_INVALID,
+                "Invalid Unix timestamp provided.",
+                status.HTTP_400_BAD_REQUEST,
             )
         except _PastTimestamp:
-            return Response(
-                {"error": "The provided timestamp must be in the future."},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.TIMESTAMP_PAST,
+                "The provided timestamp must be in the future.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if expiry_datetime is None:
@@ -257,24 +265,25 @@ class FramesViewSet(viewsets.ModelViewSet):
                 days=settings.SENT_IMAGE_MAX_SCHEDULE_DAYS
             )
             if scheduled_for > max_scheduled_for:
-                return Response(
-                    {"error": "The scheduled time is too far in the future."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    error_codes.SCHEDULE_TOO_FAR,
+                    "The scheduled time is too far in the future.",
+                    status.HTTP_400_BAD_REQUEST,
                 )
             if expiry_datetime is not None and expiry_datetime <= scheduled_for:
-                return Response(
-                    {"error": "The expiry must be after the scheduled time."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                return error_response(
+                    error_codes.EXPIRY_BEFORE_SCHEDULE,
+                    "The expiry must be after the scheduled time.",
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
         try:
             image = Image.objects.get(id=image_id, user=user, markedAsDeleted=False)
         except Image.DoesNotExist:
-            return Response(
-                {
-                    "error": "Image not found, invalid image id, or no permission to access."
-                },
-                status=status.HTTP_404_NOT_FOUND,
+            return error_response(
+                error_codes.IMAGE_NOT_FOUND,
+                "Image not found, invalid image id, or no permission to access.",
+                status.HTTP_404_NOT_FOUND,
             )
 
         not_found_error_message = (
@@ -284,9 +293,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         try:
             reciever = User.objects.get(username=reciever_username)
         except User.DoesNotExist:
-            return Response(
-                {"error": not_found_error_message},
-                status=status.HTTP_404_NOT_FOUND,
+            return error_response(
+                error_codes.RECEIVER_NOT_FOUND,
+                not_found_error_message,
+                status.HTTP_404_NOT_FOUND,
             )
 
         if reciever != user:
@@ -297,9 +307,10 @@ class FramesViewSet(viewsets.ModelViewSet):
                     status="accepted",
                 )
             except Friendship.DoesNotExist:
-                return Response(
-                    {"error": not_found_error_message},
-                    status=status.HTTP_404_NOT_FOUND,
+                return error_response(
+                    error_codes.RECEIVER_NOT_FOUND,
+                    not_found_error_message,
+                    status.HTTP_404_NOT_FOUND,
                 )
 
         if scheduled_for is not None:
@@ -484,9 +495,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         try:
             frame = self.get_queryset().get(pk=pk)
         except Frame.DoesNotExist:
-            return Response(
-                {"error": "Frame not found"},
-                status=status.HTTP_404_NOT_FOUND,
+            return error_response(
+                error_codes.FRAME_NOT_FOUND,
+                "Frame not found",
+                status.HTTP_404_NOT_FOUND,
             )
 
         expiry_minutes = os.environ.get("DJANGO_FRAME_OTP_EXPIRY_MINUTES", 10)

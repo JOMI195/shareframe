@@ -94,7 +94,7 @@ class ChangelogImage(models.Model):
         "Changelog", related_name="images", on_delete=models.CASCADE
     )
     tag = models.CharField(max_length=100)
-    image = models.ImageField(upload_to=changelog_image_upload_path)
+    image = models.ImageField(upload_to=changelog_image_upload_path, db_index=True)
     description = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 

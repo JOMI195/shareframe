@@ -3,7 +3,7 @@ from django.conf import settings
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from tests.support import seed
-from tests.support.helpers.auth import CookieClient
+from tests.support.helpers.auth import CookieClient, sign_in
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -77,7 +77,10 @@ def test_unsafe_requests_need_the_csrf_header(alice):
     response = alice.patch(ME_URL, {"username": "nope"}, format="json")
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "CSRF Failed: Request rejected."}
+    assert response.json() == {
+        "detail": "CSRF Failed: Request rejected.",
+        "code": "permission_denied",
+    }
 
 
 def test_a_csrf_rejection_does_not_echo_the_origin(alice):
@@ -126,3 +129,78 @@ def test_logout_clears_the_cookies_and_kills_the_session(alice):
     assert response.status_code == 204
     assert alice.cookies[settings.AUTH_COOKIE_ACCESS_NAME].value == ""
     assert alice.get(ME_URL).status_code == 401
+
+
+def test_logout_clears_the_http_cache(alice):
+    response = alice.post(LOGOUT_URL, {}, format="json")
+
+    assert response["Clear-Site-Data"] == '"cache"'
+
+
+class TestAudit:
+    def test_a_sign_in_names_its_channel(self, client, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            sign_in(client)
+
+        assert "Login: " in caplog.text
+        assert "via app" in caplog.text
+
+    def test_a_refresh_names_the_user(self, alice, caplog):
+        user = User.objects.get(username=seed.ALICE)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            alice.post(REFRESH_URL, {}, format="json")
+
+        assert f"Token refreshed: user {user.pk} from" in caplog.text
+
+    def test_a_refresh_without_the_cookie_is_audited(self, client, caplog):
+        client.get(CSRF_URL)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(REFRESH_URL, {}, format="json")
+
+        assert "Token refresh rejected (missing)" in caplog.text
+
+    def test_a_forged_refresh_cookie_is_audited(self, client, caplog):
+        client.get(CSRF_URL)
+        client.cookies[settings.AUTH_COOKIE_REFRESH_NAME] = "forged.token.value"
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(REFRESH_URL, {}, format="json")
+
+        assert "Token refresh rejected (invalid)" in caplog.text
+
+    def test_a_logout_names_the_user(self, alice, caplog):
+        user = User.objects.get(username=seed.ALICE)
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            alice.post(LOGOUT_URL, {}, format="json")
+
+        assert f"Logout: user {user.pk} from" in caplog.text
+
+    def test_a_logout_with_a_forged_cookie_names_no_user(self, client, caplog):
+        client.get(CSRF_URL)
+        client.cookies[settings.AUTH_COOKIE_REFRESH_NAME] = "forged.token.value"
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client.post(LOGOUT_URL, {}, format="json")
+
+        assert "Logout: user unknown from" in caplog.text
+
+    def test_a_forged_access_cookie_is_audited(self, client, caplog):
+        client.cookies[settings.AUTH_COOKIE_ACCESS_NAME] = "forged.token.value"
+
+        with caplog.at_level("INFO", logger="admin.audit"):
+            response = client.get(ME_URL)
+
+        assert response.status_code == 401
+        assert "Access token rejected from" in caplog.text
+
+    def test_no_token_reaches_the_log(self, alice, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            alice.post(REFRESH_URL, {}, format="json")
+            tokens = (alice.access_token, alice.refresh_token)
+            alice.post(LOGOUT_URL, {}, format="json")
+
+        assert all(tokens)
+        assert not any(token in caplog.text for token in tokens)

@@ -1,6 +1,8 @@
+import asyncio
 import base64
 import json
 import logging
+import time
 from datetime import datetime
 
 from channels.db import database_sync_to_async
@@ -14,7 +16,7 @@ from user_core.models import User
 
 from .close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
 from .commands import record_result
-from .models import FrameWebsocketConnection
+from .models import Frame, FrameWebsocketConnection
 
 logger = logging.getLogger("websockets.frames")
 
@@ -23,26 +25,64 @@ def _count_level(count: int) -> int:
     return logging.INFO if count else logging.DEBUG
 
 
-@database_sync_to_async
-def _read_delivery_image_b64(image: Image) -> str:
-    delivery_file = image.get_delivery_file()
-    with open(delivery_file.path, "rb") as image_file:
+# Well inside every staleness window (cleanup task, dashboards, frontend).
+LAST_SEEN_INTERVAL_SECONDS = 60
+
+
+def _read_b64(path: str) -> str:
+    with open(path, "rb") as image_file:
         return base64.b64encode(image_file.read()).decode("utf-8")
 
 
+async def _read_delivery_image_b64(image: Image) -> str:
+    path = await database_sync_to_async(lambda: image.get_delivery_file().path)()
+    # Off the shared DB thread, so a large file doesn't stall other frames' queries.
+    return await asyncio.to_thread(_read_b64, path)
+
+
+def _picture_message(
+    sender: str,
+    picture_data: str,
+    expiry_unix_timestamp: int | None,
+    sent_image_id: int | None,
+) -> str:
+    return json.dumps(
+        {
+            "type": "picture",
+            "sender": sender,
+            "data": picture_data,
+            "expiry_unix_timestamp": expiry_unix_timestamp,
+            "sent_image_id": sent_image_id,
+        }
+    )
+
+
+def _expiry_timestamp(sent_image: SentImage) -> int | None:
+    if sent_image.expires_at is None:
+        return None
+    return int(sent_image.expires_at.timestamp())
+
+
 class FrameWebSocketConsumer(AsyncWebsocketConsumer):
+    _last_seen_written = 0.0
+
+    async def update_last_seen(self, force=False):
+        now = time.monotonic()
+        if not force and now - self._last_seen_written < LAST_SEEN_INTERVAL_SECONDS:
+            return
+        self._last_seen_written = now
+        await self._write_last_seen()
+
     @database_sync_to_async
-    def update_last_seen(self):
+    def _write_last_seen(self):
         try:
             frame = self.scope.get("frame")
             if frame:
-                frame.last_seen = timezone.now()
-                frame.save(update_fields=["last_seen"])
-                connection = FrameWebsocketConnection.objects.get(
+                now = timezone.now()
+                Frame.objects.filter(pk=frame.pk).update(last_seen=now)
+                FrameWebsocketConnection.objects.filter(
                     frame=frame, channel_name=self.channel_name
-                )
-                connection.last_active = timezone.now()
-                connection.save(update_fields=["last_active"])
+                ).update(last_active=now)
         except Exception as e:
             logger.error(f"Error updating last seen fields: {str(e)}")
 
@@ -138,6 +178,15 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         return missing_images
 
     @database_sync_to_async
+    def get_sent_images(self, frame_user: User, sent_image_ids: list[int]):
+        return {
+            sent_image.id: sent_image
+            for sent_image in SentImage.objects.sent()
+            .filter(reciever=frame_user, id__in=sent_image_ids)
+            .select_related("sender", "image")
+        }
+
+    @database_sync_to_async
     def get_existing_sent_image_ids(self, frame_user: User, sent_image_ids: list[int]):
         return set(
             SentImage.objects.sent()
@@ -149,43 +198,29 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             .values_list("id", flat=True)
         )
 
-    @database_sync_to_async
-    def get_sent_image(self, frame_user: User, sent_image_id: int):
-        try:
-            return SentImage.objects.sent().get(reciever=frame_user, id=sent_image_id)
-        except SentImage.DoesNotExist:
-            logger.debug(
-                f"SentImage with ID {sent_image_id} not found for user {frame_user.username}"
+    async def send_sent_image(self, sent_image: SentImage):
+        picture_data = await _read_delivery_image_b64(sent_image.image)
+        logger.debug(
+            f"Sending picture to frame {self.scope['frame'].id} (sent_image_id={sent_image.id})"
+        )
+        await self.send(
+            text_data=_picture_message(
+                sent_image.sender.username,
+                picture_data,
+                _expiry_timestamp(sent_image),
+                sent_image.id,
             )
-            return None
-        except SentImage.MultipleObjectsReturned:
-            logger.error(
-                f"Multiple SentImages found with ID {sent_image_id} for user {frame_user.username}"
+        )
+
+    async def send_clear_sent_images(self, sent_image_ids: list):
+        logger.info(
+            f"Sending clear command for {len(sent_image_ids)} images to frame {self.scope['frame'].id}"
+        )
+        await self.send(
+            text_data=json.dumps(
+                {"type": "clear_specific_sent_images", "sent_image_ids": sent_image_ids}
             )
-            return None
-
-    @database_sync_to_async
-    def prepare_image_data(self, sent_image: SentImage):
-        try:
-            expiry_unix_timestamp = None
-            if sent_image.expires_at:
-                expiry_unix_timestamp = int(sent_image.expires_at.timestamp())
-
-            logger.debug(f"Prepared image data for sent_image_id={sent_image.id}")
-
-            return {
-                "sender": sent_image.sender,
-                "reciever": sent_image.reciever,
-                "image": sent_image.image,
-                "expiry_unix_timestamp": expiry_unix_timestamp,
-                "expiry_datetime": sent_image.expires_at,
-                "sent_image_id": sent_image.id,
-            }
-        except Exception as e:
-            logger.error(
-                f"Error preparing image data for sent_image_id={sent_image.id}: {str(e)}"
-            )
-            raise
+        )
 
     async def handle_check_user_frame_missing_images(self, message_data: dict):
         try:
@@ -219,16 +254,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             )
 
             for sent_image in images_to_send:
-                image_data = await self.prepare_image_data(sent_image)
-
-                await self.__class__.send_picture_to_user_frames(
-                    sender=image_data["sender"],
-                    reciever=image_data["reciever"],
-                    image=image_data["image"],
-                    expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
-                    expiry_datetime=image_data["expiry_datetime"],
-                    sent_image_id=image_data["sent_image_id"],
-                )
+                await self.send_sent_image(sent_image)
 
             existing_ids = await self.get_existing_sent_image_ids(
                 frame.user, current_images
@@ -243,9 +269,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             )
 
             if images_to_delete:
-                await self.__class__.send_clear_specific_images_to_user_frames(
-                    frame.user, images_to_delete
-                )
+                await self.send_clear_sent_images(images_to_delete)
 
         except Exception as e:
             logger.exception(f"Error handling check_missing_images: {str(e)}")
@@ -265,9 +289,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 f"comparing {len(current_images)} existing images"
             )
 
-            images_to_send = []
-            images_to_delete = []
-
+            entries = []
             for image_entry in current_images:
                 board_image_id = image_entry.get("sent_image_id")
                 board_image_expires_at = image_entry.get("expires_at")
@@ -275,13 +297,23 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 if board_image_id is None or board_image_expires_at is None:
                     logger.warning(f"Skipping malformed image entry: {image_entry}")
                     continue
+                entries.append((board_image_id, board_image_expires_at))
 
-                sent_image = await self.get_sent_image(frame.user, int(board_image_id))
+            sent_images = await self.get_sent_images(
+                frame.user, [int(board_image_id) for board_image_id, _ in entries]
+            )
+
+            images_to_send = []
+            images_to_delete = []
+            now = int(datetime.now().timestamp())
+
+            for board_image_id, board_image_expires_at in entries:
+                sent_image = sent_images.get(int(board_image_id))
                 if sent_image is not None:
                     sent_image_expiry = int(sent_image.expires_at.timestamp())
 
                     # Case 1: Expired images
-                    if sent_image_expiry < int(datetime.now().timestamp()):
+                    if sent_image_expiry < now:
                         logger.debug(
                             f"Image {board_image_id} has expired and will be deleted"
                         )
@@ -310,21 +342,10 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             )
 
             for sent_image in images_to_send:
-                image_data = await self.prepare_image_data(sent_image)
+                await self.send_sent_image(sent_image)
 
-                await self.__class__.send_picture_to_user_frames(
-                    sender=image_data["sender"],
-                    reciever=image_data["reciever"],
-                    image=image_data["image"],
-                    expiry_unix_timestamp=image_data["expiry_unix_timestamp"],
-                    expiry_datetime=image_data["expiry_datetime"],
-                    sent_image_id=image_data["sent_image_id"],
-                )
-
-            if len(images_to_delete) > 0:
-                await self.__class__.send_clear_specific_images_to_user_frames(
-                    frame.user, images_to_delete
-                )
+            if images_to_delete:
+                await self.send_clear_sent_images(images_to_delete)
 
         except Exception as e:
             logger.exception(f"Error handling check_images_expiry: {str(e)}")
@@ -409,11 +430,15 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             f"connected frames (sent_image_id={sent_image_id})"
         )
 
-        try:
-            picture_data = await _read_delivery_image_b64(image)
-        except Exception as e:
-            logger.error(f"Failed to read image file for image {image.id}: {str(e)}")
-            raise
+        picture_data = None
+        if connections:
+            try:
+                picture_data = await _read_delivery_image_b64(image)
+            except Exception as e:
+                logger.error(
+                    f"Failed to read image file for image {image.id}: {str(e)}"
+                )
+                raise
 
         if sent_image_id is None:
             try:
@@ -429,20 +454,23 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
                 logger.error(f"Failed to create SentImage record: {str(e)}")
                 raise
 
-        message = {
-            "type": "picture",
-            "sender": sender.username,
-            "data": picture_data,
-            "expiry_unix_timestamp": expiry_unix_timestamp,
-            "sent_image_id": sent_image_id,
-        }
+        if not connections:
+            return
+
+        message = _picture_message(
+            sender.username, picture_data, expiry_unix_timestamp, sent_image_id
+        )
 
         try:
             for connection in connections:
                 logger.debug(f"Sending picture to channel {connection.channel_name}")
                 await channel_layer.send(
                     connection.channel_name,
-                    {"type": "send_picture", "picture_data": json.dumps(message)},
+                    {
+                        "type": "send_picture",
+                        "picture_data": message,
+                        "sent_image_id": sent_image_id,
+                    },
                 )
         except Exception as e:
             logger.error(f"Error sending picture to channels: {str(e)}")
@@ -461,7 +489,7 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             logger.info(f"New connection accepted for frame {frame.id}")
             await self.update_last_connected(frame)
             await self.save_connection(frame)
-            await self.update_last_seen()
+            await self.update_last_seen(force=True)
         else:
             logger.warning("Connection rejected - no frame in scope")
             await self.close(code=WS_CLOSE_AUTH_REJECTED)
@@ -526,15 +554,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
         frame_id = frame.id if frame else "unknown"
 
         try:
-            try:
-                message = json.loads(event["picture_data"])
-                sent_image_id = message.get("sent_image_id")
-                logger.debug(
-                    f"Sending picture to frame {frame_id} (sent_image_id={sent_image_id})"
-                )
-            except (KeyError, json.JSONDecodeError):
-                logger.debug(f"Sending picture to frame {frame_id}")
-
+            logger.debug(
+                f"Sending picture to frame {frame_id} (sent_image_id={event.get('sent_image_id')})"
+            )
             await self.send(text_data=event["picture_data"])
         except Exception as e:
             logger.exception(f"Error sending picture to frame {frame_id}: {str(e)}")

@@ -3,15 +3,23 @@ from datetime import timedelta
 import pytest
 from django.utils import timezone
 from django_celery_results.models import TaskResult
+from rest_framework_simplejwt.token_blacklist.models import OutstandingToken
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from images.models import Image
 from metrics.collectors import (
+    ShareframeAuthCollector,
     ShareframeBusinessCollector,
     ShareframeCeleryCollector,
     ShareframeFrameCollector,
 )
 from sent_images.models import SentImage
-from tests.support.factories import FrameFactory, ImageFactory, SentImageFactory
+from tests.support.factories import (
+    FrameFactory,
+    ImageFactory,
+    SentImageFactory,
+    UserFactory,
+)
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -291,3 +299,46 @@ class TestCeleryCollector:
         self.result("SUCCESS")
 
         assert "tests.task" in self.samples("shareframe_celery_task_runs_24h")
+
+
+class TestAuthCollector:
+    def test_only_live_refresh_tokens_count_as_sessions(self):
+        before = gauges(ShareframeAuthCollector())
+        user = UserFactory(is_active=True)
+        RefreshToken.for_user(user)
+        RefreshToken.for_user(user).blacklist()
+        expired = RefreshToken.for_user(user)
+        OutstandingToken.objects.filter(jti=expired["jti"]).update(
+            expires_at=timezone.now() - timedelta(minutes=1)
+        )
+
+        values = gauges(ShareframeAuthCollector())
+
+        assert (
+            values["shareframe_auth_sessions_active"]
+            == before["shareframe_auth_sessions_active"] + 1
+        )
+        assert (
+            values["shareframe_auth_session_users"]
+            == before["shareframe_auth_session_users"] + 1
+        )
+        assert (
+            values["shareframe_auth_tokens_issued_24h"]
+            == before["shareframe_auth_tokens_issued_24h"] + 3
+        )
+        assert (
+            values["shareframe_auth_tokens_blacklisted_24h"]
+            == before["shareframe_auth_tokens_blacklisted_24h"] + 1
+        )
+
+    def test_counts_admins_and_inactive_accounts(self):
+        values = gauges(ShareframeAuthCollector())
+
+        assert (
+            values["shareframe_users_admins"]
+            == User.objects.filter(is_admin=True).count()
+        )
+        assert (
+            values["shareframe_users_inactive"]
+            == User.objects.filter(is_active=False).count()
+        )

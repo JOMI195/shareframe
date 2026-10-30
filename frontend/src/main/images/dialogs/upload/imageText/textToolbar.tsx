@@ -5,6 +5,7 @@ import {
     Chip,
     MenuItem,
     Select,
+    Slider,
     TextField,
     ToggleButton,
     ToggleButtonGroup,
@@ -22,7 +23,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import WrapTextIcon from '@mui/icons-material/WrapText';
 import { ITextPreset } from '@/types';
 import DeletePresetDialog from './deletePresetDialog';
-import { FONTS, TextColor, TextFont, TextOverlay } from './textOverlays';
+import { FONTS, MIN_FONT_SIZE, TextColor, TextFont, TextOverlay } from './textOverlays';
 
 const CHIP_LABEL_MAX_LENGTH = 20;
 
@@ -61,6 +62,7 @@ const chipLabel = (text: string) => {
 
 interface TextToolbarProps {
     overlays: TextOverlay[];
+    maxFontSize: number;
     selected: TextOverlay | null;
     disabled: boolean;
     onAddText: () => void;
@@ -77,6 +79,7 @@ interface TextToolbarProps {
 
 const TextToolbar: React.FC<TextToolbarProps> = ({
     overlays,
+    maxFontSize,
     selected,
     disabled,
     onAddText,
@@ -132,6 +135,7 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
                                 size="small"
                                 color={overlay.id === selected?.id ? 'primary' : 'default'}
                                 variant={overlay.id === selected?.id ? 'filled' : 'outlined'}
+                                aria-pressed={overlay.id === selected?.id}
                                 onClick={() => onSelect(overlay.id)}
                             />
                         ))}
@@ -216,6 +220,29 @@ const TextToolbar: React.FC<TextToolbarProps> = ({
                         >
                             <FormatBoldIcon />
                         </ToggleButton>
+                    </Row>
+                    {/* Dragging the handles has no keyboard equivalent, these do the same. */}
+                    <Row label="Größe">
+                        <Slider
+                            value={selected.fontSize}
+                            min={MIN_FONT_SIZE}
+                            max={Math.max(maxFontSize, selected.fontSize)}
+                            onChange={(_, fontSize) => onChange({ ...selected, fontSize: fontSize as number })}
+                            aria-label="Textgröße"
+                            sx={{ mx: 1 }}
+                        />
+                    </Row>
+                    <Row label="Drehung">
+                        <Slider
+                            value={selected.rotation}
+                            min={-180}
+                            max={180}
+                            marks={[{ value: 0 }]}
+                            onChange={(_, rotation) => onChange({ ...selected, rotation: rotation as number })}
+                            aria-label="Textdrehung"
+                            getAriaValueText={(value) => `${value} Grad`}
+                            sx={{ mx: 1 }}
+                        />
                     </Row>
                     {selected.width !== null && (
                         <Box sx={rowSx}>

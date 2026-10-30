@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useMemo, useSyncExternalStore } from 'react';
+import React, { PropsWithChildren, useEffect, useMemo, useSyncExternalStore } from 'react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
@@ -48,19 +48,25 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
         });
     }, [colorMode, season]);
 
-    const setColorPreference = (preference: ColorPreference) => {
-        dispatch(designSelected(preference));
-    };
+    // The installed app's status bar follows the app bar instead of staying white in dark mode.
+    useEffect(() => {
+        document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.palette.background.default);
+    }, [theme]);
 
-    const contextValue: ColorThemeContextType = {
-        theme,
-        colorMode,
-        season,
-        colorPreference,
-        setColorPreference,
-        toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
-        iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
-    };
+    const contextValue = useMemo<ColorThemeContextType>(() => {
+        const setColorPreference = (preference: ColorPreference) => {
+            dispatch(designSelected(preference));
+        };
+        return {
+            theme,
+            colorMode,
+            season,
+            colorPreference,
+            setColorPreference,
+            toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
+            iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
+        };
+    }, [theme, colorMode, season, colorPreference, dispatch]);
 
     return (
         <ColorThemeContext.Provider value={contextValue}>

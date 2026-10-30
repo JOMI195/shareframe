@@ -53,6 +53,18 @@ describe('getNewestActiveChangelog', () => {
     expect(setup([], [makeChangelog({ id: 1 })]).result.current.getNewestActiveChangelog()).toBeNull();
   });
 
+  // A new account was not away for anything.
+  it('returns null when the newest entry is older than the account', () => {
+    const { Wrapper } = createWrapper({
+      preloadedState: {
+        entities: { changelogs: { changelogIds: ids, changelogs: ids.map((id) => makeChangelog({ id: id.id })) } },
+        auth: { user: { me: { date_joined: '2026-04-01T10:00:00Z' } } },
+      },
+    });
+
+    expect(renderHook(() => useChangelogs(), { wrapper: Wrapper }).result.current.getNewestActiveChangelog()).toBeNull();
+  });
+
   it('returns null when there are no changelogs at all', () => {
     const { Wrapper } = createWrapper();
     expect(renderHook(() => useChangelogs(), { wrapper: Wrapper }).result.current.getNewestActiveChangelog()).toBeNull();
@@ -126,7 +138,7 @@ describe('loading actions', () => {
     expect(store.getState().entities.changelogs.changelogIds).toHaveLength(3);
   });
 
-  it('requests only the active ids', async () => {
+  it('requests only the newest entry for the announcement', async () => {
     const body = vi.fn();
     server.use(
       mswHttp.post(apiUrl(getChangelogsByIdsUrl()), async ({ request }) => {
@@ -135,13 +147,13 @@ describe('loading actions', () => {
       }),
     );
 
-    const { result } = setup([2]);
-    act(() => result.current.loadChangelogs());
+    const { result } = setup([], []);
+    act(() => result.current.loadNewestChangelog());
 
-    await waitFor(() => expect(body).toHaveBeenCalledWith({ ids: [1, 3] }));
+    await waitFor(() => expect(body).toHaveBeenCalledWith({ ids: [2] }));
   });
 
-  it('requests exactly the given ids, dismissed or not', async () => {
+  it('requests the given ids that are not loaded, dismissed or not', async () => {
     const body = vi.fn();
     server.use(
       mswHttp.post(apiUrl(getChangelogsByIdsUrl()), async ({ request }) => {
@@ -150,8 +162,8 @@ describe('loading actions', () => {
       }),
     );
 
-    const { result } = setup([2]);
-    act(() => result.current.loadChangelogsByIds([2, 3]));
+    const { result } = setup([2], [makeChangelog({ id: 1 })]);
+    act(() => result.current.loadChangelogsByIds([1, 2, 3]));
 
     await waitFor(() => expect(body).toHaveBeenCalledWith({ ids: [2, 3] }));
   });

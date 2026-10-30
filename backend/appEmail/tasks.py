@@ -2,6 +2,7 @@ import mimetypes
 import os
 from email.message import MIMEPart
 from email.policy import default as default_policy
+from smtplib import SMTPException
 
 from django.conf import settings
 from django.core.mail import EmailMultiAlternatives
@@ -121,3 +122,27 @@ def send_django_mail_with_logo(
         + (images or []),
         headers=headers,
     )
+
+
+# Account mails carry tokens, so callers pass a kwargsrepr that the result backend stores instead.
+@celery.task(bind=True, max_retries=3)
+def send_account_mail(
+    self,
+    template_name: str,
+    context: dict[str, any],
+    from_email: str,
+    to_emails: list[str],
+) -> None:
+    try:
+        send_django_mail_with_logo(
+            template_name=template_name,
+            context=context,
+            from_email=from_email,
+            to_emails=to_emails,
+        )
+    except (SMTPException, OSError) as exc:
+        raise self.retry(
+            exc=exc,
+            countdown=30 * 2**self.request.retries,
+            kwargsrepr=getattr(self.request, "kwargsrepr", None),
+        ) from exc

@@ -23,6 +23,7 @@ import {
   createImageFailed,
   createImageFulfilled,
   createImagePending,
+  createImageProgress,
   deleteImageFailed,
   deleteImageFulfilled,
   imagesRequestFailed,
@@ -70,11 +71,19 @@ describe('dialogs that consume the selection', () => {
     ['delete', deleteImageDialogOpened, 'imagesToDelete'],
     ['sendToFrame', sendImageToUserFrameDialogOpened, 'imagesToSend'],
   ])('%s copies the current selection on open', (dialog, action, key) => {
-    const state = reducer(withSelection(), action());
+    // Both creators take no payload here; the send one also accepts explicit photos.
+    const state = reducer(withSelection(), (action as () => ReturnType<typeof deleteImageDialogOpened>)());
     const opened = state.dialogs[dialog as 'delete' | 'sendToFrame'] as Record<string, unknown>;
 
     expect(opened.open).toBe(true);
     expect((opened[key] as { id: number }[]).map((i) => i.id)).toEqual([1, 2]);
+  });
+
+  it('sends the given photos instead of the selection, e.g. right after an upload', () => {
+    const uploaded = [makeImage({ id: 9 })];
+    const state = reducer(withSelection(), sendImageToUserFrameDialogOpened({ images: uploaded }));
+
+    expect(state.dialogs.sendToFrame.imagesToSend.map((i) => i.id)).toEqual([9]);
   });
 
   it.each([
@@ -151,10 +160,10 @@ describe('snackbars', () => {
 
 describe('entity actions drive the snackbars', () => {
   it.each([
-    ['imagesRequestFailed', imagesRequestFailed(), 'Bilder laden fehlgeschlagen', 'error'],
-    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Bild hochladen erfolgreich', 'success'],
-    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Bilder löschen erfolgreich', 'success'],
-    ['deleteImageFailed', deleteImageFailed(), 'Bilder löschen fehlgeschlagen', 'error'],
+    ['imagesRequestFailed', imagesRequestFailed(), 'Fotos konnten nicht geladen werden', 'error'],
+    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Foto hochgeladen', 'success'],
+    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Fotos gelöscht', 'success'],
+    ['deleteImageFailed', deleteImageFailed(), 'Fotos konnten nicht gelöscht werden', 'error'],
   ])('%s shows an alert', (_name, action, message, severity) => {
     const state = reducer(initial(), action);
     expect(state.snackbar.alert).toEqual({ open: true, message, severity });
@@ -164,7 +173,14 @@ describe('entity actions drive the snackbars', () => {
   it('shows a loading snackbar while uploading', () => {
     expect(reducer(initial(), createImagePending()).snackbar.loading).toEqual({
       open: true,
-      message: 'Bild hochladen',
+      message: 'Foto wird hochgeladen',
+    });
+  });
+
+  it('counts the upload progress in the loading snackbar', () => {
+    expect(reducer(initial(), createImageProgress(42)).snackbar.loading).toEqual({
+      open: true,
+      message: 'Foto wird hochgeladen (42 %)',
     });
   });
 
@@ -174,10 +190,10 @@ describe('entity actions drive the snackbars', () => {
     const failedWith = (payload?: string) => ({ type: createImageFailed.type, payload });
 
     expect(reducer(initial(), failedWith('Datei zu groß')).snackbar.alert.message).toBe(
-      'Bild hochladen fehlgeschlagen: Datei zu groß',
+      'Foto hochladen fehlgeschlagen: Datei zu groß',
     );
     expect(reducer(initial(), failedWith()).snackbar.alert.message).toBe(
-      'Bild hochladen fehlgeschlagen',
+      'Foto hochladen fehlgeschlagen',
     );
   });
 });

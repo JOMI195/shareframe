@@ -25,7 +25,7 @@ const succeedingSignIn = () =>
   );
 
 const fill = async (user: ReturnType<typeof renderWithProviders>['user']) => {
-  await user.type(screen.getByLabelText('Email'), 'alice@example.com');
+  await user.type(screen.getByLabelText('E-Mail-Adresse'), 'alice@example.com');
   await user.type(screen.getByLabelText('Passwort'), 'geheim');
 };
 
@@ -33,9 +33,9 @@ describe('SignIn form', () => {
   it('renders the fields and the submit button', () => {
     renderWithProviders(<Page />, { preloadedState: buildState() });
 
-    expect(screen.getByLabelText('Email')).toBeInTheDocument();
+    expect(screen.getByLabelText('E-Mail-Adresse')).toBeInTheDocument();
     expect(screen.getByLabelText('Passwort')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'anmelden' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Anmelden' })).toBeEnabled();
     expect(screen.getByRole('link', { name: 'Passwort vergessen?' })).toHaveAttribute(
       'href',
       '/auth/users/password-reset/form/',
@@ -45,7 +45,7 @@ describe('SignIn form', () => {
   it('shows a required error for each empty field', async () => {
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
 
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     await waitFor(() => expect(screen.getAllByText('Dieses Feld wird benötigt')).toHaveLength(2));
   });
@@ -60,7 +60,7 @@ describe('SignIn form', () => {
     );
 
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     await waitFor(() => expect(screen.getAllByText('Dieses Feld wird benötigt')).toHaveLength(2));
     expect(requests).not.toHaveBeenCalled();
@@ -77,9 +77,9 @@ describe('SignIn form', () => {
     );
 
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
-    await user.type(screen.getByLabelText('Email'), 'keine-email');
+    await user.type(screen.getByLabelText('E-Mail-Adresse'), 'keine-email');
     await user.type(screen.getByLabelText('Passwort'), 'geheim');
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     await waitFor(() => expect(requests).toHaveBeenCalled());
   });
@@ -89,7 +89,7 @@ describe('SignIn form', () => {
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
 
     await fill(user);
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     await waitFor(() => expect(localStorage.getItem('loggedIn')).toBe('true'));
   });
@@ -107,7 +107,7 @@ describe('SignIn form', () => {
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
 
     await fill(user);
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     expect(await screen.findByText('Startseite')).toBeInTheDocument();
     expect(profileRequests).toHaveBeenCalledOnce();
@@ -118,7 +118,7 @@ describe('SignIn form', () => {
       preloadedState: buildState({ auth: { user: { api: { loading: true } } } }),
     });
 
-    expect(screen.getByRole('button', { name: 'anmelden' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Anmelden' })).toBeDisabled();
   });
 
   it('redirects straight to the dashboard when already signed in', async () => {
@@ -149,7 +149,7 @@ describe('SignIn with blocked cookies', () => {
     vi.spyOn(navigator, 'cookieEnabled', 'get').mockReturnValue(false);
 
     await fill(user);
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     expect(await screen.findByText(COOKIE_HINT)).toBeInTheDocument();
     expect(localStorage.getItem('loggedIn')).toBeNull();
@@ -163,18 +163,18 @@ describe('SignIn field adornments', () => {
     const password = screen.getByLabelText('Passwort');
 
     expect(password).toHaveAttribute('type', 'password');
-    await user.click(screen.getByRole('button', { name: 'toggle current password visibility' }));
+    await user.click(screen.getByRole('button', { name: 'Passwort anzeigen' }));
     expect(password).toHaveAttribute('type', 'text');
   });
 
   it('shows a clear button only once the email has content', async () => {
     const { user } = renderWithProviders(<Page />, { preloadedState: buildState() });
 
-    expect(screen.queryByRole('button', { name: 'clear email field' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'E-Mail-Adresse leeren' })).not.toBeInTheDocument();
 
-    await user.type(screen.getByLabelText('Email'), 'alice@example.com');
-    await user.click(await screen.findByRole('button', { name: 'clear email field' }));
+    await user.type(screen.getByLabelText('E-Mail-Adresse'), 'alice@example.com');
+    await user.click(await screen.findByRole('button', { name: 'E-Mail-Adresse leeren' }));
 
-    expect(screen.getByLabelText('Email')).toHaveValue('');
+    expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue('');
   });
 });

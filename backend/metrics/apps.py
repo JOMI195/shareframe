@@ -16,6 +16,7 @@ class MetricsConfig(AppConfig):
 
     def ready(self):
         from .collectors import (
+            ShareframeAuthCollector,
             ShareframeBusinessCollector,
             ShareframeCeleryCollector,
             ShareframeFrameCollector,
@@ -25,3 +26,4 @@ class MetricsConfig(AppConfig):
         _register(REGISTRY, ShareframeFrameCollector())
         _register(REGISTRY, ShareframeCeleryCollector())
         _register(BUSINESS_REGISTRY, ShareframeBusinessCollector())
+        _register(BUSINESS_REGISTRY, ShareframeAuthCollector())

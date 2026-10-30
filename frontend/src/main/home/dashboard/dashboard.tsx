@@ -1,5 +1,10 @@
 import { Box, Typography } from "@mui/material";
-import { useAppSelector } from "@/store";
+import AddIcon from "@mui/icons-material/Add";
+import BottomFloatingActions from "@/common/components/bottomFloatingActions";
+import { useNavigate } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { uploadRequested } from "@/store/ui/images/images.slice";
+import { getImageUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import Header from "./header/header";
 import LoadingSkeleton from "./loading/loadingSkeleton";
@@ -10,10 +15,12 @@ import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 
 const Dashboard: React.FC = () => {
     const user = useAppSelector(getUser);
+    const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const dashboardStats = useAppSelector(getDashboardData);
 
-    const dashboardLoading = useAppSelector(getDashboardApi).loading;
-    const showSkeleton = useMinimumLoading(dashboardLoading);
+    const dashboardApi = useAppSelector(getDashboardApi);
+    const showSkeleton = useMinimumLoading(dashboardApi.loading && dashboardApi.lastFetch === null);
 
     const imagesStats = dashboardStats?.images;
     const sentImagesStats = dashboardStats?.sent_images;
@@ -41,7 +48,7 @@ const Dashboard: React.FC = () => {
             <Header username={user.me.username} />
 
             {/* Quick Access Cards */}
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
                 mb: 1
             }}>
                 Schnellzugriff
@@ -49,7 +56,7 @@ const Dashboard: React.FC = () => {
             <QuickAccess />
 
             {/* Quick Stats Row */}
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
                 mb: 1
             }}>
                 Statistiken
@@ -65,6 +72,17 @@ const Dashboard: React.FC = () => {
                     activityData={activityData}
                 />
             )}
+            <BottomFloatingActions
+                actionPrimary={{
+                    icon: <AddIcon />,
+                    label: "Foto hinzufügen",
+                    color: "primary",
+                    onClick: () => {
+                        dispatch(uploadRequested());
+                        navigate("/" + getImageUrl());
+                    },
+                }}
+            />
         </Box>
     );
 };

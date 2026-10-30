@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { act, screen, waitFor } from '@testing-library/react';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
@@ -41,23 +41,22 @@ describe('changelog list', () => {
     expect(screen.getAllByText(/Neuste Änderung/)).not.toHaveLength(0);
   });
 
-  // The announcement load fetches only undismissed entries; answering last must not shrink the list.
-  it('keeps the newest entry when the announcement load answers last', async () => {
+  // The announcement and the page load overlap; whichever answers last must not shrink the list.
+  it('keeps the page entries when the announcement load answers last', async () => {
     let release = () => {};
     const held = new Promise<void>((resolve) => { release = resolve; });
     server.use(
       http.post(apiUrl(changelogEndpoints.getChangelogsByIdsUrl()), async ({ request }) => {
         const { ids } = (await request.json()) as { ids: number[] };
-        if (!ids.includes(newest.id)) await held;
+        if (ids.length === 1 && ids[0] === newest.id) await held;
         return HttpResponse.json([older, newest].filter((entry) => ids.includes(entry.id)));
       }),
       ...withChangelogs([older, newest]),
     );
-    const { store } = renderRoute('/aenderungen/', {
-      preloadedState: signedInState({ ui: { changelogs: { deactivatedIds: [newest.id] } } }),
-    });
+    const { store } = renderRoute('/aenderungen/', { preloadedState: signedInState() });
 
-    expect(await screen.findByText(/- Neuste Änderung$/)).toBeInTheDocument();
+    // Two overlapping requests plus the minimum skeleton time; the default wait is too tight under a full run.
+    expect(await screen.findByText(/- Ältere Änderung$/, undefined, { timeout: 5000 })).toBeInTheDocument();
     const before = store.getState().entities.changelogs.changelogs;
     release();
     await waitFor(() => expect(store.getState().entities.changelogs.changelogs).not.toBe(before));
@@ -192,11 +191,52 @@ describe('new changelog dialog', () => {
     await screen.findByText(/Hi, /);
 
     server.use(...withChangelogs([older, newest]));
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 5 * 60 * 1000 + 1);
     act(() => document.dispatchEvent(new Event('visibilitychange')));
 
     expect(
       await screen.findByText('✨ Neue Änderungen während deiner Abwesenheit'),
     ).toBeInTheDocument();
+  });
+
+  it('does not refetch the list on a quick return to the app', async () => {
+    let calls = 0;
+    server.use(
+      http.get(apiUrl(changelogEndpoints.getChangelogIdsUrl()), () => {
+        calls += 1;
+        return HttpResponse.json([older]);
+      }),
+      ...withChangelogs([older]),
+    );
+    renderRoute('/dashboard/', {
+      preloadedState: signedInState({ ui: { changelogs: { deactivatedIds: [older.id] } } }),
+    });
+    await waitFor(() => expect(calls).toBe(1));
+
+    act(() => document.dispatchEvent(new Event('visibilitychange')));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls).toBe(1);
+  });
+
+  it('does not refetch the list when navigating', async () => {
+    let calls = 0;
+    server.use(
+      http.get(apiUrl(changelogEndpoints.getChangelogIdsUrl()), () => {
+        calls += 1;
+        return HttpResponse.json([older]);
+      }),
+      ...withChangelogs([older]),
+    );
+    const { router } = renderRoute('/dashboard/', {
+      preloadedState: signedInState({ ui: { changelogs: { deactivatedIds: [older.id] } } }),
+    });
+    await waitFor(() => expect(calls).toBe(1));
+
+    await act(() => router.navigate('/fotos/'));
+    await screen.findByRole('button', { name: /Foto hinzufügen/ });
+
+    expect(calls).toBe(1);
   });
 
   it('stays away when everything has been seen', async () => {

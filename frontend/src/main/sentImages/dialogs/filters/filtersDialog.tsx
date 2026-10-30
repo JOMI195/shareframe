@@ -1,15 +1,16 @@
-import { Button, Dialog, DialogContent, Grid, Typography, useMediaQuery, useTheme, AppBar, Toolbar, IconButton, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
-import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter } from "@/store/ui/sentImages/sentImages.slice";
+import DialogHeader from '@/common/components/dialogHeader';
+import FormActions from '@/common/components/settings/formActions';
+import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
+import { ShippingFilter, StatusFilter } from "@/types";
 import { useState } from "react";
-import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
-import { getUser } from "@/store/entities/authentication/authentication.slice";
+import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
-import UserAvatar from "@/common/components/userAvatar";
-import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
+import UserFilterSelect from "@/main/sentImages/gallery/filters/userFilterSelect";
 
 const FiltersDialog = () => {
     const theme = useTheme();
@@ -19,20 +20,22 @@ const FiltersDialog = () => {
     const loading = useAppSelector(getImagesApi).loading;
     const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
 
-    const user = useAppSelector(getUser);
-    const friendships = useAppSelector(getFriendships);
 
+    const [statusFilterLocal, setStatusFilterLocal] = useState<StatusFilter>('all');
+    const [shippingFilterLocal, setShippingFilterLocal] = useState<ShippingFilter>('all');
     const [senderFilterLocal, setSenderFilterLocal] = useState('');
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
-    const dialogFilters = `${filterDialog.open}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
+    const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
 
     if (dialogFilters !== syncedFilters) {
         setSyncedFilters(dialogFilters);
         if (filterDialog.open) {
+            setStatusFilterLocal(filterDialog.statusFilter);
+            setShippingFilterLocal(filterDialog.shippingFilter);
             setSenderFilterLocal(filterDialog.senderFilter || '');
             setReceiverFilterLocal(filterDialog.receiverFilter || '');
         }
@@ -43,13 +46,14 @@ const FiltersDialog = () => {
     };
 
     const handleApplyFilters = () => {
-
+        dispatch(setStatusFilter({ statusFilter: statusFilterLocal }));
+        dispatch(setShippingFilter({ shippingFilter: shippingFilterLocal }));
         dispatch(setSenderFilter({ senderFilter: senderFilterLocal }));
         dispatch(setRecieverFilter({ receiverFilter: receiverFilterLocal }));
 
         dispatch(setSentImagesFilters({
-            status: filterDialog.statusFilter,
-            shipping: filterDialog.shippingFilter,
+            status: statusFilterLocal,
+            shipping: shippingFilterLocal,
             sender: senderFilterLocal,
             receiver: receiverFilterLocal,
         }));
@@ -77,47 +81,19 @@ const FiltersDialog = () => {
         handleDialogClose();
     };
 
-    const userAvatars = getFriendAvatars(friendships, user.me);
-    const availableUsernames = [...userAvatars.keys()];
-
-    const getUserDisplayName = (username: string) => {
-        return username === user.me.username ? 'Du' : username;
-    };
-
-    const renderUser = (username: string) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <UserAvatar username={username} url={userAvatars.get(username)} size={24} />
-            {getUserDisplayName(username)}
-        </Box>
-    );
-
     return (
-        <Dialog
+        <AppDialog
             fullScreen={!matches}
             open={filterDialog.open}
             onClose={handleDialogClose}
-            aria-describedby="filter-dialog"
+            aria-labelledby="filter-dialog-title"
             maxWidth="sm"
             fullWidth
             slots={{
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            <AppBar sx={{ position: 'relative' }} color="inherit">
-                <Toolbar>
-                    <Typography sx={{ flex: 1 }} variant="h6" component="div">
-                        Mehr Filter
-                    </Typography>
-                    <IconButton
-                        edge="start"
-                        color="inherit"
-                        onClick={handleDialogClose}
-                        aria-label="cancel"
-                    >
-                        <CloseIcon />
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
+            <DialogHeader title="Filter" titleId="filter-dialog-title" onClose={handleDialogClose} />
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
                     <Typography
@@ -129,113 +105,80 @@ const FiltersDialog = () => {
                         Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
                     <Grid container spacing={2}>
+                            <Grid size={12}>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="filter-dialog-status-label">Status</InputLabel>
+                                    <Select
+                                        labelId="filter-dialog-status-label"
+                                        value={statusFilterLocal}
+                                        label="Status"
+                                        onChange={(e) => setStatusFilterLocal(e.target.value as StatusFilter)}
+                                    >
+                                        <MenuItem value="all">Alle Fotos</MenuItem>
+                                        <MenuItem value="active">Aktive</MenuItem>
+                                        <MenuItem value="expired">Abgelaufene</MenuItem>
+                                        <MenuItem value="scheduled">Geplante</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={12}>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="filter-dialog-shipping-label">Richtung</InputLabel>
+                                    <Select
+                                        labelId="filter-dialog-shipping-label"
+                                        value={shippingFilterLocal}
+                                        label="Richtung"
+                                        onChange={(e) => setShippingFilterLocal(e.target.value as ShippingFilter)}
+                                    >
+                                        <MenuItem value="all">Alle Fotos</MenuItem>
+                                        <MenuItem value="sentToYou">An dich gesendete</MenuItem>
+                                        <MenuItem value="sentByYou">Von dir gesendete</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
                         <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Suche nach Sender</InputLabel>
-                                <Select
-                                    disabled={loading || friendshipsLoading}
-                                    value={senderFilterLocal}
-                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Sender</em>}
-                                    label="Suche nach Sender"
-                                    onChange={(e) => setSenderFilterLocal(e.target.value as string)}
-                                    displayEmpty
-                                    notched
-                                >
-                                    <MenuItem value="">
-                                        <em>Alle Sender</em>
-                                    </MenuItem>
-                                    {availableUsernames.map((username) => (
-                                        <MenuItem
-                                            key={username}
-                                            value={username}
-                                        >
-                                            {renderUser(username)}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <UserFilterSelect
+                                label="Absender"
+                                emptyLabel="Alle Absender"
+                                value={senderFilterLocal}
+                                onChange={setSenderFilterLocal}
+                                disabled={loading || friendshipsLoading}
+                                sx={{ mb: 2 }}
+                            />
                         </Grid>
                         <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Suche nach Empfänger</InputLabel>
-                                <Select
-                                    disabled={loading || friendshipsLoading}
-                                    value={receiverFilterLocal}
-                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Empfänger</em>}
-                                    label="Suche nach Empfänger"
-                                    onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
-                                    displayEmpty
-                                    notched
-                                >
-                                    <MenuItem value="">
-                                        <em>Alle Empfänger</em>
-                                    </MenuItem>
-                                    {availableUsernames.map((username) => (
-                                        <MenuItem
-                                            key={username}
-                                            value={username}
-                                        >
-                                            {renderUser(username)}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <UserFilterSelect
+                                label="Empfänger"
+                                emptyLabel="Alle Empfänger"
+                                value={receiverFilterLocal}
+                                onChange={setReceiverFilterLocal}
+                                disabled={loading || friendshipsLoading}
+                                sx={{ mb: 2 }}
+                            />
                         </Grid>
                     </Grid>
                 </Box>
 
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{ mt: 2 }}
-                >
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleDialogClose}
-                            color="primary"
-                            variant="outlined"
-                            fullWidth
-                        >
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleClearFilters}
-                            color="inherit"
-                            variant="outlined"
-                            fullWidth
-                            disabled={loading}
-                        >
-                            Filter löschen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        size={{
-                            xs: 12,
-                            sm: 4
-                        }}>
-                        <Button
-                            onClick={handleApplyFilters}
-                            color="primary"
-                            variant="contained"
-                            fullWidth
-                            disabled={loading}
-                        >
-                            Filter anwenden
-                        </Button>
-                    </Grid>
-                </Grid>
+                <FormActions>
+                    <Button
+                        onClick={handleClearFilters}
+                        color="inherit"
+                        variant="outlined"
+                        disabled={loading}
+                    >
+                        Zurücksetzen
+                    </Button>
+                    <Button
+                        onClick={handleApplyFilters}
+                        color="primary"
+                        variant="contained"
+                        disabled={loading}
+                    >
+                        Filter anwenden
+                    </Button>
+                </FormActions>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

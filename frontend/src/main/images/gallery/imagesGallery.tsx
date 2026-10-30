@@ -11,21 +11,23 @@ import {
     Skeleton
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getDialogs as imagesDialogs, openPreviewImageDialog, selectImage } from "@/store/ui/images/images.slice";
+import { getDialogs as imagesDialogs, openCreateImageDialog, openPreviewImageDialog, selectImage } from "@/store/ui/images/images.slice";
 import {
     getApi as imagesApi,
     getImagesPaginated,
     getImagesPaginatedPageSize
 } from "@/store/entities/images/images.slice";
-import { getApi as friendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { IImage } from "@/types";
-import { setImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import FilterControls from "./filters/filters";
-import { getVariant } from "@/common/utils/images";
+import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
+import { onActivateKey } from "@/common/utils/keyboard";
 import SelectableElement from "../../../common/components/selectableElement";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import SelectionBar from "./selectionBar";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -37,8 +39,9 @@ const ImagesGallery: React.FC = () => {
     const imagesPaginated = useAppSelector(getImagesPaginated);
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
-    const friendshipsLoading = useAppSelector(friendshipsApi).loading;
-    const showSkeleton = useMinimumLoading(imagesLoading || friendshipsLoading);
+    const imagesFailed = useAppSelector(imagesApi).imagesFailed;
+    const imagesStale = useAppSelector(imagesApi).imagesStale;
+    const showSkeleton = useMinimumLoading(imagesLoading && (imagesStale || imagesPaginated.results.length === 0));
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));
@@ -66,7 +69,7 @@ const ImagesGallery: React.FC = () => {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
         dispatch(setImagesPaginatedPage(page));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollToTop();
     };
 
     const renderLoadingSkeleton = () => (
@@ -103,9 +106,9 @@ const ImagesGallery: React.FC = () => {
                                 page={imagesPaginated.page}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size={"large"}
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -129,25 +132,31 @@ const ImagesGallery: React.FC = () => {
     return (
         <Stack spacing={2}>
             <FilterControls />
+            {isSelectionDialogOpen && <SelectionBar />}
             {isSmallScreen && imagesPaginated.page > 1 && renderPagination()}
             {showSkeleton ? renderLoadingSkeleton() :
                 imagesPaginated.results.length !== 0 ?
                     (
                         <ImageList cols={cols} gap={8}>
                             {imagesPaginated.results.map((image) => (
-                                <ImageListItem
-                                    key={image.id}
-                                    onClick={() => handleImageClick(image)}
-                                    //onTouchStart={() => handleImageClick(image)}
-                                    style={{ cursor: "pointer" }}
-                                >
+                                <ImageListItem key={image.id}>
+                                    {/* The button sits inside the li, so the list keeps its list semantics. */}
+                                    <Box
+                                        onClick={() => handleImageClick(image)}
+                                        role="button"
+                                        tabIndex={0}
+                                        aria-label={image.display_name || image.name}
+                                        aria-pressed={isSelectionDialogOpen ? selectedImages.some((selected) => selected.id === image.id) : undefined}
+                                        onKeyDown={(event) => onActivateKey(event, () => handleImageClick(image))}
+                                        sx={{ cursor: "pointer", height: "100%", borderRadius: 1, display: "flex", flexDirection: "column" }}
+                                    >
                                     <SelectableElement
                                         elementToSelect={image}
                                         selectedElements={selectedImages}
                                         selectionEnabled={isSelectionDialogOpen}
                                     >
                                         <AuthenticatedImage
-                                            url={`${MEDIA_BASE_URL}${getVariant(image, "thumbnail")?.url}`}
+                                            url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
                                             alt={image.name}
                                             style={{
                                                 width: "100%",
@@ -157,11 +166,22 @@ const ImagesGallery: React.FC = () => {
                                             }}
                                         />
                                     </SelectableElement>
+                                    </Box>
                                 </ImageListItem>
                             ))}
                         </ImageList>
                     ) : (
-                        <DataNotFound notFoundMessage={"Keine Fotos vorhanden"} />
+                        imagesFailed ? (
+                            <DataNotFound
+                                notFoundMessage={"Fotos konnten nicht geladen werden"}
+                                action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchImages(imagesPaginated.page, pageSize)) }}
+                            />
+                        ) : (
+                            <DataNotFound
+                                notFoundMessage={"Keine Fotos vorhanden"}
+                                action={{ label: "Foto hochladen", onClick: () => dispatch(openCreateImageDialog()) }}
+                            />
+                        )
                     )}
 
             {renderPagination(true)}

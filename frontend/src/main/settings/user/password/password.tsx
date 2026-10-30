@@ -10,6 +10,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import SettingsSection from "@/common/components/settings/settingsSection";
 import FormActions from "@/common/components/settings/formActions";
+import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 const Security = () => {
     const dispatch = useAppDispatch();
@@ -67,15 +68,15 @@ const Security = () => {
         initialValues: initialSetUserPasswortValues,
         validationSchema: userPatchValidationSchema,
         enableReinitialize: true,
-        onSubmit: (values) => {
-            dispatch(setPassword(values));
-            setUserPasswordForm.resetForm();
+        onSubmit: async (values) => {
+            const changed: unknown = await dispatch(setPassword(values));
+            if (changed === true) setUserPasswordForm.resetForm();
         },
     });
 
-    const fields: { name: keyof ISetUserPasswortForm; label: string; autoComplete: string }[] = [
+    const fields: { name: keyof ISetUserPasswortForm; label: string; autoComplete: string; hint?: string }[] = [
         { name: 'current_password', label: 'Aktuelles Passwort', autoComplete: 'current-password' },
-        { name: 'new_password', label: 'Neues Passwort', autoComplete: 'new-password' },
+        { name: 'new_password', label: 'Neues Passwort', autoComplete: 'new-password', hint: PASSWORD_RULES },
         { name: 're_new_password', label: 'Neues Passwort wiederholen', autoComplete: 'new-password' },
     ];
 
@@ -88,7 +89,7 @@ const Security = () => {
                 onSubmit={setUserPasswordForm.handleSubmit}
                 spacing={2}
             >
-                {fields.map(({ name, label, autoComplete }) => (
+                {fields.map(({ name, label, autoComplete, hint }) => (
                     <TextField
                         key={name}
                         id={name}
@@ -101,8 +102,8 @@ const Security = () => {
                             Boolean(setUserPasswordForm.errors[name])
                         }
                         helperText={
-                            getIn(setUserPasswordForm.touched, name) &&
-                            getIn(setUserPasswordForm.errors, name)
+                            (getIn(setUserPasswordForm.touched, name) &&
+                                getIn(setUserPasswordForm.errors, name)) || hint
                         }
                         onChange={setUserPasswordForm.handleChange}
                         fullWidth
@@ -114,7 +115,7 @@ const Security = () => {
                                 endAdornment: (
                                     <InputAdornment position='end'>
                                         <IconButton
-                                            aria-label="Passwort anzeigen"
+                                            aria-label={`${label} ${showPassword[name] ? 'verbergen' : 'anzeigen'}`}
                                             onClick={() => handleClickShowPassword(name)}
                                             onMouseDown={handleMouseDownPassword}
                                             edge='end'
@@ -135,12 +136,12 @@ const Security = () => {
                         color="secondary"
                         onClick={() => setUserPasswordForm.resetForm()}
                     >
-                        {"Zurücksetzen"}
+                        {"Verwerfen"}
                     </Button>
                     <Button
                         type='submit'
                         variant='contained'
-                        disabled={getAuthApi.loading}
+                        loading={getAuthApi.loading}
                     >
                         {'Speichern'}
                     </Button>

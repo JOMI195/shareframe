@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
@@ -26,6 +26,7 @@ import {
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { isICoreUser } from "@/types";
 import { Alert } from "@mui/material";
+import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 export default function SignUp() {
   const dispatch = useAppDispatch();
@@ -37,19 +38,6 @@ export default function SignUp() {
   });
 
   const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-
-    if (errorMessage) {
-      timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 10000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [errorMessage]);
 
   const handleClickShowPassword = (key: keyof typeof showPassword) => {
     setShowPassword({ ...showPassword, [key]: !showPassword[key] });
@@ -77,7 +65,7 @@ export default function SignUp() {
       .string()
       .strict(true)
       .trim("Der Nutzername darf keine Leerzeichen enthalten")
-      .min(1, "Dein Nutzername muss mindestens Zeichen enthalten" as string)
+      .min(1, "Dein Nutzername muss mindestens ein Zeichen enthalten" as string)
       .max(
         50,
         "Dein Nutzername darf maximal 50 Zeichen enthalten" as string
@@ -85,7 +73,7 @@ export default function SignUp() {
       .required("Dieses Feld wird benötigt" as string),
     email: yup
       .string()
-      .email("Email muss gültig sein")
+      .email("Bitte gib eine gültige E-Mail-Adresse an")
       .required("Dieses Feld wird benötigt" as string),
     password: yup
       .string()
@@ -113,6 +101,7 @@ export default function SignUp() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setErrorMessage("");
       // the api middleware resolves with the response body, not the dispatched action
       const response: unknown = await dispatch(signUpUser(values));
       if (isICoreUser(response)) {
@@ -122,9 +111,10 @@ export default function SignUp() {
           { replace: true, state: { resendActivationTo: signUpForm.values.email } }
         );
       } else {
-        setErrorMessage("Möglicherweise existiert die Email/ Nutzername bereits oder es gab ein Problem mit der Aktivierungs-Mail. Bitte überprüfe deine Emailadresse und versuche es erneut. Bei wiederholtem Fehler versuche es in 24 Stunden erneut oder kontaktiere den Support.");
+        setErrorMessage("Möglicherweise existiert die E-Mail-Adresse oder der Nutzername bereits oder es gab ein Problem mit der Aktivierungs-Mail. Bitte überprüfe deine E-Mail-Adresse und versuche es erneut. Bei wiederholtem Fehler versuche es in 24 Stunden erneut oder kontaktiere den Support.");
+        // Name and address stay, so a retry only needs the password again.
+        signUpForm.setValues({ ...values, password: "", re_password: "" }, false);
       }
-      signUpForm.resetForm();
     },
   });
 
@@ -152,7 +142,7 @@ export default function SignUp() {
             <TextField
               id='email'
               name='email'
-              label={'Email'}
+              label={'E-Mail-Adresse'}
               value={signUpForm.values.email}
               onBlur={signUpForm.handleBlur}
               error={
@@ -201,12 +191,12 @@ export default function SignUp() {
                 Boolean(signUpForm.errors.password)
               }
               helperText={
-                getIn(signUpForm.touched, "password") &&
-                getIn(signUpForm.errors, "password")
+                (getIn(signUpForm.touched, "password") &&
+                  getIn(signUpForm.errors, "password")) || PASSWORD_RULES
               }
               onChange={signUpForm.handleChange}
               fullWidth
-              autoComplete='password'
+              autoComplete='new-password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
               slotProps={{
@@ -214,7 +204,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='toggle current password visibility'
+                        aria-label={`Passwort ${showPassword.current_password ? 'verbergen' : 'anzeigen'}`}
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }
@@ -250,7 +240,7 @@ export default function SignUp() {
               }
               onChange={signUpForm.handleChange}
               fullWidth
-              autoComplete='re_password'
+              autoComplete='new-password'
               variant='outlined'
               type={showPassword.current_password ? 'text' : 'password'}
               slotProps={{
@@ -258,7 +248,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='toggle current password visibility'
+                        aria-label={`Passwort wiederholen ${showPassword.current_password ? 'verbergen' : 'anzeigen'}`}
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }
@@ -299,7 +289,7 @@ export default function SignUp() {
               color="secondary"
               onClick={handleCancel}
             >
-              {"abbrechen"}
+              {"Abbrechen"}
             </Button>
           </Grid>
           <Grid

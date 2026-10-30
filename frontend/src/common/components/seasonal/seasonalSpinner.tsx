@@ -13,7 +13,7 @@ const SeasonalSpinner: React.FC<{ size?: number }> = ({ size = 40 }) => {
 
     return (
         <Box role="progressbar" aria-label="Lädt" sx={{ display: 'inline-flex', p: 1 }}>
-            {createElement(Icon, { sx: { fontSize: size, color: 'accent.main', animation: `${bounce} 0.9s ease-in-out infinite` } })}
+            {createElement(Icon, { sx: { fontSize: size, color: 'accent.main', animation: `${bounce} 0.9s ease-in-out infinite`, '@media (prefers-reduced-motion: reduce)': { animation: 'none' } } })}
         </Box>
     );
 };

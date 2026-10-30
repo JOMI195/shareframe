@@ -6,16 +6,18 @@ import { getContactUrl } from '@/assets/endpoints/api/contactEndpoints';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { server } from '@tests/mocks/server';
 import { apiUrl } from '@tests/mocks/apiUrl';
+import { signedInState } from '@tests/helpers/preloadedState';
+import { seedUser } from '@tests/fixtures';
 
 const fill = async (
   user: ReturnType<typeof renderWithProviders>['user'],
-  over: Partial<Record<'Dein Name' | 'Email' | 'Betreff' | 'Message', string>> = {},
+  over: Partial<Record<'Dein Name' | 'E-Mail-Adresse' | 'Betreff' | 'Nachricht', string>> = {},
 ) => {
   const values = {
     'Dein Name': 'Alice',
-    Email: 'alice@example.com',
+    'E-Mail-Adresse': 'alice@example.com',
     Betreff: 'Frage',
-    Message: 'Hallo',
+    Nachricht: 'Hallo',
     ...over,
   };
   for (const [label, value] of Object.entries(values)) {
@@ -30,9 +32,16 @@ describe('ContactForm', () => {
   it('renders every field', () => {
     renderWithProviders(<ContactForm />);
 
-    ['Dein Name', 'Email', 'Betreff', 'Message'].forEach((label) =>
+    ['Dein Name', 'E-Mail-Adresse', 'Betreff', 'Nachricht'].forEach((label) =>
       expect(screen.getByLabelText(label)).toBeInTheDocument(),
     );
+  });
+
+  it('fills in the email of a signed-in user', () => {
+    localStorage.setItem('loggedIn', 'true');
+    renderWithProviders(<ContactForm />, { preloadedState: signedInState() });
+
+    expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue(seedUser.email);
   });
 
   it('requires every field', async () => {
@@ -40,20 +49,20 @@ describe('ContactForm', () => {
 
     await submit(user);
 
-    expect(await screen.findByText('Email is required')).toBeInTheDocument();
-    expect(screen.getByText('Message is required')).toBeInTheDocument();
-    // The subject field reuses the name field's message.
-    expect(screen.getAllByText('Name is required')).toHaveLength(2);
+    expect(await screen.findByText('Bitte gib deine E-Mail-Adresse an')).toBeInTheDocument();
+    expect(screen.getByText('Bitte schreib uns eine Nachricht')).toBeInTheDocument();
+    expect(screen.getByText('Bitte gib deinen Namen an')).toBeInTheDocument();
+    expect(screen.getByText('Bitte gib einen Betreff an')).toBeInTheDocument();
   });
 
   // Unlike sign-in, this form does validate the address shape.
   it('rejects a malformed email', async () => {
     const { user } = renderWithProviders(<ContactForm />);
 
-    await fill(user, { Email: 'keine-email' });
+    await fill(user, { 'E-Mail-Adresse': 'keine-email' });
     await submit(user);
 
-    expect(await screen.findByText('Enter a valid email')).toBeInTheDocument();
+    expect(await screen.findByText('Bitte gib eine gültige E-Mail-Adresse an')).toBeInTheDocument();
   });
 
   it('posts the values and resets the form', async () => {
@@ -77,7 +86,7 @@ describe('ContactForm', () => {
         message: 'Hallo',
       }),
     );
-    await waitFor(() => expect(screen.getByLabelText('Email')).toHaveValue(''));
+    await waitFor(() => expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue(''));
   });
 
   it('shows the sending snackbar state in the store', async () => {
@@ -87,7 +96,7 @@ describe('ContactForm', () => {
     await submit(user);
 
     await waitFor(() => expect(store.getState().ui.contact.snackbar.alert.open).toBe(true));
-    expect(store.getState().ui.contact.snackbar.alert.message).toBe('Senden der Kontaktemail erfolgreich');
+    expect(store.getState().ui.contact.snackbar.alert.message).toBe('Nachricht gesendet');
   });
 
   it('surfaces a backend failure through the snackbar', async () => {
@@ -100,5 +109,6 @@ describe('ContactForm', () => {
     await submit(user);
 
     await waitFor(() => expect(store.getState().ui.contact.snackbar.alert.severity).toBe('error'));
+    expect(screen.getByLabelText('Nachricht')).toHaveValue('Hallo');
   });
 });

@@ -1,0 +1,25 @@
+# Stable keys the frontend translates; the English detail stays for logs and API users.
+SERIAL_REQUIRED = "serial_required"
+FRAME_UNAVAILABLE = "frame_unavailable"
+FRAME_NOT_FOUND = "frame_not_found"
+
+RECEIVER_REQUIRED = "receiver_required"
+IMAGE_REQUIRED = "image_required"
+TIMESTAMP_INVALID = "timestamp_invalid"
+TIMESTAMP_PAST = "timestamp_past"
+SCHEDULE_TOO_FAR = "schedule_too_far"
+EXPIRY_BEFORE_SCHEDULE = "expiry_before_schedule"
+IMAGE_NOT_FOUND = "image_not_found"
+RECEIVER_NOT_FOUND = "receiver_not_found"
+
+FRIEND_CODE_UNKNOWN = "friend_code_unknown"
+FRIEND_REQUEST_SELF = "friend_request_self"
+FRIEND_REQUEST_PENDING = "friend_request_pending"
+FRIENDSHIP_EXISTS = "friendship_exists"
+FRIEND_REQUEST_GONE = "friend_request_gone"
+FRIENDSHIP_NOT_FOUND = "friendship_not_found"
+
+WRONG_PASSWORD = "wrong_password"
+PASSWORD_INVALID = "password_invalid"
+PASSWORD_MISMATCH = "password_mismatch"
+RESET_LINK_INVALID = "reset_link_invalid"

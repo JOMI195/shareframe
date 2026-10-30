@@ -26,7 +26,7 @@ const serveOtp = (otp = '482913', expires = '10') =>
     ),
   );
 
-const otpField = () => screen.getByLabelText('OTP') as HTMLInputElement;
+const otpField = () => screen.getByLabelText('Einmal-Code') as HTMLInputElement;
 
 afterEach(() => {
   Object.defineProperty(navigator, 'clipboard', { configurable: true, value: undefined });
@@ -38,17 +38,17 @@ describe('RequestOTPDialog', () => {
     render();
 
     expect(otpField().value).toBe('');
-    expect(screen.getByRole('button', { name: 'copy otp' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Code kopieren' })).toBeDisabled();
   });
 
   it('shows the generated OTP and how long it lasts', async () => {
     serveOtp();
     const { user } = render();
 
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
 
     await waitFor(() => expect(otpField().value).toBe('482913'));
-    expect(screen.getByText('gültig für: 10 Minuten')).toBeInTheDocument();
+    expect(screen.getByText('Noch 10 Minuten gültig')).toBeInTheDocument();
   });
 
   it('copies the OTP and says so', async () => {
@@ -59,10 +59,10 @@ describe('RequestOTPDialog', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
     Object.defineProperty(window, 'isSecureContext', { configurable: true, value: true });
 
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
     await waitFor(() => expect(otpField().value).toBe('482913'));
 
-    await user.click(screen.getByRole('button', { name: 'copy otp' }));
+    await user.click(screen.getByRole('button', { name: 'Code kopieren' }));
 
     expect(writeText).toHaveBeenCalledWith('482913');
     await waitFor(() =>
@@ -78,10 +78,10 @@ describe('RequestOTPDialog', () => {
     Object.defineProperty(window, 'isSecureContext', { configurable: true, value: false });
     document.execCommand = vi.fn().mockReturnValue(false);
 
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
     await waitFor(() => expect(otpField().value).toBe('482913'));
 
-    await user.click(screen.getByRole('button', { name: 'copy otp' }));
+    await user.click(screen.getByRole('button', { name: 'Code kopieren' }));
 
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.severity).toBe('error'));
   });
@@ -95,11 +95,11 @@ describe('RequestOTPDialog', () => {
     );
 
     const { user } = render();
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
     await waitFor(() => expect(otpField().value).toBe('111111'));
 
     otp = '222222';
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
 
     await waitFor(() => expect(otpField().value).toBe('222222'));
   });
@@ -112,9 +112,18 @@ describe('RequestOTPDialog', () => {
     );
 
     const { user, store } = render();
-    await user.click(screen.getByRole('button', { name: 'Generieren' }));
+    await user.click(screen.getByRole('button', { name: /Code erstellen/ }));
 
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.open).toBe(true));
     expect(otpField().value).toBe('');
+  });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = render();
+
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.frames.dialogs.requestOTP.open).toBe(false);
   });
 });

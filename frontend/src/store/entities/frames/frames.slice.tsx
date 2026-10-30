@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IFrame } from "@/types";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -7,6 +8,7 @@ type SliceState = {
     loading: boolean;
     otpLoading: boolean;
     lastFetch: number | null;
+    failed: boolean;
   };
   frames: IFrame[];
 };
@@ -16,6 +18,7 @@ const initialState: SliceState = {
     loading: false,
     otpLoading: false,
     lastFetch: null,
+    failed: false,
   },
   frames: []
 };
@@ -26,6 +29,7 @@ const framesSlice = createSlice({
   reducers: {
     framesRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.failed = false;
     },
     framesReceived: (sliceState, action) => {
       sliceState.frames = action.payload;
@@ -34,6 +38,7 @@ const framesSlice = createSlice({
     },
     framesRequestFailed: (sliceState) => {
       sliceState.api.loading = false;
+      sliceState.api.failed = true;
     },
     registerFramePending: (sliceState) => {
       sliceState.api.loading = true;
@@ -72,6 +77,9 @@ const framesSlice = createSlice({
     frameOTPRequestFailed: (sliceState) => {
       sliceState.api.otpLoading = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 

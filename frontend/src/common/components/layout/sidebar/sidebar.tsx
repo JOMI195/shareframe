@@ -6,7 +6,7 @@ import {
     ListItemIcon,
     ListItemText,
     Box,
-    ClickAwayListener,
+    SwipeableDrawer,
     useTheme,
     useMediaQuery,
     Typography,
@@ -29,6 +29,8 @@ import { IAppBarMenuItem } from '@/types';
 import { getAuthenticationUrl, getSignOutUrl } from '@/assets/endpoints/app/authEndpoints';
 import { getChangelogsUrl, getContactUrl, getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
+import { useBackToClose } from '@/hooks/navigation/useBackToClose';
+import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from './sidebarWidth';
 
 const Sidebar: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -38,11 +40,9 @@ const Sidebar: React.FC = () => {
 
     const user = useAppSelector(getUser);
 
-    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'));
-    const fullWidth = 240;
-    const iconOnlyWidth = 75;
+    const isDesktop = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
     const shouldShowIconsOnly = isDesktop && !open;
-    const currentWidth = shouldShowIconsOnly ? iconOnlyWidth : fullWidth;
+    const currentWidth = shouldShowIconsOnly ? SIDEBAR_ICON_WIDTH : SIDEBAR_WIDTH;
 
     useEffect(() => {
         if (isDesktop) {
@@ -50,24 +50,22 @@ const Sidebar: React.FC = () => {
         }
     }, [dispatch, isDesktop]);
 
-    const handleSidebarClose = (event: MouseEvent | TouchEvent | React.MouseEvent) => {
-        // Don't close sidebar on desktop when in icon-only mode
-        if (isDesktop || shouldShowIconsOnly) {
-            return;
-        }
+    // Below desktop the drawer is a modal: it closes on navigation and on the back button.
+    useEffect(() => {
+        if (!isDesktop) dispatch(closeSidebar());
+    }, [dispatch, isDesktop, location.pathname]);
 
-        const target = event.target as HTMLElement;
-        if (target && target.closest('.ignore-clickaway')) {
-            return;
-        }
-        if (open) {
-            dispatch(closeSidebar());
-        }
+    useBackToClose(!isDesktop && open, () => dispatch(closeSidebar()));
+
+    // A link to another page closes the drawer through the route change; closing here as well
+    // would take its history entry back while the router is still navigating.
+    const handleItemClick = (itemUrl: string) => {
+        if (!isDesktop && itemUrl === location.pathname) dispatch(closeSidebar());
     };
 
     const sidebarBottomItems = [
         {
-            name: "Account",
+            name: "Konto",
             icon: <UserAvatar username={user.me.username} url={user.me.account?.avatar} size={25} />,
             url: getSettingsUrl() + getUserSettingsUrl()
         },
@@ -92,19 +90,19 @@ const Sidebar: React.FC = () => {
                         alignItems: "flex-start"
                     }}
                 >
-                    <Link component={RouterLink} to={getContactUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                    <Link component={RouterLink} to={getContactUrl()} color="inherit">
                         {"Kontakt"}
                     </Link>
-                    <Link component={RouterLink} to={getImprintUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                    <Link component={RouterLink} to={getImprintUrl()} color="inherit">
                         {"Impressum"}
                     </Link>
-                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
                         {"Datenschutzerklärung"}
                     </Link>
                 </Box>
                 <Box>
                     {"Copyright © "}
-                    <Link component={RouterLink} to={getDashboardUrl()} onClick={() => dispatch(closeSidebar())} color="inherit">
+                    <Link component={RouterLink} to={getDashboardUrl()} color="inherit">
                         {"shareframe.de"}
                     </Link>{" "}
                     {new Date().getFullYear()}
@@ -115,24 +113,25 @@ const Sidebar: React.FC = () => {
     }
 
 
-    const renderListItem = (item: IAppBarMenuItem, isBottomItem = false) => {
+    const renderListItem = (item: IAppBarMenuItem) => {
         const itemUrl = item.url.startsWith("/") ? item.url : `/${item.url}`;
-        const isActive = !isBottomItem && location.pathname === itemUrl;
+        const isActive = !item.url.includes(getSignOutUrl()) && location.pathname.startsWith(itemUrl);
 
         const listItemContent = (
             <ListItem
                 component={RouterLink}
                 to={itemUrl}
                 key={item.name}
-                onClick={handleSidebarClose}
+                onClick={() => handleItemClick(itemUrl)}
+                aria-current={isActive ? 'page' : undefined}
                 sx={{
-                    backgroundColor: isActive ? 'primary.light' : 'inherit',
+                    backgroundColor: isActive ? 'primary.main' : 'inherit',
                     color: isActive ? 'primary.contrastText' : 'inherit',
                     borderRadius: 0.5,
                     //px: shouldShowIconsOnly ? 1 : 2,
                     minHeight: 48,
                     '&:hover': {
-                        backgroundColor: isActive ? 'primary.main' : 'action.hover',
+                        backgroundColor: isActive ? 'primary.dark' : 'action.hover',
                     },
                 }}
             >
@@ -162,81 +161,98 @@ const Sidebar: React.FC = () => {
         return listItemContent;
     };
 
-    return (
-        <ClickAwayListener
-            mouseEvent="onMouseUp"
-            touchEvent="onTouchStart"
-            onClickAway={handleSidebarClose}
+    const content = (
+        <Box
+            sx={{
+                width: currentWidth,
+                height: '100%',
+                p: 1,
+                '&:hover': {
+                    backgroundColor: isDesktop && !open ? 'action.hover' : 'transparent',
+                },
+            }}
         >
             <Box
-                onClickCapture={(e) => {
-                    // Prevent sidebar from opening if a list item or its child is clicked
-                    const target = e.target as HTMLElement;
-                    const isListItemClick = target.closest('.MuiListItem-root');
-
-                    if (shouldShowIconsOnly && !open && !isListItemClick) {
-                        dispatch(openSidedbar());
-                    }
-                }}
+                component="nav"
+                aria-label="Hauptmenü"
                 sx={{
-                    cursor: shouldShowIconsOnly ? 'pointer' : 'default',
+                    height: '100%',
+                    display: "flex",
+                    flexDirection: "column",
                 }}
             >
-                <Drawer
-                    variant="persistent"
-                    open={open || shouldShowIconsOnly}
+                <List
                     sx={{
-                        width: currentWidth,
-                        flexShrink: 0,
-                        '& .MuiDrawer-paper': {
-                            top: theme => theme.layout.appbar.height,
-                            height: `calc(100% - ${theme.layout.appbar.height}px)`,
-                            width: currentWidth,
-                            transition: theme.transitions.create('width', {
-                                easing: theme.transitions.easing.sharp,
-                                duration: theme.transitions.duration.standard,
-                            }),
-                            overflowX: 'hidden',
-
-                        },
+                        flex: 1
                     }}
                 >
-                    <Box
-                        sx={{
-                            width: currentWidth,
-                            height: '100%',
-                            backgroundColor: 'background.paper',
-                            p: 1,
-                            borderRadius: 1,
-                            '&:hover': {
-                                backgroundColor: !open ? 'action.hover' : "none",
-                            },
-                        }}
-                        role="sidebar"
-                    >
-                        <Box
-                            sx={{
-                                height: '100%',
-                                display: "flex",
-                                flexDirection: "column",
-                            }}
-                        >
-                            <List
-                                sx={{
-                                    flex: 1
-                                }}
-                            >
-                                {sidebarMenuItems.map((item) => renderListItem(item))}
-                            </List>
-                            <List>
-                                {sidebarBottomItems.map((item) => renderListItem(item, true))}
-                            </List>
-                            {!shouldShowIconsOnly && renderBottomLegals()}
-                        </Box>
-                    </Box>
-                </Drawer>
+                    {sidebarMenuItems.map((item) => renderListItem(item))}
+                </List>
+                <List>
+                    {sidebarBottomItems.map((item) => renderListItem(item))}
+                </List>
+                {!shouldShowIconsOnly && renderBottomLegals()}
             </Box>
-        </ClickAwayListener>
+        </Box>
+    );
+
+    const paperSx = {
+        top: theme.layout.appbar.height,
+        height: `calc(100% - ${theme.layout.appbar.height}px)`,
+        width: currentWidth,
+        overflowX: 'hidden',
+        // Same surface as the desktop sidebar; dark mode would lighten the modal drawer.
+        backgroundImage: 'none',
+    };
+
+    if (!isDesktop) {
+        return (
+            <SwipeableDrawer
+                open={open}
+                onOpen={() => dispatch(openSidedbar())}
+                onClose={() => dispatch(closeSidebar())}
+                disableSwipeToOpen
+                ModalProps={{ keepMounted: true }}
+                sx={{ '& .MuiDrawer-paper': paperSx }}
+            >
+                {content}
+            </SwipeableDrawer>
+        );
+    }
+
+    return (
+        <Box
+            onClickCapture={(e) => {
+                // Prevent sidebar from opening if a list item or its child is clicked
+                const target = e.target as HTMLElement;
+                const isListItemClick = target.closest('.MuiListItem-root');
+
+                if (shouldShowIconsOnly && !open && !isListItemClick) {
+                    dispatch(openSidedbar());
+                }
+            }}
+            sx={{
+                cursor: shouldShowIconsOnly ? 'pointer' : 'default',
+            }}
+        >
+            <Drawer
+                variant="persistent"
+                open={open || shouldShowIconsOnly}
+                sx={{
+                    width: currentWidth,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        ...paperSx,
+                        transition: theme.transitions.create('width', {
+                            easing: theme.transitions.easing.sharp,
+                            duration: theme.transitions.duration.standard,
+                        }),
+                    },
+                }}
+            >
+                {content}
+            </Drawer>
+        </Box>
     );
 };
 

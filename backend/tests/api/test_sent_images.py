@@ -1,6 +1,8 @@
 from types import SimpleNamespace
 
 import pytest
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
 
 from sent_images.models import SentImage, SentImageStatus
@@ -22,6 +24,17 @@ def test_requires_authentication(client):
     assert client.get(URL).status_code == 401
 
 
+def test_the_query_count_does_not_grow_with_the_page(alice, alice_user):
+    SentImageFactory.create_batch(5, reciever=alice_user)
+
+    with CaptureQueriesContext(connection) as one:
+        alice.get(URL, {"page_size": 1})
+    with CaptureQueriesContext(connection) as full:
+        alice.get(URL, {"page_size": 5})
+
+    assert len(full) == len(one)
+
+
 def test_lists_the_users_own_traffic(alice, alice_user):
     response = alice.get(URL)
 
@@ -40,6 +53,14 @@ def test_the_page_size_can_be_changed(alice):
     response = alice.get(URL, {"page_size": 2})
 
     assert len(response.data["results"]) == 2
+
+
+def test_an_entry_stays_after_its_image_is_deleted_from_the_gallery(alice, alice_user):
+    entry = SentImageFactory(sender=alice_user)
+
+    assert alice.delete(f"/api/images/{entry.image_id}/").status_code == 200
+
+    assert alice.get(f"{URL}{entry.pk}/").status_code == 200
 
 
 def test_filters_to_what_was_sent_to_you(alice, alice_user):

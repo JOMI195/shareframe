@@ -25,7 +25,7 @@ EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
-# It reads and logs request.body on every request, multipart uploads included.
+# It logs request bodies on every request.
 MIDDLEWARE = [m for m in MIDDLEWARE if "request_logging" not in m]
 
 # The stock config attaches seven RotatingFileHandlers and creates backend/logs/.

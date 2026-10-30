@@ -12,9 +12,9 @@ const signInAs = async (
   email = 'alice@example.com',
   password = 'geheim123',
 ) => {
-  await user.type(screen.getByLabelText('Email'), email);
+  await user.type(screen.getByLabelText('E-Mail-Adresse'), email);
   await user.type(screen.getByLabelText('Passwort'), password);
-  await user.click(screen.getByRole('button', { name: 'anmelden' }));
+  await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 };
 
 // The mocked mirror of tests/e2e/auth.spec.ts, plus the cases that do not need
@@ -55,15 +55,18 @@ describe('signing in', () => {
 
     await signInAs(user, 'alice@example.com', 'falsch');
 
-    expect(await screen.findByText(/Bitte überprüfe deine E-Mail-Adresse/)).toBeInTheDocument();
+    expect(await screen.findByText(/E-Mail-Adresse oder Passwort stimmen nicht/)).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/auth/sign-in/');
     expect(localStorage.getItem('loggedIn')).toBeNull();
+    // Only the password has to be typed again.
+    expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue('alice@example.com');
+    expect(screen.getByLabelText('Passwort')).toHaveValue('');
   });
 
   it('asks for both fields', async () => {
     const { user } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
 
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     expect(await screen.findAllByText('Dieses Feld wird benötigt')).toHaveLength(2);
   });
@@ -71,8 +74,38 @@ describe('signing in', () => {
   it('sends a signed-out visitor from a protected route to sign-in', async () => {
     renderRoute('/fotos/', { preloadedState: buildState() });
 
-    expect(await screen.findByRole('button', { name: 'anmelden' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Anmelden' })).toBeInTheDocument();
   });
+
+  it('returns to the protected page after signing in', async () => {
+    const { user, router } = renderRoute('/fotos/', { preloadedState: buildState() });
+    await screen.findByRole('button', { name: 'Anmelden' });
+
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
+  });
+
+  it('explains an expired session and returns to where it ended', async () => {
+    sessionStorage.setItem('sessionExpired', '/freunde/');
+    const { user, router } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
+
+    expect(await screen.findByText(/Sitzung ist abgelaufen/)).toBeInTheDocument();
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/freunde/'));
+    expect(sessionStorage.getItem('sessionExpired')).toBeNull();
+  });
+
+  it('ignores a return path that leaves the app', async () => {
+    sessionStorage.setItem('sessionExpired', '//evil.example/');
+    const { user, router } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
+
+    await signInAs(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/dashboard/'));
+  });
+
 
   it('takes an already signed-in visitor straight to the dashboard', async () => {
     const { router } = renderRoute('/auth/sign-in/', { preloadedState: signedInState() });
@@ -156,5 +189,38 @@ describe('confirming an email change', () => {
         severity: 'error',
       }),
     );
+  });
+});
+
+describe('setting a new password from the reset link', () => {
+  const fillNewPassword = async (user: ReturnType<typeof renderRoute>['user']) => {
+    await user.type(screen.getByLabelText(/^Neues Passwort/, { selector: 'input' }), 'geheim123');
+    await user.type(screen.getByLabelText(/^Passwort wiederholen/, { selector: 'input' }), 'geheim123');
+    await user.click(screen.getByRole('button', { name: 'Passwort neu vergeben' }));
+  };
+
+  it('goes to sign-in once the password is set', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getResetPasswordConfirmUrl()), () => new HttpResponse(null, { status: 204 })),
+    );
+    const { user, router } = renderRoute('/auth/users/password-reset/abc/token1', { preloadedState: buildState() });
+
+    await fillNewPassword(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/sign-in/'));
+  });
+
+  it('stays and offers a new link when the token is rejected', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getResetPasswordConfirmUrl()), () =>
+        HttpResponse.json({ token: ['Invalid token for given user.'] }, { status: 400 }),
+      ),
+    );
+    const { user, router } = renderRoute('/auth/users/password-reset/abc/token1', { preloadedState: buildState() });
+
+    await fillNewPassword(user);
+
+    expect(await screen.findByRole('link', { name: 'Neuen Link anfordern' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/auth/users/password-reset/abc/token1');
   });
 });

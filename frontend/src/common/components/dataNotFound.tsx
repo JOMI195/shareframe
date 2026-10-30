@@ -1,11 +1,14 @@
-import { Box, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { ReactNode } from "react";
+import { Box, Button, Stack, Typography, useMediaQuery, useTheme } from "@mui/material";
 import Logo from "./logo";
 import SeasonalEmptyState from "./seasonal/seasonalEmptyState";
 
 interface DataNotFoundProps {
     notFoundMessage: string;
+    // The next step out of the empty state, e.g. uploading the first photo.
+    action?: { label: string; onClick: () => void; icon?: ReactNode };
 }
-const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage }) => {
+const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage, action }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const imageWidth = isSmallScreen ? 150 : 300;
@@ -27,10 +30,16 @@ const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage }) => {
                     lightLogoSrc="/frame-3d-no-data.svg"
                     clickable={false}
                     maxWidth={imageWidth}
+                    alt=""
                 />
                 <SeasonalEmptyState size={imageWidth / 4} />
             </Box>
-            <Typography variant="h6">{notFoundMessage}</Typography>
+            <Typography variant="h6" component="p">{notFoundMessage}</Typography>
+            {action && (
+                <Button variant="contained" startIcon={action.icon} onClick={action.onClick} sx={{ mt: 1 }}>
+                    {action.label}
+                </Button>
+            )}
         </Stack>
     );
 }

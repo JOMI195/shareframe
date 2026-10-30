@@ -8,6 +8,12 @@ type SliceState = {
     loading: boolean;
     sending: boolean;
     lastFetch: number | null;
+    // A failed list load, so the gallery can offer a retry instead of looking empty.
+    imagesFailed: boolean;
+    sentImagesFailed: boolean;
+    // The stored results belong to another page or filter, so the gallery must not show them.
+    imagesStale: boolean;
+    sentImagesStale: boolean;
   };
   imagesPaginated: IImagesPaginated;
   imagesPaginatedPageSize: number;
@@ -26,6 +32,10 @@ const initialState: SliceState = {
     loading: false,
     sending: false,
     lastFetch: null,
+    imagesFailed: false,
+    sentImagesFailed: false,
+    imagesStale: false,
+    sentImagesStale: false,
   },
   imagesPaginated: {
     count: 0,
@@ -76,19 +86,23 @@ const imagesSlice = createSlice({
   reducers: {
     imagesRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.imagesFailed = false;
     },
     imagesReceived: (sliceState, action) => {
       sliceState.imagesPaginated = {
         ...action.payload,
         page: sliceState.imagesPaginated.page,
       };
+      sliceState.api.imagesStale = false;
       sliceState.api.lastFetch = Date.now();
       resetApiState(sliceState);
     },
     imagesRequestFailed: (sliceState) => {
       resetApiState(sliceState);
+      sliceState.api.imagesFailed = true;
     },
     imagesPageSet: (sliceState, action) => {
+      if (action.payload !== sliceState.imagesPaginated.page) sliceState.api.imagesStale = true;
       sliceState.imagesPaginated.page = action.payload;
     },
     imagesPageSizeSet: (sliceState, action) => {
@@ -96,6 +110,8 @@ const imagesSlice = createSlice({
     },
     createImagePending: (sliceState) => {
       sliceState.api.sending = true;
+    },
+    createImageProgress: (_sliceState, _action: PayloadAction<number>) => {
     },
     createImageFulfilled: (sliceState, action) => {
       sliceState.imagesPaginated.results.unshift(action.payload);
@@ -131,25 +147,30 @@ const imagesSlice = createSlice({
     },
     sentImagesRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.sentImagesFailed = false;
     },
     sentImagesReceived: (sliceState, action) => {
       sliceState.sentImagesPaginated = {
         ...action.payload,
         page: sliceState.sentImagesPaginated.page,
       };
+      sliceState.api.sentImagesStale = false;
       sliceState.api.lastFetch = Date.now();
       resetApiState(sliceState);
     },
     sentImagesRequestFailed: (sliceState) => {
       resetApiState(sliceState);
+      sliceState.api.sentImagesFailed = true;
     },
     sentImagesPageSet: (sliceState, action) => {
+      if (action.payload !== sliceState.sentImagesPaginated.page) sliceState.api.sentImagesStale = true;
       sliceState.sentImagesPaginated.page = action.payload;
     },
     sentImagesPageSizeSet: (sliceState, action) => {
       sliceState.sentImagesPaginatedPageSize = action.payload;
     },
     sentImagesFiltersSet: (sliceState, action) => {
+      sliceState.api.sentImagesStale = true;
       sliceState.sentImagesFilters = {
         ...sliceState.sentImagesFilters,
         ...action.payload,
@@ -165,7 +186,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     deactivateSentImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     deactivateSentImageFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
       replaceSentImage(sliceState, action.payload);
@@ -175,7 +196,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     cancelScheduledSentImagePending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     cancelScheduledSentImageFulfilled: (sliceState, action: PayloadAction<number>) => {
       const sentImages = sliceState.sentImagesPaginated;
@@ -188,7 +209,7 @@ const imagesSlice = createSlice({
       resetApiState(sliceState);
     },
     sendScheduledSentImageNowPending: (sliceState) => {
-      sliceState.api.loading = true;
+      sliceState.api.sending = true;
     },
     sendScheduledSentImageNowFulfilled: (sliceState, action: PayloadAction<ISentImage>) => {
       replaceSentImage(sliceState, action.payload);
@@ -220,9 +241,8 @@ const imagesSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addCase(signedOut, (sliceState) => {
-      sliceState.textPresets = initialState.textPresets;
-    });
+    // The next user on this device must not see the previous one's photos.
+    builder.addCase(signedOut, () => initialState);
   },
 });
 
@@ -233,6 +253,7 @@ export const {
   imagesPageSet,
   imagesPageSizeSet,
   createImagePending,
+  createImageProgress,
   createImageFailed,
   createImageFulfilled,
   deleteImageFailed,

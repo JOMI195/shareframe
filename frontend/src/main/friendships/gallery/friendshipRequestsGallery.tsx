@@ -10,20 +10,24 @@ import {
     Skeleton,
     Grid,
     CardActions,
-    Tooltip,
-    IconButton,
+    Button,
+    List,
+    ListItem,
+    ListItemAvatar,
+    ListItemText,
     useMediaQuery,
 } from "@mui/material";
+import ConfirmDialog from "@/common/components/confirmDialog";
+import { getIncomingPendingRequests } from "../pendingRequests";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { IFriendship } from "@/types";
-import DeleteIcon from '@mui/icons-material/Delete';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
+import { acceptFrindshipRequest, fetchFriendships, rejectFrindshipRequest, withdrawFriendshipRequest } from "@/store/entities/friendships/friendships.actions";
 import DataNotFound from "@/common/components/dataNotFound";
 import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -34,50 +38,35 @@ const FriendshipRequestsGallery: React.FC = () => {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const friendships = useAppSelector(getFriendships);
-    const friendshipsLoading = useAppSelector(getApi).loading;
-    const showSkeleton = useMinimumLoading(friendshipsLoading);
+    const friendshipsApi = useAppSelector(getApi);
+    const showSkeleton = useMinimumLoading(friendshipsApi.loading && friendshipsApi.lastFetch === null);
     const user = useAppSelector(getUser);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(friendships.length / ITEMS_PER_PAGE);
-    const currentFriendships = friendships.slice(
+    const [requestToReject, setRequestToReject] = useState<IFriendship | null>(null);
+    const [acceptingId, setAcceptingId] = useState<number | null>(null);
+
+    // Filtered before paging, so every page is full and the page count is right.
+    const incomingRequests = getIncomingPendingRequests(friendships, user.me.username);
+    const outgoingRequests = friendships.filter(
+        (friendship) => friendship.status === "pending" && friendship.sender === user.me.username
+    );
+    const totalPages = Math.ceil(incomingRequests.length / ITEMS_PER_PAGE);
+    const filteredRequests = incomingRequests.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
 
-    const filteredRequests = currentFriendships
-        // Only consider pending or rejected requests
-        .filter(
-            (friendship) =>
-                friendship.status === "pending"
-        )
-        // Only show friend requests received by the current user
-        .filter((friendship) => friendship.reciever === user.me.username)
-        // Exclude friend requests if an accepted friendship already exists between user and friend
-        .filter((friendship) => {
-            // For a friend request received by the user, the friend is the sender
-            const friend = friendship.sender;
-            // Check in the complete friendships array for an accepted friendship with that friend
-            const acceptedExists = friendships.some(
-                (f) =>
-                    f.status === "accepted" &&
-                    (
-                        // Either the current user sent the accepted request...
-                        (f.sender === user.me.username && f.reciever === friend) ||
-                        // ...or the current user received the accepted request.
-                        (f.reciever === user.me.username && f.sender === friend)
-                    )
-            );
-            return !acceptedExists;
-        })
-
     const handleFriendshipReject = async (friendship: IFriendship) => {
+        setRequestToReject(null);
         await dispatch(rejectFrindshipRequest(friendship.id));
         dispatch(fetchFriendships());
     }
 
     const handleFriendshipAcccept = async (friendship: IFriendship) => {
+        setAcceptingId(friendship.id);
         await dispatch(acceptFrindshipRequest(friendship.id));
+        setAcceptingId(null);
         dispatch(fetchFriendships());
     }
 
@@ -86,7 +75,7 @@ const FriendshipRequestsGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
@@ -114,8 +103,6 @@ const FriendshipRequestsGallery: React.FC = () => {
     );
 
     const renderFriendRequestCard = (friendship: IFriendship) => {
-        const isMyRequest = friendship.sender === user.me.username;
-
         const fromThem = friendship.sender !== user.me.username;
 
         const friend = fromThem ? friendship.sender : friendship.reciever;
@@ -134,50 +121,31 @@ const FriendshipRequestsGallery: React.FC = () => {
                     }}
                 >
                     <UserAvatar username={friend} url={friendAvatar} size={80} />
-                    <Typography variant="h6" sx={{ mt: 1 }}>
+                    <Typography variant="h6" component="p" noWrap sx={{ mt: 1, maxWidth: "100%" }}>
                         {friend}
                     </Typography>
                 </CardContent>
-                <CardActions>
-                    <Box sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        width: "100%"
-                    }}>
-                        <Stack
-                            direction="row"
-                            spacing={1}
-                            sx={{
-                                alignItems: "center"
-                            }}
+                <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+                    <Stack spacing={1} sx={{ width: "100%" }}>
+                        <Button
+                            onClick={() => handleFriendshipAcccept(friendship)}
+                            variant="contained"
+                            loading={acceptingId === friendship.id}
+                            fullWidth
+                            aria-label="Anfrage annehmen"
                         >
-                            {!isMyRequest && friendship.status !== "rejected" && (
-                                <Tooltip title="Freundschaftsanfrage ablehnen">
-                                    <IconButton
-                                        onClick={() => handleFriendshipReject(friendship)}
-                                        color="error"
-                                        aria-label="Anfrage ablehnen"
-                                    >
-                                        <DeleteIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            )}
-
-                            {!isMyRequest && friendship.status !== "rejected" && (
-                                <Tooltip title="Freundschaftsanfrage annehmen">
-                                    <IconButton
-                                        onClick={() => handleFriendshipAcccept(friendship)}
-                                        color="success"
-                                        aria-label="Anfrage annehmen"
-                                    >
-                                        <HowToRegIcon />
-                                    </IconButton>
-                                </Tooltip>
-                            )}
-                        </Stack>
-                    </Box>
+                            Annehmen
+                        </Button>
+                        <Button
+                            onClick={() => setRequestToReject(friendship)}
+                            disabled={acceptingId === friendship.id}
+                            color="error"
+                            fullWidth
+                            aria-label="Anfrage ablehnen"
+                        >
+                            Ablehnen
+                        </Button>
+                    </Stack>
                 </CardActions>
             </Card>
         );
@@ -203,9 +171,9 @@ const FriendshipRequestsGallery: React.FC = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size="large"
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -213,7 +181,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                             <Typography variant="subtitle2" color="textSecondary" sx={{
                                 textAlign: "center"
                             }}>
-                                {filteredRequests.length} Freundschaftsanfrage{filteredRequests.length !== 1 ? "n" : ""}
+                                {incomingRequests.length} Freundschaftsanfrage{incomingRequests.length !== 1 ? "n" : ""}
                             </Typography>
                         )}
                     </>
@@ -262,6 +230,41 @@ const FriendshipRequestsGallery: React.FC = () => {
             </Box>
 
             {renderPagination(true)}
+
+            {!showSkeleton && outgoingRequests.length > 0 && (
+                <Box sx={{ px: 2 }}>
+                    <Typography variant="subtitle1">Gesendete Anfragen</Typography>
+                    <List>
+                        {outgoingRequests.map((friendship) => (
+                            <ListItem
+                                key={friendship.id}
+                                disableGutters
+                                secondaryAction={
+                                    <Button onClick={() => dispatch(withdrawFriendshipRequest(friendship.id))}>
+                                        Zurückziehen
+                                    </Button>
+                                }
+                            >
+                                <ListItemAvatar>
+                                    <UserAvatar username={friendship.reciever} url={friendship.reciever_avatar} size={40} />
+                                </ListItemAvatar>
+                                <ListItemText primary={friendship.reciever} secondary="Wartet auf Antwort" />
+                            </ListItem>
+                        ))}
+                    </List>
+                </Box>
+            )}
+
+            <ConfirmDialog
+                open={requestToReject !== null}
+                title={`Anfrage von ${requestToReject?.sender ?? ""} ablehnen?`}
+                confirmLabel="Ablehnen"
+                destructive
+                onConfirm={() => requestToReject && handleFriendshipReject(requestToReject)}
+                onCancel={() => setRequestToReject(null)}
+            >
+                Die Person kann dir später erneut eine Anfrage senden.
+            </ConfirmDialog>
         </Stack>
     );
 };

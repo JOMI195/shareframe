@@ -5,6 +5,8 @@ import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
 import { getAllowedExtensionLabels } from './imageUpload/validation/imageValidation';
 import { maxFilesOnce } from './useUploadQueue';
+
+const maxFileSizeMB = import.meta.env.VITE_APP_UPLOADED_FILES_MAX_SIZE_MB;
 import { PickerSource } from './usePhotoPicker';
 
 interface StartScreenProps {
@@ -86,6 +88,7 @@ const StartScreen: React.FC<StartScreenProps> = ({ openPicker, selectFiles, isPr
             </Stack>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                 {`${getAllowedExtensionLabels().join(', ')} · bis zu ${maxFilesOnce} Fotos auf einmal`}
+                {maxFileSizeMB && ` · je bis ${maxFileSizeMB} MB`}
             </Typography>
         </Box>
     );

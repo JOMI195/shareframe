@@ -4,12 +4,19 @@ import { StackedSnackbar } from "./snackbarStack";
 import MuiAlert, { AlertColor, AlertProps } from "@mui/material/Alert";
 import { RootState, useAppDispatch, useAppSelector } from "@/store";
 import { UnknownAction } from "redux";
+import Button from "@mui/material/Button";
+import { Link as RouterLink } from "react-router";
 
+export interface SnackbarLink {
+  label: string;
+  to: string;
+}
 
 interface AlertSnackbar {
   open: boolean;
   message: string;
   severity: AlertColor;
+  link?: SnackbarLink;
 }
 
 interface IAlertSnackbarProps {
@@ -52,7 +59,8 @@ const AlertSnackbar = (
   return (
     <StackedSnackbar
       open={snackbar.open}
-      autoHideDuration={10000}
+      // Errors stay until dismissed, so there is time to read them.
+      autoHideDuration={snackbar.severity === 'error' ? null : 10000}
       onClose={handleSnackbarClose}
       slots={{
         transition: Slide
@@ -60,7 +68,12 @@ const AlertSnackbar = (
     >
       <Alert
         severity={snackbar.severity}
-        onClose={handleSnackbarClose}
+        onClose={snackbar.link ? undefined : handleSnackbarClose}
+        action={snackbar.link && (
+          <Button color="inherit" size="small" component={RouterLink} to={snackbar.link.to} onClick={() => dispatch(closeSnackbar())}>
+            {snackbar.link.label}
+          </Button>
+        )}
         sx={{ width: "100%" }}
       >
         {snackbar.message}

@@ -41,7 +41,7 @@ const ScheduleSelector: React.FC<ScheduleSelectorProps> = ({ enabled, value, err
                         textField: {
                             fullWidth: true,
                             error: error !== null,
-                            helperText: error ?? `Höchstens ${MAX_SCHEDULE_DAYS} Tage im Voraus. Die Ablaufzeit zählt ab dem Sendezeitpunkt.`,
+                            helperText: error ?? `Höchstens ${MAX_SCHEDULE_DAYS} Tage im Voraus. Die Anzeigedauer zählt ab dem Sendezeitpunkt.`,
                         },
                     }}
                 />

@@ -29,27 +29,27 @@ test.describe('frames', () => {
   test('issues a one-time password for a frame', async ({ signedInPage: page }) => {
     await openFrames(page);
 
-    await frameCards(page).first().getByRole('button', { name: 'generate otp' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Einmal-Code anzeigen' }).click();
     const otp = page.locator('input#otp');
     await expect(otp).toHaveValue('');
-    await expect(page.getByRole('button', { name: 'copy otp' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Code kopieren' })).toBeDisabled();
 
-    await page.getByRole('button', { name: 'Generieren' }).click();
+    await page.getByRole('button', { name: /Code erstellen/ }).click();
 
     await expect(otp).toHaveValue(/^\d{6}$/, { timeout: 30_000 });
-    await expect(page.getByText(/gültig für: \d+ Minuten/)).toBeVisible();
-    await expect(page.getByRole('button', { name: 'copy otp' })).toBeEnabled();
+    await expect(page.getByText(/Noch \d+ Minuten? gültig/)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Code kopieren' })).toBeEnabled();
   });
 
   test('issues a different one-time password on demand', async ({ signedInPage: page }) => {
     await openFrames(page);
-    await frameCards(page).first().getByRole('button', { name: 'generate otp' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Einmal-Code anzeigen' }).click();
 
-    await page.getByRole('button', { name: 'Generieren' }).click();
+    await page.getByRole('button', { name: /Code erstellen/ }).click();
     await expect(page.locator('input#otp')).toHaveValue(/^\d{6}$/, { timeout: 30_000 });
     const first = await page.locator('input#otp').inputValue();
 
-    await page.getByRole('button', { name: 'Generieren' }).click();
+    await page.getByRole('button', { name: /Code erstellen/ }).click();
 
     await expect
       .poll(() => page.locator('input#otp').inputValue(), { timeout: 30_000 })
@@ -65,7 +65,7 @@ test.describe('frames', () => {
 
     // The open dialog marks the rest of the page aria-hidden, so the snackbar is
     // matched by its text rather than its role.
-    await expect(page.getByText('Bilderrahmen registrieren fehlgeschlagen')).toBeVisible({
+    await expect(page.getByText(/Diesen Bilderrahmen können wir nicht hinzufügen/)).toBeVisible({
       timeout: 30_000,
     });
     // The dialog stays open so the serial can be corrected.
@@ -77,11 +77,11 @@ test.describe('frames', () => {
     const serial = (await frameCards(page).first().innerText()).match(SERIAL)?.[0];
     expect(serial).toBeTruthy();
 
-    await frameCards(page).first().getByRole('button', { name: 'delete' }).click();
+    await frameCards(page).first().getByRole('button', { name: 'Bilderrahmen entfernen' }).click();
     await expect(
       page.getByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+    await page.getByRole('button', { name: 'Entfernen', exact: true }).click();
 
     await expect(frameCards(page)).toHaveCount(1, { timeout: 30_000 });
     await page.reload();

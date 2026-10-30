@@ -37,13 +37,33 @@ describe('friend list', () => {
     await waitFor(() => expect(requestsTab()).toHaveTextContent('1'));
   });
 
-  it('lists the incoming request and not my own outgoing one', async () => {
+  it('lists incoming requests to answer and my own as waiting', async () => {
     const { user } = await openFriendships();
 
     await user.click(requestsTab());
 
     expect(await screen.findByText('dave')).toBeInTheDocument();
-    expect(screen.queryByText('erin')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Anfrage annehmen' })).toBeInTheDocument();
+    expect(screen.getByText('Gesendete Anfragen')).toBeInTheDocument();
+    expect(screen.getByText('erin')).toBeInTheDocument();
+    expect(screen.getByText('Wartet auf Antwort')).toBeInTheDocument();
+  });
+
+  it('withdraws my own request', async () => {
+    const calls: string[] = [];
+    server.use(
+      mswHttp.delete(apiUrl(friendshipEndpoints.getFriendshipsDeleteRequestUrl(outgoing.id)), () => {
+        calls.push('withdraw');
+        return HttpResponse.json({ ...outgoing, id: String(outgoing.id) });
+      }),
+    );
+    const { user } = await openFriendships();
+
+    await user.click(requestsTab());
+    await user.click(await screen.findByRole('button', { name: 'Zurückziehen' }));
+
+    await waitFor(() => expect(calls).toEqual(['withdraw']));
+    await waitFor(() => expect(screen.queryByText('erin')).not.toBeInTheDocument());
   });
 
   it('says so when nobody has asked', async () => {
@@ -84,6 +104,8 @@ describe('answering a request', () => {
 
     await user.click(requestsTab());
     await user.click(await screen.findByRole('button', { name: 'Anfrage ablehnen' }));
+    expect(calls).toEqual([]);
+    await user.click(await screen.findByRole('button', { name: 'Ablehnen' }));
 
     await waitFor(() => expect(calls).toEqual(['reject']));
   });
@@ -91,8 +113,8 @@ describe('answering a request', () => {
 
 describe('sending a request', () => {
   const openDialog = async (user: ReturnType<typeof renderRoute>['user']) => {
-    await user.click(screen.getByRole('button', { name: /Freundschafsanfrage/ }));
-    return screen.findByLabelText('Freundschaftscode');
+    await user.click(screen.getByRole('button', { name: 'Freund hinzufügen' }));
+    return screen.findByLabelText('Freundescode');
   };
 
   it('sends the friend code that was typed', async () => {
@@ -107,10 +129,27 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'SEEDB001');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     await waitFor(() =>
       expect(bodies).toEqual([{ reciever_friendship_user_search_code: 'SEEDB001' }]),
+    );
+  });
+
+  it('says why a request was refused', async () => {
+    server.use(
+      mswHttp.post(apiUrl(friendshipEndpoints.getFriendshipsSendRequestUrl()), () =>
+        HttpResponse.json({ detail: 'Friendship request already sent', code: 'friend_request_pending' }, { status: 400 }),
+      ),
+    );
+    const { user, store } = await openFriendships();
+
+    const field = await openDialog(user);
+    await user.type(field, 'SEEDB001');
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
+
+    await waitFor(() =>
+      expect(store.getState().ui.friendships.snackbar.alert.message).toBe('Du hast dieser Person schon eine Anfrage geschickt.'),
     );
   });
 
@@ -126,7 +165,7 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'KURZ');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     expect(await screen.findByText('Der Code besteht aus 8 Zeichen')).toBeInTheDocument();
     expect(bodies).toHaveLength(0);
@@ -142,11 +181,21 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'UNBEKANN');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     await waitFor(() =>
       expect(store.getState().ui.friendships.snackbar.alert.severity).toBe('error'),
     );
     expect(store.getState().ui.friendships.dialogs.create.open).toBe(true);
+  });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = await openFriendships();
+
+    await openDialog(user);
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.friendships.dialogs.create.open).toBe(false);
   });
 });

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
+import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
@@ -8,11 +8,12 @@ import { useAppDispatch, useAppSelector } from "@/store";
 import { closeCreateFriendshipsDialog, getDialogs, openFriendshipsAlertSnackbar } from "@/store/ui/friendships/friendships.slice";
 import { IFriendshipCreateForm, isIFriendship } from "@/types";
 import { sendFrindshipRequest } from "@/store/entities/friendships/friendships.actions";
-import { AppBar, Box, Divider, Grid, IconButton, Paper, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Divider, Grid, IconButton, Paper, Stack, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
+import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
 import { copyToClipboard } from "@/common/utils/clipboard/clipboard";
 
 const FriendshipCreateDialog: React.FC = () => {
@@ -67,35 +68,29 @@ const FriendshipCreateDialog: React.FC = () => {
     ));
   };
 
+  const canShare = typeof navigator.share === "function";
+
+  const handleShareCode = async () => {
+    try {
+      await navigator.share({ title: "ShareFrame", text: `Mein Freundescode für ShareFrame: ${friendshipCode}` });
+    } catch {
+      // Closing the share sheet rejects as well.
+    }
+  };
+
   return (
-    <Dialog
+    <AppDialog
       fullScreen={matches ? false : true}
       open={open}
       onClose={handleDialogClose}
-      aria-describedby="friendship-create-dialog"
+      aria-labelledby="friendship-create-title"
       maxWidth="xs"
       fullWidth
       slots={{
         transition: matches ? ZoomTransition : SlideTransition
       }}
     >
-      {!matches && (
-        <AppBar sx={{ position: 'relative' }} color='inherit'>
-          <Toolbar>
-            <IconButton
-              edge='start'
-              color='inherit'
-              onClick={handleDialogClose}
-              aria-label='cancel'
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-              Freund hinzufügen
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      )}
+      <DialogHeader title="Freund hinzufügen" titleId="friendship-create-title" onClose={handleDialogClose} />
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -136,20 +131,31 @@ const FriendshipCreateDialog: React.FC = () => {
               >
                 <Typography
                   variant="h6"
+                  component="p"
                   color="primary"
                   sx={{ fontWeight: 'bold', letterSpacing: 2 }}
                 >
                   {friendshipCode}
                 </Typography>
-                <ContentCopyIcon
-                  onClick={handleCopyCode}
-                  className="ignore-clickaway"
-                  sx={{
-                    cursor: 'pointer',
-                    color: 'text.secondary',
-                    '&:hover': { color: 'primary.main' }
-                  }}
-                />
+                <Box sx={{ display: 'flex' }}>
+                  {canShare && (
+                    <IconButton
+                      onClick={handleShareCode}
+                      aria-label="Meinen Code teilen"
+                      sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                    >
+                      <ShareIcon />
+                    </IconButton>
+                  )}
+                  <IconButton
+                    onClick={handleCopyCode}
+                    className="ignore-clickaway"
+                    aria-label="Meinen Code kopieren"
+                    sx={{ width: 44, height: 44, color: 'text.secondary', '&:hover': { color: 'primary.main' } }}
+                  >
+                    <ContentCopyIcon />
+                  </IconButton>
+                </Box>
               </Box>
             </Stack>
           </Paper>
@@ -178,7 +184,7 @@ const FriendshipCreateDialog: React.FC = () => {
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                Bitte gebe hier den Freundschaftscode der Person ein, welche du hinzufügen möchtest
+                Gib den Freundescode der Person ein, die du hinzufügen möchtest.
               </Typography>
               <Box
                 component='form'
@@ -192,7 +198,8 @@ const FriendshipCreateDialog: React.FC = () => {
                     <TextField
                       id='friend_code'
                       name='reciever_friendship_user_search_code'
-                      label="Freundschaftscode"
+                      autoComplete="off"
+                      label="Freundescode"
                       value={form.values.reciever_friendship_user_search_code}
                       onBlur={form.handleBlur}
                       onChange={(e) => {
@@ -211,7 +218,10 @@ const FriendshipCreateDialog: React.FC = () => {
                       variant='outlined'
                       slotProps={{
                         htmlInput: {
-                          style: { textTransform: 'uppercase' }
+                          style: { textTransform: 'uppercase' },
+                          autoCapitalize: 'characters',
+                          autoCorrect: 'off',
+                          spellCheck: false,
                         }
                       }}
                     />
@@ -222,23 +232,9 @@ const FriendshipCreateDialog: React.FC = () => {
                       fullWidth
                       form='friendship-create-form'
                       variant='contained'
+                      loading={form.isSubmitting}
                     >
-                      {'Hinzufügen'}
-                    </Button>
-                  </Grid>
-                  <Grid
-                    size={{
-                      xs: 12,
-                      sm: 12
-                    }}>
-                    <Button
-                      type="button"
-                      fullWidth
-                      variant="outlined"
-                      color="secondary"
-                      onClick={handleDialogClose}
-                    >
-                      {"abbrechen"}
+                      {'Anfrage senden'}
                     </Button>
                   </Grid>
                 </Grid>
@@ -248,7 +244,7 @@ const FriendshipCreateDialog: React.FC = () => {
         </Box>
 
       </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 };
 

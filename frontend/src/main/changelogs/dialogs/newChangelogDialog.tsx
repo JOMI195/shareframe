@@ -1,18 +1,18 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import {
     Box,
-    CircularProgress,
-    Button,
     Typography,
 } from '@mui/material';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
-import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
+import { usePromptSlot } from '@/common/components/lifecycle/promptQueue';
+import { formatDateNumeric } from "@/common/utils/date/date";
+
+// The markdown renderer loads only when there is something to announce.
+const MarkdownImagesIntercept = lazy(() => import('@/common/utils/markdown/markdownImagesIntercept'));
 
 const NewChangelogDialog: React.FC = () => {
     const {
-        isLoading,
-        changelogs,
         deactivateChangelog,
         getNewestActiveChangelog
     } = useChangelogs();
@@ -25,32 +25,18 @@ const NewChangelogDialog: React.FC = () => {
     };
 
     const newestChangelog = getNewestActiveChangelog();
-    const open = !isLoading && changelogs.length > 0 && Boolean(newestChangelog);
+    const granted = usePromptSlot('changelog', Boolean(newestChangelog));
 
-    if (isLoading) {
-        return (
-            <ShareframeMainDialog
-                open={open}
-                onDialogClose={handleClose}
-                dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
-            >
-                <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
-                    <CircularProgress />
-                </Box>
-            </ShareframeMainDialog>
-        );
-    }
-
-    if (!newestChangelog) {
+    if (!newestChangelog || !granted) {
         return null;
     }
 
     return (
         <ShareframeMainDialog
-            open={open}
+            open
             onDialogClose={handleClose}
             dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
-            dialogSubtitle={new Date(newestChangelog.date).toLocaleDateString()}
+            dialogSubtitle={formatDateNumeric(newestChangelog.date)}
             maxWidth="md"
             fullWidth
         >
@@ -62,20 +48,11 @@ const NewChangelogDialog: React.FC = () => {
                 }}
             >
                 <Typography variant='h5'>{newestChangelog.title}</Typography>
-                <MarkdownImagesIntercept>
-                    {newestChangelog.content}
-                </MarkdownImagesIntercept>
-            </Box>
-
-            <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 3, mb: 1, width: '100%', position: 'sticky', bottom: 0, right: 0 }}>
-                <Button
-                    onClick={handleClose}
-                    variant="contained"
-                    color="primary"
-                    sx={{ display: { xs: 'none', sm: 'block' } }}
-                >
-                    Schließen
-                </Button>
+                <Suspense fallback={null}>
+                    <MarkdownImagesIntercept>
+                        {newestChangelog.content}
+                    </MarkdownImagesIntercept>
+                </Suspense>
             </Box>
         </ShareframeMainDialog>
     );

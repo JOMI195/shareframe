@@ -141,7 +141,7 @@ groups:
                 uid: loki
               editorMode: code
               queryType: range
-              expr: 'sum by (user, ip) (count_over_time({job="host", program=~"sshd(-session)?"} |= "Accepted" | regexp `Accepted \S+ for (?P<user>\S+) from (?P<ip>\S+)` [1m]))'
+              expr: 'sum by (user, ip) (count_over_time({job="host", program=~"sshd(-session)?"} |~ `Accepted \S+ for \S+ from \S+` | regexp `Accepted \S+ for (?P<user>\S+) from (?P<ip>\S+)` [1m]))'
               intervalMs: 1000
               maxDataPoints: 43200
           - refId: B

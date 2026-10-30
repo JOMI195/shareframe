@@ -33,15 +33,15 @@ const ImagePreviewDialog = () => {
         const deletionTime = getDeletionTime(createdAt);
         const timeDiff = deletionTime.getTime() - now.getTime();
 
-        if (timeDiff <= 0) return "Bereits abgelaufen. Wird gelöscht...";
+        if (timeDiff <= 0) return "Wird gleich aus der Galerie gelöscht";
 
         const hours = Math.floor(timeDiff / (1000 * 60 * 60));
         const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
 
         if (hours > 0) {
-            return `Wird in ${hours}h ${minutes}m gelöscht`;
+            return `Wird in ${hours} Std. ${minutes} Min. aus der Galerie gelöscht`;
         } else {
-            return `Wird in ${minutes}m gelöscht`;
+            return `Wird in ${minutes} Min. aus der Galerie gelöscht`;
         }
     };
 
@@ -125,10 +125,10 @@ const ImagePreviewDialog = () => {
                             }}>
                             {selectedImage.auto_delete_after_period && (
                                 <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                    <Typography sx={{ mb: 0.5 }} color="GrayText" >Verwendungszeit</Typography>
+                                    <Typography sx={{ mb: 0.5 }} color="text.secondary">Speicherdauer</Typography>
                                     <Chip
                                         icon={<AccessTimeIcon />}
-                                        label={`Mit kurzer Verwendungszeit markiert. ${getTimeUntilDeletion(selectedImage.created_at)}`}
+                                        label={getTimeUntilDeletion(selectedImage.created_at)}
                                         color="warning"
                                         size="small"
                                         variant="outlined"

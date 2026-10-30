@@ -25,6 +25,7 @@ def test_the_business_endpoint_carries_the_business_gauges(client):
     assert "shareframe_users_total" in body
     assert "shareframe_sent_images_total" in body
     assert "shareframe_sent_images_scheduled" in body
+    assert "shareframe_auth_sessions_active" in body
 
 
 def test_the_fleet_roster_lives_on_the_default_registry(client):

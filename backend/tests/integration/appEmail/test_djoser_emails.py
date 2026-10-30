@@ -1,9 +1,11 @@
+import json
 import logging
 import os
 import re
-from smtplib import SMTPServerDisconnected
+from unittest.mock import patch
 
 import pytest
+from celery.exceptions import Retry
 from django.core import mail
 from django.test import RequestFactory
 
@@ -105,10 +107,10 @@ def test_a_failed_notice_is_logged_not_raised(email_class, user, monkeypatch, ca
     "email_class",
     [DjoserActivationEmail, DjoserPasswordResetEmail, DjoserEmailChangeConfirmEmail],
 )
-def test_a_failed_link_mail_raises(email_class, user, monkeypatch):
+def test_a_failed_link_mail_is_retried(email_class, user, monkeypatch):
     break_delivery(monkeypatch)
 
-    with pytest.raises(SMTPServerDisconnected):
+    with pytest.raises(Retry):
         email_class(RequestFactory().get("/"), {"user": user, "token": "tok-en"}).send(
             [user.email]
         )
@@ -165,3 +167,18 @@ def test_the_support_button_leads_to_the_contact_page(email_class, user, setting
         f'href="{os.environ["FRONTEND_BASE_URL"]}{settings.FRONTEND_CONTACT_URL}" class="button"'
         in html_of(message)
     )
+
+
+# The worker needs a JSON context, and tokens must not land in the result backend.
+@pytest.mark.parametrize("email_class", CLASSES)
+def test_mails_are_queued_with_a_json_context_and_a_redacted_repr(email_class, user):
+    with patch("appEmail.djoserEmailConfig.send_account_mail.apply_async") as queue:
+        email_class(RequestFactory().get("/"), {"user": user, "token": "tok-en"}).send(
+            [user.email]
+        )
+
+    kwargs = queue.call_args.kwargs
+    assert json.loads(json.dumps(kwargs["kwargs"]["context"]))["user"] == {
+        "username": user.username
+    }
+    assert "tok-en" not in kwargs["kwargsrepr"]

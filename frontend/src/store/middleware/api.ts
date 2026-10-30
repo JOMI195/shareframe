@@ -3,6 +3,7 @@ import { isAxiosError } from "axios";
 import http from "@/services/httpService.ts";
 import * as actions from "@/common/utils/constants/api.constants.tsx";
 import { ApiRequestPayload } from "@/common/utils/constants/api.constants.tsx";
+import { errorMessageFor } from "@/common/utils/errors/errorMessages";
 
 interface ApiRequestAction {
   type: string;
@@ -19,6 +20,25 @@ const isApiRequestAction = (action: unknown): action is ApiRequestAction => {
 const getErrorMessage = (error: unknown): string => {
   if (!isAxiosError(error)) {
     return error instanceof Error ? error.message : "Unbekannter Fehler";
+  }
+
+  if (!error.response) {
+    return navigator.onLine
+      ? "Der Server ist gerade nicht erreichbar."
+      : "Du bist offline. Prüfe deine Internetverbindung.";
+  }
+
+  if (error.response.status >= 500) {
+    return "Auf dem Server ist ein Fehler aufgetreten.";
+  }
+
+  // DRF's own texts for these are English.
+  if (error.response.status === 403) {
+    return "Dafür fehlt dir die Berechtigung.";
+  }
+
+  if (error.response.status === 404) {
+    return "Das gibt es nicht mehr.";
   }
 
   if (error.response?.status === 413) {
@@ -44,7 +64,15 @@ const getErrorMessage = (error: unknown): string => {
     if (typeof firstValue === "string") return firstValue;
   }
 
-  return error.message ?? "Unbekannter Fehler";
+  return "Unbekannter Fehler";
+};
+
+const getErrorCode = (error: unknown): string | undefined => {
+  if (!isAxiosError(error)) return undefined;
+  const data: unknown = error.response?.data;
+  if (!data || typeof data !== "object") return undefined;
+  const code = (data as Record<string, unknown>).code;
+  return typeof code === "string" ? code : undefined;
 };
 
 const apiMiddleware: Middleware =
@@ -61,6 +89,7 @@ const apiMiddleware: Middleware =
           onStart,
           onSuccess,
           onError,
+          onUploadProgress,
           onStartPayload,
           onSuccessPayload,
           onErrorPayload,
@@ -76,11 +105,21 @@ const apiMiddleware: Middleware =
         next(action);
 
         try {
+          let lastPercent = -1;
           const response = await http.request({
             url,
             method,
             data,
             headers,
+            onUploadProgress: onUploadProgress
+              ? ({ loaded, total }) => {
+                if (!total) return;
+                const percent = Math.round((loaded * 100) / total);
+                if (percent === lastPercent) return;
+                lastPercent = percent;
+                dispatch({ type: onUploadProgress, payload: percent });
+              }
+              : undefined,
           });
           dispatch(actions.apiSuccess(response.data));
           if (onSuccess) {
@@ -91,12 +130,14 @@ const apiMiddleware: Middleware =
           }
           return onSuccessPayload ?? response.data;
         } catch (error) {
-          const message = getErrorMessage(error);
+          const code = getErrorCode(error);
+          const message = errorMessageFor(code) ?? getErrorMessage(error);
           dispatch(actions.apiFailed(message));
           if (onError) {
             dispatch({
               type: onError,
               payload: onErrorPayload ?? message,
+              meta: { code },
             });
           }
           return onErrorPayload ?? message;

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import { HttpResponse, http as mswHttp } from 'msw';
 import * as frameEndpoints from '@/assets/endpoints/api/framesEndpoints';
@@ -33,12 +33,29 @@ describe('frame list', () => {
     expect(await screen.findByText('Offline')).toBeInTheDocument();
   });
 
-  it('says so when no frame is registered', async () => {
-    await openFrames([]);
+  it('says so when no frame is registered and offers to add one', async () => {
+    const { user, store } = await openFrames([]);
 
-    expect(
-      await screen.findByText('Keine hinzugefügten Bilderrahmen vorhanden'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Noch kein Bilderrahmen hinzugefügt')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Ersten Bilderrahmen hinzufügen' }));
+
+    expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
+  });
+
+  it('offers a retry when the list could not be loaded', async () => {
+    let fail = true;
+    server.use(
+      mswHttp.get(apiUrl(frameEndpoints.getFramesUrl()), () =>
+        fail ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json([frame]),
+      ),
+    );
+    const { user } = renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
+    const retry = await screen.findByRole('button', { name: 'Erneut versuchen' });
+
+    fail = false;
+    await user.click(retry);
+
+    expect(await screen.findByText(SERIAL)).toBeInTheDocument();
   });
 
   // frames.tsx refetches on window focus so a frame paired elsewhere shows up.
@@ -53,9 +70,27 @@ describe('frame list', () => {
     renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
     await waitFor(() => expect(calls).toBe(1));
 
+    vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 31 * 1000);
     window.dispatchEvent(new Event('focus'));
 
     await waitFor(() => expect(calls).toBe(2));
+  });
+
+  it('does not refetch on a quick refocus', async () => {
+    let calls = 0;
+    server.use(
+      mswHttp.get(apiUrl(frameEndpoints.getFramesUrl()), () => {
+        calls += 1;
+        return HttpResponse.json([frame]);
+      }),
+    );
+    renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
+    await screen.findByText(frame.public_serial_number);
+
+    window.dispatchEvent(new Event('focus'));
+
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(calls).toBe(1);
   });
 });
 
@@ -120,6 +155,16 @@ describe('registering a frame', () => {
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.severity).toBe('error'));
     expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
   });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = await openFrames();
+
+    await openDialog(user);
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.frames.dialogs.register.open).toBe(false);
+  });
 });
 
 describe('unregistering a frame', () => {
@@ -133,11 +178,11 @@ describe('unregistering a frame', () => {
     );
     const { user } = await openFrames();
 
-    await user.click(await screen.findByRole('button', { name: 'delete' }));
+    await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     expect(
-      await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
+      await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen.'),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
+    await user.click(screen.getByRole('button', { name: 'Entfernen' }));
 
     await waitFor(() => expect(bodies).toEqual([{ public_serial_number: SERIAL }]));
   });
@@ -152,7 +197,7 @@ describe('unregistering a frame', () => {
     );
     const { user } = await openFrames();
 
-    await user.click(await screen.findByRole('button', { name: 'delete' }));
+    await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     await user.click(screen.getByRole('button', { name: 'Abbrechen' }));
 
     expect(calls).toHaveLength(0);

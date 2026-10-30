@@ -1,6 +1,7 @@
 import React, { ReactNode } from 'react';
 import FinalError from '../finalError/finalError';
 import LoadingFallback from '../../loadingFallback';
+import StandaloneTheme from '../standaloneTheme';
 
 interface ErrorBoundaryProps {
     children: ReactNode;
@@ -85,7 +86,7 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
 
         // If there's an error but not yet showing contact page
         if (this.state.hasError && !this.state.showContactPage) {
-            return (<LoadingFallback />);
+            return (<StandaloneTheme><LoadingFallback /></StandaloneTheme>);
         }
 
         // Render children normally

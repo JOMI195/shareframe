@@ -169,6 +169,8 @@ test.describe('photo lifecycle', () => {
 
     await test.step('upload', async () => {
       await page.getByRole('button', { name: 'Hochladen' }).click();
+      // Uploading ends with an offer to send the photo; this flow sends it later.
+      await page.getByRole('button', { name: 'Später' }).click();
 
       // The dialog closes itself once every selected photo has been uploaded.
       await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
@@ -180,8 +182,7 @@ test.describe('photo lifecycle', () => {
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
 
-      // Neither select in this dialog exposes an accessible name; receivers come first.
-      await page.getByRole('dialog').getByRole('combobox').first().click();
+      await page.getByRole('dialog').getByRole('combobox', { name: 'Empfänger' }).click();
       await page.getByRole('option', { name: 'seed_bob' }).click();
       await page.keyboard.press('Escape');
       await page.getByRole('button', { name: /an 1 Empfänger senden/ }).click();
@@ -195,12 +196,13 @@ test.describe('photo lifecycle', () => {
       await page.goto('/aktivitaeten/');
       await expect(page.getByText(/geteilte/)).toBeVisible({ timeout: 30_000 });
 
-      await page.locator('.MuiImageListItem-root').first().click();
-      await expect(page.getByRole('dialog').filter({ hasText: 'Gesendetes Foto' })).toBeVisible();
-      await runSpeedDialAction(page, 'Foto deaktivieren');
-      await page.getByRole('button', { name: 'Deaktivieren bestätigen' }).click();
+      // Real tiles only: the loading skeletons share the class but take no clicks.
+      await page.locator('.MuiImageListItem-root [role="button"]').first().click();
+      await expect(page.getByRole('dialog').filter({ hasText: /(Gesendetes|Erhaltenes) Foto/ })).toBeVisible();
+      await page.getByRole('button', { name: 'Foto deaktivieren' }).click();
+      await page.getByRole('button', { name: 'Deaktivieren', exact: true }).click();
 
-      await expect(page.getByRole('button', { name: 'Deaktivieren bestätigen' })).toBeHidden({
+      await expect(page.getByRole('button', { name: 'Deaktivieren', exact: true })).toBeHidden({
         timeout: 30_000,
       });
     });
@@ -211,7 +213,7 @@ test.describe('photo lifecycle', () => {
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
 
-      await page.getByRole('dialog').getByRole('combobox').first().click();
+      await page.getByRole('dialog').getByRole('combobox', { name: 'Empfänger' }).click();
       await page.getByRole('option', { name: 'seed_bob' }).click();
       await page.keyboard.press('Escape');
       await page.getByRole('switch', { name: 'Zu einem späteren Zeitpunkt senden' }).check();
@@ -225,8 +227,8 @@ test.describe('photo lifecycle', () => {
       await expect(newest.getByText('Geplant')).toBeVisible({ timeout: 30_000 });
 
       await newest.click();
-      await runSpeedDialAction(page, 'Vorzeitig, sofort senden');
-      await page.getByRole('button', { name: 'Sofort senden bestätigen' }).click();
+      await runSpeedDialAction(page, 'Jetzt senden');
+      await page.getByRole('button', { name: 'Jetzt senden', exact: true }).click();
 
       await expect(newest.getByText('Aktiv')).toBeVisible({ timeout: 30_000 });
     });
@@ -238,7 +240,7 @@ test.describe('photo lifecycle', () => {
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');
-      await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+      await page.getByRole('button', { name: 'Löschen', exact: true }).click();
 
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before);
     });

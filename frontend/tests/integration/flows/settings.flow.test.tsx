@@ -139,7 +139,7 @@ describe('profile', () => {
     expect(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' })).toBeChecked();
   });
 
-  it('saves a new username together with the searchable flag', async () => {
+  it('saves a new username', async () => {
     const bodies: Record<string, unknown>[] = [];
     server.use(
       mswHttp.patch(apiUrl(authEndpoints.getMyUserDataUrl()), async ({ request }) => {
@@ -148,15 +148,30 @@ describe('profile', () => {
       }),
     );
     const { user } = await openUserSettings();
+    expect(screen.getByRole('button', { name: 'Speichern' })).toBeDisabled();
 
     await user.clear(screen.getByLabelText('Nutzername'));
     await user.type(screen.getByLabelText('Nutzername'), 'alice2');
-    await user.click(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' }));
     await user.click(screen.getByRole('button', { name: 'Speichern' }));
 
-    await waitFor(() => expect(bodies).toHaveLength(1));
-    expect(bodies[0].username).toBe('alice2');
-    expect((bodies[0].account as Record<string, unknown>).friendship_user_searchable).toBe(false);
+    await waitFor(() => expect(bodies).toEqual([{ username: 'alice2' }]));
+  });
+
+  it('saves the friend request switch right away', async () => {
+    const bodies: Record<string, unknown>[] = [];
+    server.use(
+      mswHttp.patch(apiUrl(authEndpoints.getMyUserDataUrl()), async ({ request }) => {
+        const body = (await request.json()) as Record<string, unknown>;
+        bodies.push(body);
+        return HttpResponse.json({ ...seedUser, account: { ...seedUser.account, ...(body.account as object) } });
+      }),
+    );
+    const { user } = await openUserSettings();
+
+    await user.click(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' }));
+
+    await waitFor(() => expect(bodies).toEqual([{ account: { friendship_user_searchable: false } }]));
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' })).not.toBeChecked());
   });
 
   it('refuses an empty username', async () => {
@@ -181,7 +196,7 @@ describe('profile', () => {
 
     await user.clear(screen.getByLabelText('Nutzername'));
     await user.type(screen.getByLabelText('Nutzername'), 'irgendwas');
-    await user.click(screen.getByRole('button', { name: 'Zurücksetzen' }));
+    await user.click(screen.getByRole('button', { name: 'Verwerfen' }));
 
     expect((screen.getByLabelText('Nutzername') as HTMLInputElement).value).toBe(seedUser.username);
   });

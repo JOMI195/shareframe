@@ -1,12 +1,15 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core import signing
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from djoser.utils import decode_uid
 from djoser.views import UserViewSet as BaseUserViewSet
 from rest_framework import serializers, status
 from rest_framework.decorators import action
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
@@ -16,6 +19,7 @@ from appEmail.djoserEmailConfig import (
     DjoserUserDeletedEmail,
 )
 from authentication.cookies import delete_auth_cookies
+from config import error_codes
 from config.throttles import (
     AuthEmailBurstRateThrottle,
     AuthEmailSustainedRateThrottle,
@@ -25,6 +29,7 @@ from user_core.serializers import (
     EmailChangeConfirmSerializer,
     EmailChangeRequestSerializer,
 )
+from utils.api_errors import error_response
 from utils.client_ip import client_ip
 
 logger = logging.getLogger("admin.audit")
@@ -42,6 +47,64 @@ AUTH_EMAIL_ACTIONS = (
 INVALID_EMAIL_CHANGE_LINK = "Der Link ist ungültig oder abgelaufen."
 
 
+def _password_error_code(fields):
+    if "current_password" in fields:
+        return error_codes.WRONG_PASSWORD
+    if "uid" in fields or "token" in fields:
+        return error_codes.RESET_LINK_INVALID
+    if "new_password" in fields or "re_new_password" in fields:
+        return error_codes.PASSWORD_INVALID
+    if "non_field_errors" in fields:
+        return error_codes.PASSWORD_MISMATCH
+    return None
+
+
+# Only these fixed strings reach the log.
+LOGGED_REJECTIONS = (
+    "wrong_password",
+    "password_invalid",
+    "password_mismatch",
+    "reset_link_invalid",
+)
+LOGGED_RULES = (
+    "password_entirely_numeric",
+    "password_too_common",
+    "password_too_short",
+    "password_too_similar",
+)
+
+
+def _logged_reason(code):
+    return next((known for known in LOGGED_REJECTIONS if known == code), "other")
+
+
+def _failed_rules(candidate, user):
+    try:
+        validate_password(candidate, user)
+    except DjangoValidationError as e:
+        broken = {error.code for error in e.error_list}
+        return [rule for rule in LOGGED_RULES if rule in broken]
+    return []
+
+
+def _log_password_rejected(request, code, user=None):
+    reason = _logged_reason(code)
+    if reason == "password_invalid":
+        rules = _failed_rules(str(request.data.get("new_password", "")), user)
+        if rules:
+            reason = f"{reason}: {','.join(rules)}"
+    logger.warning("Password rejected (%s) from %s", reason, client_ip(request))
+
+
+def _with_password_error_code(request, exc, user=None):
+    fields = exc.detail if isinstance(exc.detail, dict) else {}
+    code = _password_error_code(fields)
+    if code is None:
+        raise exc
+    _log_password_rejected(request, code, user)
+    return Response({**fields, "code": code}, status=status.HTTP_400_BAD_REQUEST)
+
+
 class PasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True)
 
@@ -55,9 +118,11 @@ class CustomUserViewSet(BaseUserViewSet):
             password = serializer.validated_data["password"]
 
             if not request.user.check_password(password):
-                return Response(
-                    {"detail": "Incorrect password."},
-                    status=status.HTTP_400_BAD_REQUEST,
+                _log_password_rejected(request, error_codes.WRONG_PASSWORD)
+                return error_response(
+                    error_codes.WRONG_PASSWORD,
+                    "Incorrect password.",
+                    status.HTTP_400_BAD_REQUEST,
                 )
 
             # Loaded before delete() for the farewell mail.
@@ -144,7 +209,10 @@ class CustomUserViewSet(BaseUserViewSet):
 
     @action(["post"], detail=False)
     def set_password(self, request, *args, **kwargs):
-        response = super().set_password(request, *args, **kwargs)
+        try:
+            response = super().set_password(request, *args, **kwargs)
+        except ValidationError as exc:
+            return _with_password_error_code(request, exc, request.user)
         logger.info(
             "Password changed: %s from %s", request.user.email, client_ip(request)
         )
@@ -152,7 +220,10 @@ class CustomUserViewSet(BaseUserViewSet):
 
     @action(["post"], detail=False)
     def reset_password_confirm(self, request, *args, **kwargs):
-        response = super().reset_password_confirm(request, *args, **kwargs)
+        try:
+            response = super().reset_password_confirm(request, *args, **kwargs)
+        except ValidationError as exc:
+            return _with_password_error_code(request, exc)
         user = get_user_model().objects.get(pk=decode_uid(request.data["uid"]))
         logger.info("Password reset: %s from %s", user.email, client_ip(request))
         return response

@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
+import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { AppBar, Box, DialogTitle, Grid, IconButton, TextField, Toolbar, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Grid, IconButton, TextField, Tooltip, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { closeRequestOTPDialog, getDialogs, openFramesAlertSnackbar } from "@/store/ui/frames/frames.slice";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import { obtainFrameOTP } from "@/store/entities/frames/frames.actions";
@@ -54,7 +54,7 @@ const RequestOTPDialog: React.FC = () => {
     const ok = await copyToClipboard(otp);
     dispatch(openFramesAlertSnackbar(
       ok
-        ? { message: "OTP in die Zwischenablage kopiert", severity: "success" }
+        ? { message: "Einmal-Code kopiert", severity: "success" }
         : { message: "Kopieren fehlgeschlagen", severity: "error" }
     ));
   };
@@ -71,43 +71,25 @@ const RequestOTPDialog: React.FC = () => {
         return;
       }
       setExpiresIn(remaining);
-      setExpiresDisplay(`${Math.ceil(expiresIn / 60)}`);
+      setExpiresDisplay(`${Math.ceil(remaining / 60)}`);
     }, 60000);
 
     return () => clearInterval(timer);
   }, [expiresIn]);
 
   return (
-    <Dialog
+    <AppDialog
       fullScreen={matches ? false : true}
       open={dialog.open}
       onClose={handleDialogClose}
-      aria-describedby='dialog-slide-upload'
+      aria-labelledby='request-otp-title'
       maxWidth="xs"
       fullWidth
       slots={{
         transition: matches ? ZoomTransition : SlideTransition
       }}
     >
-      {!matches ? (
-        <AppBar sx={{ position: 'relative' }} color='inherit'>
-          <Toolbar>
-            <IconButton
-              edge='start'
-              color='inherit'
-              onClick={handleDialogClose}
-              aria-label='cancel'
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-              OTP generieren
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      ) : (
-        <DialogTitle>OTP generieren</DialogTitle>
-      )}
+      <DialogHeader title="Einmal-Code für die Einstellungen" titleId="request-otp-title" onClose={handleDialogClose} />
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -118,17 +100,12 @@ const RequestOTPDialog: React.FC = () => {
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Generiere ein OTP (One-Time-Password), welches du für bestimmte Authentifizierungen mit deinem Bilderrahmen nutzen kannst.
+            Mit diesem Code meldest du dich in den Einstellungen deines Bilderrahmens an. Öffne sie über „Öffnen“ auf der Karte des Rahmens, im selben WLAN.
           </Typography>
           <Typography variant="body2" sx={{
             color: "text.secondary"
           }}>
-            Beachte, dass das OTP nur eine kurze Zeit gültig und nur während der Öffnung dieses Dialogs sichtbar ist.
-          </Typography>
-          <Typography variant="body2" sx={{
-            color: "text.secondary"
-          }}>
-            Du kannst jederzeit ein neues OTP generieren.
+            Der Code gilt nur kurz und ist nur sichtbar, solange dieses Fenster offen ist. Du kannst jederzeit einen neuen erstellen.
           </Typography>
           <Grid
             container
@@ -140,7 +117,7 @@ const RequestOTPDialog: React.FC = () => {
             {otp && expiresDisplay && (
               <Grid size={12}>
                 <Typography variant="body1" color="error">
-                  gültig für: {expiresDisplay} Minuten
+                  Noch {expiresDisplay} {expiresDisplay === "1" ? "Minute" : "Minuten"} gültig
                 </Typography>
               </Grid>
             )}
@@ -148,19 +125,19 @@ const RequestOTPDialog: React.FC = () => {
               <TextField
                 id='otp'
                 name='otp'
-                label='OTP'
-                disabled
+                label='Einmal-Code'
                 value={otp}
+                slotProps={{ htmlInput: { readOnly: true } }}
                 fullWidth
                 variant='outlined'
               />
             </Grid>
             <Grid size={2}>
               <Tooltip
-                title='OTP in die Zwischenablage kopieren'
+                title='Code kopieren'
               >
                 <span>
-                  <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="copy otp" className="ignore-clickaway">
+                  <IconButton onClick={handleCopyOtp} disabled={!otp} aria-label="Code kopieren" className="ignore-clickaway">
                     <ContentCopyIcon />
                   </IconButton>
                 </span>
@@ -181,24 +158,13 @@ const RequestOTPDialog: React.FC = () => {
                 disabled={loading}
                 onClick={async () => frame !== undefined ? await handleGenerateFrameOtp(frame.id) : null}
               >
-                {'Generieren'}
-              </Button>
-            </Grid>
-            <Grid size={12}>
-              <Button
-                type="button"
-                fullWidth
-                variant="outlined"
-                color="secondary"
-                onClick={handleDialogClose}
-              >
-                {"Abbrechen"}
+                {otp ? 'Neuen Code erstellen' : 'Code erstellen'}
               </Button>
             </Grid>
           </Grid>
         </Box>
       </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 };
 

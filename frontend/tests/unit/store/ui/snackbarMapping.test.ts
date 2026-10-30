@@ -36,36 +36,36 @@ describe('authentication ui snackbars', () => {
     expect(snackbarMap(authReducer, authActions)).toMatchInlineSnapshot(`
       {
         "authenticationFulfilled": "success: Anmeldung erfolgreich",
-        "authenticationPending": "loading: Anmeldung läuft",
+        "authenticationPending": "loading: Du wirst angemeldet",
         "authenticationRejected": "error: Anmeldung fehlgeschlagen",
         "emailChangeConfirmFulfilled": "success: E-Mail-Adresse geändert. Melde dich ab jetzt mit der neuen Adresse an",
-        "emailChangeConfirmPending": "loading: Bestätige neue E-Mail-Adresse",
+        "emailChangeConfirmPending": "loading: E-Mail-Adresse wird bestätigt",
         "emailChangeConfirmRejected": "error: Bestätigung der E-Mail-Adresse fehlgeschlagen",
         "emailChangeRequestFulfilled": "success: Bestätigungslink an die neue E-Mail-Adresse gesendet",
-        "emailChangeRequestPending": "loading: Sende Bestätigungslink",
+        "emailChangeRequestPending": "loading: Bestätigungslink wird gesendet",
         "emailChangeRequestRejected": "error: Änderung der E-Mail-Adresse fehlgeschlagen",
-        "passwordResetFulfilled": "success: Email zum Passwort zurücksetzen erfolgreich gesendet",
-        "passwordResetPending": "loading: Email zum Passwort zurücksetzen senden",
-        "passwordResetRejected": "error: Email zum Passwort zurücksetzen fehlgeschlagen",
-        "passwordUpdateFulfilled": "success: Vergabe eines neuen Passwort erfolgreich",
-        "passwordUpdatePending": "loading: Vergebe neues Passwort",
-        "passwordUpdateRejected": "error: Vergabe eines neuen Passwort fehlgeschlagen",
-        "resendActivationEmailFulfilled": "success: Erneutes Senden der Aktivierungsmail erfolgreich",
-        "resendActivationEmailPending": "loading: Erneutes Senden der Aktivierungsmail",
-        "resendActivationEmailRejected": "error: Erneutes Senden der Aktivierungsmail fehlgeschlagen",
+        "passwordResetFulfilled": "success: E-Mail zum Zurücksetzen gesendet",
+        "passwordResetPending": "loading: E-Mail wird gesendet",
+        "passwordResetRejected": "error: E-Mail konnte nicht gesendet werden",
+        "passwordUpdateFulfilled": "success: Passwort geändert",
+        "passwordUpdatePending": "loading: Passwort wird gespeichert",
+        "passwordUpdateRejected": "error: Passwort konnte nicht geändert werden",
+        "resendActivationEmailFulfilled": "success: Aktivierungsmail gesendet",
+        "resendActivationEmailPending": "loading: Aktivierungsmail wird gesendet",
+        "resendActivationEmailRejected": "error: Aktivierungsmail konnte nicht gesendet werden",
         "signedOut": "success: Abmeldung erfolgreich",
-        "userActivationFulfilled": "success: Nutzeraktivierung erfolgreich",
-        "userActivationPending": "loading: Nutzeraktivierung läuft",
-        "userActivationRejected": "error: Nutzeraktivierung fehlgeschlagen",
-        "userCreationFulfilled": "success: Nutzerregistrierung erfolgreich",
-        "userCreationPending": "loading: Nutzerregistrierung läuft",
-        "userCreationRejected": "error: Nutzerregistrierung fehlgeschlagen",
-        "userDeleteFulfilled": "success: Löschen des Nutzerkontos erfolgreich",
-        "userDeletePending": "loading: Löschen des Nutzerkontos",
-        "userDeleteRejected": "error: Löschen des Nutzerkontos fehlgeschlagen",
-        "userUpdateFulfilled": "success: Nutzerupdate erfolgreich",
-        "userUpdatePending": "loading: Nutzerupdate",
-        "userUpdateRejected": "error: Nutzerupdate fehlgeschlagen",
+        "userActivationFulfilled": "success: Konto aktiviert",
+        "userActivationPending": "loading: Konto wird aktiviert",
+        "userActivationRejected": "error: Konto konnte nicht aktiviert werden",
+        "userCreationFulfilled": "success: Konto erstellt",
+        "userCreationPending": "loading: Konto wird erstellt",
+        "userCreationRejected": "error: Konto konnte nicht erstellt werden",
+        "userDeleteFulfilled": "success: Konto gelöscht",
+        "userDeletePending": "loading: Konto wird gelöscht",
+        "userDeleteRejected": "error: Konto konnte nicht gelöscht werden",
+        "userUpdateFulfilled": "success: Gespeichert",
+        "userUpdatePending": "loading: Wird gespeichert",
+        "userUpdateRejected": "error: Konnte nicht gespeichert werden",
       }
     `);
   });
@@ -75,16 +75,16 @@ describe('frames ui snackbars', () => {
   it('maps every entity action', () => {
     expect(snackbarMap(framesReducer, framesActions)).toMatchInlineSnapshot(`
       {
-        "frameOTPRecieved": "success: OTP erfolgreich generiert",
-        "frameOTPRequestFailed": "error: Generierung von OTP fehlgeschlagen",
-        "frameOTPRequested": "loading: Generiere OTP",
-        "framesRequestFailed": "error: Bilderrahmen laden fehlgeschlagen",
-        "registerFrameFailed": "error: Bilderrahmen registrieren fehlgeschlagen",
-        "registerFrameFulfilled": "success: Bilderrahmen registrieren erfolgreich",
-        "registerFramePending": "loading: Bilderrahmen registrieren",
-        "unregisterFrameFailed": "error: Bilderrahmen vom Nutzer lösen fehlgeschlagen",
-        "unregisterFrameFulfilled": "success: Bilderrahmen vom Nutzer lösen erfolgreich",
-        "unregisterFramePending": "loading: Bilderrahmen vom Nutzer lösen",
+        "frameOTPRecieved": "success: Code erstellt",
+        "frameOTPRequestFailed": "error: Code konnte nicht erstellt werden",
+        "frameOTPRequested": "loading: Code wird erstellt",
+        "framesRequestFailed": "error: Bilderrahmen konnten nicht geladen werden",
+        "registerFrameFailed": "error: Bilderrahmen konnte nicht hinzugefügt werden",
+        "registerFrameFulfilled": "success: Bilderrahmen hinzugefügt",
+        "registerFramePending": "loading: Bilderrahmen wird hinzugefügt",
+        "unregisterFrameFailed": "error: Bilderrahmen konnte nicht entfernt werden",
+        "unregisterFrameFulfilled": "success: Bilderrahmen entfernt",
+        "unregisterFramePending": "loading: Bilderrahmen wird entfernt",
       }
     `);
   });
@@ -94,19 +94,20 @@ describe('friendships ui snackbars', () => {
   it('maps every entity action', () => {
     expect(snackbarMap(friendshipsReducer, friendshipsActions)).toMatchInlineSnapshot(`
       {
-        "acceptFriendshipRequestFailed": "error: Freundschaftsanfrage annehmen fehlgeschlagen",
-        "acceptFriendshipRequestFulfilled": "success: Freundschaftsanfrage annehmen erfolgreich",
-        "acceptFriendshipRequestPending": "loading: Freundschaftsanfrage annehmen",
-        "friendshipDeleteDeleteFailed": "error: Freundschaft löschen fehlgeschlagen",
-        "friendshipDeleteDeleteFulfilled": "success: Freundschaft löschen erfolgreich",
-        "friendshipDeleteRequested": "loading: Freundschaft löschen",
-        "friendshipsRequestFailed": "error: Freundesdaten laden fehlgeschlagen",
-        "rejectFriendshipRequestFailed": "error: Freundschaftsanfrage ablehnen fehlgeschlagen",
-        "rejectFriendshipRequestFulfilled": "success: Freundschaftsanfrage ablehnen erfolgreich",
-        "rejectFriendshipRequestPending": "loading: Freundschaftsanfrage ablehnen",
-        "sendFriendshipRequestFailed": "error: Freundschaftsanfrage fehlgeschlagen. Schau mal ob die Anfrage nicht schon gestellt wurde.",
-        "sendFriendshipRequestFulfilled": "success: Freundschaftsanfrage erfolgreich",
-        "sendFriendshipRequestPending": "loading: Freundschaftsanfrage",
+        "acceptFriendshipRequestFailed": "error: Anfrage konnte nicht angenommen werden",
+        "acceptFriendshipRequestFulfilled": "success: Anfrage angenommen",
+        "acceptFriendshipRequestPending": "loading: Anfrage wird angenommen",
+        "friendshipDeleteDeleteFailed": "error: Freundschaft konnte nicht beendet werden",
+        "friendshipDeleteDeleteFulfilled": "success: Freundschaft beendet",
+        "friendshipDeleteRequested": "loading: Freundschaft wird beendet",
+        "friendshipRequestWithdrawn": "success: Anfrage zurückgezogen",
+        "friendshipsRequestFailed": "error: Freunde konnten nicht geladen werden",
+        "rejectFriendshipRequestFailed": "error: Anfrage konnte nicht abgelehnt werden",
+        "rejectFriendshipRequestFulfilled": "success: Anfrage abgelehnt",
+        "rejectFriendshipRequestPending": "loading: Anfrage wird abgelehnt",
+        "sendFriendshipRequestFailed": "error: Die Anfrage konnte nicht gesendet werden.",
+        "sendFriendshipRequestFulfilled": "success: Anfrage gesendet",
+        "sendFriendshipRequestPending": "loading: Anfrage wird gesendet",
       }
     `);
   });
@@ -116,9 +117,9 @@ describe('contact ui snackbars', () => {
   it('maps every entity action', () => {
     expect(snackbarMap(contactReducer, contactActions)).toMatchInlineSnapshot(`
       {
-        "contactEmailSendingFailed": "error: Senden der Kontaktemail fehlgeschlagen",
-        "contactEmailSendingFulfilled": "success: Senden der Kontaktemail erfolgreich",
-        "contactEmailSendingPending": "loading: Senden der Kontaktemail läuft",
+        "contactEmailSendingFailed": "error: Nachricht konnte nicht gesendet werden",
+        "contactEmailSendingFulfilled": "success: Nachricht gesendet",
+        "contactEmailSendingPending": "loading: Nachricht wird gesendet",
       }
     `);
   });

@@ -2,8 +2,7 @@ import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import ProtectedRoute from "@/common/components/protectedRoute";
 import NotFound from "@/common/components/error/notFound/notFound";
 import Layout from "./layout";
-import User from "./user/user";
-import App from "./app/app";
+import { lazyPage } from "@/routes/lazyPage";
 import { getAppSettingsUrl, getUserSettingsUrl } from "@/assets/endpoints/app/settingEndpoints";
 
 const settingsRoutes = [
@@ -16,14 +15,14 @@ const settingsRoutes = [
     children: [
       {
         path: getAppSettingsUrl(),
-        element: <App />,
+        ...lazyPage(() => import("./app/app")),
       },
       {
         element: <ProtectedRoute redirectPath={getDashboardUrl()} />,
         children: [
           {
             path: getUserSettingsUrl(),
-            element: <User />,
+            ...lazyPage(() => import("./user/user")),
           },
         ],
       },

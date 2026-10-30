@@ -1,5 +1,7 @@
-import { AppBar, Box, Button, Dialog, DialogContent, DialogTitle, Grid, IconButton, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
-import CloseIcon from '@mui/icons-material/Close';
+import { Box, Button, DialogContent, Typography, useMediaQuery, useTheme } from "@mui/material";
+import AppDialog from '@/common/components/appDialog';
+import DialogHeader from '@/common/components/dialogHeader';
+import FormActions from '@/common/components/settings/formActions';
 import { useEffect, useMemo, useRef, useState } from "react";
 import EasyCropper, { Area, MediaSize, Point, Size } from "react-easy-crop";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -77,7 +79,7 @@ const CropAvatarDialog = ({ file, onClose }: CropAvatarDialogProps) => {
     const notReady = !(croppedAreaPixels && croppedAreaPixels.width >= 1 && croppedAreaPixels.height >= 1);
 
     return (
-        <Dialog
+        <AppDialog
             fullScreen={!matches}
             maxWidth="sm"
             fullWidth
@@ -90,24 +92,7 @@ const CropAvatarDialog = ({ file, onClose }: CropAvatarDialogProps) => {
             // The cropper measures itself on load, which mid-transition yields a scaled or empty box.
             slotProps={{ transition: { onEntered: () => setEntered(true) } }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={onClose}
-                            aria-label='cancel'
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                        <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-                            Profilbild
-                        </Typography>
-                    </Toolbar>
-                </AppBar>
-            )}
-            <DialogTitle id='dialog-crop-avatar-title'>Profilbild zuschneiden</DialogTitle>
+            <DialogHeader title="Profilbild zuschneiden" titleId="dialog-crop-avatar-title" onClose={onClose} />
             <DialogContent>
                 <Typography sx={{ mb: 2 }}>
                     Verschiebe und zoome das Bild, bis der Ausschnitt im Kreis passt.
@@ -151,34 +136,20 @@ const CropAvatarDialog = ({ file, onClose }: CropAvatarDialogProps) => {
                     MIN_ZOOM={MIN_ZOOM}
                     MAX_ZOOM={MAX_ZOOM}
                 />
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                        mt: 3,
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center"
-                    }}>
-                    <Grid sx={{ order: { xs: 4, md: 3 } }} size={{ xs: 12, sm: 6 }}>
-                        <Button onClick={onClose} color="primary" variant="outlined" fullWidth>
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid sx={{ order: { xs: 3, md: 3 } }} size={{ xs: 12, sm: 6 }}>
+                <Box sx={{ mt: 3 }}>
+                    <FormActions>
                         <Button
                             onClick={handleConfirm}
                             color="primary"
                             disabled={loading || notReady}
                             variant="contained"
-                            fullWidth
                         >
                             Übernehmen
                         </Button>
-                    </Grid>
-                </Grid>
+                    </FormActions>
+                </Box>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

@@ -1,15 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import AppDialog from '@/common/components/appDialog';
 import {
     Button,
-    Dialog,
     DialogContent,
-    Grid,
     Typography,
     useMediaQuery,
     useTheme,
-    AppBar,
-    Toolbar,
-    IconButton,
     Select,
     MenuItem,
     FormControl,
@@ -17,22 +13,31 @@ import {
     Chip,
     Box,
     OutlinedInput,
-    SelectChangeEvent
+    SelectChangeEvent,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs } from "@/store/ui/images/images.slice";
+import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs, sendToFramesFinished } from "@/store/ui/images/images.slice";
 import { getApi } from "@/store/entities/images/images.slice";
 import { sendImageToUserFrames } from "@/store/entities/images/images.actions";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import UserAvatar from "@/common/components/userAvatar";
 import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
+import FormActions from '@/common/components/settings/formActions';
 import { getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import ExpirationSelector from './expirationSelector';
 import { DEFAULT_EXPIRATION_HOURS, expirationTimestamp } from './expiration';
 import ScheduleSelector from './scheduleSelector';
 import { defaultScheduleDate, scheduleError, toUnixSeconds } from './schedule';
+import { sendSummary } from './sendSummary';
+import { fetchFramesIfStale } from '@/store/entities/frames/frames.actions';
+import { getApi as getFramesApi, getFrames } from '@/store/entities/frames/frames.slice';
+import AuthenticatedImage from '@/common/components/authenticatedImage';
+import { getVariantUrl } from '@/common/utils/images';
+import { getActivityUrl } from '@/assets/endpoints/app/appEndpoints';
+
+const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -51,7 +56,7 @@ const SendImageToUserFrameDialog = () => {
     const dispatch = useAppDispatch();
 
     const { sendToFrame: sendDialog } = useAppSelector(getDialogs);
-    const loading = useAppSelector(getApi).loading;
+    const loading = useAppSelector(getApi).sending;
     const imagesToSend = sendDialog.imagesToSend;
 
     const user = useAppSelector(getUser);
@@ -60,15 +65,26 @@ const SendImageToUserFrameDialog = () => {
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
-    const [expirationHours, setExpirationHours] = useState<number>(DEFAULT_EXPIRATION_HOURS);
+    const [expirationHours, setExpirationHours] = useState<number | null>(DEFAULT_EXPIRATION_HOURS);
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
     const [scheduledError, setScheduledError] = useState<string | null>(null);
     const [isSendingInProgress, setIsSendingInProgress] = useState(false);
     const [isReceiverSelectOpen, setIsReceiverSelectOpen] = useState(false);
 
+    const frames = useAppSelector(getFrames);
+    const framesLoaded = useAppSelector(getFramesApi).lastFetch !== null;
+
+    useEffect(() => {
+        if (sendDialog.open) dispatch(fetchFramesIfStale());
+    }, [dispatch, sendDialog.open]);
+
     const receiverAvatars = getFriendAvatars(friendships, user.me);
-    const availableReceivers = [...receiverAvatars.keys()];
+    // Sending to yourself needs a frame of your own.
+    const availableReceivers = [...receiverAvatars.keys()].filter(
+        (receiver) => receiver !== user.me.username || !framesLoaded || frames.length > 0
+    );
+    const photoWord = imagesToSend.length === 1 ? "Foto" : "Fotos";
 
     const handleDialogClose = () => {
         if (!isSendingInProgress) {
@@ -92,11 +108,10 @@ const SendImageToUserFrameDialog = () => {
     const handleReceiverSelectionChange = (event: SelectChangeEvent<typeof selectedReceiverUsernames>) => {
         const value = event.target.value;
         setSelectedReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
-        setTimeout(() => setIsReceiverSelectOpen(false), 100);
     };
 
     const handleConfirmSend = async () => {
-        if (imagesToSend.length === 0 || selectedReceiverUsernames.length === 0) {
+        if (imagesToSend.length === 0 || selectedReceiverUsernames.length === 0 || expirationHours === null) {
             return;
         }
 
@@ -111,29 +126,34 @@ const SendImageToUserFrameDialog = () => {
 
         setIsSendingInProgress(true);
 
-        try {
-            const expiresAt = expirationTimestamp(expirationHours, sendAt?.getTime());
-
-            await Promise.all(
-                imagesToSend.flatMap(imageToSend =>
-                    selectedReceiverUsernames.map(receiverUsername =>
-                        dispatch(sendImageToUserFrames(
-                            receiverUsername,
-                            imageToSend.id,
-                            // TODO: sent as number
-                            expiresAt.toString(),
-                            sendAt ? toUnixSeconds(sendAt) : undefined
-                        ))
-                    )
+        const expiresAt = expirationTimestamp(expirationHours, sendAt?.getTime());
+        const results = await Promise.all(
+            imagesToSend.flatMap(imageToSend =>
+                selectedReceiverUsernames.map(receiverUsername =>
+                    dispatch(sendImageToUserFrames(
+                        receiverUsername,
+                        imageToSend.id,
+                        // TODO: sent as number
+                        expiresAt.toString(),
+                        sendAt ? toUnixSeconds(sendAt) : undefined
+                    ))
                 )
-            );
-        } catch {
-            // cleanup happens in finally
-        } finally {
-            setIsSendingInProgress(false);
-            handleDialogClose();
-            dispatch(closeSelectionDialog());
-        }
+            )
+        );
+
+        // One summary instead of a snackbar per photo and receiver, where a late success hid a failure.
+        const summary = sendSummary(results, imagesToSend.length, selectedReceiverUsernames.length, isScheduled);
+        dispatch(sendToFramesFinished({
+            message: summary.message,
+            severity: summary.severity,
+            ...(!summary.allFailed && { link: { label: "Ansehen", to: "/" + getActivityUrl() } }),
+        }));
+        setIsSendingInProgress(false);
+
+        // Nothing went out, so the choices stay for another try.
+        if (summary.allFailed) return;
+        handleDialogClose();
+        dispatch(closeSelectionDialog());
     };
 
     const getReceiverDisplayName = (username: string) => {
@@ -141,43 +161,48 @@ const SendImageToUserFrameDialog = () => {
     };
 
     return (
-        <Dialog
+        <AppDialog
             fullScreen={matches ? false : true}
             open={sendDialog.open}
             onClose={handleDialogClose}
-            aria-describedby='send-image-dialog'
+            aria-labelledby='send-image-title'
             maxWidth="md"
             fullWidth
             slots={{
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            {!matches && (
-                <AppBar sx={{ position: 'relative' }} color='inherit'>
-                    <Toolbar>
-                        <Typography sx={{ flex: 1 }} variant='h6' component='div'>
-                            {`Ausgewählte${imagesToSend.length === 1 ? "s" : ""} Foto${imagesToSend.length > 1 ? "s" : ""} senden`}
-                        </Typography>
-                        <IconButton
-                            edge='start'
-                            color='inherit'
-                            onClick={handleDialogClose}
-                            aria-label='cancel'
-                            disabled={isSendingInProgress}
-                        >
-                            <CloseIcon />
-                        </IconButton>
-                    </Toolbar>
-                </AppBar>
-            )}
+            <DialogHeader
+                title={`${photoWord} senden`}
+                titleId="send-image-title"
+                onClose={handleDialogClose}
+                closeDisabled={isSendingInProgress}
+            />
             <DialogContent>
+                <Box sx={{ display: 'flex', gap: 1, mb: 2, overflowX: 'auto' }}>
+                    {imagesToSend.map((image) => (
+                        <AuthenticatedImage
+                            key={image.id}
+                            url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
+                            alt={image.display_name || image.name}
+                            style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+                        />
+                    ))}
+                </Box>
                 <Typography sx={{ mb: 3 }}>
-                    {`Wähle die Empfänger und die Ablaufzeit. ${imagesToSend.length === 1 ? "Das" : "Die"} ${imagesToSend.length > 1 ? "ausgewählten" : "ausgewählte"} ${imagesToSend.length > 1 ? "Fotos" : "Foto"} ${imagesToSend.length === 1 ? "wird" : "werden"} an alle Bilderrahmen der ausgewählten Empfänger geschickt und dort bis zum Ender der angegebenen Ablaufzeit, bzw. bis der Empfänger ${imagesToSend.length === 1 ? "dieses" : "diese"} deaktiviert, angezeigt.`}
+                    {`Wähle die Empfänger. ${imagesToSend.length === 1 ? "Das Foto erscheint" : "Die Fotos erscheinen"} auf allen ihren Bilderrahmen, bis die Anzeigedauer endet oder der Empfänger ${imagesToSend.length === 1 ? "es" : "sie"} deaktiviert.`}
                 </Typography>
 
+                {availableReceivers.length === 0 && (
+                    <Typography color="text.secondary" sx={{ mb: 2 }}>
+                        Noch keine Empfänger: füge unter Freunde einen Freund hinzu oder registriere einen eigenen Bilderrahmen.
+                    </Typography>
+                )}
+
                 <FormControl fullWidth sx={{ mb: 1 }}>
-                    <InputLabel>Empfänger</InputLabel>
+                    <InputLabel id="send-receivers-label">Empfänger</InputLabel>
                     <Select
+                        labelId="send-receivers-label"
                         multiple
                         value={selectedReceiverUsernames}
                         onChange={handleReceiverSelectionChange}
@@ -231,58 +256,31 @@ const SendImageToUserFrameDialog = () => {
                     disabled={isSendingInProgress}
                 />
 
+                {/* Remounted per opening, so its own mode and value start fresh with the parent's. */}
                 <ExpirationSelector
+                    key={String(sendDialog.open)}
                     expirationHours={expirationHours}
                     onExpirationHoursChange={setExpirationHours}
+                    disabled={isSendingInProgress}
                 />
 
-                <Grid
-                    container
-                    spacing={2}
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        mt: 3
-                    }}>
-                    <Grid
-                        sx={{ order: { xs: 4, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
-                        <Button
-                            onClick={handleDialogClose}
-                            color="primary"
-                            variant="outlined"
-                            fullWidth
-                            disabled={isSendingInProgress}
-                        >
-                            Abbrechen
-                        </Button>
-                    </Grid>
-                    <Grid
-                        sx={{ order: { xs: 3, md: 3 } }}
-                        size={{
-                            xs: 12,
-                            sm: 6
-                        }}>
+                <Box sx={{ mt: 3 }}>
+                    <FormActions>
                         <Button
                             onClick={handleConfirmSend}
                             color="primary"
-                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null}
+                            disabled={loading || selectedReceiverUsernames.length === 0 || isSendingInProgress || scheduledError !== null || expirationHours === null}
                             variant="contained"
-                            fullWidth
                         >
                             {isSendingInProgress
-                                ? `Sende ${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger...`
-                                : `${imagesToSend.length} ${selectedReceiverUsernames.length === 1 ? "Foto" : "Fotos"} an ${selectedReceiverUsernames.length} Empfänger ${isScheduled ? "planen" : "senden"}`
+                                ? `Sende ${imagesToSend.length} ${photoWord} an ${selectedReceiverUsernames.length} Empfänger...`
+                                : `${imagesToSend.length} ${photoWord} an ${selectedReceiverUsernames.length} Empfänger ${isScheduled ? "planen" : "senden"}`
                             }
                         </Button>
-                    </Grid>
-                </Grid>
+                    </FormActions>
+                </Box>
             </DialogContent>
-        </Dialog>
+        </AppDialog>
     );
 };
 

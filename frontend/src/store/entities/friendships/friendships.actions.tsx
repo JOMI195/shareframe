@@ -1,6 +1,7 @@
 import * as friendshipsSlice from "./friendships.slice";
 import { apiRequest } from "@/common/utils/constants/api.constants";
 import * as friendshipsEndpoints from "@/assets/endpoints/api/friendshipsEndpoints";
+import { fetchIfStale } from "@/store/fetchIfStale";
 
 export const fetchFriendships = () =>
   apiRequest({
@@ -9,6 +10,11 @@ export const fetchFriendships = () =>
     onSuccess: friendshipsSlice.friendshipsReceived.type,
     onError: friendshipsSlice.friendshipsRequestFailed.type,
   });
+
+const FRIENDSHIPS_MAX_AGE_MS = 60 * 1000;
+
+export const fetchFriendshipsIfStale = () =>
+  fetchIfStale((state) => friendshipsSlice.getApi(state).lastFetch, FRIENDSHIPS_MAX_AGE_MS, fetchFriendships);
 
 export const sendFrindshipRequest = (reciever_friendship_user_search_code: string) =>
   apiRequest({
@@ -38,6 +44,16 @@ export const rejectFrindshipRequest = (friendshipId: number) =>
     onSuccess: friendshipsSlice.rejectFriendshipRequestFulfilled.type,
     onError: friendshipsSlice.rejectFriendshipRequestFailed.type,
     data: {}
+  });
+
+// Same endpoint as ending a friendship; only the sender of a pending request uses it this way.
+export const withdrawFriendshipRequest = (friendshipId: number) =>
+  apiRequest({
+    url: friendshipsEndpoints.getFriendshipsDeleteRequestUrl(friendshipId),
+    method: "delete",
+    onStart: friendshipsSlice.friendshipDeleteRequested.type,
+    onSuccess: friendshipsSlice.friendshipRequestWithdrawn.type,
+    onError: friendshipsSlice.friendshipDeleteDeleteFailed.type,
   });
 
 export const deleteFriendship = (friendshipId: number) =>

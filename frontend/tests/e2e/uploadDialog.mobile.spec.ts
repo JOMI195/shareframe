@@ -51,13 +51,13 @@ test.describe('upload dialog on a phone', () => {
       for (const control of [
         cropArea,
         sliderTrack(page, 'Zoom'),
-        sliderTrack(page, 'Rotation'),
+        sliderTrack(page, 'Drehen'),
         page.getByRole('button', { name: 'Nach links verschieben' }),
         page.getByRole('button', { name: 'Nach oben verschieben' }),
         page.getByRole('button', { name: 'Nach unten verschieben' }),
         page.getByRole('button', { name: 'Nach rechts verschieben' }),
         page.getByRole('button', { name: 'Zentrieren' }),
-        page.getByRole('button', { name: 'Reset' }),
+        page.getByRole('button', { name: 'Zurücksetzen' }),
         page.getByRole('button', { name: 'Weiter zur Vorschau' }),
       ]) {
         await expect(control).toBeInViewport({ ratio: 1 });
@@ -125,15 +125,14 @@ test.describe('upload dialog on a phone', () => {
 
     await test.step('upload and clean up', async () => {
       await page.getByRole('button', { name: 'Hochladen' }).click();
+      await page.getByRole('button', { name: 'Später' }).click();
       await expect(page.getByRole('button', { name: 'Foto hinzufügen' })).toBeVisible({ timeout: 60_000 });
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before + 1);
 
-      // On a phone the success message covers the floating actions until it is gone.
-      await page.getByRole('alert').getByRole('button', { name: 'Close' }).click();
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');
-      await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+      await page.getByRole('button', { name: 'Löschen', exact: true }).click();
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before);
     });
   });

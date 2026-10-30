@@ -15,7 +15,7 @@ const App = () => {
             content: <Appearance />
         },
         {
-            label: "Privatspähre",
+            label: "Privatsphäre",
             id: "privacy",
             icon: <PolicyIcon />,
             content: <Privacy />

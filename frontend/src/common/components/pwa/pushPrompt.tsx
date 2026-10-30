@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import ConfirmDialog from '@/common/components/confirmDialog';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getPwa, pushPromptDismissed } from '@/store/ui/settings/settings.slice';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import { getPushSubscription, isPushSupported, subscribePush } from '@/common/utils/pwa/push';
-import { ZoomTransition } from '../dialogTransitions';
+import { usePromptSlot } from '../lifecycle/promptQueue';
 
 const PushPrompt: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -26,6 +26,8 @@ const PushPrompt: React.FC = () => {
         };
     }, [askable]);
 
+    const open = usePromptSlot('push', askable && unsubscribed);
+
     const dismiss = () => dispatch(pushPromptDismissed());
 
     const handleEnable = async () => {
@@ -34,24 +36,17 @@ const PushPrompt: React.FC = () => {
     };
 
     return (
-        <Dialog
-            open={askable && unsubscribed}
-            onClose={dismiss}
-            maxWidth="xs"
-            fullWidth
-            slots={{ transition: ZoomTransition }}
+        <ConfirmDialog
+            open={open}
+            title="Push-Benachrichtigungen aktivieren?"
+            confirmLabel="Aktivieren"
+            cancelLabel="Später"
+            backToClose={false}
+            onConfirm={handleEnable}
+            onCancel={dismiss}
         >
-            <DialogTitle>Push-Benachrichtigungen aktivieren?</DialogTitle>
-            <DialogContent>
-                <Typography>
-                    Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit in den Einstellungen unter Benachrichtigungen ändern.
-                </Typography>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={dismiss}>Später</Button>
-                <Button variant="contained" onClick={handleEnable}>Aktivieren</Button>
-            </DialogActions>
-        </Dialog>
+            Wir erinnern dich, wenn du länger kein Foto geteilt hast, und sagen dir Bescheid, wenn es bei ShareFrame Neuigkeiten gibt. Du kannst das jederzeit unter Konto → Mitteilungen ändern.
+        </ConfirmDialog>
     );
 };
 

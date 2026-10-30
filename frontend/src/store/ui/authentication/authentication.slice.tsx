@@ -1,3 +1,4 @@
+import { errorText } from "@/common/utils/errors/errorMessages";
 import { AlertColor } from "@mui/material";
 import { createSlice } from "@reduxjs/toolkit";
 import {
@@ -57,13 +58,13 @@ const authSlice = createSlice({
       .addCase(userCreationPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Nutzerregistrierung läuft",
+          message: "Konto wird erstellt",
         };
       })
       .addCase(userCreationFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzerregistrierung erfolgreich",
+          message: "Konto erstellt",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -74,7 +75,7 @@ const authSlice = createSlice({
       .addCase(userCreationRejected, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzerregistrierung fehlgeschlagen",
+          message: "Konto konnte nicht erstellt werden",
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -85,13 +86,13 @@ const authSlice = createSlice({
       .addCase(userActivationPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Nutzeraktivierung läuft",
+          message: "Konto wird aktiviert",
         };
       })
       .addCase(userActivationFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzeraktivierung erfolgreich",
+          message: "Konto aktiviert",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -102,7 +103,7 @@ const authSlice = createSlice({
       .addCase(userActivationRejected, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzeraktivierung fehlgeschlagen",
+          message: "Konto konnte nicht aktiviert werden",
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -113,7 +114,7 @@ const authSlice = createSlice({
       .addCase(authenticationPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Anmeldung läuft",
+          message: "Du wirst angemeldet",
         };
       })
       .addCase(authenticationFulfilled, (auth) => {
@@ -148,13 +149,13 @@ const authSlice = createSlice({
       .addCase(passwordResetPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Email zum Passwort zurücksetzen senden",
+          message: "E-Mail wird gesendet",
         };
       })
       .addCase(passwordResetFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Email zum Passwort zurücksetzen erfolgreich gesendet",
+          message: "E-Mail zum Zurücksetzen gesendet",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -162,10 +163,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(passwordResetRejected, (auth) => {
+      .addCase(passwordResetRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Email zum Passwort zurücksetzen fehlgeschlagen",
+          message: errorText(action, "E-Mail konnte nicht gesendet werden"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -176,13 +177,13 @@ const authSlice = createSlice({
       .addCase(passwordUpdatePending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Vergebe neues Passwort",
+          message: "Passwort wird gespeichert",
         };
       })
       .addCase(passwordUpdateFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Vergabe eines neuen Passwort erfolgreich",
+          message: "Passwort geändert",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -190,10 +191,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(passwordUpdateRejected, (auth) => {
+      .addCase(passwordUpdateRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Vergabe eines neuen Passwort fehlgeschlagen",
+          message: errorText(action, "Passwort konnte nicht geändert werden"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -204,7 +205,7 @@ const authSlice = createSlice({
       .addCase(emailChangeRequestPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Sende Bestätigungslink",
+          message: "Bestätigungslink wird gesendet",
         };
       })
       .addCase(emailChangeRequestFulfilled, (auth) => {
@@ -232,7 +233,7 @@ const authSlice = createSlice({
       .addCase(emailChangeConfirmPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Bestätige neue E-Mail-Adresse",
+          message: "E-Mail-Adresse wird bestätigt",
         };
       })
       .addCase(emailChangeConfirmFulfilled, (auth) => {
@@ -260,13 +261,13 @@ const authSlice = createSlice({
       .addCase(resendActivationEmailPending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Erneutes Senden der Aktivierungsmail",
+          message: "Aktivierungsmail wird gesendet",
         };
       })
       .addCase(resendActivationEmailFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Erneutes Senden der Aktivierungsmail erfolgreich",
+          message: "Aktivierungsmail gesendet",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -277,7 +278,7 @@ const authSlice = createSlice({
       .addCase(resendActivationEmailRejected, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Erneutes Senden der Aktivierungsmail fehlgeschlagen",
+          message: "Aktivierungsmail konnte nicht gesendet werden",
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -288,13 +289,13 @@ const authSlice = createSlice({
       .addCase(userUpdatePending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Nutzerupdate",
+          message: "Wird gespeichert",
         };
       })
       .addCase(userUpdateFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzerupdate erfolgreich",
+          message: "Gespeichert",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -302,10 +303,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(userUpdateRejected, (auth) => {
+      .addCase(userUpdateRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Nutzerupdate fehlgeschlagen",
+          message: errorText(action, "Konnte nicht gespeichert werden"),
           severity: "error",
         };
         auth.snackbar.loading = {
@@ -316,13 +317,13 @@ const authSlice = createSlice({
       .addCase(userDeletePending, (auth) => {
         auth.snackbar.loading = {
           open: true,
-          message: "Löschen des Nutzerkontos",
+          message: "Konto wird gelöscht",
         };
       })
       .addCase(userDeleteFulfilled, (auth) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Löschen des Nutzerkontos erfolgreich",
+          message: "Konto gelöscht",
           severity: "success",
         };
         auth.snackbar.loading = {
@@ -330,10 +331,10 @@ const authSlice = createSlice({
           message: "",
         };
       })
-      .addCase(userDeleteRejected, (auth) => {
+      .addCase(userDeleteRejected, (auth, action) => {
         auth.snackbar.alert = {
           open: true,
-          message: "Löschen des Nutzerkontos fehlgeschlagen",
+          message: errorText(action, "Konto konnte nicht gelöscht werden"),
           severity: "error",
         };
         auth.snackbar.loading = {

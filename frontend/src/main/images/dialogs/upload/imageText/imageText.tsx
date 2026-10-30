@@ -15,7 +15,7 @@ import { exportStageToBlob } from './exportImage';
 import { MAX_OUTPUT_SIDE } from '../outputSize';
 import { loadFonts } from './fonts';
 import { useLoadedImage } from './useLoadedImage';
-import { createDateOverlay, createTextOverlay, overlayFromPreset, overlayToPreset, scaleOverlays, TextOverlay } from './textOverlays';
+import { createDateOverlay, createTextOverlay, MIN_FONT_SIZE, overlayFromPreset, overlayToPreset, scaleOverlays, TextOverlay } from './textOverlays';
 
 interface ImageTextProps {
     epaper: boolean;
@@ -136,6 +136,7 @@ const ImageText: React.FC<ImageTextProps> = ({
             <ToolControls>
                 <TextToolbar
                     overlays={overlays}
+                    maxFontSize={image ? Math.round(image.height / 2) : MIN_FONT_SIZE}
                     selected={selected}
                     disabled={!ready}
                     onAddText={() => image && addOverlay(createTextOverlay(image.width, image.height, overlays.length))}

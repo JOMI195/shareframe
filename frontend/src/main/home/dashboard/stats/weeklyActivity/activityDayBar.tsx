@@ -9,14 +9,19 @@ interface ActivityDayBarProps {
 
 const ActivityDayBar: FC<ActivityDayBarProps> = ({ day, sentCount, receivedCount }) => {
     const theme = useTheme();
+    const tone = theme.palette.mode === 'dark' ? 'light' : 'dark';
 
     return (
-        <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+        <Box
+            role="img"
+            aria-label={`${day}: ${sentCount} gesendet, ${receivedCount} empfangen`}
+            sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
+        >
             <Stack direction="column" spacing={0} sx={{
                 alignItems: "center"
             }}>
                 {/* Number for sent count */}
-                <Typography variant="caption" color={theme.palette.success.dark} sx={{
+                <Typography variant="caption" color={theme.palette.success[tone]} sx={{
                     fontWeight: "medium"
                 }}>
                     {sentCount > 0 ? sentCount : ''}
@@ -49,7 +54,7 @@ const ActivityDayBar: FC<ActivityDayBarProps> = ({ day, sentCount, receivedCount
                 />
 
                 {/* Number for received count */}
-                <Typography variant="caption" color={theme.palette.info.dark} sx={{
+                <Typography variant="caption" color={theme.palette.info[tone]} sx={{
                     fontWeight: "medium"
                 }}>
                     {receivedCount > 0 ? receivedCount : ''}

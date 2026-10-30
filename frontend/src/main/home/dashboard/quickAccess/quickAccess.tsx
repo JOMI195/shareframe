@@ -1,6 +1,5 @@
 import { FC, ReactNode } from 'react';
 import { Grid } from "@mui/material";
-import { useNavigate } from "react-router";
 import { getImageUrl, getActivityUrl, getFriendsUrl, getFramesUrl } from "@/assets/endpoints/app/appEndpoints";
 import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
 import ShareIcon from '@mui/icons-material/Share';
@@ -11,32 +10,30 @@ import QuickAccessCard from './card/quickAccessCard';
 interface CardInfo {
     title: string;
     icon: ReactNode;
-    onClick: () => void;
+    to: string;
 }
 
 const QuickAccess: FC = () => {
-    const navigate = useNavigate();
-
     const cards: CardInfo[] = [
         {
             title: "Fotos",
             icon: <PhotoLibraryIcon color="primary" sx={{ fontSize: 40 }} />,
-            onClick: () => navigate("/" + getImageUrl())
+            to: "/" + getImageUrl()
         },
         {
             title: "Aktivitäten",
             icon: <ShareIcon color="secondary" sx={{ fontSize: 40 }} />,
-            onClick: () => navigate("/" + getActivityUrl())
+            to: "/" + getActivityUrl()
         },
         {
             title: "Freunde",
             icon: <PeopleIcon sx={{ fontSize: 40 }} />,
-            onClick: () => navigate("/" + getFriendsUrl())
+            to: "/" + getFriendsUrl()
         },
         {
             title: "Bilderrahmen",
             icon: <FilterFramesIcon sx={{ fontSize: 40 }} />,
-            onClick: () => navigate("/" + getFramesUrl())
+            to: "/" + getFramesUrl()
         }
     ];
 
@@ -52,7 +49,7 @@ const QuickAccess: FC = () => {
                     <QuickAccessCard
                         title={card.title}
                         icon={card.icon}
-                        onClick={card.onClick}
+                        to={card.to}
                     />
                 </Grid>
             ))}

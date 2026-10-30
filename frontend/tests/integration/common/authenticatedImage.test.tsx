@@ -4,6 +4,7 @@ import { HttpResponse, http as mswHttp } from 'msw';
 import AuthenticatedImage from '@/common/components/authenticatedImage';
 import { server } from '@tests/mocks/server';
 import { triggerIntersection } from '@tests/setup/vitest.setup';
+import { clearImageCache } from '@/common/utils/imageCache';
 
 const URL_PATH = 'http://localhost:8000/media/photo.jpg';
 
@@ -59,15 +60,38 @@ describe('AuthenticatedImage', () => {
     expect(URL.createObjectURL).toHaveBeenCalled();
   });
 
-  it('revokes the object url on unmount', async () => {
+  it('shows a remounted image at once, without a second request', async () => {
+    const requests = vi.fn();
+    server.use(
+      mswHttp.get(URL_PATH, () => {
+        requests();
+        return HttpResponse.arrayBuffer(new Uint8Array([1]).buffer);
+      }),
+    );
+    const { unmount } = render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
+    await scroll();
+    const first = (await screen.findByAltText('Foto')).getAttribute('src');
+    unmount();
+
+    const { container } = render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
+
+    expect(container.querySelector('.MuiSkeleton-root')).not.toBeInTheDocument();
+    expect(screen.getByAltText('Foto')).toHaveAttribute('src', first);
+    expect(requests).toHaveBeenCalledOnce();
+  });
+
+  // Unmounting keeps the blob for the next mount; only sign-out drops it.
+  it('revokes cached blobs when the cache is cleared', async () => {
     serveImage();
     const { unmount } = render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
     await scroll();
-    await screen.findByAltText('Foto');
-
+    const src = (await screen.findByAltText('Foto')).getAttribute('src');
     unmount();
+    expect(URL.revokeObjectURL).not.toHaveBeenCalled();
 
-    expect(URL.revokeObjectURL).toHaveBeenCalled();
+    clearImageCache();
+
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith(src);
   });
 
   it('reserves the box with a ratio placeholder while loading', () => {
@@ -86,7 +110,7 @@ describe('AuthenticatedImage', () => {
     expect(await screen.findByAltText('Foto')).toHaveStyle({ filter: 'blur(25px)' });
   });
 
-  it('reports a failed load through onError', async () => {
+  it('reports a failed load through onError and shows a placeholder', async () => {
     server.use(mswHttp.get(URL_PATH, () => HttpResponse.json({ detail: 'nope' }, { status: 404 })));
     const onError = vi.fn();
 
@@ -95,6 +119,29 @@ describe('AuthenticatedImage', () => {
 
     await waitFor(() => expect(onError).toHaveBeenCalledWith(expect.any(Error)));
     expect(screen.queryByAltText('Foto')).not.toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Foto' })).toBeInTheDocument();
+    expect(screen.getByTestId('BrokenImageOutlinedIcon')).toBeInTheDocument();
+  });
+
+  it('retries a failed image on the next mount', async () => {
+    let fail = true;
+    server.use(
+      mswHttp.get(URL_PATH, () =>
+        fail
+          ? HttpResponse.json({ detail: 'nope' }, { status: 500 })
+          : HttpResponse.arrayBuffer(new Uint8Array([1]).buffer),
+      ),
+    );
+    const { unmount } = render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
+    await scroll();
+    await screen.findByTestId('BrokenImageOutlinedIcon');
+    unmount();
+
+    fail = false;
+    render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
+    await scroll();
+
+    expect(await screen.findByAltText('Foto')).toBeInTheDocument();
   });
 
   it('fires onClick on the loaded image', async () => {

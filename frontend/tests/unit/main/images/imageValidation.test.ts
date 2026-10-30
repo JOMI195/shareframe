@@ -50,7 +50,7 @@ describe('validateImage format', () => {
 describe('validateImage limits', () => {
   it('rejects a batch larger than the per-upload limit', () => {
     const result = validateImage(makeFile('photo.jpg', 'image/jpeg'), 0, 16);
-    expect(result.errors).toContain('Maximal 15 Foto(s) können auf einmal hochgeladen werden');
+    expect(result.errors).toContain('Du kannst höchstens 15 Fotos auf einmal hochladen');
   });
 
   it('rejects a file whose index is past the per-upload limit', () => {
@@ -65,7 +65,7 @@ describe('validateImage limits', () => {
   it('rejects when the account total would be exceeded', () => {
     const result = validateImage(makeFile('photo.jpg', 'image/jpeg'), 0, 1, 100);
     expect(result.errors).toContain(
-      'Maximale Gesamtanzahl von 100 hochgeladenen Foto(s) würde überschritten werden',
+      'Du kannst insgesamt höchstens 100 Fotos haben',
     );
   });
 
@@ -106,7 +106,7 @@ describe('validateImages', () => {
     expect(validFiles).toHaveLength(0);
     expect(invalidFiles).toHaveLength(2);
     invalidFiles.forEach(({ errors }) => {
-      expect(errors).toEqual(['Maximale Gesamtanzahl von 100 Foto(s) würde überschritten']);
+      expect(errors).toEqual(['Du kannst insgesamt höchstens 100 Fotos haben']);
     });
   });
 

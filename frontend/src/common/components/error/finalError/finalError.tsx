@@ -1,68 +1,44 @@
 import React from 'react';
-import {
-    Container,
-    Typography,
-    Box,
-    Link,
-} from '@mui/material';
+import { Box, Button, Container, Link, Stack, Typography } from '@mui/material';
+import Logo from '../../logo';
+import StandaloneTheme from '../standaloneTheme';
+import { clearLocalDataAndReload } from '@/common/utils/localData';
 
-const FinalError: React.FC = () => {
-
-    return (
-        <Container
-            maxWidth="sm"
-            sx={{
-                p: 2,
-                mt: 8,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                backgroundColor: "white"
-            }}
-        >
-            <img
-                src={"/logo-light-full-shareframe.svg"}
-                alt="Logo"
-                style={{
-                    width: '100%',
-                    maxWidth: 300,
-                    marginRight: 16,
-                    marginBottom: 50
-                }}
-            />
-
-            <Box
-                sx={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'flex-start',
-                    backgroundColor: "white"
-                }}
-            >
-                <Typography variant="h5" gutterBottom color="error">
-                    Kritischer Systemfehler
-                </Typography>
-                <Typography variant="body1" color="black">
-                    Es trat ein wiederholter Systemfehler auf. Um den Fehler zu beheben lösche bitte alle lokalen Websitedaten und lade die Seite erneut.
-                </Typography>
-                <Typography variant="body1" color="black" sx={{
-                    marginBottom: "16px"
-                }}>
-                    Wenn dies nicht möglich ist oder der Fehler weiterhin besteht kontaktiere bitte unseren Support.
+const FinalError: React.FC = () => (
+    <StandaloneTheme>
+        <Container component="main" maxWidth="sm" sx={{ py: 8, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <Box sx={{ mb: 5, width: '100%', display: 'flex', justifyContent: 'center' }}>
+                <Logo
+                    darkLogoSrc="/logo-dark-full-shareframe.svg"
+                    lightLogoSrc="/logo-light-full-shareframe.svg"
+                    clickable={false}
+                    marginRight={0}
+                    maxWidth={300}
+                    alt="ShareFrame"
+                />
+            </Box>
+            <Stack spacing={2}>
+                <Typography variant="h5" component="h1" color="error">
+                    Kritischer Fehler
                 </Typography>
                 <Typography>
-                    Support-Email:
-                    <Link
-                        href="mailto:info@shareframe.de"
-                        color="primary"
-                        sx={{ pl: 1 }}
-                    >
-                        info@shareframe.de
-                    </Link>
+                    ShareFrame ist wiederholt auf einen Fehler gestoßen. Lade die Seite neu. Hilft das nicht, lösche die lokalen Daten dieser Seite. Dein Konto und deine Fotos bleiben erhalten, eventuell musst du dich danach neu anmelden.
                 </Typography>
-            </Box>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+                    <Button variant="contained" onClick={() => window.location.reload()}>
+                        Neu laden
+                    </Button>
+                    <Button variant="outlined" color="error" onClick={() => void clearLocalDataAndReload()}>
+                        Lokale Daten löschen
+                    </Button>
+                </Stack>
+                <Typography sx={{ color: 'text.secondary' }}>
+                    Besteht der Fehler weiter, schreib uns an{' '}
+                    <Link href="mailto:info@shareframe.de">info@shareframe.de</Link>.
+                </Typography>
+            </Stack>
         </Container>
-    );
-};
+    </StandaloneTheme>
+);
 
 export default FinalError;

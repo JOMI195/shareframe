@@ -8,6 +8,8 @@ export interface ApiRequestPayload {
     onStart?: string;
     onSuccess?: string;
     onError?: string;
+    // Action type that receives the upload progress in percent.
+    onUploadProgress?: string;
     onStartPayload?: unknown;
     onSuccessPayload?: unknown;
     onErrorPayload?: unknown;

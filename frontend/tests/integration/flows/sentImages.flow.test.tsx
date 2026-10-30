@@ -8,6 +8,7 @@ import { makeImage, makePage, makeSentImage, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withSentImages } from '@tests/mocks';
 import { clickSpeedDialAction } from '@tests/helpers/speedDial';
+import { setSmallScreen } from '@tests/setup/vitest.setup';
 
 const ME = seedUser.username;
 
@@ -80,7 +81,7 @@ describe('activity list', () => {
     await openActivity([]);
 
     expect(
-      await screen.findByText('Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden'),
+      await screen.findByText('Noch keine gesendeten oder erhaltenen Fotos'),
     ).toBeInTheDocument();
   });
 
@@ -93,6 +94,73 @@ describe('activity list', () => {
     expect(await screen.findByRole('img', { name: 'bob', hidden: true })).toBeInTheDocument();
     expect(screen.queryByRole('img', { name: 'carol', hidden: true })).not.toBeInTheDocument();
     expect(screen.getByText('C')).toBeInTheDocument();
+  });
+});
+
+describe('filters on a phone', () => {
+  it('collapse into one button that counts the active filters', async () => {
+    setSmallScreen(true);
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    expect(screen.queryByLabelText('Status')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    await user.click(await screen.findByLabelText('Status'));
+    await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name: 'Abgelaufene' }));
+    await user.click(screen.getByRole('button', { name: 'Filter anwenden' }));
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
+    // The page stays hidden from the accessibility tree until the dialog has faded out.
+    expect(await screen.findByRole('button', { name: 'Filter (1 aktiv)' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter zurücksetzen' })).toBeInTheDocument();
+  });
+
+  it('keeps the page size on the page and out of the filter dialog', async () => {
+    setSmallScreen(true);
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    await chooseOption(user, 'Fotos pro Seite', '20');
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('page_size=20'));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByLabelText('Fotos pro Seite')).not.toBeInTheDocument();
+  });
+});
+
+describe('filters on a wide screen', () => {
+  it('shows every filter on the page and applies a sender at once', async () => {
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    expect(screen.getByLabelText('Status')).toBeInTheDocument();
+    expect(screen.getByLabelText('Richtung')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Mehr Filter/ })).not.toBeInTheDocument();
+
+    await user.click(screen.getAllByRole('combobox')[2]);
+    await user.click(within(await screen.findByRole('listbox')).getByRole('option', { name: 'Du' }));
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain(`sender=${ME}`));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter zurücksetzen' })).toBeEnabled());
+  });
+});
+
+describe('blurring on a phone', () => {
+  // A display switch rather than a filter: on the page, acting at once.
+  it('keeps the switch on the page and out of the filter dialog', async () => {
+    setSmallScreen(true);
+    const { user, store } = await openActivity();
+
+    const blur = screen.getByRole('switch', { name: 'Fotos an dich verbergen' });
+    expect(blur).toBeChecked();
+    await user.click(blur);
+    expect(store.getState().ui.sentImages.dialogs.filter.hideToYouFilter).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByRole('switch')).not.toBeInTheDocument();
   });
 });
 
@@ -109,7 +177,7 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Abgelaufene');
+    await chooseOption(user, 'Status', 'Abgelaufene');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
   });
@@ -118,7 +186,7 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Versand Filter', 'Von dir gesendete');
+    await chooseOption(user, 'Richtung', 'Von dir gesendete');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('shipping=sentByYou'));
   });
@@ -127,9 +195,19 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Geplante');
+    await chooseOption(user, 'Status', 'Geplante');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=scheduled'));
+  });
+
+  it('asks for the chosen page size from the first page', async () => {
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    await chooseOption(user, 'Fotos pro Seite', '30');
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('page_size=30'));
+    expect(urls[urls.length - 1]).toContain('page=1');
   });
 
   // "Alle Fotos" is a sentinel, not a value the backend understands.
@@ -137,10 +215,10 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Abgelaufene');
+    await chooseOption(user, 'Status', 'Abgelaufene');
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
 
-    await chooseOption(user, 'Status Filter', 'Alle Fotos');
+    await chooseOption(user, 'Status', 'Alle Fotos');
 
     await waitFor(() => expect(urls[urls.length - 1]).not.toContain('status='));
   });
@@ -157,9 +235,9 @@ describe('deactivating a shared photo', () => {
     );
     const { user } = await openActivity();
 
-    await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
-    await clickSpeedDialAction(user, 'Foto deaktivieren');
-    await user.click(await screen.findByRole('button', { name: 'Deaktivieren bestätigen' }));
+    await user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
+    await user.click(await screen.findByRole('button', { name: 'Foto deaktivieren' }));
+    await user.click(await screen.findByRole('button', { name: 'Deaktivieren' }));
 
     await waitFor(() => expect(calls).toEqual(['deactivate']));
   });
@@ -167,7 +245,7 @@ describe('deactivating a shared photo', () => {
   it('offers no actions menu for a photo that already expired', async () => {
     const { user } = await openActivity([sentByMe]);
 
-    await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    await user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
 
     expect(await screen.findByRole('button', { name: 'Foto herunterladen' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Aktionen' })).not.toBeInTheDocument();
@@ -177,7 +255,7 @@ describe('deactivating a shared photo', () => {
 describe('a scheduled photo', () => {
   const openScheduled = async () => {
     const view = await openActivity([scheduled]);
-    await view.user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
+    await view.user.click(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0] as HTMLElement);
     return view;
   };
 
@@ -204,9 +282,9 @@ describe('a scheduled photo', () => {
     );
     const { user } = await openScheduled();
 
-    await clickSpeedDialAction(user, 'Vorzeitig, sofort senden');
+    await clickSpeedDialAction(user, 'Jetzt senden');
     expect(calls).toEqual([]);
-    await user.click(await screen.findByRole('button', { name: 'Sofort senden bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Jetzt senden' }));
 
     await waitFor(() => expect(calls).toEqual(['send-now']));
   });
@@ -221,8 +299,8 @@ describe('a scheduled photo', () => {
     );
     const { user } = await openScheduled();
 
-    await clickSpeedDialAction(user, 'Geplantes Senden abbrechen');
-    await user.click(await screen.findByRole('button', { name: 'Senden abbrechen bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Geplantes Senden abbrechen' }));
+    await user.click(await screen.findByRole('button', { name: 'Sendung abbrechen' }));
 
     await waitFor(() => expect(calls).toEqual(['cancel']));
     await waitFor(() => expect(document.querySelectorAll('.MuiImageListItem-root')).toHaveLength(0));
@@ -232,7 +310,7 @@ describe('a scheduled photo', () => {
     const { user } = await openScheduled();
     await user.hover(await screen.findByRole('button', { name: 'Aktionen' }));
 
-    await screen.findByText('Geplantes Senden abbrechen');
+    await screen.findByText('Jetzt senden');
     expect(screen.queryByText('Foto deaktivieren')).not.toBeInTheDocument();
   });
 });

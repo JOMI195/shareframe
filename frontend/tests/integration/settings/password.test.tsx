@@ -59,6 +59,26 @@ describe('password settings', () => {
     );
   });
 
+  it('keeps the form when the server refuses the change', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getSetPasswordUrl()), () =>
+        HttpResponse.json({ current_password: ['Invalid password.'] }, { status: 400 }),
+      ),
+    );
+    const { user } = render();
+
+    await fill(user, { current: 'falsch123', next: VALID, repeat: VALID });
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Speichern' })).not.toBeDisabled());
+    expect(screen.getByLabelText('Neues Passwort')).toHaveValue(VALID);
+  });
+
+  it('shows the password rules before anything is typed', () => {
+    render();
+
+    expect(screen.getByText(/8 bis 50 Zeichen/)).toBeInTheDocument();
+  });
+
   it('refuses two passwords that do not match', async () => {
     const bodies = recordChange();
     const { user } = render();
@@ -106,7 +126,7 @@ describe('password settings', () => {
     const { user } = render();
     await user.type(screen.getByLabelText('Neues Passwort'), VALID);
 
-    await user.click(screen.getByRole('button', { name: 'Zurücksetzen' }));
+    await user.click(screen.getByRole('button', { name: 'Verwerfen' }));
 
     expect((screen.getByLabelText('Neues Passwort') as HTMLInputElement).value).toBe('');
   });

@@ -150,6 +150,14 @@ def test_failed_logins_trip_the_limit(client, throttled):
     assert codes[-1] == 429
 
 
+def test_a_throttled_login_is_audited(client, throttled, caplog):
+    with caplog.at_level("INFO", logger="admin.audit"):
+        for _ in range(FAILED_LOGIN_LIMIT + 1):
+            login(client, "wrong-pass1")
+
+    assert "Login throttled from" in caplog.text
+
+
 def test_the_limit_also_blocks_the_right_password(client, throttled):
     for _ in range(FAILED_LOGIN_LIMIT):
         login(client, "wrong-pass1")

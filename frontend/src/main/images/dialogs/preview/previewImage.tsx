@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, useMediaQuery, useTheme } from "@mui/material";
 import axiosInstance from "@/services/api";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
-import { getDeliveryUrl, getVariant } from "@/common/utils/images";
+import { getDeliveryUrl, getVariantUrl } from "@/common/utils/images";
 import { IImage } from "@/types";
 import EpaperToggle, { EpaperView } from "@/main/images/epaper/epaperToggle";
 import { useEpaperPreview } from "@/main/images/epaper/useEpaperPreview";
@@ -37,7 +37,7 @@ const PreviewImage: React.FC<{ image: IImage }> = ({ image }) => {
 
     const original = (
         <AuthenticatedImage
-            url={`${MEDIA_BASE_URL}${getVariant(image, isSmallScreen ? "medium" : "large")?.url}`}
+            url={`${MEDIA_BASE_URL}${getVariantUrl(image, isSmallScreen ? "medium" : "large")}`}
             alt={image.name}
             style={imageStyle}
             aspectRatio={image.height ? image.width / image.height : undefined}

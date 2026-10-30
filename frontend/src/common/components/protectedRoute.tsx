@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import SeasonalSpinner from "./seasonal/seasonalSpinner";
-import { Navigate, Outlet } from "react-router";
+import { Navigate, Outlet, useLocation } from "react-router";
 import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
-import { loadMyUserProfile } from "@/store/entities/authentication/authentication.actions";
+import { loadMyUserProfileShared } from "@/store/entities/authentication/authentication.actions";
 
 interface ProtectedRouteProps {
   redirectPath?: string;
@@ -17,6 +17,7 @@ const ProtectedRoute = ({
   children,
 }: ProtectedRouteProps) => {
   const dispatch = useAppDispatch();
+  const location = useLocation();
   const me = useAppSelector(getMyUserDetails);
   const [attempted, setAttempted] = useState(false);
   const requested = useRef(false);
@@ -27,13 +28,14 @@ const ProtectedRoute = ({
     requested.current = true;
 
     (async () => {
-      await dispatch(loadMyUserProfile());
+      await dispatch(loadMyUserProfileShared());
       setAttempted(true);
     })();
   }, [loggedIn, me.id, dispatch]);
 
   if (!loggedIn) {
-    return <Navigate to={redirectPath} replace />;
+    // Router state, not a query parameter, so the return path cannot be planted in a link.
+    return <Navigate to={redirectPath} replace state={{ from: location.pathname + location.search }} />;
   }
 
   if (me.id === 0 && !attempted) {

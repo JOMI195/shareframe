@@ -4,8 +4,10 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from config import error_codes
 from config.throttles import BurstRateThrottle, SustainedRateThrottle
 from user_core.models import User
+from utils.api_errors import error_response
 
 from .models import Friendship
 from .serializers import (
@@ -44,11 +46,10 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         try:
             element = self.get_queryset().get(pk=self.kwargs["pk"])
         except Friendship.DoesNotExist:
-            return Response(
-                {
-                    "detail": "Friendship not found or you don't have permission to view it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIENDSHIP_NOT_FOUND,
+                "Friendship not found or you don't have permission to view it.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = self.get_serializer(element)
@@ -62,11 +63,10 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         try:
             element = self.get_queryset().get(pk=self.kwargs["pk"])
         except Friendship.DoesNotExist:
-            return Response(
-                {
-                    "detail": "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_REQUEST_GONE,
+                "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = FriendshipRetrieveSerializer(element)
@@ -87,17 +87,17 @@ class FriendshipViewSet(viewsets.ModelViewSet):
                 account__friendship_user_search_code=reciever_friendship_user_search_code,
             )
         except User.DoesNotExist:
-            return Response(
-                {
-                    "detail": "Reciever not found or invalid reciever friendship user search code."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_CODE_UNKNOWN,
+                "Reciever not found or invalid reciever friendship user search code.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         if reciever == request.user:
-            return Response(
-                {"detail": "Friendship request to yourself not possible"},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_REQUEST_SELF,
+                "Friendship request to yourself not possible",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_requests = Friendship.objects.filter(
@@ -106,9 +106,10 @@ class FriendshipViewSet(viewsets.ModelViewSet):
 
         existing_pending_request = existing_requests.filter(status="pending").exists()
         if existing_pending_request:
-            return Response(
-                {"detail": "Friendship request already sent"},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_REQUEST_PENDING,
+                "Friendship request already sent",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_friendship = self.queryset.filter(
@@ -117,9 +118,10 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             status="accepted",
         ).exists()
         if existing_friendship:
-            return Response(
-                {"detail": "Friendship allready created and accepted"},
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIENDSHIP_EXISTS,
+                "Friendship allready created and accepted",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         serializer = FriendshipCreateSerializer(
@@ -135,15 +137,14 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="accept-request")
     def accept_request(self, request, pk):
         try:
-            existing_request = Friendship.objects.get(
+            existing_request = self.queryset.get(
                 pk=pk, reciever=request.user, status="pending"
             )
         except Friendship.DoesNotExist:
-            return Response(
-                {
-                    "detail": "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_REQUEST_GONE,
+                "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_friendship = self.queryset.filter(
@@ -153,16 +154,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         ).exists()
         if existing_friendship:
             existing_request.status = "rejected"
-            existing_request.save()
-            return Response(
-                {
-                    "detail": "You are already friends with this user. The friendship request is not valid anymore has been rejected."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            existing_request.save(update_fields=["status", "updated_at"])
+            return error_response(
+                error_codes.FRIENDSHIP_EXISTS,
+                "You are already friends with this user. The friendship request is not valid anymore has been rejected.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_request.status = "accepted"
-        existing_request.save()
+        existing_request.save(update_fields=["status", "updated_at"])
 
         serializer = FriendshipRetrieveSerializer(existing_request)
 
@@ -171,15 +171,14 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="reject-request")
     def reject_request(self, request, pk=None):
         try:
-            existing_request = Friendship.objects.get(
+            existing_request = self.queryset.get(
                 pk=pk, reciever=request.user, status="pending"
             )
         except Friendship.DoesNotExist:
-            return Response(
-                {
-                    "detail": "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return error_response(
+                error_codes.FRIEND_REQUEST_GONE,
+                "The friendship request could not be found. It may have already been accepted, rejected, or you may not have permission to respond to it.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_friendship = self.queryset.filter(
@@ -189,16 +188,15 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         ).exists()
         if existing_friendship:
             existing_request.status = "rejected"
-            existing_request.save()
-            return Response(
-                {
-                    "detail": "You are already friends with this user. The friendship request is not valid anymore has been rejected."
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            existing_request.save(update_fields=["status", "updated_at"])
+            return error_response(
+                error_codes.FRIENDSHIP_EXISTS,
+                "You are already friends with this user. The friendship request is not valid anymore has been rejected.",
+                status.HTTP_400_BAD_REQUEST,
             )
 
         existing_request.status = "rejected"
-        existing_request.save()
+        existing_request.save(update_fields=["status", "updated_at"])
 
         serializer = FriendshipRetrieveSerializer(existing_request)
 

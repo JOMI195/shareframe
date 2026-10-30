@@ -1,3 +1,4 @@
+import base64
 import json
 from datetime import timedelta
 
@@ -102,6 +103,22 @@ async def test_heartbeat_updates_last_seen():
     await communicator.disconnect()
 
 
+async def test_last_seen_is_written_at_most_once_a_minute():
+    frame = await make_frame()
+    communicator, _, _ = await connect(await make_token(frame))
+    await communicator.receive_nothing(timeout=0.3)
+    long_ago = timezone.now() - timedelta(hours=2)
+    await database_sync_to_async(Frame.objects.filter(pk=frame.pk).update)(
+        last_seen=long_ago
+    )
+
+    await communicator.send_to(text_data=json.dumps({"type": "heartbeat"}))
+    await communicator.receive_nothing(timeout=0.3)
+
+    assert (await reload(frame)).last_seen == long_ago
+    await communicator.disconnect()
+
+
 async def test_pushing_to_the_frame_does_not_count_as_seeing_it():
     """A push to a half-open socket would otherwise keep a dead frame online."""
     frame = await make_frame()
@@ -202,6 +219,45 @@ class TestMissingImages:
         pictures = await payloads_of(communicator, "picture")
         assert [p["sent_image_id"] for p in pictures] == [sent.id]
         await communicator.disconnect()
+
+    # The board parses exactly these fields.
+    async def test_the_pushed_picture_keeps_the_board_format(self):
+        frame = await make_frame()
+        sent = await make_sent_image(frame)
+        communicator, _, _ = await connect(await make_token(frame))
+
+        await communicator.send_to(
+            text_data=json.dumps({"type": "check_missing_images", "sent_image_ids": []})
+        )
+
+        [picture] = await payloads_of(communicator, "picture")
+        assert picture == {
+            "type": "picture",
+            "sender": sent.sender.username,
+            "data": picture["data"],
+            "expiry_unix_timestamp": int(sent.expires_at.timestamp()),
+            "sent_image_id": sent.id,
+        }
+        assert base64.b64decode(picture["data"])
+        await communicator.disconnect()
+
+    async def test_only_the_asking_frame_gets_the_answer(self):
+        frame = await make_frame()
+        other = await database_sync_to_async(FrameFactory)(user=frame.user)
+        await make_sent_image(frame)
+        asking, _, _ = await connect(await make_token(frame))
+        silent, _, _ = await connect(await make_token(other))
+        await silent.send_to(text_data=json.dumps({"type": "ping"}))
+        await silent.receive_from()
+
+        await asking.send_to(
+            text_data=json.dumps({"type": "check_missing_images", "sent_image_ids": []})
+        )
+
+        assert len(await payloads_of(asking, "picture")) == 1
+        assert await silent.receive_nothing(timeout=0.4)
+        await asking.disconnect()
+        await silent.disconnect()
 
     async def test_an_image_the_board_already_has_is_not_resent(self):
         frame = await make_frame()

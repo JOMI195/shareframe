@@ -1,6 +1,4 @@
-import { useAppSelector } from "@/store";
-import { getDesign } from "@/store/ui/settings/settings.slice";
-import { Box } from "@mui/material";
+import { alpha, Box } from "@mui/material";
 import { ReactNode } from "react";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CircleIcon from "@mui/icons-material/Circle";
@@ -22,14 +20,9 @@ const SelectableElement = <T extends SelectableItem>({
     selectedElements,
     selectionEnabled
 }: SelectableElementProps<T>) => {
-    const design = useAppSelector(getDesign);
-
     const isSelected = selectedElements.some(
         (selectedElement) => selectedElement.id === elementToSelect.id
     );
-    const selectedBackgroundColor = design === "dark"
-        ? "rgba(90, 152, 218, 0.3)"
-        : "rgba(25, 118, 210, 0.4)";
 
     return (
         <Box
@@ -51,7 +44,7 @@ const SelectableElement = <T extends SelectableItem>({
                         left: 0,
                         right: 0,
                         bottom: 0,
-                        backgroundColor: isSelected ? selectedBackgroundColor : "rgba(0, 0, 0, 0.1)",
+                        backgroundColor: isSelected ? (theme) => alpha(theme.palette.primary.main, 0.35) : "rgba(0, 0, 0, 0.1)",
                         border: isSelected ? "3px solid" : "2px solid transparent",
                         borderColor: isSelected ? "primary.main" : "transparent",
                         borderRadius: 1,
@@ -72,7 +65,7 @@ const SelectableElement = <T extends SelectableItem>({
                         backgroundColor: "white",
                         borderRadius: "50%",
                         fontSize: "20px",
-                        zIndex: 10,
+                        zIndex: 1,
                     }}
                 />
             )}
@@ -86,7 +79,7 @@ const SelectableElement = <T extends SelectableItem>({
                         backgroundColor: "rgba(0, 0, 0, 0.3)",
                         borderRadius: "50%",
                         fontSize: "20px",
-                        zIndex: 10,
+                        zIndex: 1,
                     }}
                 />
             )}

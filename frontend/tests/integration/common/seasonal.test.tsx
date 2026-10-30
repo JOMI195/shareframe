@@ -182,7 +182,7 @@ const everything = (
 );
 
 const expectPlain = () => {
-  expect(screen.getByText('Willkommen zu ShareFrame')).toBeVisible();
+  expect(screen.getByText('Willkommen bei ShareFrame')).toBeVisible();
   expect(screen.queryByTestId('GhostIcon')).not.toBeInTheDocument();
   expect(screen.queryByTestId('PumpkinIcon')).not.toBeInTheDocument();
   expect(screen.queryByTestId('JackOLanternIcon')).not.toBeInTheDocument();

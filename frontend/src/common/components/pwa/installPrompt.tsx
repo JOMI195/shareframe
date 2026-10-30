@@ -5,6 +5,7 @@ import { getPwa, installPromptDismissed } from '@/store/ui/settings/settings.sli
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import IosInstallDialog from './iosInstallDialog';
 import { StackedSnackbar } from '../snackbars/snackbarStack';
+import { usePromptSlot } from '../lifecycle/promptQueue';
 
 const InstallPrompt: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -15,7 +16,7 @@ const InstallPrompt: React.FC = () => {
     const { installed, canPrompt, showIosHint, promptInstall } = usePwaInstall();
     const [iosDialogOpen, setIosDialogOpen] = useState(false);
 
-    const open = (canPrompt || showIosHint) && !installed && !dismissed;
+    const open = usePromptSlot('install', (canPrompt || showIosHint) && !installed && !dismissed);
 
     const dismiss = () => dispatch(installPromptDismissed());
 

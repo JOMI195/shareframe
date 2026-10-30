@@ -94,7 +94,7 @@ describe('avatar settings', () => {
     const file = new File([new Uint8Array([1, 2, 3])], 'me.png', { type: 'image/png' });
     await user.upload(screen.getByLabelText('Profilbild auswählen'), file);
     const dialog = await screen.findByRole('dialog', { name: 'Profilbild zuschneiden' });
-    await user.click(within(dialog).getByRole('button', { name: 'Abbrechen' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Schließen' }));
 
     await waitFor(() =>
       expect(screen.queryByRole('dialog', { name: 'Profilbild zuschneiden' })).not.toBeInTheDocument(),
@@ -118,10 +118,10 @@ describe('avatar settings', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Nach unten verschieben' }));
     expect(JSON.parse(cropper.dataset.crop!)).toEqual({ x: 10, y: 10 });
 
-    await user.click(within(dialog).getByRole('button', { name: 'Reset' }));
+    await user.click(within(dialog).getByRole('button', { name: 'Zurücksetzen' }));
     expect(JSON.parse(cropper.dataset.crop!)).toEqual({ x: 0, y: 0 });
     expect(cropper.dataset.zoom).toBe('1');
-    expect(within(dialog).queryByRole('slider', { name: 'Rotation' })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('slider', { name: 'Drehen' })).not.toBeInTheDocument();
   });
 
   it('removes the picture after confirming', async () => {
@@ -129,7 +129,7 @@ describe('avatar settings', () => {
     const { user } = render();
 
     await user.click(screen.getByRole('button', { name: 'Entfernen' }));
-    await user.click(await screen.findByRole('button', { name: 'Entfernen bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Profilbild entfernen' }));
 
     await waitFor(() => expect(deleted).toHaveLength(1));
     await waitFor(() =>
@@ -146,7 +146,7 @@ describe('avatar settings', () => {
     await user.click(await screen.findByRole('button', { name: 'Abbrechen' }));
 
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Entfernen bestätigen' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: 'Profilbild entfernen' })).not.toBeInTheDocument(),
     );
     expect(deleted).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Entfernen' })).toBeInTheDocument();

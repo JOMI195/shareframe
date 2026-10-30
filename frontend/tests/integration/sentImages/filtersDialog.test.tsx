@@ -18,8 +18,8 @@ const render = () =>
     }),
   });
 
-// Neither MUI Select exposes an accessible name here; the sender comes first.
-const senderSelect = () => screen.getAllByRole('combobox')[0];
+// Neither MUI Select exposes an accessible name here; status and direction come first.
+const senderSelect = () => screen.getAllByRole('combobox')[2];
 
 describe('FiltersDialog', () => {
   it('shows the picture of every user it offers', async () => {
@@ -48,7 +48,16 @@ describe('FiltersDialog', () => {
   it('shows the placeholder while nobody is chosen', () => {
     render();
 
-    expect(senderSelect()).toHaveTextContent('Alle Sender');
-    expect(screen.getAllByRole('combobox')[1]).toHaveTextContent('Alle Empfänger');
+    expect(senderSelect()).toHaveTextContent('Alle Absender');
+    expect(screen.getAllByRole('combobox')[3]).toHaveTextContent('Alle Empfänger');
+  });
+
+  it('closes from the header without a separate cancel button', async () => {
+    const { user, store } = render();
+
+    expect(screen.queryByRole('button', { name: 'Abbrechen' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Schließen' }));
+
+    expect(store.getState().ui.sentImages.dialogs.filter.open).toBe(false);
   });
 });

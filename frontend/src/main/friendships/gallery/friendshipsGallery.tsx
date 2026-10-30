@@ -17,12 +17,13 @@ import {
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
-import { openDeleteFriendshipsDialog } from "@/store/ui/friendships/friendships.slice";
+import { openCreateFriendshipsDialog, openDeleteFriendshipsDialog } from "@/store/ui/friendships/friendships.slice";
 import { IFriendship } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import DataNotFound from "@/common/components/dataNotFound";
 import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -33,13 +34,15 @@ const FriendshipsGallery: React.FC = () => {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const friendships = useAppSelector(getFriendships);
-    const friendshipsLoading = useAppSelector(getApi).loading;
-    const showSkeleton = useMinimumLoading(friendshipsLoading);
+    const friendshipsApi = useAppSelector(getApi);
+    const showSkeleton = useMinimumLoading(friendshipsApi.loading && friendshipsApi.lastFetch === null);
     const user = useAppSelector(getUser);
 
     const [currentPage, setCurrentPage] = useState(1);
-    const totalPages = Math.ceil(friendships.length / ITEMS_PER_PAGE);
-    const currentFriendships = friendships.slice(
+    // Filtered before paging, so every page is full and the page count is right.
+    const friends = friendships.filter((friendship) => friendship.status === "accepted");
+    const totalPages = Math.ceil(friends.length / ITEMS_PER_PAGE);
+    const currentFriendships = friends.slice(
         (currentPage - 1) * ITEMS_PER_PAGE,
         currentPage * ITEMS_PER_PAGE
     );
@@ -53,7 +56,7 @@ const FriendshipsGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
@@ -97,7 +100,7 @@ const FriendshipsGallery: React.FC = () => {
                     }}
                 >
                     <UserAvatar username={friend} url={friendAvatar} size={80} />
-                    <Typography variant="h6" sx={{ mt: 1 }}>
+                    <Typography variant="h6" component="p" sx={{ mt: 1 }}>
                         {friend}
                     </Typography>
                 </CardContent>
@@ -110,11 +113,12 @@ const FriendshipsGallery: React.FC = () => {
                         width: "100%"
                     }}>
                         <Stack direction="row">
-                            <Tooltip title={"Freundschaft löschen"}>
+                            <Tooltip title={"Freundschaft beenden"}>
                                 <IconButton
                                     onClick={() => { deleteFriendButtonClickHandle(friendship) }}
-                                    aria-label="delete"
+                                    aria-label="Freundschaft beenden"
                                     color="error"
+                                    sx={{ width: 44, height: 44 }}
                                 >
                                     <DeleteIcon />
                                 </IconButton>
@@ -146,9 +150,9 @@ const FriendshipsGallery: React.FC = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size="large"
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -156,7 +160,7 @@ const FriendshipsGallery: React.FC = () => {
                             <Typography variant="subtitle2" color="textSecondary" sx={{
                                 textAlign: "center"
                             }}>
-                                {friendships.filter((friendship) => friendship.status === "accepted").length} Freund{friendships.filter((friendship) => friendship.status === "accepted").length !== 1 ? "e" : ""}
+                                {friends.length} Freund{friends.length !== 1 ? "e" : ""}
                             </Typography>
                         )}
                     </>
@@ -183,10 +187,9 @@ const FriendshipsGallery: React.FC = () => {
                             </Grid>
                         ))}
                     </Grid>
-                ) : currentFriendships.filter((friendship) => friendship.status === "accepted").length !== 0 ? (
+                ) : currentFriendships.length !== 0 ? (
                     <Grid container spacing={2}>
                         {currentFriendships
-                            .filter((friendship) => friendship.status === "accepted")
                             .map((friendship) => (
                                 <Grid
                                     key={friendship.id}
@@ -200,7 +203,10 @@ const FriendshipsGallery: React.FC = () => {
                             ))}
                     </Grid>
                 ) : (
-                    <DataNotFound notFoundMessage={"Keine Freundschaften vorhanden"} />
+                    <DataNotFound
+                        notFoundMessage={"Keine Freundschaften vorhanden"}
+                        action={{ label: "Freund hinzufügen", onClick: () => dispatch(openCreateFriendshipsDialog()) }}
+                    />
                 )}
             </Box>
 

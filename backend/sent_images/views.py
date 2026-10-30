@@ -11,6 +11,7 @@ from rest_framework.response import Response
 
 from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
 from frames.consumers import FrameWebSocketConsumer
+from images.models import prefetch_variants
 
 from .delivery import deliver_scheduled_sent_image
 from .models import SentImage, SentImageStatus
@@ -28,9 +29,13 @@ class SentImagesPagination(PageNumberPagination):
 
 
 class SentImagesViewSet(viewsets.ModelViewSet):
-    queryset = SentImage.objects.select_related(
-        "sender__account", "reciever__account"
-    ).order_by("-sent_at")
+    queryset = (
+        SentImage.objects.select_related(
+            "sender__account", "reciever__account", "image"
+        )
+        .prefetch_related(prefetch_variants("image__variants"))
+        .order_by("-sent_at")
+    )
     http_method_names = ["get", "post", "head", "options"]
     permission_classes = [IsAuthenticated]
     serializer_class = SentImagesRetrieveSerializer

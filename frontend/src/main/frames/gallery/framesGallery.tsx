@@ -23,10 +23,12 @@ import KeyIcon from '@mui/icons-material/Key';
 import WifiIcon from '@mui/icons-material/Wifi';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
-import { openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { openRegisterFrameDialog, openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
+import { fetchframes } from "@/store/entities/frames/frames.actions";
 import { isFrameActive } from "@/common/utils/frame";
 import DataNotFound from "@/common/components/dataNotFound";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 6;
 
@@ -38,7 +40,9 @@ const FramesGallery: React.FC = () => {
 
     const frames: IFrame[] = useAppSelector(getFrames);
     const loading = useAppSelector(getApi).loading;
-    const showSkeleton = useMinimumLoading(loading);
+    const framesFailed = useAppSelector(getApi).failed;
+    // Focus refreshes keep the current cards instead of flashing the skeleton.
+    const showSkeleton = useMinimumLoading(loading && frames.length === 0);
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(frames.length / ITEMS_PER_PAGE);
@@ -56,7 +60,7 @@ const FramesGallery: React.FC = () => {
         page: number
     ) => {
         setCurrentPage(page);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderLoadingSkeletonCard = () => (
@@ -144,23 +148,28 @@ const FramesGallery: React.FC = () => {
                                     justifyContent: "space-between",
                                     alignItems: "center"
                                 }}>
-                                <Typography>
-                                    Einstellungen:
-                                </Typography>
-                                <Tooltip title={"Öffne Bilderrahmen Einstellungen"}>
+                                <Box>
+                                    <Typography>
+                                        Einstellungen
+                                    </Typography>
+                                    <Typography variant="caption" sx={{ color: "text.secondary" }}>
+                                        {ipAddress ? "Nur im selben WLAN erreichbar" : "Der Rahmen hat noch keine Adresse gemeldet"}
+                                    </Typography>
+                                </Box>
+                                <Tooltip title={"Einstellungen des Bilderrahmens öffnen"}>
+                                    <span>
                                     <Button
                                         variant="contained"
                                         color={"secondary"}
                                         size="small"
-                                        onClick={() => window.open(`http://${ipAddress}`, "_blank")}
+                                        onClick={() => window.open(`http://${ipAddress}`, "_blank", "noopener")}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
                                         startIcon={<OpenInNewIcon />}
-                                        sx={{
-                                            height: "28px"
-                                        }}
+                                        sx={{ minHeight: 36 }}
                                     >
                                         {"Öffnen"}
                                     </Button>
+                                    </span>
                                 </Tooltip>
                             </Stack>
                             <Stack
@@ -170,18 +179,20 @@ const FramesGallery: React.FC = () => {
                                     justifyContent: "center",
                                     alignItems: "center"
                                 }}>
-                                <Tooltip title={"Bilderrahmen abmelden"}>
+                                <Tooltip title={"Bilderrahmen entfernen"}>
                                     <IconButton
                                         onClick={() => { unregisterFrameButtonClickHandle(frame) }}
-                                        aria-label="delete"
+                                        aria-label="Bilderrahmen entfernen"
                                         color="error"
+                                        sx={{ width: 44, height: 44 }}
                                     >
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={"OTP generieren"}>
+                                <Tooltip title={"Einmal-Code für den Rahmen anzeigen"}>
                                     <IconButton
-                                        aria-label="generate otp"
+                                        aria-label="Einmal-Code anzeigen"
+                                        sx={{ width: 44, height: 44 }}
                                         onClick={() => dispatch(openRequestOTPDialog({ frameId: frame.id }))}
                                     >
                                         <KeyIcon />
@@ -215,9 +226,9 @@ const FramesGallery: React.FC = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size="large"
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -266,7 +277,17 @@ const FramesGallery: React.FC = () => {
                             ))}
                     </Grid>
                 ) : (
-                    <DataNotFound notFoundMessage={"Keine hinzugefügten Bilderrahmen vorhanden"} />
+                    framesFailed ? (
+                        <DataNotFound
+                            notFoundMessage={"Bilderrahmen konnten nicht geladen werden"}
+                            action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchframes()) }}
+                        />
+                    ) : (
+                        <DataNotFound
+                            notFoundMessage={"Noch kein Bilderrahmen hinzugefügt"}
+                            action={{ label: "Ersten Bilderrahmen hinzufügen", onClick: () => dispatch(openRegisterFrameDialog()) }}
+                        />
+                    )
                 )}
             </Box>
 

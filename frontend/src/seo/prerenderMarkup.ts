@@ -27,6 +27,6 @@ export const prerenderMarkup: Record<string, string> = {
   ),
   "/impressum/": stub(
     "Impressum",
-    "Anbieterkennzeichnung nach § 5 TMG mit Herausgeber, Kontaktdaten und Urheberrechtshinweisen zu shareframe.de.",
+    "Anbieterkennzeichnung nach § 5 DDG mit Herausgeber, Kontaktdaten und Urheberrechtshinweisen zu shareframe.de.",
   ),
 };

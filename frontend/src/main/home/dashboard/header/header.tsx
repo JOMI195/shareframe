@@ -1,5 +1,5 @@
 import { FC } from 'react';
-import { Card, CardContent, Typography, Box, IconButton, useTheme } from "@mui/material";
+import { Card, CardContent, Typography, Box, IconButton } from "@mui/material";
 import ManageAccountsIcon from '@mui/icons-material/ManageAccounts';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { useNavigate } from "react-router";
@@ -11,35 +11,34 @@ interface HeaderProps {
 }
 
 const Header: FC<HeaderProps> = ({ username }) => {
-    const theme = useTheme();
     const navigate = useNavigate();
     const greeting = useSeasonPick('greeting');
 
     return (
-        <Card sx={{ mb: 2, bgcolor: theme.palette.primary.main, color: "white" }}>
+        <Card sx={{ mb: 2, bgcolor: "primary.main", color: "primary.contrastText" }}>
             <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Typography variant="h5" sx={{
+                        <Typography variant="h5" component="h1" sx={{
                             fontWeight: "bold"
                         }}>
                             Hi, {username}
                         </Typography>
-                        <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                            {greeting ?? "Willkommen zu ShareFrame"}
+                        <Typography variant="body2">
+                            {greeting ?? "Willkommen bei ShareFrame"}
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "row" }}>
                         <IconButton
-                            size="small"
-                            sx={{ color: "white" }}
+                            aria-label="Konto-Einstellungen"
+                            sx={{ color: "inherit", width: 44, height: 44 }}
                             onClick={() => navigate("/" + getSettingsUrl() + getUserSettingsUrl())}
                         >
                             <ManageAccountsIcon />
                         </IconButton>
                         <IconButton
-                            size="small"
-                            sx={{ color: "white" }}
+                            aria-label="App-Einstellungen"
+                            sx={{ color: "inherit", width: 44, height: 44 }}
                             onClick={() => navigate("/" + getSettingsUrl() + getAppSettingsUrl())}
                         >
                             <SettingsIcon />

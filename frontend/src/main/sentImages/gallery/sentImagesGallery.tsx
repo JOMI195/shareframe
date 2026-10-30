@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router";
+import { getImageUrl } from "@/assets/endpoints/app/appEndpoints";
 import {
     Box,
     ImageList,
@@ -16,6 +18,7 @@ import {
     getApi as getImagesApi,
     getSentImagesPaginated,
     getSentImagesPaginatedPageSize,
+    getSentImagesFilters,
 } from "@/store/entities/images/images.slice";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
@@ -24,14 +27,15 @@ import SendIcon from '@mui/icons-material/Send';
 import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
-import { getVariant } from "@/common/utils/images";
-import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
+import { getVariantUrl } from "@/common/utils/images";
 import DataNotFound from "@/common/components/dataNotFound";
-import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
+import { onActivateKey } from "@/common/utils/keyboard";
+import { fetchSentImagesPaginated, setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
 import { getSentImageState } from "../sentImageStatus";
 import SentImageStatusLabel from "../sentImageStatusLabel";
 import UserAvatar from "@/common/components/userAvatar";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const SKELETON_COLS = 3;
@@ -40,11 +44,15 @@ const SentImagesGallery = () => {
     const dispatch = useAppDispatch();
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
-    const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
-    const showSkeleton = useMinimumLoading(loading || friendshipsLoading);
+    const sentImagesFailed = useAppSelector(getImagesApi).sentImagesFailed;
+    const sentImagesStale = useAppSelector(getImagesApi).sentImagesStale;
+    const appliedFilters = useAppSelector(getSentImagesFilters);
+    const unfiltered = appliedFilters.status === 'all' && appliedFilters.shipping === 'all' && !appliedFilters.sender && !appliedFilters.receiver;
+    const navigate = useNavigate();
+    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
+    const showSkeleton = useMinimumLoading(loading && (sentImagesStale || sentImagesPaginated.results.length === 0));
     const theme = useTheme();
 
-    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
 
     const { filter: filterDialog } = useAppSelector(getDialogs);
@@ -70,7 +78,7 @@ const SentImagesGallery = () => {
 
     const handlePageChange = (_event: React.ChangeEvent<unknown>, page: number) => {
         dispatch(setSentImagesPaginatedPage(page));
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        scrollToTop();
     };
 
     const handleFiltersChange = (newFilters: ISentImagesFilters) => {
@@ -181,9 +189,9 @@ const SentImagesGallery = () => {
                                 page={currentPage}
                                 onChange={handlePageChange}
                                 color="primary"
-                                size={"large"}
-                                showFirstButton
-                                showLastButton
+                                size="medium"
+                                showFirstButton={!isSmallScreen}
+                                showLastButton={!isSmallScreen}
                             />
                         )}
 
@@ -223,13 +231,17 @@ const SentImagesGallery = () => {
                             (sentImage.reciever === user.me.username && sentImage.sender !== user.me.username);
 
                         return (
-                            <ImageListItem
-                                key={sentImage.id}
-                                onClick={() => handleImageClick(sentImage)}
-                                style={{ cursor: "pointer" }}
-                            >
+                            <ImageListItem key={sentImage.id}>
+                                {/* Named by its visible text: photo, sender or receiver, date and status. */}
+                                <Box
+                                    onClick={() => handleImageClick(sentImage)}
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(event) => onActivateKey(event, () => handleImageClick(sentImage))}
+                                    sx={{ cursor: "pointer", height: "100%", borderRadius: 1, display: "flex", flexDirection: "column" }}
+                                >
                                 <AuthenticatedImage
-                                    url={`${MEDIA_BASE_URL}${getVariant(sentImage.image, "thumbnail")?.url}`}
+                                    url={`${MEDIA_BASE_URL}${getVariantUrl(sentImage.image, "thumbnail")}`}
                                     alt={sentImage.image.name}
                                     style={{
                                         width: "100%",
@@ -253,12 +265,23 @@ const SentImagesGallery = () => {
                                         </Box>
                                     }
                                 />
+                                </Box>
                             </ImageListItem>
                         );
                     })}
                 </ImageList>
             ) : (
-                <DataNotFound notFoundMessage={"Keine erhaltenen oder gesendeten Fotos gefunden oder vorhanden"} />
+                sentImagesFailed ? (
+                    <DataNotFound
+                        notFoundMessage={"Aktivitäten konnten nicht geladen werden"}
+                        action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchSentImagesPaginated(currentPage, pageSize, appliedFilters)) }}
+                    />
+                ) : (
+                    <DataNotFound
+                        notFoundMessage={"Noch keine gesendeten oder erhaltenen Fotos"}
+                        action={unfiltered ? { label: "Foto senden", icon: <SendIcon />, onClick: () => navigate("/" + getImageUrl()) } : undefined}
+                    />
+                )
             )}
 
             {renderPagination(true)}

@@ -127,6 +127,8 @@ describe('logout after repeated auth failures', () => {
     expect(calls).toContain(getTokenLogoutUrl());
     expect(persistor.flush).toHaveBeenCalled();
     expect(window.location.href).toBe('/auth/sign-in/');
+    // Lets the sign-in page explain why and return to the same place.
+    expect(sessionStorage.getItem('sessionExpired')).not.toBeNull();
   });
 
   // One expired session must not end it: the refresh failure counts once, and

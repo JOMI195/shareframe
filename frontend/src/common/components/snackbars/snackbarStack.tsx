@@ -15,7 +15,11 @@ export const SnackbarStackProvider = ({ children }: { children: ReactNode }) => 
         ref={setStack}
         sx={(theme) => ({
           position: 'fixed',
-          bottom: 16,
+          // Above the page's floating action buttons on phones.
+          bottom: {
+            xs: 'calc(88px + env(safe-area-inset-bottom))',
+            sm: 'calc(16px + env(safe-area-inset-bottom))',
+          },
           left: 0,
           right: 0,
           px: 1,

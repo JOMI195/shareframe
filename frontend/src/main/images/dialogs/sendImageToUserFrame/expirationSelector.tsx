@@ -9,19 +9,22 @@ import {
     FormControlLabel,
     Radio,
     Box,
+    FormLabel,
 } from '@mui/material';
-import { PREDEFINED_EXPIRATION_OPTIONS, TimeUnit, toExpirationHours } from './expiration';
+import { MAX_CUSTOM_EXPIRATION, PREDEFINED_EXPIRATION_OPTIONS, TimeUnit, toExpirationHours } from './expiration';
 
 interface ExpirationSelectorProps {
-    expirationHours: number;
-    onExpirationHoursChange: (hours: number) => void;
+    expirationHours: number | null;
+    onExpirationHoursChange: (hours: number | null) => void;
+    disabled?: boolean;
 }
 
 type SelectionMode = 'predefined' | 'custom';
 
 const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
     expirationHours,
-    onExpirationHoursChange
+    onExpirationHoursChange,
+    disabled,
 }) => {
     const [customTimeUnit, setCustomTimeUnit] = useState<TimeUnit>('hours');
     const [customTimeValue, setCustomTimeValue] = useState<string>('1');
@@ -73,29 +76,34 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
 
     return (
         <Box sx={styles.container}>
+            <FormLabel id="expiration-label">Anzeigedauer</FormLabel>
             <RadioGroup
                 value={selectionMode}
                 onChange={handleSelectionModeChange}
                 sx={styles.radioGroup}
+                aria-labelledby="expiration-label"
             >
                 <FormControlLabel
                     value="predefined"
                     control={<Radio />}
-                    label="Vordefinierte Zeiten"
+                    label="Vorgaben"
+                    disabled={disabled}
                 />
                 <FormControlLabel
                     value="custom"
                     control={<Radio />}
-                    label="Benutzerdefinierte Zeit"
+                    label="Eigene Dauer"
+                    disabled={disabled}
                 />
             </RadioGroup>
 
             {selectionMode === 'predefined' ? (
-                <FormControl fullWidth>
-                    <InputLabel>Ablaufzeit</InputLabel>
+                <FormControl fullWidth disabled={disabled}>
+                    <InputLabel id="expiration-hours-label">Anzeigedauer</InputLabel>
                     <Select
-                        value={expirationHours}
-                        label="Ablaufzeit"
+                        labelId="expiration-hours-label"
+                        value={expirationHours ?? PREDEFINED_EXPIRATION_OPTIONS[0].hours}
+                        label="Anzeigedauer"
                         onChange={(e) => onExpirationHoursChange(Number(e.target.value))}
                     >
                         {PREDEFINED_EXPIRATION_OPTIONS.map((option) => (
@@ -111,15 +119,19 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
                         type="number"
                         value={customTimeValue}
                         onChange={(e) => handleCustomTimeValueChange(e.target.value)}
-                        label="Zeit"
+                        label="Dauer"
                         sx={styles.timeInput}
+                        disabled={disabled}
+                        error={expirationHours === null}
+                        helperText={expirationHours === null ? `Eine ganze Zahl von 1 bis ${MAX_CUSTOM_EXPIRATION}` : undefined}
                         slotProps={{
-                            htmlInput: { min: 1, max: 365 }
+                            htmlInput: { min: 1, max: MAX_CUSTOM_EXPIRATION, inputMode: 'numeric' }
                         }}
                     />
-                    <FormControl sx={styles.unitSelect}>
-                        <InputLabel>Einheit</InputLabel>
+                    <FormControl sx={styles.unitSelect} disabled={disabled}>
+                        <InputLabel id="expiration-unit-label">Einheit</InputLabel>
                         <Select
+                            labelId="expiration-unit-label"
                             value={customTimeUnit}
                             label="Einheit"
                             onChange={(e) => handleCustomTimeUnitChange(e.target.value as TimeUnit)}

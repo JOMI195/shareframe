@@ -1,5 +1,7 @@
 import pytest
 from django.core.files.base import ContentFile
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 
 from changelogs.models import Changelog, ChangelogImage
 from frames.models import Frame, FrameGroup
@@ -95,3 +97,16 @@ class TestGetByIds:
 
         assert "::hero::" not in response.data[0]["content"]
         assert "![A hero](" in response.data[0]["content"]
+
+    def test_the_query_count_does_not_grow_with_the_entries(self, alice):
+        def queries_for(ids):
+            with CaptureQueriesContext(connection) as context:
+                alice.post(BY_IDS_URL, {"ids": ids}, format="json")
+            return len(context)
+
+        groups = list(alice_groups())
+        first = ChangelogFactory(groups=groups)
+        baseline = queries_for([first.id])
+        more = [ChangelogFactory(groups=groups).id for _ in range(3)]
+
+        assert queries_for([first.id, *more]) == baseline

@@ -44,4 +44,9 @@ def exception_handler(exc, context):
     # DRF forwards Http404 args, which name the model.
     if isinstance(exc, Http404):
         exc = exceptions.NotFound()
-    return drf_exception_handler(exc, context)
+    response = drf_exception_handler(exc, context)
+    if response is not None and isinstance(exc, exceptions.APIException):
+        codes = exc.get_codes()
+        if isinstance(codes, str) and isinstance(response.data, dict):
+            response.data["code"] = codes
+    return response

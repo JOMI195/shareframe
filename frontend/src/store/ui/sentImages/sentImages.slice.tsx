@@ -1,6 +1,7 @@
 import { RootState } from "@/store";
 import { ISentImage, ShippingFilter, StatusFilter } from "@/types";
 import { createSlice } from "@reduxjs/toolkit";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 
 type SliceState = {
   dialogs: {
@@ -39,6 +40,11 @@ const initialState: SliceState = {
 const sentImagesSlice = createSlice({
   name: "sentImages",
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(routeChanged, (sliceState) => {
+      closeOpenDialogs(sliceState.dialogs);
+    });
+  },
   reducers: {
     previewSentImageDialogOpened: (sliceState, action) => {
       sliceState.dialogs.preview.open = true;

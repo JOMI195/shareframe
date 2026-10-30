@@ -2,6 +2,7 @@ import pytest
 
 from friendships.models import Friendship
 from tests.support import seed
+from tests.support.factories import FriendshipFactory, UserFactory
 from user_core.models import User
 
 pytestmark = pytest.mark.django_db
@@ -58,6 +59,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_code_unknown"
 
     def test_a_user_who_is_not_searchable_cannot_be_found(self, alice):
         response = alice.post(
@@ -67,6 +69,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_code_unknown"
 
     def test_a_request_to_yourself_is_rejected(self, alice):
         response = alice.post(
@@ -77,6 +80,7 @@ class TestSendRequest:
 
         assert response.status_code == 400
         assert "yourself" in response.data["detail"]
+        assert response.data["code"] == "friend_request_self"
 
     def test_a_second_pending_request_is_rejected(self, alice):
         response = alice.post(
@@ -87,6 +91,7 @@ class TestSendRequest:
 
         assert response.status_code == 400
         assert "already sent" in response.data["detail"]
+        assert response.data["code"] == "friend_request_pending"
 
     def test_an_existing_friendship_blocks_a_new_request(self, alice):
         response = alice.post(
@@ -96,6 +101,7 @@ class TestSendRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friendship_exists"
 
 
 class TestAcceptRequest:
@@ -118,6 +124,7 @@ class TestAcceptRequest:
         )
 
         assert response.status_code == 400
+        assert response.data["code"] == "friend_request_gone"
 
     def test_an_already_accepted_request_cannot_be_accepted_again(self, alice):
         accepted = friendship_between(seed.ALICE, seed.BOB, "accepted")
@@ -186,6 +193,21 @@ class TestRetrieveAndDestroy:
 
         assert response.status_code == 200
         assert not Friendship.objects.filter(pk=accepted.pk).exists()
+
+    def test_the_sender_can_withdraw_a_pending_request(self, alice):
+        pending = FriendshipFactory(sender=User.objects.get(username=seed.ALICE))
+
+        response = alice.delete(f"{LIST_URL}{pending.pk}/")
+
+        assert response.status_code == 200
+        assert response.data["id"] == str(pending.pk)
+        assert not Friendship.objects.filter(pk=pending.pk).exists()
+
+    def test_someone_elses_pending_request_cannot_be_withdrawn(self, alice):
+        pending = FriendshipFactory(sender=UserFactory())
+
+        assert alice.delete(f"{LIST_URL}{pending.pk}/").status_code == 400
+        assert Friendship.objects.filter(pk=pending.pk).exists()
 
     def test_someone_elses_friendship_cannot_be_ended(self, alice):
         other = friendship_between(seed.BOB, seed.CAROL, "accepted")

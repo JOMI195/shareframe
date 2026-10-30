@@ -3,6 +3,12 @@ import { MAX_OUTPUT_SIDE } from '../../outputSize';
 // Mobile Safari refuses to allocate canvases beyond these bounds and silently yields a blank one.
 const MAX_OUTPUT_AREA = 16 * 1024 * 1024;
 
+// The next multiple of step in the given direction, so a button never moves against itself.
+export const stepRotation = (rotation: number, step: number, direction: 1 | -1) => {
+    const index = direction > 0 ? Math.floor(rotation / step) + 1 : Math.ceil(rotation / step) - 1;
+    return (((index * step) % 360) + 360) % 360;
+};
+
 export function getRadianAngle(degreeValue: number) {
     return (degreeValue * Math.PI) / 180
 }

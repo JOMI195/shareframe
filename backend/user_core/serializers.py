@@ -40,8 +40,8 @@ class UserRetrievePatchSerializer(UsernameBlacklistMixin, BaseUserSerializer):
 
     class Meta(BaseUserSerializer.Meta):
         model = User
-        fields = ("id", "email", "username", "account")
-        read_only_fields = ("id", "email")
+        fields = ("id", "email", "username", "date_joined", "account")
+        read_only_fields = ("id", "email", "date_joined")
 
     def update(self, instance, validated_data):
         account_data = validated_data.pop("account", None)

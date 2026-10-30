@@ -119,6 +119,7 @@ class TestRegister:
         response = alice.post(f"{URL}register-user/", {}, format="json")
 
         assert response.status_code == 400
+        assert response.data["code"] == "serial_required"
 
     def test_an_unknown_serial_is_not_found(self, alice):
         response = alice.post(
@@ -128,6 +129,7 @@ class TestRegister:
         )
 
         assert response.status_code == 404
+        assert response.data["code"] == "frame_unavailable"
 
     def test_a_frame_someone_else_owns_is_refused(self, alice, alice_entry):
         other = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
@@ -139,6 +141,8 @@ class TestRegister:
         )
 
         assert response.status_code == 400
+        # Same code as an unknown serial, so serials cannot be probed.
+        assert response.data["code"] == "frame_unavailable"
 
     def test_the_serial_format_is_four_groups_of_four(self, spare_entry):
         """The register dialog's schema matches this shape."""
@@ -330,7 +334,8 @@ class TestSendImage:
 
         assert response.status_code == 400
         assert response.json() == {
-            "error": "The provided timestamp must be in the future."
+            "code": "timestamp_past",
+            "detail": "The provided timestamp must be in the future.",
         }
 
     def test_an_unparsable_expiry_is_rejected(self, world):
@@ -342,7 +347,10 @@ class TestSendImage:
         )
 
         assert response.status_code == 400
-        assert response.json() == {"error": "Invalid Unix timestamp provided."}
+        assert response.json() == {
+            "code": "timestamp_invalid",
+            "detail": "Invalid Unix timestamp provided.",
+        }
 
     def test_a_future_expiry_is_accepted(self, world):
         response = self.send(

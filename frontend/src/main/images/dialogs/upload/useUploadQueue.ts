@@ -45,7 +45,7 @@ export const useUploadQueue = () => {
 
         if (skipped > 0) {
             dispatch(openImagesAlertSnackbar({
-                message: `${skipped} Foto(s) wurden nicht hinzugefügt (bereits ausgewählt oder Maximum von ${maxFilesOnce} erreicht).`,
+                message: `${skipped === 1 ? 'Ein Foto wurde' : `${skipped} Fotos wurden`} nicht hinzugefügt, weil sie schon ausgewählt sind oder das Maximum von ${maxFilesOnce} erreicht ist.`,
                 severity: "warning"
             }));
         }

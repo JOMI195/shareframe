@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, vi } from 'vitest';
 import axiosInstance from '@/services/api';
+import { clearImageCache } from '@/common/utils/imageCache';
 import { server } from '../mocks/server';
 
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
@@ -9,6 +10,11 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 // jsdom's XMLHttpRequest never finishes a multipart body under MSW; the fetch
 // adapter does, and the request itself is identical.
 axiosInstance.defaults.adapter = 'fetch';
+// The fetch adapter streams the body to report upload progress, which never finishes here either.
+axiosInstance.interceptors.request.use((config) => {
+  delete config.onUploadProgress;
+  return config;
+});
 afterAll(() => server.close());
 
 // --- jsdom gaps ---
@@ -58,7 +64,8 @@ export const intersectionObservers: { callback: ObserverCallback; elements: Elem
 
 export const triggerIntersection = (isIntersecting = true) => {
   intersectionObservers.forEach(({ callback, elements }) => {
-    callback(elements.map((target) => ({ isIntersecting, target })));
+    // A browser never reports an empty entry list, e.g. for an unmounted component.
+    if (elements.length > 0) callback(elements.map((target) => ({ isIntersecting, target })));
   });
 };
 
@@ -112,6 +119,7 @@ Object.defineProperty(window, 'location', {
 afterEach(() => {
   server.resetHandlers();
   cleanup();
+  clearImageCache();
   localStorage.clear();
   sessionStorage.clear();
   intersectionObservers.length = 0;

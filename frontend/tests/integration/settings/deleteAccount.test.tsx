@@ -91,7 +91,7 @@ describe('delete account', () => {
   });
 
   it('stays signed in on the page when the password is wrong', async () => {
-    recordDelete(() => HttpResponse.json({ current_password: ['Ungültiges Passwort.'] }, { status: 400 }));
+    recordDelete(() => HttpResponse.json({ detail: 'Incorrect password.', code: 'wrong_password' }, { status: 400 }));
     const { user, store } = render();
     const id = store.getState().auth.user.me.id;
 
@@ -102,6 +102,7 @@ describe('delete account', () => {
     expect(screen.getByLabelText('path')).toHaveTextContent('/settings/user/');
     expect(store.getState().auth.user.me.id).toBe(id);
     expect(screen.getByLabelText('Passwort')).toHaveValue('');
+    expect(screen.getByText('Das Passwort stimmt nicht.')).toBeInTheDocument();
   });
 
   it('keeps the account when the confirmation is cancelled', async () => {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Grid from "@mui/material/Grid";
@@ -8,14 +8,18 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
-import { useAppDispatch } from "@/store";
+import { useAppDispatch, useAppSelector } from "@/store";
 import { sendContactEmail } from "@/store/entities/contact/contact.actions";
+import { getApi } from "@/store/entities/contact/contact.slice";
+import { getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
 import SettingsSection from "@/common/components/settings/settingsSection";
 import FormActions from "@/common/components/settings/formActions";
 
 export default function ContactForm() {
     const dispatch = useAppDispatch();
     const loggedIn = localStorage.getItem("loggedIn") === "true";
+    const me = useAppSelector(getMyUserDetails);
+    const { loading } = useAppSelector(getApi);
 
     const [initialValues] = useState({
         name: "",
@@ -27,37 +31,42 @@ export default function ContactForm() {
     const validationSchema = yup.object({
         name: yup
             .string()
-            .required("Name is required"),
+            .required("Bitte gib deinen Namen an"),
         subject: yup
             .string()
-            .required("Name is required"),
+            .required("Bitte gib einen Betreff an"),
         email: yup
             .string()
-            .email("Enter a valid email")
-            .required("Email is required"),
+            .email("Bitte gib eine gültige E-Mail-Adresse an")
+            .required("Bitte gib deine E-Mail-Adresse an"),
         message: yup
             .string()
-            .required("Message is required"),
+            .required("Bitte schreib uns eine Nachricht"),
     });
 
     const contactForm = useFormik({
         initialValues: initialValues,
         validationSchema: validationSchema,
-        enableReinitialize: true,
         onSubmit: async (values) => {
-            dispatch(sendContactEmail(values));
-            contactForm.resetForm();
+            const sent: unknown = await dispatch(sendContactEmail(values));
+            if (sent === true) contactForm.resetForm();
         },
     });
 
+    const { values, touched, setFieldValue } = contactForm;
+    // The profile can arrive after the first render.
+    useEffect(() => {
+        if (loggedIn && me.email && !values.email && !touched.email) setFieldValue("email", me.email, false);
+    }, [loggedIn, me.email, values.email, touched.email, setFieldValue]);
+
     const fields = [
-        { name: "name", label: "Dein Name" },
-        { name: "email", label: "Email" },
-        { name: "subject", label: "Betreff" },
-        { name: "message", label: "Message", multiline: true },
+        { name: "name", label: "Dein Name", autoComplete: "name" },
+        { name: "email", label: "E-Mail-Adresse", autoComplete: "email", type: "email" },
+        { name: "subject", label: "Betreff", autoComplete: "off" },
+        { name: "message", label: "Nachricht", autoComplete: "off", multiline: true },
     ] as const;
 
-    const renderField = ({ name, label, ...rest }: (typeof fields)[number]) => (
+    const renderField = ({ name, label, autoComplete, ...rest }: (typeof fields)[number]) => (
         <TextField
             key={name}
             id={name}
@@ -70,6 +79,8 @@ export default function ContactForm() {
             onChange={contactForm.handleChange}
             fullWidth
             variant="outlined"
+            autoComplete={autoComplete}
+            {...("type" in rest && { type: rest.type })}
             {...("multiline" in rest && { multiline: true, rows: 10 })}
         />
     );
@@ -89,7 +100,7 @@ export default function ContactForm() {
                     <Stack component="form" id="contact-form" noValidate onSubmit={contactForm.handleSubmit} spacing={2}>
                         {fields.map(renderField)}
                         <FormActions>
-                            <Button type="submit" variant="contained">
+                            <Button type="submit" variant="contained" loading={loading}>
                                 Nachricht absenden
                             </Button>
                         </FormActions>
@@ -127,7 +138,7 @@ export default function ContactForm() {
                         xs: 12,
                         lg: 7
                     }}>
-                    <Typography variant="h2">
+                    <Typography variant="h3" component="h1">
                         Kontaktiere uns
                     </Typography>
                 </Grid>
@@ -136,8 +147,8 @@ export default function ContactForm() {
                         xs: 12,
                         lg: 7
                     }}>
-                    <Typography variant="h6">
-                        Hast du Fragen, Anregungen oder möchtest einen Bug melden? Nutze einfach das folgende Formular, um uns dein Anliegen mitzuteilen. Wir freuen uns auf dein Feedback und werden uns so schnell wie möglich bei dir melden. Bitte gib deinen Namen den Betreff, deine E-Mail-Adresse und deine Nachricht an uns an.
+                    <Typography variant="body1" sx={{ fontSize: "1.1rem" }}>
+                        Hast du Fragen, Anregungen oder möchtest einen Bug melden? Nutze einfach das folgende Formular, um uns dein Anliegen mitzuteilen. Wir freuen uns auf dein Feedback und werden uns so schnell wie möglich bei dir melden.
                     </Typography>
                 </Grid>
                 <Grid
@@ -170,6 +181,7 @@ export default function ContactForm() {
                         fullWidth
                         form="contact-form"
                         variant="contained"
+                        loading={loading}
                     >
                         Nachricht absenden
                     </Button>

@@ -1,24 +1,26 @@
-import React, { Suspense, lazy, useCallback, useEffect, useState } from 'react'
+import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
+import AppDialog from '@/common/components/appDialog';
+import ConfirmDialog from '@/common/components/confirmDialog';
 import {
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  LinearProgress,
-  useMediaQuery,
-  useTheme,
+    Box,
+    Button,
+    CircularProgress,
+    LinearProgress,
+    useMediaQuery,
+    useTheme,
 } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
+import { visuallyHidden } from '@mui/utils'
 import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
 
 import { validateImage } from './imageUpload/validation/imageValidation'
 import { useAppDispatch, useAppSelector } from '@/store'
-import { closeCreateImageDialog, getDialogs, openImagesAlertSnackbar } from '@/store/ui/images/images.slice'
+import { closeCreateImageDialog, getDialogs, openImagesAlertSnackbar, openSendImageToUserFrameDialog } from '@/store/ui/images/images.slice'
 import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
-import { IImageValidationResponse, isIImage } from '@/types'
+import { IImage, IImageValidationResponse, isIImage } from '@/types'
 import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
 import { Area, Point } from 'react-easy-crop'
 import { getCroppedImg } from './imageCropping/cropper/utils'
@@ -106,6 +108,9 @@ const UploadDialog: React.FC = () => {
   const [overlaysWidth, setOverlaysWidth] = useState<number | null>(null)
   const [finalImage, replaceFinalImage] = useBlobImage()
   const [epaperView, setEpaperView] = useState<EpaperView>('original')
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [sendPrompt, setSendPrompt] = useState<IImage[]>([])
+  const uploadedThisSession = useRef<IImage[]>([])
 
   const open = useAppSelector(getDialogs).create.open
 
@@ -129,12 +134,35 @@ const UploadDialog: React.FC = () => {
     setTool('crop')
   }, [replaceCroppedImage, replaceAdjustedImage, replaceFinalImage])
 
-  const handleDialogClose = () => {
+  const closeDialog = () => {
+    uploadedThisSession.current = [];
+    setConfirmDiscard(false);
     dispatch(closeCreateImageDialog());
     resetQueue();
     setCurrentImageIndex(null);
     setAutoDeleteAfterPeriod(true);
     resetCropperState();
+  }
+
+  // Uploading is usually followed by sending, so offer it right away.
+  const finishSession = () => {
+    const uploaded = uploadedThisSession.current
+    closeDialog()
+    if (uploaded.length > 0) setSendPrompt(uploaded)
+  }
+
+  const handleSendNow = () => {
+    dispatch(openSendImageToUserFrameDialog({ images: sendPrompt }))
+    setSendPrompt([])
+  }
+
+  // Closing by hand (X, Escape, back) would drop every photo still being edited.
+  const handleDialogClose = () => {
+    if (!busy && !sending && imageStatuses.some(status => status.status !== 'uploaded')) {
+      setConfirmDiscard(true)
+      return
+    }
+    closeDialog()
   }
 
   const selectImageForCropping = useCallback((index: number) => {
@@ -158,7 +186,7 @@ const UploadDialog: React.FC = () => {
   const removeImage = (indexToRemove: number) => {
     const remaining = imageStatuses.filter((_, index) => index !== indexToRemove)
     if (remaining.length > 0 && remaining.every(status => status.status === 'uploaded')) {
-      handleDialogClose()
+      finishSession()
       return
     }
     setImageStatuses(remaining)
@@ -270,6 +298,7 @@ const UploadDialog: React.FC = () => {
         const newImage = await dispatch(uploadImage(croppedFile, upload_image_sha256_hex_hash, autoDeleteAfterPeriod))
 
         if (isIImage(newImage)) {
+          uploadedThisSession.current = [newImage, ...uploadedThisSession.current]
           setImageStatuses(prev =>
             prev.map((status, i) =>
               i === index
@@ -282,7 +311,7 @@ const UploadDialog: React.FC = () => {
             i === index || status.status === 'uploaded'
           )
           if (allUploaded) {
-            handleDialogClose()
+            finishSession()
             return
           }
 
@@ -332,141 +361,169 @@ const UploadDialog: React.FC = () => {
     : 'Fotos hochladen'
 
   return (
-    <Dialog
-      fullScreen={!matches}
-      open={open}
-      onClose={handleDialogClose}
-      aria-labelledby="upload-dialog-title"
-      maxWidth="lg"
-      fullWidth
-      slots={{
-        transition: matches ? ZoomTransition : SlideTransition
-      }}
-      slotProps={{
-        paper: { sx: { height: { md: 'min(900px, calc(100% - 64px))' } } },
-        transition: { onEntered: () => setEntered(true), onExited: () => setEntered(false) }
-      }}
-    >
-      <input {...inputProps} />
-      <EditorLayout
-        title={title}
-        subtitle={currentImage?.file.name}
+    <>
+      <AppDialog
+        fullScreen={!matches}
+        open={open}
         onClose={handleDialogClose}
-        onBack={previewing ? handleBackToEdit : undefined}
-        actions={currentImage && showsEpaperToggle && <EpaperToggle value={epaperView} onChange={setEpaperView} />}
-        strip={imageStatuses.length > 0 && (
-          <>
-            <ThumbStrip
-              imageStatuses={imageStatuses}
-              currentImageIndex={currentImageIndex}
-              imagePreviews={imagePreviews}
-              previewErrors={previewErrors}
-              markPreviewBroken={markPreviewBroken}
-              onSelect={handleSelectPhoto}
-              onRemove={removeImage}
-              onAdd={() => openPicker('gallery')}
-              canAdd={imageStatuses.length < maxFilesOnce}
-              isPreparing={isPreparing}
-            />
-            <LinearProgress sx={{ visibility: busy || exportRequested ? 'visible' : 'hidden' }} />
-          </>
-        )}
-        footer={currentImage && (previewing && finalImage ? (
-          <Box sx={{ display: 'flex', gap: 2 }}>
-            {matches && (
-              <Button variant="outlined" size="large" fullWidth onClick={handleBackToEdit} disabled={sending}>
-                Zurück zum Bearbeiten
+        aria-labelledby="upload-dialog-title"
+        maxWidth="lg"
+        fullWidth
+        slots={{
+          transition: matches ? ZoomTransition : SlideTransition
+        }}
+        slotProps={{
+          paper: { sx: { height: { md: 'min(900px, calc(100% - 64px))' } } },
+          transition: { onEntered: () => setEntered(true), onExited: () => setEntered(false) }
+        }}
+      >
+        <input {...inputProps} />
+        <EditorLayout
+          title={title}
+          subtitle={currentImage?.file.name}
+          onClose={handleDialogClose}
+          onBack={previewing ? handleBackToEdit : undefined}
+          actions={currentImage && showsEpaperToggle && <EpaperToggle value={epaperView} onChange={setEpaperView} />}
+          strip={imageStatuses.length > 0 && (
+            <>
+              <ThumbStrip
+                imageStatuses={imageStatuses}
+                currentImageIndex={currentImageIndex}
+                imagePreviews={imagePreviews}
+                previewErrors={previewErrors}
+                markPreviewBroken={markPreviewBroken}
+                onSelect={handleSelectPhoto}
+                onRemove={removeImage}
+                onAdd={() => openPicker('gallery')}
+                canAdd={imageStatuses.length < maxFilesOnce}
+                isPreparing={isPreparing}
+              />
+              <LinearProgress sx={{ visibility: busy || exportRequested ? 'visible' : 'hidden' }} />
+              <Box role="status" sx={visuallyHidden}>
+                {sending ? 'Wird hochgeladen…' : busy || exportRequested ? 'Foto wird vorbereitet…' : ''}
+              </Box>
+            </>
+          )}
+          footer={currentImage && (previewing && finalImage ? (
+            <Box sx={{ display: 'flex', gap: 2 }}>
+              {matches && (
+                <Button variant="outlined" size="large" fullWidth onClick={handleBackToEdit} disabled={sending}>
+                  Zurück zum Bearbeiten
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                size="large"
+                fullWidth
+                disabled={sending}
+                startIcon={sending ? <CircularProgress size={18} color="inherit" /> : <CloudUploadIcon />}
+                onClick={() => handleUpload(finalImage.blob)}
+              >
+                Hochladen
               </Button>
-            )}
+            </Box>
+          ) : (
             <Button
               variant="contained"
               size="large"
               fullWidth
-              disabled={sending}
-              startIcon={sending ? <CircularProgress size={18} color="inherit" /> : <CloudUploadIcon />}
-              onClick={() => handleUpload(finalImage.blob)}
+              disabled={editLocked || sending || !!previewErrors[currentImage.id]}
+              startIcon={busy || exportRequested ? <CircularProgress size={18} color="inherit" /> : undefined}
+              onClick={goToPreview}
             >
-              Hochladen
+              Weiter zur Vorschau
             </Button>
-          </Box>
-        ) : (
-          <Button
-            variant="contained"
-            size="large"
-            fullWidth
-            disabled={editLocked || sending || !!previewErrors[currentImage.id]}
-            startIcon={busy || exportRequested ? <CircularProgress size={18} color="inherit" /> : undefined}
-            onClick={goToPreview}
-          >
-            Weiter zur Vorschau
-          </Button>
-        ))}
-      >
-        {imageStatuses.length === 0 && (
-          <StartScreen
-            openPicker={openPicker}
-            selectFiles={selectFiles}
-            isPreparing={isPreparing}
-            showCamera={showCamera}
-          />
-        )}
-        {currentImage && !previewing && entered && (
-          <EditorGrid>
-            {tool === 'crop' && (
-              <ImageCropping
-                currentImage={currentImage}
-                preview={imagePreviews[currentImage.id]}
-                previewError={previewErrors[currentImage.id]}
-                markPreviewBroken={markPreviewBroken}
-                setCroppedAreaPixels={setCroppedAreaPixels}
-                crop={crop}
-                setCrop={setCrop}
-                zoom={zoom}
-                setZoom={setZoom}
-                rotation={rotation}
-                setRotation={setRotation}
-              />
-            )}
-            {tool === 'adjust' && croppedImage && (
-              <ImageAdjust
-                epaper={epaper}
-                croppedImage={croppedImage}
-                fileName={currentImage.file.name}
-                adjustment={adjustment}
-                setAdjustment={setAdjustment}
-              />
-            )}
-            {tool === 'text' && adjustedImage && (
-              <Suspense fallback={<ToolCanvas><CircularProgress /></ToolCanvas>}>
-                <ImageText
-                  key={adjustedImage.url}
-                  epaper={epaper}
-                  photo={adjustedImage}
-                  fileName={currentImage.file.name}
-                  overlays={textOverlays}
-                  setOverlays={setTextOverlays}
-                  overlaysWidth={overlaysWidth}
-                  setOverlaysWidth={setOverlaysWidth}
-                  exportRequested={exportRequested}
-                  handleTextDone={handleTextDone}
-                  handleExportFailed={handleExportFailed}
+          ))}
+        >
+          {imageStatuses.length === 0 && (
+            <StartScreen
+              openPicker={openPicker}
+              selectFiles={selectFiles}
+              isPreparing={isPreparing}
+              showCamera={showCamera}
+            />
+          )}
+          {currentImage && !previewing && entered && (
+            <EditorGrid>
+              {tool === 'crop' && (
+                <ImageCropping
+                  currentImage={currentImage}
+                  preview={imagePreviews[currentImage.id]}
+                  previewError={previewErrors[currentImage.id]}
+                  markPreviewBroken={markPreviewBroken}
+                  setCroppedAreaPixels={setCroppedAreaPixels}
+                  crop={crop}
+                  setCrop={setCrop}
+                  zoom={zoom}
+                  setZoom={setZoom}
+                  rotation={rotation}
+                  setRotation={setRotation}
                 />
-              </Suspense>
-            )}
-            <ToolTabs value={tool} onChange={changeTool} disabled={editLocked} />
-          </EditorGrid>
-        )}
-        {previewing && finalImage && currentImage && (
-          <ImagePreview
-            finalImage={finalImage}
-            epaper={epaper}
-            fileName={currentImage.file.name}
-            autoDeleteAfterPeriod={autoDeleteAfterPeriod}
-            setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
-          />
-        )}
-      </EditorLayout>
-    </Dialog>
+              )}
+              {tool === 'adjust' && croppedImage && (
+                <ImageAdjust
+                  epaper={epaper}
+                  croppedImage={croppedImage}
+                  fileName={currentImage.file.name}
+                  adjustment={adjustment}
+                  setAdjustment={setAdjustment}
+                />
+              )}
+              {tool === 'text' && adjustedImage && (
+                <Suspense fallback={<ToolCanvas><CircularProgress /></ToolCanvas>}>
+                  <ImageText
+                    key={adjustedImage.url}
+                    epaper={epaper}
+                    photo={adjustedImage}
+                    fileName={currentImage.file.name}
+                    overlays={textOverlays}
+                    setOverlays={setTextOverlays}
+                    overlaysWidth={overlaysWidth}
+                    setOverlaysWidth={setOverlaysWidth}
+                    exportRequested={exportRequested}
+                    handleTextDone={handleTextDone}
+                    handleExportFailed={handleExportFailed}
+                  />
+                </Suspense>
+              )}
+              <ToolTabs value={tool} onChange={changeTool} disabled={editLocked} />
+            </EditorGrid>
+          )}
+          {previewing && finalImage && currentImage && (
+            <ImagePreview
+              finalImage={finalImage}
+              epaper={epaper}
+              fileName={currentImage.file.name}
+              autoDeleteAfterPeriod={autoDeleteAfterPeriod}
+              setAutoDeleteAfterPeriod={setAutoDeleteAfterPeriod}
+            />
+          )}
+        </EditorLayout>
+        <ConfirmDialog
+          open={confirmDiscard}
+          title="Bearbeitung verwerfen?"
+          confirmLabel="Verwerfen"
+          cancelLabel="Weiter bearbeiten"
+          destructive
+          backToClose={false}
+          onConfirm={closeDialog}
+          onCancel={() => setConfirmDiscard(false)}
+        >
+          Noch nicht hochgeladene Fotos und ihre Bearbeitung gehen verloren.
+        </ConfirmDialog>
+      </AppDialog>
+      <ConfirmDialog
+        open={sendPrompt.length > 0}
+        title={sendPrompt.length === 1 ? 'Foto hochgeladen' : `${sendPrompt.length} Fotos hochgeladen`}
+        confirmLabel="Jetzt senden"
+        cancelLabel="Später"
+        backToClose={false}
+        onConfirm={handleSendNow}
+        onCancel={() => setSendPrompt([])}
+      >
+        Jetzt an einen Bilderrahmen senden?
+      </ConfirmDialog>
+    </>
   );
 }
 

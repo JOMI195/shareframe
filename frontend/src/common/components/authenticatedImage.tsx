@@ -1,7 +1,7 @@
-import axiosInstance from '@/services/api';
-import { Skeleton } from '@mui/material';
+import { Box, Skeleton } from '@mui/material';
+import BrokenImageOutlinedIcon from '@mui/icons-material/BrokenImageOutlined';
 import React, { useState, useEffect, useRef } from 'react';
-import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
+import { acquireImage, peekImage } from '@/common/utils/imageCache';
 
 interface AuthenticatedImageProps {
     url: string;
@@ -24,17 +24,28 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     hideToYouFilter,
     aspectRatio
 }) => {
-    const [imageSrc, setImageSrc] = useState<string>('');
-    const [isLoading, setIsLoading] = useState<boolean>(true);
+    const [loaded, setLoaded] = useState<{ url: string; src: string } | null>(null);
+    const [failedUrl, setFailedUrl] = useState<string | null>(null);
     const [isVisible, setIsVisible] = useState<boolean>(false);
     const imgRef = useRef<HTMLDivElement>(null);
-    const showSkeleton = useMinimumLoading(isLoading);
+    const onErrorRef = useRef(onError);
+
+    // A cached blob renders straight away, without waiting for the observer or the skeleton.
+    const imageSrc = loaded?.url === url ? loaded.src : peekImage(url) ?? '';
+    const hasError = failedUrl === url;
+    // No minimum hold: thumbnails often arrive within a few ms.
+    const showSkeleton = !imageSrc && !hasError;
+
+    useEffect(() => {
+        onErrorRef.current = onError;
+    });
 
     useEffect(() => {
         const observer = new IntersectionObserver(
             ([entry]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
+                    observer.disconnect();
                 }
             },
             {
@@ -49,54 +60,55 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             observer.observe(element);
         }
 
-        return () => {
-            if (element) {
-                observer.unobserve(element);
-            }
-        };
+        return () => observer.disconnect();
     }, []);
 
     useEffect(() => {
-        if (!isVisible) return;
+        if (!isVisible && !peekImage(url)) return;
 
         let isMounted = true;
-        let objectUrl = '';
+        const image = acquireImage(url);
 
-        const loadImage = async (): Promise<void> => {
-            try {
-                setIsLoading(true);
-
-                const response = await axiosInstance.get(url, {
-                    responseType: 'blob'
-                });
-
-                objectUrl = URL.createObjectURL(response.data);
-
-                if (isMounted) {
-                    setImageSrc(objectUrl);
-                    setIsLoading(false);
-                } else {
-                    URL.revokeObjectURL(objectUrl);
-                }
-            } catch (error) {
-                setIsLoading(false);
-                if (error instanceof Error) {
-                    onError?.(error);
-                } else {
-                    onError?.(new Error('Failed to load image'));
-                }
+        image.objectUrl.then(
+            (src) => {
+                if (isMounted) setLoaded({ url, src });
+            },
+            (error: unknown) => {
+                if (!isMounted) return;
+                setFailedUrl(url);
+                onErrorRef.current?.(error instanceof Error ? error : new Error('Failed to load image'));
             }
-        };
-
-        loadImage();
+        );
 
         return () => {
             isMounted = false;
-            if (objectUrl) {
-                URL.revokeObjectURL(objectUrl);
-            }
+            image.release();
         };
-    }, [url, isVisible, onError]);
+    }, [url, isVisible]);
+
+    if (hasError) {
+        return (
+            <Box
+                ref={imgRef}
+                role="img"
+                aria-label={alt}
+                onClick={onClick}
+                sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '100%',
+                    minHeight: 80,
+                    aspectRatio,
+                    bgcolor: 'action.hover',
+                    color: 'text.disabled',
+                }}
+                style={style}
+            >
+                <BrokenImageOutlinedIcon />
+            </Box>
+        );
+    }
 
     if (showSkeleton) {
         // A hidden img of the same ratio reserves the box: percentage widths collapse when the parent is shrink-to-fit.
@@ -136,13 +148,11 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 <img
                     src={imageSrc}
                     alt={alt}
+                    decoding="async"
                     className={className}
-                    loading="lazy"
                     style={{
                         ...style,
                         filter: hideToYouFilter ? 'blur(25px)' : 'none',
-                        transition: 'opacity 0.5s ease-in-out',
-                        opacity: isLoading ? 0 : 1,
                     }}
                     onClick={onClick}
                 />

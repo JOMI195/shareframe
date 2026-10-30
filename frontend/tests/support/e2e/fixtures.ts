@@ -12,17 +12,16 @@ export const dismissChangelogDialog = async (page: Page) => {
 
   await dialog.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => undefined);
   if (await dialog.isVisible()) {
-    // Phones hide the text button and leave only the header's X.
-    await dialog.getByRole('button', { name: /^(Schließen|close)$/ }).filter({ visible: true }).first().click();
+    await dialog.getByRole('button', { name: 'Schließen' }).click();
     await expect(dialog).toBeHidden();
   }
 };
 
 export const signIn = async (page: Page, user = alice) => {
   await page.goto('/auth/sign-in/');
-  await page.getByLabel('Email').fill(user.email);
-  await page.getByLabel('Passwort').fill(user.password);
-  await page.getByRole('button', { name: 'anmelden' }).click();
+  await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(user.email);
+  await page.getByLabel('Passwort', { exact: true }).fill(user.password);
+  await page.getByRole('button', { name: 'Anmelden' }).click();
   await expect(page).toHaveURL(/\/dashboard\/$/);
   await dismissChangelogDialog(page);
 };

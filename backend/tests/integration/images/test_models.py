@@ -73,22 +73,22 @@ class TestVariantProcessing:
         return abs(pixel[0] - self.RED[0]) < abs(pixel[0] - self.BLUE[0])
 
     def test_exif_orientation_is_applied(self):
-        source = PILImage.new("RGB", (200, 100), self.BLUE)
-        source.paste(self.RED, (0, 0, 100, 100))
+        source = PILImage.new("RGB", (2000, 1000), self.BLUE)
+        source.paste(self.RED, (0, 0, 1000, 1000))
         exif = PILImage.Exif()
         exif[0x0112] = 6
 
         image = ImageFactory(image=self._upload(source, "photo.jpg", "JPEG", exif=exif))
         variant = self._open(image.get_variant("medium"))
 
-        assert (image.width, image.height) == (100, 200)
+        assert (image.width, image.height) == (1000, 2000)
         assert variant.size == (800, 1600)
         # Rotated upright, the red left half ends up on top.
         assert self._closer_to_red(variant.getpixel((400, 10)))
         assert not self._closer_to_red(variant.getpixel((400, 1590)))
 
     def test_variants_keep_the_aspect_ratio(self):
-        image = ImageFactory(image=upload_file(size=(400, 300)))
+        image = ImageFactory(image=upload_file(size=(2000, 1500)))
 
         sizes = {
             v.image_size.name: self._open(v.file).size for v in image.variants.all()
@@ -98,6 +98,19 @@ class TestVariantProcessing:
             "large": (1600, 1200),
             "medium": (800, 600),
             "thumbnail": (350, 262),
+        }
+
+    def test_a_small_image_is_not_upscaled(self):
+        image = ImageFactory(image=upload_file(size=(1200, 1600)))
+
+        sizes = {
+            v.image_size.name: self._open(v.file).size for v in image.variants.all()
+        }
+
+        assert sizes == {
+            "large": (1200, 1600),
+            "medium": (800, 1066),
+            "thumbnail": (350, 466),
         }
 
     def test_a_fixed_height_size_is_honoured(self):

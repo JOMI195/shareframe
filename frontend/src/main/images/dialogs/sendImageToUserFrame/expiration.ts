@@ -9,8 +9,12 @@ export const PREDEFINED_EXPIRATION_OPTIONS = [
 
 export const DEFAULT_EXPIRATION_HOURS = PREDEFINED_EXPIRATION_OPTIONS[0].hours;
 
-export const toExpirationHours = (value: string, unit: TimeUnit): number => {
-    const numericValue = parseInt(value) || 1;
+export const MAX_CUSTOM_EXPIRATION = 365;
+
+// null marks an entry that cannot be sent.
+export const toExpirationHours = (value: string, unit: TimeUnit): number | null => {
+    const numericValue = Number(value);
+    if (!Number.isInteger(numericValue) || numericValue < 1 || numericValue > MAX_CUSTOM_EXPIRATION) return null;
     return unit === 'days' ? numericValue * 24 : numericValue;
 };
 

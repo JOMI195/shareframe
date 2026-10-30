@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCroppedImg, getRadianAngle, rotateSize } from '@/main/images/dialogs/upload/imageCropping/cropper/utils';
+import { getCroppedImg, getRadianAngle, rotateSize, stepRotation } from '@/main/images/dialogs/upload/imageCropping/cropper/utils';
 
 describe('getRadianAngle', () => {
   it('converts degrees to radians', () => {
@@ -44,5 +44,18 @@ describe('getCroppedImg', () => {
     await expect(getCroppedImg(file, { width: NaN, height: NaN, x: 0, y: 0 })).rejects.toThrow(
       'Der Zuschnitt ist noch nicht bereit. Bitte erneut versuchen.',
     );
+  });
+});
+
+describe('stepRotation', () => {
+  it.each([
+    ['turns right by one step', 0, 1, 22.5],
+    ['keeps stepping', 22.5, 1, 45],
+    ['goes right to the next step from between two', 10, 1, 22.5],
+    ['goes left to the previous step from between two', 10, -1, 0],
+    ['wraps past a full turn', 337.5, 1, 0],
+    ['wraps below zero', 0, -1, 337.5],
+  ] as const)('%s', (_name, rotation, direction, expected) => {
+    expect(stepRotation(rotation, 22.5, direction)).toBe(expected);
   });
 });

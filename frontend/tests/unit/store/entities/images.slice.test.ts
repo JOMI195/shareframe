@@ -4,6 +4,7 @@ import reducer, {
   createImageFulfilled,
   createImagePending,
   cancelScheduledSentImageFulfilled,
+  cancelScheduledSentImagePending,
   deactivateSentImageFailed,
   deactivateSentImageFulfilled,
   deactivateSentImagePending,
@@ -22,6 +23,7 @@ import reducer, {
   sendImageToUserFrameFailed,
   sendImageToUserFrameFulfilled,
   sendScheduledSentImageNowFulfilled,
+  sendScheduledSentImageNowPending,
   sendImageToUserFramePending,
   sentImagesFiltersSet,
   sentImagesPageSet,
@@ -31,6 +33,7 @@ import reducer, {
   sentImagesRequested,
 } from '@/store/entities/images/images.slice';
 import { rootState } from '@tests/helpers/preloadedState';
+import { signedOut } from '@/store/entities/authentication/authentication.slice';
 import { makeImage, makePage, makeSentImage } from '@tests/fixtures';
 
 const initial = () => reducer(undefined, { type: '@@init' });
@@ -41,7 +44,10 @@ describe('images slice api flags', () => {
   it.each([
     ['imagesRequested', imagesRequested, { loading: true, sending: false }],
     ['sentImagesRequested', sentImagesRequested, { loading: true, sending: false }],
-    ['deactivateSentImagePending', deactivateSentImagePending, { loading: true, sending: false }],
+    // Row actions must not raise the list flag, or the grid swaps to the skeleton.
+    ['deactivateSentImagePending', deactivateSentImagePending, { loading: false, sending: true }],
+    ['cancelScheduledSentImagePending', cancelScheduledSentImagePending, { loading: false, sending: true }],
+    ['sendScheduledSentImageNowPending', sendScheduledSentImageNowPending, { loading: false, sending: true }],
     ['createImagePending', createImagePending, { loading: false, sending: true }],
     ['deleteImagePending', deleteImagePending, { loading: false, sending: true }],
     ['sendImageToUserFramePending', sendImageToUserFramePending, { loading: false, sending: true }],
@@ -59,7 +65,7 @@ describe('images slice api flags', () => {
     ['sendImageToUserFrameFulfilled', sendImageToUserFrameFulfilled],
     ['deactivateSentImageFailed', deactivateSentImageFailed],
   ])('%s clears loading and sending', (_name, action) => {
-    const busy = { ...initial(), api: { loading: true, sending: true, lastFetch: null } };
+    const busy = { ...initial(), api: { ...initial().api, loading: true, sending: true } };
     expect(reducer(busy, action()).api).toMatchObject({ loading: false, sending: false });
   });
 
@@ -71,6 +77,30 @@ describe('images slice api flags', () => {
   });
 });
 
+describe('signing out', () => {
+  // A shared device: the next user must not see the previous one's photos.
+  it('forgets the loaded photos', () => {
+    const loaded = reducer(initial(), imagesReceived(makePage([makeImage()], { count: 1 })));
+
+    expect(reducer(loaded, signedOut()).imagesPaginated.results).toEqual([]);
+  });
+});
+
+describe('list load failures', () => {
+  it('marks a failed photo load until the next request', () => {
+    const failed = reducer(initial(), imagesRequestFailed());
+    expect(failed.api.imagesFailed).toBe(true);
+
+    expect(reducer(failed, imagesRequested()).api.imagesFailed).toBe(false);
+  });
+
+  it('tracks the activity list separately', () => {
+    const failed = reducer(initial(), sentImagesRequestFailed());
+
+    expect(failed.api).toMatchObject({ sentImagesFailed: true, imagesFailed: false });
+  });
+});
+
 describe('getApiState', () => {
   it('is true while either flag is set', () => {
     const state = rootState();
@@ -79,7 +109,7 @@ describe('getApiState', () => {
     state.entities.images.api.sending = true;
     expect(getApiState(state)).toBe(true);
 
-    state.entities.images.api = { loading: true, sending: false, lastFetch: null };
+    state.entities.images.api = { ...state.entities.images.api, loading: true, sending: false };
     expect(getApiState(state)).toBe(true);
   });
 });
@@ -99,6 +129,25 @@ describe('imagesReceived', () => {
     vi.useFakeTimers().setSystemTime(new Date('2026-01-01T00:00:00Z'));
     const state = reducer(initial(), imagesReceived(makePage([])));
     expect(state.api.lastFetch).toBe(Date.parse('2026-01-01T00:00:00Z'));
+  });
+});
+
+describe('stale results', () => {
+  it('are flagged when the page changes and cleared by the next load', () => {
+    const loaded = reducer(initial(), imagesReceived(makePage([makeImage()])));
+    expect(reducer(loaded, imagesPageSet(1)).api.imagesStale).toBe(false);
+
+    const paged = reducer(loaded, imagesPageSet(2));
+    expect(paged.api.imagesStale).toBe(true);
+    expect(reducer(paged, imagesReceived(makePage([]))).api.imagesStale).toBe(false);
+  });
+
+  it('are flagged for the activity list when its filters change', () => {
+    const loaded = reducer(initial(), sentImagesReceived(makePage([makeSentImage()])));
+    const filtered = reducer(loaded, sentImagesFiltersSet({ status: 'active' }));
+
+    expect(filtered.api.sentImagesStale).toBe(true);
+    expect(filtered.api.imagesStale).toBe(false);
   });
 });
 

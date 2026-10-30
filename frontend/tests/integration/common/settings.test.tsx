@@ -21,7 +21,7 @@ const render = (route: string) =>
     { route },
   );
 
-describe('settings tabs', () => {
+describe('Bereiche', () => {
   it('opens the first tab by default', () => {
     render('/');
 

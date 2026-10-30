@@ -4,13 +4,12 @@ import Dialogs from "./dialogs/dialogs";
 import SentImagesGallery from "./gallery/sentImagesGallery";
 import { fetchSentImagesPaginated, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
+import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 import { getSentImagesFilters, getSentImagesPaginated, getSentImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
-import { useLocation } from "react-router";
+import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const SentImages: React.FC = () => {
     const dispatch = useAppDispatch();
-    const { pathname } = useLocation();
 
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
@@ -31,17 +30,22 @@ const SentImages: React.FC = () => {
         ));
     }, [dispatch, currentPage, pageSize, sentImagesFilters]);
 
-    useEffect(() => {
+    // Reset on leave, not on entry: a reset on entry refetches after the first fetch.
+    useEffect(() => () => {
         dispatch(setSentImagesPaginatedPage(1));
-    }, [dispatch, pathname]);
+    }, [dispatch]);
+
+    useEffect(() => {
+        dispatch(fetchFriendshipsIfStale());
+    }, [dispatch]);
 
     useEffect(() => {
         fetchSentImagesPaginatedWithFilters();
-        dispatch(fetchFriendships());
-    }, [dispatch, fetchSentImagesPaginatedWithFilters]);
+    }, [fetchSentImagesPaginatedWithFilters]);
 
     return (
         <Container maxWidth={"md"} disableGutters>
+            <HiddenPageTitle>Aktivitäten</HiddenPageTitle>
             <Box sx={{
                 height: "100%",
                 flexGrow: 1,

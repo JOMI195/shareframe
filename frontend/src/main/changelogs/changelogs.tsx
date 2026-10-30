@@ -18,6 +18,8 @@ import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import DataNotFound from '@/common/components/dataNotFound';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
+import { formatDateNumeric } from "@/common/utils/date/date";
+import { scrollToTop } from "@/common/utils/scroll";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -31,8 +33,6 @@ const Changelogs: React.FC = () => {
         loadChangelogsByIds,
         cleanUpdDeactivatedIds
     } = useChangelogs();
-
-    const showSkeleton = useMinimumLoading(isLoading);
 
     const [currentPage, setCurrentPage] = useState(1);
     const totalPages = Math.ceil(sortedChangelogIds.length / ITEMS_PER_PAGE);
@@ -51,6 +51,9 @@ const Changelogs: React.FC = () => {
         return pageIds.flatMap(id => byId.get(id) ?? []);
     }, [changelogs, pageIds]);
 
+    // A background refetch must not swap loaded entries for the skeleton.
+    const showSkeleton = useMinimumLoading(isLoading && pageChangelogs.length === 0);
+
     useEffect(() => {
         loadChangelogsByIds(pageIds);
     }, [loadChangelogsByIds, pageIds]);
@@ -64,7 +67,7 @@ const Changelogs: React.FC = () => {
         newPage: number
     ) => {
         setCurrentPage(newPage);
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        scrollToTop();
     };
 
     const renderPagination = (showCount = false) => (
@@ -82,9 +85,9 @@ const Changelogs: React.FC = () => {
                     page={page}
                     onChange={handlePageChange}
                     color="primary"
-                    size="large"
-                    showFirstButton
-                    showLastButton
+                    size="medium"
+                    showFirstButton={!isSmallScreen}
+                    showLastButton={!isSmallScreen}
                 />
             )}
 
@@ -106,7 +109,7 @@ const Changelogs: React.FC = () => {
             <Typography sx={{
                 marginBottom: "16px"
             }}>
-                Informiere dich hier über die neusten Änderungen deines Bilderrahmens und der Shareframe Plattform.
+                Hier findest du die neuesten Änderungen an deinem Bilderrahmen und an ShareFrame.
             </Typography>
 
             {showSkeleton && (
@@ -166,7 +169,7 @@ const Changelogs: React.FC = () => {
                                                         mb: 2
                                                     }}>
                                                     <Typography variant="subtitle1">
-                                                        {new Date(changelog.date).toLocaleDateString()}
+                                                        {formatDateNumeric(changelog.date)}
                                                     </Typography>
                                                     {isNewest && (
                                                         <Chip
@@ -187,7 +190,7 @@ const Changelogs: React.FC = () => {
                                         <>
                                             <Box>
                                                 <Typography variant="subtitle1">
-                                                    {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
+                                                    {formatDateNumeric(changelog.date)} - {changelog.title}
                                                 </Typography>
                                             </Box>
                                             {isNewest && (

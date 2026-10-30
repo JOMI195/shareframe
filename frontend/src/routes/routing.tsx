@@ -1,32 +1,23 @@
 import { createBrowserRouter } from 'react-router';
 import LoadingFallback from '@/common/components/loadingFallback';
-import MainLayout from '@/common/components/layout/layout';
 import NotFound from '@/common/components/error/notFound/notFound';
 import { getAuthenticationUrl } from '@/assets/endpoints/app/authEndpoints';
 import Snackbars from '@/common/components/snackbars/snackbars';
 import { getActivityUrl, getChangelogsUrl, getContactUrl, getDashboardUrl, getFramesUrl, getFriendsUrl, getHomeUrl, getImageUrl } from '@/assets/endpoints/app/appEndpoints';
 import { getSettingsUrl } from '@/assets/endpoints/app/settingEndpoints';
-import ContactForm from '@/main/contact/contactForm';
 import { getImprintUrl, getPrivacyPolicyUrl } from '@/assets/endpoints/app/legalEndpoints';
-import PrivacyPolicy from '@/main/legals/privacyPolicy';
-import Impressum from '@/main/legals/impressum';
 import FeatureSelectorWrapper from '@/common/components/featureSelectorWrapper';
 import authenticationRoutes from '@/main/authentication/authentication';
 import settingsRoutes from '@/main/settings/settings';
 import ProtectedRoute from '@/common/components/protectedRoute';
-import Friendships from '@/main/friendships/friendships';
-import Frames from '@/main/frames/frames';
-import SentImages from '@/main/sentImages/sentImages';
-import Images from '@/main/images/images';
 import PublicLayout from '@/main/legals/layout';
 import SessionLayout from '@/common/components/layout/sessionLayout';
 import PublicHeader from '@/common/components/layout/topLayout/publicHeader';
-import Home from '@/main/home/home';
 import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
-import Changelogs from '@/main/changelogs/changelogs';
-import Unsubscribe from '@/main/notifications/unsubscribe';
 import { getUnsubscribePageUrl } from '@/assets/endpoints/app/notificationEndpoints';
+import { lazyPage } from './lazyPage';
+import RouteError from '@/common/components/error/routeError/routeError';
 
 // Exported so tests can mount the real route tree with createMemoryRouter.
 // eslint-disable-next-line react-refresh/only-export-components
@@ -34,6 +25,7 @@ export const routes = [
   {
     element: <SeoHead />,
     HydrateFallback: LoadingFallback,
+    errorElement: <RouteError />,
     children: [
       {
         element: <Snackbars />,
@@ -64,15 +56,15 @@ export const routes = [
                 children: [
                   {
                     path: getPrivacyPolicyUrl(),
-                    element: <PrivacyPolicy />,
+                    ...lazyPage(() => import('@/main/legals/privacyPolicy')),
                   },
                   {
                     path: getImprintUrl(),
-                    element: <Impressum />,
+                    ...lazyPage(() => import('@/main/legals/impressum')),
                   },
                   {
                     path: getUnsubscribePageUrl() + ":token",
-                    element: <Unsubscribe />,
+                    ...lazyPage(() => import('@/main/notifications/unsubscribe')),
                   },
                 ],
               },
@@ -86,14 +78,14 @@ export const routes = [
                 children: [
                   {
                     path: getContactUrl(),
-                    element: <ContactForm />,
+                    ...lazyPage(() => import('@/main/contact/contactForm')),
                   },
                 ],
               },
             ],
           },
           {
-            element: <MainLayout />,
+            ...lazyPage(() => import('@/common/components/layout/layout')),
             children: [
               {
                 path: "*",
@@ -101,33 +93,34 @@ export const routes = [
               },
               {
                 element: <ProtectedRoute />,
+                errorElement: <RouteError />,
                 children: [
                   {
                     element: <FeatureSelectorWrapper feature="app" />,
                     children: [
                       {
                         path: getDashboardUrl(),
-                        element: <Home />
+                        ...lazyPage(() => import('@/main/home/home')),
                       },
                       {
                         path: getImageUrl(),
-                        element: <Images />
+                        ...lazyPage(() => import('@/main/images/images')),
                       },
                       {
                         path: getFriendsUrl(),
-                        element: <Friendships />
+                        ...lazyPage(() => import('@/main/friendships/friendships')),
                       },
                       {
                         path: getFramesUrl(),
-                        element: <Frames />
+                        ...lazyPage(() => import('@/main/frames/frames')),
                       },
                       {
                         path: getActivityUrl(),
-                        element: <SentImages />
+                        ...lazyPage(() => import('@/main/sentImages/sentImages')),
                       },
                       {
                         path: getChangelogsUrl(),
-                        element: <Changelogs />
+                        ...lazyPage(() => import('@/main/changelogs/changelogs')),
                       }
                     ]
                   },

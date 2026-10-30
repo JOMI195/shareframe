@@ -1,16 +1,17 @@
 import React, { useState } from "react";
+import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
-import Dialog from "@mui/material/Dialog";
 import DialogContent from "@mui/material/DialogContent";
 import { useFormik, getIn } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IRegisterFrameForm, isIFrameResponse } from "@/types";
-import { AppBar, Box, DialogTitle, Grid, IconButton, Stack, TextField, Toolbar, Typography, useMediaQuery, useTheme } from "@mui/material";
+import { Box, Grid, Stack, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { closeRegisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.slice";
 import { registerFrame } from "@/store/entities/frames/frames.actions";
-import CloseIcon from '@mui/icons-material/Close';
+import DialogHeader from '@/common/components/dialogHeader';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
+import { formatSerial } from "./serial";
 
 const RegisterFrameDialog: React.FC = () => {
   const theme = useTheme();
@@ -54,36 +55,18 @@ const RegisterFrameDialog: React.FC = () => {
   };
 
   return (
-    <Dialog
+    <AppDialog
       fullScreen={matches ? false : true}
       open={open}
       onClose={handleDialogClose}
-      aria-describedby='dialog-slide-upload'
+      aria-labelledby='register-frame-title'
       maxWidth="xs"
       fullWidth
       slots={{
         transition: matches ? ZoomTransition : SlideTransition
       }}
     >
-      {!matches ? (
-        <AppBar sx={{ position: 'relative' }} color='inherit'>
-          <Toolbar>
-            <IconButton
-              edge='start'
-              color='inherit'
-              onClick={handleDialogClose}
-              aria-label='cancel'
-            >
-              <CloseIcon />
-            </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant='h6' component='div'>
-              Bilderrahmen hinzufügen
-            </Typography>
-          </Toolbar>
-        </AppBar>
-      ) : (
-        <DialogTitle>Bilderrahmen hinzufügen</DialogTitle>
-      )}
+      <DialogHeader title="Bilderrahmen hinzufügen" titleId="register-frame-title" onClose={handleDialogClose} />
       <DialogContent>
         <Box sx={{
           display: 'flex',
@@ -95,7 +78,7 @@ const RegisterFrameDialog: React.FC = () => {
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Bitte gebe hier die Seriennummer des Bilderrahmens ein, welchen du hinzufügen möchtest
+              Gib die Seriennummer ein, die du zusammen mit deinem Bilderrahmen bekommen hast.
             </Typography>
             <Box
               component='form'
@@ -107,28 +90,29 @@ const RegisterFrameDialog: React.FC = () => {
               <Grid container spacing={2}>
                 <Grid size={12}>
                   <TextField
-                    id='friend_code'
+                    id='frame_serial'
                     name='public_serial_number'
+                    autoComplete="off"
                     label="Seriennummer"
                     value={form.values.public_serial_number}
                     onBlur={form.handleBlur}
-                    onChange={(e) => {
-                      const uppercaseValue = e.target.value.toUpperCase();
-                      form.setFieldValue('public_serial_number', uppercaseValue);
-                    }}
+                    onChange={(e) => form.setFieldValue('public_serial_number', formatSerial(e.target.value))}
                     error={
                       form.touched.public_serial_number &&
                       Boolean(form.errors.public_serial_number)
                     }
                     helperText={
-                      getIn(form.touched, "public_serial_number") &&
-                      getIn(form.errors, "public_serial_number")
+                      (getIn(form.touched, "public_serial_number") &&
+                        getIn(form.errors, "public_serial_number")) || "Format XXXX-XXXX-XXXX-XXXX, die Bindestriche kommen von selbst"
                     }
                     fullWidth
                     variant='outlined'
                     slotProps={{
                       htmlInput: {
-                        style: { textTransform: 'uppercase' }
+                        style: { textTransform: 'uppercase' },
+                        autoCapitalize: 'characters',
+                        autoCorrect: 'off',
+                        spellCheck: false,
                       }
                     }}
                   />
@@ -139,23 +123,9 @@ const RegisterFrameDialog: React.FC = () => {
                     fullWidth
                     form='register-frame-form'
                     variant='contained'
+                    loading={form.isSubmitting}
                   >
                     {'Hinzufügen'}
-                  </Button>
-                </Grid>
-                <Grid
-                  size={{
-                    xs: 12,
-                    sm: 12
-                  }}>
-                  <Button
-                    type="button"
-                    fullWidth
-                    variant="outlined"
-                    color="secondary"
-                    onClick={handleDialogClose}
-                  >
-                    {"abbrechen"}
                   </Button>
                 </Grid>
               </Grid>
@@ -163,7 +133,7 @@ const RegisterFrameDialog: React.FC = () => {
           </Stack>
         </Box>
       </DialogContent>
-    </Dialog>
+    </AppDialog>
   );
 };
 

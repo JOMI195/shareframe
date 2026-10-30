@@ -3,6 +3,7 @@ import { apiRequest } from "@/common/utils/constants/api.constants";
 import * as changelogsEndpoints from "@/assets/endpoints/api/changelogsEndpoints";
 import { AppDispatch, RootState } from "@/store";
 import { getDeactivatedIds } from "@/store/ui/changelogs/changelogs.slice";
+import { fetchIfStale } from "@/store/fetchIfStale";
 
 export const fetchChangelogIds = () =>
     apiRequest({
@@ -22,16 +23,28 @@ export const fetchChangelogsByIds = (ids: number[]) =>
         data: { ids },
     });
 
-export const fetchActiveChangelogs =
+// A brand-new account has nothing it was "away" for.
+export const publishedBeforeJoining = (changelogDate: string, dateJoined?: string) =>
+    Boolean(dateJoined) && changelogDate < dateJoined!.slice(0, 10);
+
+const IDS_MAX_AGE_MS = 5 * 60 * 1000;
+
+export const fetchChangelogIdsIfStale = () =>
+    fetchIfStale((state) => changelogsSlice.getApi(state).idsLastFetch, IDS_MAX_AGE_MS, fetchChangelogIds);
+
+export const fetchMissingChangelogs =
+    (ids: number[]) => (dispatch: AppDispatch, getState: () => RootState) => {
+        const loaded = new Set(changelogsSlice.getChangelogs(getState()).map((log) => log.id));
+        const missing = ids.filter((id) => !loaded.has(id));
+        if (missing.length > 0) dispatch(fetchChangelogsByIds(missing));
+    };
+
+// Only the newest entry is ever announced, so only its content is needed up front.
+export const fetchNewestChangelog =
     () => (dispatch: AppDispatch, getState: () => RootState) => {
         const state = getState();
-        const allIds = changelogsSlice.getChangelogIds(state).map((item: { id: number }) => item.id);
-        const deactivatedIds = getDeactivatedIds(state);
-        const activeIds = allIds.filter((id: number) => !deactivatedIds.includes(id));
-
-        if (activeIds.length > 0) {
-            dispatch(fetchChangelogsByIds(activeIds));
-        } else {
-            dispatch(changelogsSlice.changelogsReceived([]));
-        }
+        const newest = changelogsSlice.getSortedChangelogIds(state)[0];
+        if (!newest || getDeactivatedIds(state).includes(newest.id)) return;
+        if (publishedBeforeJoining(newest.date, state.auth.user.me.date_joined)) return;
+        dispatch(fetchMissingChangelogs([newest.id]));
     };

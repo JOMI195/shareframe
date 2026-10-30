@@ -1,5 +1,6 @@
 import { RootState } from "@/store";
 import { IFriendship } from "@/types";
+import { signedOut } from "@/store/entities/authentication/authentication.slice";
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
@@ -67,6 +68,10 @@ const friendshipsSlice = createSlice({
     friendshipDeleteRequested: (sliceState) => {
       sliceState.api.loading = true;
     },
+    friendshipRequestWithdrawn: (sliceState, action) => {
+      sliceState.friendships = sliceState.friendships.filter((friendship) => friendship.id !== Number(action.payload.id));
+      sliceState.api.loading = false;
+    },
     friendshipDeleteDeleteFulfilled: (sliceState, action) => {
       const oldCreation = action.payload;
       const index = sliceState.friendships.findIndex(
@@ -80,6 +85,9 @@ const friendshipsSlice = createSlice({
     friendshipDeleteDeleteFailed: (sliceState) => {
       sliceState.api.loading = false;
     },
+  },
+  extraReducers: (builder) => {
+    builder.addCase(signedOut, () => initialState);
   },
 });
 
@@ -98,7 +106,8 @@ export const {
   rejectFriendshipRequestPending,
   friendshipDeleteDeleteFailed,
   friendshipDeleteDeleteFulfilled,
-  friendshipDeleteRequested
+  friendshipDeleteRequested,
+  friendshipRequestWithdrawn
 } = friendshipsSlice.actions;
 export default friendshipsSlice.reducer;
 

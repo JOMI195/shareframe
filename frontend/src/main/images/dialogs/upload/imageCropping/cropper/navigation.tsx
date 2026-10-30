@@ -3,14 +3,15 @@ import React from 'react';
 
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import Forward30Icon from '@mui/icons-material/Forward30';
-import Replay30Icon from '@mui/icons-material/Replay30';
+import RotateLeftIcon from '@mui/icons-material/RotateLeft';
+import RotateRightIcon from '@mui/icons-material/RotateRight';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import { stepRotation } from './utils';
 
 const roundZoom = (zoom: number) => Math.round(zoom * 100) / 100;
 
@@ -31,29 +32,7 @@ const RotationControl: React.FC<RotationControlProps> = ({
     MIN_ROTATION,
     MAX_ROTATION,
 }) => {
-    const normalizeRotation = (rotation: number) => ((rotation % 360) + 360) % 360;
-
-    const snapToNearestDegree = (rotation: number, step: number) => {
-        const remainder = rotation % step;
-        if (remainder === 0) return rotation;
-        return remainder > step / 2 ? rotation + (step - remainder) : rotation - remainder;
-    };
-
-    const handleRotationForward = () => {
-        if (onRotation && typeof rotation === 'number') {
-            let newRotation = rotation % ROTATION_DEGREE === 0 ? rotation - ROTATION_DEGREE : snapToNearestDegree(rotation, ROTATION_DEGREE);
-            newRotation = normalizeRotation(newRotation);
-            onRotation(newRotation);
-        }
-    };
-
-    const handleRotationReplay = () => {
-        if (onRotation && typeof rotation === 'number') {
-            let newRotation = rotation % ROTATION_DEGREE === 0 ? rotation + ROTATION_DEGREE : snapToNearestDegree(rotation, ROTATION_DEGREE);
-            newRotation = normalizeRotation(newRotation);
-            onRotation(newRotation);
-        }
-    };
+    const rotate = (direction: 1 | -1) => onRotation(stepRotation(rotation, ROTATION_DEGREE, direction));
 
     const handleRotationSliderChange = (_: Event, value: number | number[], __: number) => {
         if (typeof value === 'number') {
@@ -79,12 +58,13 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 Rotation
             </Typography>
             <IconButton
-                onClick={handleRotationForward}
-                disabled={!!disabled || rotation <= MIN_ROTATION}
+                onClick={() => rotate(-1)}
+                disabled={disabled}
+                aria-label="Nach links drehen"
                 size="small"
                 sx={{ color: 'text.secondary', mr: 1 }}
             >
-                <Forward30Icon />
+                <RotateLeftIcon />
             </IconButton>
             <Slider
                 value={rotation}
@@ -93,7 +73,8 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 min={MIN_ROTATION}
                 max={MAX_ROTATION}
                 step={1}
-                aria-label="Rotation"
+                aria-label="Drehen"
+                getAriaValueText={(value) => `${value} Grad`}
                 style={{ flex: 1 }}
                 sx={{
                     flex: 1,
@@ -110,12 +91,13 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 }}
             />
             <IconButton
-                onClick={handleRotationReplay}
-                disabled={!!disabled || rotation >= MAX_ROTATION}
+                onClick={() => rotate(1)}
+                disabled={disabled}
+                aria-label="Nach rechts drehen"
                 size="small"
                 sx={{ color: 'text.secondary', ml: 1 }}
             >
-                <Replay30Icon />
+                <RotateRightIcon />
             </IconButton>
         </Box>
     );
@@ -211,6 +193,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     max={MAX_ZOOM}
                     step={0.01}
                     aria-label="Zoom"
+                    getAriaValueText={(value) => `${Math.round(value * 100)} %`}
                     style={{ flex: 1 }}
                     sx={{
                         flex: 1,
@@ -330,8 +313,8 @@ export const Navigation: React.FC<NavigationProps> = ({
                                 <CenterFocusStrongIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Reset">
-                            <IconButton onClick={onCropperReset} disabled={disabled} aria-label="Reset" size="small" sx={{ color: 'text.secondary' }}>
+                        <Tooltip title="Zurücksetzen">
+                            <IconButton onClick={onCropperReset} disabled={disabled} aria-label="Zurücksetzen" size="small" sx={{ color: 'text.secondary' }}>
                                 <RestartAltIcon fontSize="small" />
                             </IconButton>
                         </Tooltip>
@@ -370,7 +353,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             }}
                             onClick={onCropperReset}
                         >
-                            Reset
+                            Zurücksetzen
                         </Button>
                     </Grid>
                 </Grid>

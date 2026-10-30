@@ -1,8 +1,10 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFrameFailed, sendImageToUserFrameFulfilled, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
-import { IImage, ISentImage } from "@/types";
+import { createImageFailed, createImageFulfilled, createImagePending, createImageProgress, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
+import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
+import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import type { SnackbarLink } from "@/common/components/snackbars/alertSnackbar";
 
 export type ScheduledSentImageAction = 'sendNow' | 'cancel';
 
@@ -19,8 +21,10 @@ type SliceState = {
     scheduledAction: { open: boolean, sentImageId: number | null, action: ScheduledSentImageAction | null },
     selection: { open: boolean, selectedImages: IImage[] },
   };
+  // Set from another page to open the editor once the photos page is shown.
+  uploadRequested: boolean;
   snackbar: {
-    alert: { open: boolean; message: string; severity: AlertColor };
+    alert: { open: boolean; message: string; severity: AlertColor; link?: SnackbarLink };
     loading: { open: boolean; message: string; };
   };
 };
@@ -38,6 +42,7 @@ const initialState: SliceState = {
     scheduledAction: { open: false, sentImageId: null, action: null },
     selection: { open: false, selectedImages: [] },
   },
+  uploadRequested: false,
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
     loading: { open: false, message: "", },
@@ -48,8 +53,8 @@ const showLoading = (sliceState: SliceState, message: string) => {
   sliceState.snackbar.loading = { open: true, message };
 };
 
-const showAlert = (sliceState: SliceState, message: string, severity: AlertColor) => {
-  sliceState.snackbar.alert = { open: true, message, severity };
+const showAlert = (sliceState: SliceState, message: string, severity: AlertColor, link?: SnackbarLink) => {
+  sliceState.snackbar.alert = { open: true, message, severity, ...(link && { link }) };
   sliceState.snackbar.loading = { open: false, message: "" };
 };
 
@@ -58,6 +63,9 @@ const imagesSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder
+      .addCase(routeChanged, (sliceState) => {
+        closeOpenDialogs(sliceState.dialogs);
+      })
       // .addCase(imagesRequested, (sliceState) => {
       //   sliceState.snackbar.loading = {
       //     open: true,
@@ -73,7 +81,7 @@ const imagesSlice = createSlice({
       .addCase(imagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder laden fehlgeschlagen",
+          message: "Fotos konnten nicht geladen werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -82,7 +90,7 @@ const imagesSlice = createSlice({
         };
       })
       .addCase(textPresetsRequestFailed, (sliceState) => {
-        sliceState.snackbar.alert = { open: true, message: "Vorlagen laden fehlgeschlagen", severity: "error" };
+        sliceState.snackbar.alert = { open: true, message: "Vorlagen konnten nicht geladen werden", severity: "error" };
       })
       .addCase(createTextPresetFulfilled, (sliceState) => {
         sliceState.snackbar.alert = { open: true, message: "Vorlage gespeichert", severity: "success" };
@@ -100,18 +108,24 @@ const imagesSlice = createSlice({
         sliceState.snackbar.alert = { open: true, message: "Vorlage gelöscht", severity: "success" };
       })
       .addCase(deleteTextPresetFailed, (sliceState) => {
-        sliceState.snackbar.alert = { open: true, message: "Vorlage löschen fehlgeschlagen", severity: "error" };
+        sliceState.snackbar.alert = { open: true, message: "Vorlage konnte nicht gelöscht werden", severity: "error" };
       })
       .addCase(createImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bild hochladen",
+          message: "Foto wird hochgeladen",
+        };
+      })
+      .addCase(createImageProgress, (sliceState, action: PayloadAction<number>) => {
+        sliceState.snackbar.loading = {
+          open: true,
+          message: `Foto wird hochgeladen (${action.payload} %)`,
         };
       })
       .addCase(createImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bild hochladen erfolgreich",
+          message: "Foto hochgeladen",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -123,8 +137,8 @@ const imagesSlice = createSlice({
         sliceState.snackbar.alert = {
           open: true,
           message: action.payload
-            ? `Bild hochladen fehlgeschlagen: ${action.payload}`
-            : "Bild hochladen fehlgeschlagen",
+            ? `Foto hochladen fehlgeschlagen: ${action.payload}`
+            : "Foto hochladen fehlgeschlagen",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -135,13 +149,13 @@ const imagesSlice = createSlice({
       .addCase(deleteImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bilder löschen",
+          message: "Fotos werden gelöscht",
         };
       })
       .addCase(deleteImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder löschen erfolgreich",
+          message: "Fotos gelöscht",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -152,7 +166,7 @@ const imagesSlice = createSlice({
       .addCase(deleteImageFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilder löschen fehlgeschlagen",
+          message: "Fotos konnten nicht gelöscht werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -175,7 +189,7 @@ const imagesSlice = createSlice({
       .addCase(sentImagesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendete Bilder laden fehlgeschlagen",
+          message: "Gesendete Fotos konnten nicht geladen werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -186,43 +200,19 @@ const imagesSlice = createSlice({
       .addCase(sendImageToUserFramePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Fotos an Bilderrahmen der Empfänger schicken",
-        };
-      })
-      .addCase(sendImageToUserFrameFulfilled, (sliceState, action: { payload?: Partial<ISentImage> }) => {
-        sliceState.snackbar.alert = {
-          open: true,
-          message: action.payload?.status === "scheduled"
-            ? "Versand an Bilderrahmen der Empfänger geplant"
-            : "Fotos an Bilderrahmen der Empfänger schicken erfolgreich",
-          severity: "success",
-        };
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
-        };
-      })
-      .addCase(sendImageToUserFrameFailed, (sliceState) => {
-        sliceState.snackbar.alert = {
-          open: true,
-          message: "Fotos an Bilderrahmen der Empfänger schicken fehlgeschlagen",
-          severity: "error",
-        };
-        sliceState.snackbar.loading = {
-          open: false,
-          message: "",
+          message: "Fotos werden gesendet",
         };
       })
       .addCase(deactivateSentImagePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Gesendetes Foto deaktiveren",
+          message: "Foto wird deaktiviert",
         };
       })
       .addCase(deactivateSentImageFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendetes Foto deaktiveren erfolgreich",
+          message: "Foto deaktiviert",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -233,7 +223,7 @@ const imagesSlice = createSlice({
       .addCase(deactivateSentImageFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Gesendetes Foto deaktiveren fehlgeschlagen",
+          message: "Foto konnte nicht deaktiviert werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -242,27 +232,31 @@ const imagesSlice = createSlice({
         };
       })
       .addCase(cancelScheduledSentImagePending, (sliceState) => {
-        showLoading(sliceState, "Geplantes Senden abbrechen");
+        showLoading(sliceState, "Sendung wird abgebrochen");
       })
       .addCase(cancelScheduledSentImageFulfilled, (sliceState) => {
-        showAlert(sliceState, "Geplantes Senden abgebrochen", "success");
+        showAlert(sliceState, "Sendung abgebrochen", "success");
       })
       .addCase(cancelScheduledSentImageFailed, (sliceState) => {
-        showAlert(sliceState, "Geplantes Senden abbrechen fehlgeschlagen", "error");
+        showAlert(sliceState, "Sendung konnte nicht abgebrochen werden", "error");
       })
       .addCase(sendScheduledSentImageNowPending, (sliceState) => {
-        showLoading(sliceState, "Foto sofort senden");
+        showLoading(sliceState, "Foto wird gesendet");
       })
       .addCase(sendScheduledSentImageNowFulfilled, (sliceState) => {
         showAlert(sliceState, "Foto gesendet", "success");
       })
       .addCase(sendScheduledSentImageNowFailed, (sliceState) => {
-        showAlert(sliceState, "Foto sofort senden fehlgeschlagen", "error");
+        showAlert(sliceState, "Foto konnte nicht gesendet werden", "error");
       })
   },
   reducers: {
     createImageDialogOpened: (sliceState) => {
       sliceState.dialogs.create.open = true;
+      sliceState.uploadRequested = false;
+    },
+    uploadRequested: (sliceState) => {
+      sliceState.uploadRequested = true;
     },
     createImageDialogClosed: (sliceState) => {
       sliceState.dialogs.create.open = false;
@@ -285,9 +279,12 @@ const imagesSlice = createSlice({
       sliceState.dialogs.preview.selectedImage = null;
       sliceState.dialogs.selection.selectedImages = [];
     },
-    sendImageToUserFrameDialogOpened: (sliceState) => {
-      sliceState.dialogs.sendToFrame.imagesToSend = sliceState.dialogs.selection.selectedImages;
-      sliceState.dialogs.sendToFrame.open = true;
+    sendImageToUserFrameDialogOpened: {
+      reducer: (sliceState, action: PayloadAction<{ images: IImage[] } | undefined>) => {
+        sliceState.dialogs.sendToFrame.imagesToSend = action.payload?.images ?? sliceState.dialogs.selection.selectedImages;
+        sliceState.dialogs.sendToFrame.open = true;
+      },
+      prepare: (payload?: { images: IImage[] }) => ({ payload }),
     },
     sendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.sendToFrame.open = false;
@@ -331,12 +328,23 @@ const imagesSlice = createSlice({
       }
       // If keepImageOnReSelect is true and image is found, do nothing (keep it selected)
     },
+    imagesSelected: (sliceState, action: PayloadAction<IImage[]>) => {
+      const selected = sliceState.dialogs.selection.selectedImages;
+      const ids = new Set(selected.map((image) => image.id));
+      selected.push(...action.payload.filter((image) => !ids.has(image.id)));
+    },
+    selectionCleared: (sliceState) => {
+      sliceState.dialogs.selection.selectedImages = [];
+    },
     alertSnackbarOpened: (images, action) => {
       images.snackbar.alert = {
         open: true,
         message: action.payload.message,
         severity: action.payload.severity,
       };
+    },
+    sendToFramesFinished: (images, action: PayloadAction<{ message: string; severity: AlertColor; link?: SnackbarLink }>) => {
+      showAlert(images, action.payload.message, action.payload.severity, action.payload.link);
     },
     alertSnackbarClosed: (images) => {
       images.snackbar.alert = {
@@ -384,8 +392,10 @@ export const closePreviewImageDialog = () => ({
   type: previewImageDialogClosed.type,
 });
 
-export const openSendImageToUserFrameDialog = () => ({
+// Without images it sends the current selection.
+export const openSendImageToUserFrameDialog = (payload?: { images: IImage[] }) => ({
   type: sendImageToUserFrameDialogOpened.type,
+  payload,
 });
 
 export const closeSendImageToUserFrameDialog = () => ({
@@ -442,11 +452,24 @@ export const openImagesLoadingSnackbar = (payload: {
   payload,
 });
 
+export const selectImages = (images: IImage[]) => ({
+  type: imagesSelected.type,
+  payload: images,
+});
+
+export const clearSelection = () => ({
+  type: selectionCleared.type,
+});
+
 export const closeImagesLoadingSnackbar = () => ({
   type: loadingSnackbarClosed.type,
 });
 
+export const getUploadRequested = (state: RootState) => state.ui.images.uploadRequested;
+
 export const {
+  uploadRequested,
+  sendToFramesFinished,
   createImageDialogOpened,
   createImageDialogClosed,
   alertSnackbarOpened,
@@ -465,7 +488,9 @@ export const {
   scheduledSentImageDialogOpened,
   selectionDialogOpened,
   selectionDialogClosed,
-  imageSelected
+  imageSelected,
+  imagesSelected,
+  selectionCleared,
 } = imagesSlice.actions;
 
 export default imagesSlice.reducer;

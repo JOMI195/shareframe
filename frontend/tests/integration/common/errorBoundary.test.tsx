@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import ErrorBoundary from '@/common/components/error/errorBoundary/errorBoundary';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 
@@ -67,7 +67,8 @@ describe('ErrorBoundary', () => {
 
     renderBoundary();
 
-    expect(screen.getByText(/kontakt/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Kritischer Fehler' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Lokale Daten löschen' })).toBeInTheDocument();
     vi.advanceTimersByTime(2000);
     expect(window.location.reload).not.toHaveBeenCalled();
   });
@@ -90,5 +91,22 @@ describe('ErrorBoundary', () => {
     const log = JSON.parse(localStorage.getItem('error_count') ?? 'null');
 
     expect(log).toBeNull();
+  });
+
+  // In the app the boundary sits above the store and theme provider.
+  describe('without providers', () => {
+    it('shows the loading fallback', () => {
+      const { container } = render(<ErrorBoundary><Boom /></ErrorBoundary>);
+
+      expect(container.querySelector('.MuiCircularProgress-root')).toBeInTheDocument();
+    });
+
+    it('shows the final error page', () => {
+      localStorage.setItem('error_count', JSON.stringify([{ timestamp: '2026-01-01T00:00:00Z' }]));
+
+      render(<ErrorBoundary><Boom /></ErrorBoundary>);
+
+      expect(screen.getByRole('heading', { name: 'Kritischer Fehler' })).toBeInTheDocument();
+    });
   });
 });
