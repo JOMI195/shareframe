@@ -36,7 +36,7 @@ class Account(models.Model):
     )
     friendship_user_searchable = models.BooleanField(default=True)
     friendship_user_search_code = models.CharField(max_length=100, unique=True)
-    avatar = models.ImageField(upload_to=avatar_upload_path, blank=True)
+    avatar = models.ImageField(upload_to=avatar_upload_path, blank=True, db_index=True)
 
     objects = AccountManager()
 
