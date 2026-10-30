@@ -1,3 +1,5 @@
+import logging
+
 from django.conf import settings
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.utils.decorators import method_decorator
@@ -8,6 +10,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
+from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -16,9 +19,19 @@ from config.throttles import (
     FailedLoginThrottle,
     SustainedRateThrottle,
 )
+from utils.client_ip import client_ip
 
 from .auth import enforce_csrf
 from .cookies import delete_auth_cookies, set_auth_cookies
+
+logger = logging.getLogger("admin.audit")
+
+
+def _token_user_id(raw):
+    try:
+        return RefreshToken(raw).get(api_settings.USER_ID_CLAIM)
+    except TokenError:
+        return None
 
 
 class SignalTokenObtainPairView(TokenObtainPairView):
@@ -50,6 +63,10 @@ class SignalTokenObtainPairView(TokenObtainPairView):
         )
         return Response(serializer.validated_data)
 
+    def throttled(self, request, wait):
+        logger.warning("Login throttled from %s", client_ip(request))
+        super().throttled(request, wait)
+
 
 @method_decorator(ensure_csrf_cookie, name="dispatch")
 class CookieTokenObtainPairView(SignalTokenObtainPairView):
@@ -69,6 +86,9 @@ class CookieTokenRefreshView(TokenRefreshView):
 
         refresh = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH_NAME)
         if not refresh:
+            logger.warning(
+                "Token refresh rejected (missing) from %s", client_ip(request)
+            )
             return Response(
                 {"detail": "Refresh cookie missing."},
                 status=status.HTTP_401_UNAUTHORIZED,
@@ -79,9 +99,17 @@ class CookieTokenRefreshView(TokenRefreshView):
         try:
             serializer.is_valid(raise_exception=True)
         except TokenError as e:
+            logger.warning(
+                "Token refresh rejected (invalid) from %s", client_ip(request)
+            )
             raise InvalidToken(e.args[0]) from e
 
         tokens = serializer.validated_data
+        logger.info(
+            "Token refreshed: user %s from %s",
+            _token_user_id(tokens.get("refresh", refresh)),
+            client_ip(request),
+        )
         response = Response({"detail": "Refreshed."})
         return set_auth_cookies(response, tokens.get("access"), tokens.get("refresh"))
 
@@ -96,11 +124,15 @@ class LogoutView(APIView):
         enforce_csrf(request)
 
         refresh = request.COOKIES.get(settings.AUTH_COOKIE_REFRESH_NAME)
+        user_id = None
         if refresh:
             try:
-                RefreshToken(refresh).blacklist()
+                token = RefreshToken(refresh)
+                user_id = token.get(api_settings.USER_ID_CLAIM)
+                token.blacklist()
             except TokenError:
                 pass
+        logger.info("Logout: user %s from %s", user_id or "unknown", client_ip(request))
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
         # Private photos must not stay in the HTTP cache of a shared device.

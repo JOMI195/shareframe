@@ -4,10 +4,13 @@ from django.conf import settings
 from rest_framework import exceptions
 from rest_framework.authentication import CSRFCheck
 from rest_framework_simplejwt.authentication import JWTAuthentication
+from rest_framework_simplejwt.exceptions import InvalidToken
 
 from config.errors import CSRF_FAILED_DETAIL
+from utils.client_ip import client_ip
 
 logger = logging.getLogger("django.security.csrf")
+audit_logger = logging.getLogger("admin.audit")
 
 
 def enforce_csrf(request):
@@ -32,7 +35,11 @@ class CookieJWTAuthentication(JWTAuthentication):
         if not raw_token:
             return None
 
-        validated_token = self.get_validated_token(raw_token)
-        user = self.get_user(validated_token)
+        try:
+            validated_token = self.get_validated_token(raw_token)
+            user = self.get_user(validated_token)
+        except (InvalidToken, exceptions.AuthenticationFailed):
+            audit_logger.warning("Access token rejected from %s", client_ip(request))
+            raise
         enforce_csrf(request)
         return user, validated_token

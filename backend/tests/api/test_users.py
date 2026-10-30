@@ -149,6 +149,14 @@ class TestDeleteAccount:
         assert response.data["code"] == "wrong_password"
         assert User.objects.filter(pk=user.pk).exists()
 
+    def test_a_wrong_password_is_audited(self, client_as, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client_as(UserFactory(is_active=True)).delete(
+                ME_URL, {"password": "not-the-password1"}, format="json"
+            )
+
+        assert "Password rejected (wrong_password)" in caplog.text
+
     def test_a_wrong_password_sends_no_mail(self, client_as):
         """A re-check of the current user is not a login, so nothing is notified."""
         client = client_as(UserFactory(is_active=True))
@@ -228,6 +236,39 @@ class TestSetPassword:
             )
 
         assert "Password changed" not in caplog.text
+
+    def test_a_refusal_is_audited_with_the_failed_rules(self, client_as, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            response = client_as(UserFactory(is_active=True)).post(
+                SET_PASSWORD_URL,
+                {
+                    "current_password": "factory-pass1",
+                    "new_password": "1234567",
+                    "re_new_password": "1234567",
+                },
+                format="json",
+            )
+
+        assert response.data["code"] == "password_invalid"
+        assert (
+            "Password rejected (password_invalid: password_entirely_numeric,"
+            "password_too_common,password_too_short)" in caplog.text
+        )
+        assert "1234567" not in caplog.text
+
+    def test_a_wrong_current_password_is_audited(self, client_as, caplog):
+        with caplog.at_level("INFO", logger="admin.audit"):
+            client_as(UserFactory(is_active=True)).post(
+                SET_PASSWORD_URL,
+                {
+                    "current_password": "wrong-pass1",
+                    "new_password": "brand-new-pass1",
+                    "re_new_password": "brand-new-pass1",
+                },
+                format="json",
+            )
+
+        assert "Password rejected (wrong_password)" in caplog.text
 
     def test_the_current_password_must_match(self, client_as):
         user = UserFactory(is_active=True)

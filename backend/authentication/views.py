@@ -1,7 +1,9 @@
 import logging
 
 from django.contrib.auth import get_user_model
+from django.contrib.auth.password_validation import validate_password
 from django.core import signing
+from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import IntegrityError, transaction
 from djoser.utils import decode_uid
 from djoser.views import UserViewSet as BaseUserViewSet
@@ -57,11 +59,29 @@ def _password_error_code(fields):
     return None
 
 
-def _with_password_error_code(exc):
+def _failed_rules(password, user):
+    try:
+        validate_password(password, user)
+    except DjangoValidationError as e:
+        return sorted({error.code for error in e.error_list if error.code})
+    return []
+
+
+def _log_password_rejected(request, code, user=None):
+    reason = code
+    if code == error_codes.PASSWORD_INVALID:
+        rules = _failed_rules(str(request.data.get("new_password", "")), user)
+        if rules:
+            reason = f"{code}: {','.join(rules)}"
+    logger.warning("Password rejected (%s) from %s", reason, client_ip(request))
+
+
+def _with_password_error_code(request, exc, user=None):
     fields = exc.detail if isinstance(exc.detail, dict) else {}
     code = _password_error_code(fields)
     if code is None:
         raise exc
+    _log_password_rejected(request, code, user)
     return Response({**fields, "code": code}, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -78,6 +98,7 @@ class CustomUserViewSet(BaseUserViewSet):
             password = serializer.validated_data["password"]
 
             if not request.user.check_password(password):
+                _log_password_rejected(request, error_codes.WRONG_PASSWORD)
                 return error_response(
                     error_codes.WRONG_PASSWORD,
                     "Incorrect password.",
@@ -171,7 +192,7 @@ class CustomUserViewSet(BaseUserViewSet):
         try:
             response = super().set_password(request, *args, **kwargs)
         except ValidationError as exc:
-            return _with_password_error_code(exc)
+            return _with_password_error_code(request, exc, request.user)
         logger.info(
             "Password changed: %s from %s", request.user.email, client_ip(request)
         )
@@ -182,7 +203,7 @@ class CustomUserViewSet(BaseUserViewSet):
         try:
             response = super().reset_password_confirm(request, *args, **kwargs)
         except ValidationError as exc:
-            return _with_password_error_code(exc)
+            return _with_password_error_code(request, exc)
         user = get_user_model().objects.get(pk=decode_uid(request.data["uid"]))
         logger.info("Password reset: %s from %s", user.email, client_ip(request))
         return response

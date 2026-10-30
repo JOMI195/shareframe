@@ -26,6 +26,10 @@ def _is_admin_request(request):
     return request and request.path.startswith("/api/admin/")
 
 
+def _channel(request):
+    return "admin" if _is_admin_request(request) else "app"
+
+
 def _failed_login_mail_allowed(recipient_key):
     cache_key = f"failed-login-mail:{recipient_key}"
     cooldown = settings.FAILED_LOGIN_MAIL_COOLDOWN
@@ -40,7 +44,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
     ip = client_ip(request)
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
-    logger.info("Login: %s from %s", user.email, ip)
+    logger.info("Login: %s from %s via %s", user.email, ip, _channel(request))
 
     is_admin = getattr(user, "is_admin", False)
     subject = "ShareFrame - Admin-Login" if is_admin else "ShareFrame - Login"
@@ -64,7 +68,9 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
     attempted = credentials.get("username", credentials.get("email", "unknown"))
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
-    logger.warning("Failed login attempt for '%s' from %s", attempted, ip)
+    logger.warning(
+        "Failed login attempt for '%s' from %s via %s", attempted, ip, _channel(request)
+    )
 
     if _is_admin_request(request):
         if not _failed_login_mail_allowed("admin"):
