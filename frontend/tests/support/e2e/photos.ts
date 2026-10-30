@@ -11,7 +11,7 @@ export const photoCount = async (page: Page) => {
 export const enterSelectionMode = async (page: Page) => {
   // The floating actions carry icons rather than accessible names.
   await page.locator('button:has([data-testid="HighlightAltIcon"])').click();
-  await page.getByText('Tippe Fotos an, um sie auszuwählen').waitFor();
+  await page.getByText('Wähle Fotos aus, um sie zu senden oder zu löschen').waitFor();
 };
 
 export const runSpeedDialAction = async (page: Page, label: string) => {

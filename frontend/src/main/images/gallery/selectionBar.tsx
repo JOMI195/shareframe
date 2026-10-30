@@ -33,7 +33,7 @@ const SelectionBar = () => {
                 </Typography>
                 {count === 0 && (
                     <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        Tippe Fotos an, um sie auszuwählen
+                        Wähle Fotos aus, um sie zu senden oder zu löschen
                     </Typography>
                 )}
             </Box>
@@ -43,7 +43,7 @@ const SelectionBar = () => {
                 </Button>
             ) : (
                 <Button size="small" onClick={() => dispatch(selectImages(pageImages))} disabled={pageImages.length === 0}>
-                    Alle auswählen
+                    Seite auswählen
                 </Button>
             )}
         </Paper>

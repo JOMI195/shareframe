@@ -51,7 +51,7 @@ const openLibrary = async (images = library) => {
 
 const enterSelectionMode = async (user: ReturnType<typeof renderRoute>['user']) => {
   await user.click((await screen.findByTestId('HighlightAltIcon')).closest('button')!);
-  await screen.findByText('Tippe Fotos an, um sie auszuwählen');
+  await screen.findByText('Wähle Fotos aus, um sie zu senden oder zu löschen');
 };
 
 const selectFirstPhoto = async (user: ReturnType<typeof renderRoute>['user']) => {
@@ -224,7 +224,7 @@ describe('sending photos to a frame', () => {
     expect(screen.getByText('1 ausgewählt')).toBeInTheDocument();
     expect(document.querySelectorAll('.MuiImageListItem-root [role="button"]')[0]).toHaveAttribute('aria-pressed', 'true');
 
-    await user.click(screen.getByRole('button', { name: 'Alle auswählen' }));
+    await user.click(screen.getByRole('button', { name: 'Seite auswählen' }));
     expect(store.getState().ui.images.dialogs.selection.selectedImages).toHaveLength(library.length);
 
     await user.click(screen.getByRole('button', { name: 'Auswahl aufheben' }));
