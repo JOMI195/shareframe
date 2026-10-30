@@ -59,20 +59,40 @@ def _password_error_code(fields):
     return None
 
 
-def _failed_rules(password, user):
+# Only these fixed strings reach the log.
+LOGGED_REJECTIONS = (
+    "wrong_password",
+    "password_invalid",
+    "password_mismatch",
+    "reset_link_invalid",
+)
+LOGGED_RULES = (
+    "password_entirely_numeric",
+    "password_too_common",
+    "password_too_short",
+    "password_too_similar",
+)
+
+
+def _logged_reason(code):
+    return next((known for known in LOGGED_REJECTIONS if known == code), "other")
+
+
+def _failed_rules(candidate, user):
     try:
-        validate_password(password, user)
+        validate_password(candidate, user)
     except DjangoValidationError as e:
-        return sorted({error.code for error in e.error_list if error.code})
+        broken = {error.code for error in e.error_list}
+        return [rule for rule in LOGGED_RULES if rule in broken]
     return []
 
 
 def _log_password_rejected(request, code, user=None):
-    reason = code
-    if code == error_codes.PASSWORD_INVALID:
+    reason = _logged_reason(code)
+    if reason == "password_invalid":
         rules = _failed_rules(str(request.data.get("new_password", "")), user)
         if rules:
-            reason = f"{code}: {','.join(rules)}"
+            reason = f"{reason}: {','.join(rules)}"
     logger.warning("Password rejected (%s) from %s", reason, client_ip(request))
 
 
