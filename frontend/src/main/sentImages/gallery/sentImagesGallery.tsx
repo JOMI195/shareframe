@@ -42,11 +42,12 @@ const SentImagesGallery = () => {
     const user = useAppSelector(getUser);
     const loading = useAppSelector(getImagesApi).loading;
     const sentImagesFailed = useAppSelector(getImagesApi).sentImagesFailed;
+    const sentImagesStale = useAppSelector(getImagesApi).sentImagesStale;
     const appliedFilters = useAppSelector(getSentImagesFilters);
-    const showSkeleton = useMinimumLoading(loading);
+    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
+    const showSkeleton = useMinimumLoading(loading && (sentImagesStale || sentImagesPaginated.results.length === 0));
     const theme = useTheme();
 
-    const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
 
     const { filter: filterDialog } = useAppSelector(getDialogs);

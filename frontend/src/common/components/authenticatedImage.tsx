@@ -1,7 +1,6 @@
 import { Box, Skeleton } from '@mui/material';
 import BrokenImageOutlinedIcon from '@mui/icons-material/BrokenImageOutlined';
 import React, { useState, useEffect, useRef } from 'react';
-import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import { acquireImage, peekImage } from '@/common/utils/imageCache';
 
 interface AuthenticatedImageProps {
@@ -34,7 +33,8 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     // A cached blob renders straight away, without waiting for the observer or the skeleton.
     const imageSrc = loaded?.url === url ? loaded.src : peekImage(url) ?? '';
     const hasError = failedUrl === url;
-    const showSkeleton = useMinimumLoading(!imageSrc && !hasError);
+    // No minimum hold: thumbnails often arrive within a few ms.
+    const showSkeleton = !imageSrc && !hasError;
 
     useEffect(() => {
         onErrorRef.current = onError;
@@ -45,6 +45,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             ([entry]) => {
                 if (entry.isIntersecting) {
                     setIsVisible(true);
+                    observer.disconnect();
                 }
             },
             {
@@ -59,11 +60,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
             observer.observe(element);
         }
 
-        return () => {
-            if (element) {
-                observer.unobserve(element);
-            }
-        };
+        return () => observer.disconnect();
     }, []);
 
     useEffect(() => {
@@ -151,6 +148,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                 <img
                     src={imageSrc}
                     alt={alt}
+                    decoding="async"
                     className={className}
                     style={{
                         ...style,

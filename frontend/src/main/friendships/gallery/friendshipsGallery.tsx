@@ -33,8 +33,8 @@ const FriendshipsGallery: React.FC = () => {
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
 
     const friendships = useAppSelector(getFriendships);
-    const friendshipsLoading = useAppSelector(getApi).loading;
-    const showSkeleton = useMinimumLoading(friendshipsLoading);
+    const friendshipsApi = useAppSelector(getApi);
+    const showSkeleton = useMinimumLoading(friendshipsApi.loading && friendshipsApi.lastFetch === null);
     const user = useAppSelector(getUser);
 
     const [currentPage, setCurrentPage] = useState(1);

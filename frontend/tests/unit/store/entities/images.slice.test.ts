@@ -132,6 +132,25 @@ describe('imagesReceived', () => {
   });
 });
 
+describe('stale results', () => {
+  it('are flagged when the page changes and cleared by the next load', () => {
+    const loaded = reducer(initial(), imagesReceived(makePage([makeImage()])));
+    expect(reducer(loaded, imagesPageSet(1)).api.imagesStale).toBe(false);
+
+    const paged = reducer(loaded, imagesPageSet(2));
+    expect(paged.api.imagesStale).toBe(true);
+    expect(reducer(paged, imagesReceived(makePage([]))).api.imagesStale).toBe(false);
+  });
+
+  it('are flagged for the activity list when its filters change', () => {
+    const loaded = reducer(initial(), sentImagesReceived(makePage([makeSentImage()])));
+    const filtered = reducer(loaded, sentImagesFiltersSet({ status: 'active' }));
+
+    expect(filtered.api.sentImagesStale).toBe(true);
+    expect(filtered.api.imagesStale).toBe(false);
+  });
+});
+
 describe('sentImagesReceived', () => {
   it('keeps the locally selected page', () => {
     const onPageTwo = reducer(initial(), sentImagesPageSet(2));

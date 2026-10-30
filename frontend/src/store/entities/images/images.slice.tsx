@@ -11,6 +11,9 @@ type SliceState = {
     // A failed list load, so the gallery can offer a retry instead of looking empty.
     imagesFailed: boolean;
     sentImagesFailed: boolean;
+    // The stored results belong to another page or filter, so the gallery must not show them.
+    imagesStale: boolean;
+    sentImagesStale: boolean;
   };
   imagesPaginated: IImagesPaginated;
   imagesPaginatedPageSize: number;
@@ -31,6 +34,8 @@ const initialState: SliceState = {
     lastFetch: null,
     imagesFailed: false,
     sentImagesFailed: false,
+    imagesStale: false,
+    sentImagesStale: false,
   },
   imagesPaginated: {
     count: 0,
@@ -88,6 +93,7 @@ const imagesSlice = createSlice({
         ...action.payload,
         page: sliceState.imagesPaginated.page,
       };
+      sliceState.api.imagesStale = false;
       sliceState.api.lastFetch = Date.now();
       resetApiState(sliceState);
     },
@@ -96,6 +102,7 @@ const imagesSlice = createSlice({
       sliceState.api.imagesFailed = true;
     },
     imagesPageSet: (sliceState, action) => {
+      if (action.payload !== sliceState.imagesPaginated.page) sliceState.api.imagesStale = true;
       sliceState.imagesPaginated.page = action.payload;
     },
     imagesPageSizeSet: (sliceState, action) => {
@@ -145,6 +152,7 @@ const imagesSlice = createSlice({
         ...action.payload,
         page: sliceState.sentImagesPaginated.page,
       };
+      sliceState.api.sentImagesStale = false;
       sliceState.api.lastFetch = Date.now();
       resetApiState(sliceState);
     },
@@ -153,12 +161,14 @@ const imagesSlice = createSlice({
       sliceState.api.sentImagesFailed = true;
     },
     sentImagesPageSet: (sliceState, action) => {
+      if (action.payload !== sliceState.sentImagesPaginated.page) sliceState.api.sentImagesStale = true;
       sliceState.sentImagesPaginated.page = action.payload;
     },
     sentImagesPageSizeSet: (sliceState, action) => {
       sliceState.sentImagesPaginatedPageSize = action.payload;
     },
     sentImagesFiltersSet: (sliceState, action) => {
+      sliceState.api.sentImagesStale = true;
       sliceState.sentImagesFilters = {
         ...sliceState.sentImagesFilters,
         ...action.payload,

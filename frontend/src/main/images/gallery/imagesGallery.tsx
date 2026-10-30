@@ -39,7 +39,8 @@ const ImagesGallery: React.FC = () => {
     const pageSize = useAppSelector(getImagesPaginatedPageSize);
     const imagesLoading = useAppSelector(imagesApi).loading;
     const imagesFailed = useAppSelector(imagesApi).imagesFailed;
-    const showSkeleton = useMinimumLoading(imagesLoading);
+    const imagesStale = useAppSelector(imagesApi).imagesStale;
+    const showSkeleton = useMinimumLoading(imagesLoading && (imagesStale || imagesPaginated.results.length === 0));
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
     const isMediumUp = useMediaQuery(theme.breakpoints.up('md'));

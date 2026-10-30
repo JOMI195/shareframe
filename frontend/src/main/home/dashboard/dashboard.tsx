@@ -19,8 +19,8 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const dashboardStats = useAppSelector(getDashboardData);
 
-    const dashboardLoading = useAppSelector(getDashboardApi).loading;
-    const showSkeleton = useMinimumLoading(dashboardLoading);
+    const dashboardApi = useAppSelector(getDashboardApi);
+    const showSkeleton = useMinimumLoading(dashboardApi.loading && dashboardApi.lastFetch === null);
 
     const imagesStats = dashboardStats?.images;
     const sentImagesStats = dashboardStats?.sent_images;
