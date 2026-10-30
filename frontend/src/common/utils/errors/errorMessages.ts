@@ -1,4 +1,5 @@
 import type { UnknownAction } from "redux";
+import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 const ERROR_MESSAGES: Record<string, string> = {
   serial_required: "Bitte gib die Seriennummer deines Bilderrahmens ein.",
@@ -19,7 +20,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   friend_request_gone: "Diese Anfrage gibt es nicht mehr. Vielleicht wurde sie schon beantwortet.",
   friendship_not_found: "Diese Freundschaft gibt es nicht mehr.",
   wrong_password: "Das Passwort stimmt nicht.",
-  password_invalid: "Dieses Passwort ist nicht erlaubt. Wähle ein anderes.",
+  password_invalid: `Dieses Passwort ist nicht erlaubt. Wähle ein anderes mit ${PASSWORD_RULES}.`,
   password_mismatch: "Die neuen Passwörter stimmen nicht überein.",
   reset_link_invalid: "Der Link ist abgelaufen oder wurde schon benutzt.",
   throttled: "Zu viele Versuche. Bitte warte kurz.",

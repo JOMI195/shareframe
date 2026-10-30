@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Link from "@mui/material/Link";
@@ -26,6 +26,7 @@ import {
 import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
 import { isICoreUser } from "@/types";
 import { Alert } from "@mui/material";
+import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 export default function SignUp() {
   const dispatch = useAppDispatch();
@@ -37,19 +38,6 @@ export default function SignUp() {
   });
 
   const [errorMessage, setErrorMessage] = useState("");
-
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-
-    if (errorMessage) {
-      timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 10000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [errorMessage]);
 
   const handleClickShowPassword = (key: keyof typeof showPassword) => {
     setShowPassword({ ...showPassword, [key]: !showPassword[key] });
@@ -77,7 +65,7 @@ export default function SignUp() {
       .string()
       .strict(true)
       .trim("Der Nutzername darf keine Leerzeichen enthalten")
-      .min(1, "Dein Nutzername muss mindestens Zeichen enthalten" as string)
+      .min(1, "Dein Nutzername muss mindestens ein Zeichen enthalten" as string)
       .max(
         50,
         "Dein Nutzername darf maximal 50 Zeichen enthalten" as string
@@ -113,6 +101,7 @@ export default function SignUp() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setErrorMessage("");
       // the api middleware resolves with the response body, not the dispatched action
       const response: unknown = await dispatch(signUpUser(values));
       if (isICoreUser(response)) {
@@ -123,8 +112,9 @@ export default function SignUp() {
         );
       } else {
         setErrorMessage("Möglicherweise existiert die E-Mail-Adresse oder der Nutzername bereits oder es gab ein Problem mit der Aktivierungs-Mail. Bitte überprüfe deine E-Mail-Adresse und versuche es erneut. Bei wiederholtem Fehler versuche es in 24 Stunden erneut oder kontaktiere den Support.");
+        // Name and address stay, so a retry only needs the password again.
+        signUpForm.setValues({ ...values, password: "", re_password: "" }, false);
       }
-      signUpForm.resetForm();
     },
   });
 
@@ -201,8 +191,8 @@ export default function SignUp() {
                 Boolean(signUpForm.errors.password)
               }
               helperText={
-                getIn(signUpForm.touched, "password") &&
-                getIn(signUpForm.errors, "password")
+                (getIn(signUpForm.touched, "password") &&
+                  getIn(signUpForm.errors, "password")) || PASSWORD_RULES
               }
               onChange={signUpForm.handleChange}
               fullWidth

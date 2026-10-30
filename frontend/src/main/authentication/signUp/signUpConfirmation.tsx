@@ -87,7 +87,7 @@ const SignUpConfirmation: React.FC = () => {
                         <Typography variant="body1" sx={{
                             textAlign: "center"
                         }}>
-                            Schaue in dein Emailpostfach um deinen Account zu aktivieren!
+                            Schau in dein E-Mail-Postfach, um dein Konto zu aktivieren!
                         </Typography>
                     </Grid>
                     {resendActivationTo && (
@@ -100,7 +100,7 @@ const SignUpConfirmation: React.FC = () => {
                             }}>
                             <Box sx={{ display: 'flex', flexDirection: "column", alignItems: "center", textAlign: "center" }}>
                                 <Typography variant="body2" component="span">
-                                    Du hast keine Email erhalten?
+                                    Du hast keine E-Mail erhalten?
                                 </Typography>
                                 {!isDisabled && (
                                     <Link
