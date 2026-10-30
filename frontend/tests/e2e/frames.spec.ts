@@ -65,7 +65,7 @@ test.describe('frames', () => {
 
     // The open dialog marks the rest of the page aria-hidden, so the snackbar is
     // matched by its text rather than its role.
-    await expect(page.getByText('Bilderrahmen registrieren fehlgeschlagen')).toBeVisible({
+    await expect(page.getByText(/Diesen Bilderrahmen können wir nicht hinzufügen/)).toBeVisible({
       timeout: 30_000,
     });
     // The dialog stays open so the serial can be corrected.

@@ -77,8 +77,8 @@ test.describe.serial('mails', () => {
 
     await page.goto(link);
     // Required fields carry a trailing asterisk in their label.
-    await page.getByLabel('Neues Passwort', { exact: true }).fill(NEW_PASSWORD);
-    await page.getByLabel('Passwort wiederholen', { exact: true }).fill(NEW_PASSWORD);
+    await page.getByRole('textbox', { name: /^Neues Passwort/ }).fill(NEW_PASSWORD);
+    await page.getByRole('textbox', { name: /^Passwort wiederholen/ }).fill(NEW_PASSWORD);
     await page.getByRole('button', { name: 'Passwort neu vergeben' }).click();
     await expectMail(grace.email, { subject: 'ShareFrame - Passwort geändert', since });
 
