@@ -34,11 +34,14 @@ class _LogoMail:
         return context
 
     def send(self, to, *args, **kwargs):
-        send_account_mail.delay(
-            template_name=self.template_name,
-            context=_task_context(self.get_context_data()),
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=list(to),
+        send_account_mail.apply_async(
+            kwargs={
+                "template_name": self.template_name,
+                "context": _task_context(self.get_context_data()),
+                "from_email": settings.DEFAULT_FROM_EMAIL,
+                "to_emails": list(to),
+            },
+            kwargsrepr=repr({"template_name": self.template_name}),
         )
 
 

@@ -18,7 +18,6 @@ from appEmail.djoserEmailConfig import (
     DjoserPasswordResetEmail,
     DjoserUserDeletedEmail,
 )
-from appEmail.tasks import send_account_mail
 from tests.support.factories import UserFactory
 from tests.support.helpers.mail import break_delivery, html_of
 
@@ -170,14 +169,16 @@ def test_the_support_button_leads_to_the_contact_page(email_class, user, setting
     )
 
 
-# The worker needs a JSON context, and reset tokens must not land in the result backend.
+# The worker needs a JSON context, and tokens must not land in the result backend.
 @pytest.mark.parametrize("email_class", CLASSES)
-def test_mails_are_queued_with_a_json_context(email_class, user):
-    with patch("appEmail.djoserEmailConfig.send_account_mail.delay") as delay:
+def test_mails_are_queued_with_a_json_context_and_a_redacted_repr(email_class, user):
+    with patch("appEmail.djoserEmailConfig.send_account_mail.apply_async") as queue:
         email_class(RequestFactory().get("/"), {"user": user, "token": "tok-en"}).send(
             [user.email]
         )
 
-    context = delay.call_args.kwargs["context"]
-    assert json.loads(json.dumps(context))["user"] == {"username": user.username}
-    assert send_account_mail.ignore_result
+    kwargs = queue.call_args.kwargs
+    assert json.loads(json.dumps(kwargs["kwargs"]["context"]))["user"] == {
+        "username": user.username
+    }
+    assert "tok-en" not in kwargs["kwargsrepr"]
