@@ -1,14 +1,10 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react'
 import AppDialog from '@/common/components/appDialog';
+import ConfirmDialog from '@/common/components/confirmDialog';
 import {
     Box,
     Button,
     CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogContentText,
-    DialogTitle,
     LinearProgress,
     useMediaQuery,
     useTheme,
@@ -499,27 +495,30 @@ const UploadDialog: React.FC = () => {
             />
           )}
         </EditorLayout>
-        <Dialog open={confirmDiscard} onClose={() => setConfirmDiscard(false)} maxWidth="xs" fullWidth>
-          <DialogTitle>Bearbeitung verwerfen?</DialogTitle>
-          <DialogContent>
-            <DialogContentText>Noch nicht hochgeladene Fotos und ihre Bearbeitung gehen verloren.</DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setConfirmDiscard(false)}>Weiter bearbeiten</Button>
-            <Button color="error" onClick={closeDialog}>Verwerfen</Button>
-          </DialogActions>
-        </Dialog>
+        <ConfirmDialog
+          open={confirmDiscard}
+          title="Bearbeitung verwerfen?"
+          confirmLabel="Verwerfen"
+          cancelLabel="Weiter bearbeiten"
+          destructive
+          backToClose={false}
+          onConfirm={closeDialog}
+          onCancel={() => setConfirmDiscard(false)}
+        >
+          Noch nicht hochgeladene Fotos und ihre Bearbeitung gehen verloren.
+        </ConfirmDialog>
       </AppDialog>
-      <Dialog open={sendPrompt.length > 0} onClose={() => setSendPrompt([])} maxWidth="xs" fullWidth>
-        <DialogTitle>{sendPrompt.length === 1 ? 'Foto hochgeladen' : `${sendPrompt.length} Fotos hochgeladen`}</DialogTitle>
-        <DialogContent>
-          <DialogContentText>Jetzt an einen Bilderrahmen senden?</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setSendPrompt([])}>Später</Button>
-          <Button variant="contained" onClick={handleSendNow}>Jetzt senden</Button>
-        </DialogActions>
-      </Dialog>
+      <ConfirmDialog
+        open={sendPrompt.length > 0}
+        title={sendPrompt.length === 1 ? 'Foto hochgeladen' : `${sendPrompt.length} Fotos hochgeladen`}
+        confirmLabel="Jetzt senden"
+        cancelLabel="Später"
+        backToClose={false}
+        onConfirm={handleSendNow}
+        onCancel={() => setSendPrompt([])}
+      >
+        Jetzt an einen Bilderrahmen senden?
+      </ConfirmDialog>
     </>
   );
 }

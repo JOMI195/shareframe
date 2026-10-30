@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
+import { Button, IconButton, InputAdornment, Stack, TextField, Typography } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { getIn, useFormik } from "formik";
@@ -7,6 +7,7 @@ import * as yup from "yup";
 import { useAppDispatch } from "@/store";
 import { deleteMyUserProfile } from "@/store/entities/authentication/authentication.actions";
 import { clearLocalSession } from "@/common/utils/pwa/clearLocalSession";
+import ConfirmDialog from "@/common/components/confirmDialog";
 import { useNavigate } from "react-router";
 import { getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import SettingsSection from "@/common/components/settings/settingsSection";
@@ -120,28 +121,17 @@ const Delete = () => {
                 )}
             </SettingsSection>
 
-            <Dialog
+            <ConfirmDialog
                 open={confirmOpen}
-                onClose={() => !loading && setConfirmOpen(false)}
-                aria-labelledby="delete-user-confirm-title"
+                title="Konto endgültig löschen?"
+                confirmLabel="Endgültig löschen"
+                destructive
+                loading={loading}
+                onConfirm={handleConfirm}
+                onCancel={() => !loading && setConfirmOpen(false)}
             >
-                <DialogTitle id="delete-user-confirm-title">Konto endgültig löschen?</DialogTitle>
-                <DialogContent>
-                    <DialogContentText>
-                        Dein Konto und alle deine Daten werden sofort gelöscht. Das kann nicht rückgängig gemacht werden.
-                    </DialogContentText>
-                </DialogContent>
-                <DialogActions sx={{ px: 3, pb: 2 }}>
-                    <FormActions fill>
-                        <Button onClick={() => setConfirmOpen(false)} variant="outlined" disabled={loading}>
-                            Abbrechen
-                        </Button>
-                        <Button onClick={handleConfirm} color="error" variant="contained" disabled={loading}>
-                            Endgültig löschen
-                        </Button>
-                    </FormActions>
-                </DialogActions>
-            </Dialog>
+                Dein Konto und alle deine Daten werden sofort gelöscht. Das kann nicht rückgängig gemacht werden.
+            </ConfirmDialog>
         </>
     );
 };

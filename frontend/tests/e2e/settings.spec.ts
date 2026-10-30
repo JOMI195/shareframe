@@ -91,7 +91,7 @@ test.describe('personal information', () => {
     await expect(avatar).toHaveAttribute('src', /^blob:/);
 
     await page.getByRole('button', { name: 'Entfernen' }).click();
-    await page.getByRole('button', { name: 'Entfernen bestätigen' }).click();
+    await page.getByRole('button', { name: 'Profilbild entfernen' }).click();
     await expect(page.getByRole('button', { name: 'Entfernen' })).toBeHidden({ timeout: 30_000 });
     await expect(avatar).toBeHidden();
   });

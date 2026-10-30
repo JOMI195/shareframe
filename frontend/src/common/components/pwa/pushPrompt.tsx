@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
+import ConfirmDialog from '@/common/components/confirmDialog';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { getPwa, pushPromptDismissed } from '@/store/ui/settings/settings.slice';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import { getPushSubscription, isPushSupported, subscribePush } from '@/common/utils/pwa/push';
-import { ZoomTransition } from '../dialogTransitions';
 
 const PushPrompt: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -34,24 +33,17 @@ const PushPrompt: React.FC = () => {
     };
 
     return (
-        <Dialog
+        <ConfirmDialog
             open={askable && unsubscribed}
-            onClose={dismiss}
-            maxWidth="xs"
-            fullWidth
-            slots={{ transition: ZoomTransition }}
+            title="Push-Benachrichtigungen aktivieren?"
+            confirmLabel="Aktivieren"
+            cancelLabel="Später"
+            backToClose={false}
+            onConfirm={handleEnable}
+            onCancel={dismiss}
         >
-            <DialogTitle>Push-Benachrichtigungen aktivieren?</DialogTitle>
-            <DialogContent>
-                <Typography>
-                    Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
-                </Typography>
-            </DialogContent>
-            <DialogActions>
-                <Button onClick={dismiss}>Später</Button>
-                <Button variant="contained" onClick={handleEnable}>Aktivieren</Button>
-            </DialogActions>
-        </Dialog>
+            Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
+        </ConfirmDialog>
     );
 };
 

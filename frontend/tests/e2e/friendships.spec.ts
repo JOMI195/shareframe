@@ -73,7 +73,7 @@ test.describe('friendships', () => {
     await expect(
       page.getByText('Die Freundschaft kann mit einer Freundschaftsanfrage jederzeit wieder hergestellt werden.'),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Beenden bestätigen' }).click();
+    await page.getByRole('button', { name: 'Beenden', exact: true }).click();
 
     await expect(friend).toBeHidden({ timeout: 30_000 });
     await page.reload();

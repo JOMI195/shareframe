@@ -116,6 +116,23 @@ describe('filters on a phone', () => {
   });
 });
 
+describe('blurring on a phone', () => {
+  // A display switch rather than a filter: on the page, acting at once.
+  it('keeps the switch on the page and out of the filter dialog', async () => {
+    setSmallScreen(true);
+    const { user, store } = await openActivity();
+
+    const blur = screen.getByRole('switch', { name: 'Fotos an dich verbergen' });
+    expect(blur).toBeChecked();
+    await user.click(blur);
+    expect(store.getState().ui.sentImages.dialogs.filter.hideToYouFilter).toBe(false);
+
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByRole('switch')).not.toBeInTheDocument();
+  });
+});
+
 describe('server side filters', () => {
   it('asks for the first page with a page size', async () => {
     const urls = recordQueries();
@@ -179,7 +196,7 @@ describe('deactivating a shared photo', () => {
 
     await user.click(document.querySelectorAll('.MuiImageListItem-root')[0] as HTMLElement);
     await clickSpeedDialAction(user, 'Foto deaktivieren');
-    await user.click(await screen.findByRole('button', { name: 'Deaktivieren bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Deaktivieren' }));
 
     await waitFor(() => expect(calls).toEqual(['deactivate']));
   });
@@ -226,7 +243,7 @@ describe('a scheduled photo', () => {
 
     await clickSpeedDialAction(user, 'Vorzeitig, sofort senden');
     expect(calls).toEqual([]);
-    await user.click(await screen.findByRole('button', { name: 'Sofort senden bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Jetzt senden' }));
 
     await waitFor(() => expect(calls).toEqual(['send-now']));
   });
@@ -242,7 +259,7 @@ describe('a scheduled photo', () => {
     const { user } = await openScheduled();
 
     await clickSpeedDialAction(user, 'Geplantes Senden abbrechen');
-    await user.click(await screen.findByRole('button', { name: 'Senden abbrechen bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Sendung abbrechen' }));
 
     await waitFor(() => expect(calls).toEqual(['cancel']));
     await waitFor(() => expect(document.querySelectorAll('.MuiImageListItem-root')).toHaveLength(0));

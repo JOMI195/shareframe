@@ -242,7 +242,7 @@ describe('deleting photos', () => {
 
     expect(await screen.findByText(/Das Löschen von Fotos ist unwiderruflich/)).toBeInTheDocument();
     expect(screen.getByText(/Geplante Sendungen dieses Fotos werden abgebrochen/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
+    await user.click(screen.getByRole('button', { name: 'Löschen' }));
 
     await waitFor(() => expect(deleted).toEqual([String(library[0].id)]));
     expect(await screen.findByText('2 Fotos')).toBeInTheDocument();

@@ -180,9 +180,9 @@ describe('unregistering a frame', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     expect(
-      await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
+      await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen.'),
     ).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Löschen bestätigen' }));
+    await user.click(screen.getByRole('button', { name: 'Entfernen' }));
 
     await waitFor(() => expect(bodies).toEqual([{ public_serial_number: SERIAL }]));
   });

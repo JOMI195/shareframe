@@ -105,7 +105,7 @@ describe('answering a request', () => {
     await user.click(requestsTab());
     await user.click(await screen.findByRole('button', { name: 'Anfrage ablehnen' }));
     expect(calls).toEqual([]);
-    await user.click(await screen.findByRole('button', { name: 'Ablehnen bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Ablehnen' }));
 
     await waitFor(() => expect(calls).toEqual(['reject']));
   });

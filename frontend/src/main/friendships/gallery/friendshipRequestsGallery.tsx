@@ -11,16 +11,13 @@ import {
     Grid,
     CardActions,
     Button,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
     List,
     ListItem,
     ListItemAvatar,
     ListItemText,
     useMediaQuery,
 } from "@mui/material";
-import AppDialog from "@/common/components/appDialog";
+import ConfirmDialog from "@/common/components/confirmDialog";
 import { getIncomingPendingRequests } from "../pendingRequests";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
@@ -124,31 +121,25 @@ const FriendshipRequestsGallery: React.FC = () => {
                         {friend}
                     </Typography>
                 </CardContent>
-                <CardActions>
-                    <Box sx={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        height: "100%",
-                        width: "100%"
-                    }}>
-                        <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-                            <Button
-                                onClick={() => setRequestToReject(friendship)}
-                                color="error"
-                                aria-label="Anfrage ablehnen"
-                            >
-                                Ablehnen
-                            </Button>
-                            <Button
-                                onClick={() => handleFriendshipAcccept(friendship)}
-                                variant="contained"
-                                aria-label="Anfrage annehmen"
-                            >
-                                Annehmen
-                            </Button>
-                        </Stack>
-                    </Box>
+                <CardActions sx={{ px: 2, pb: 2, pt: 0 }}>
+                    <Stack spacing={1} sx={{ width: "100%" }}>
+                        <Button
+                            onClick={() => handleFriendshipAcccept(friendship)}
+                            variant="contained"
+                            fullWidth
+                            aria-label="Anfrage annehmen"
+                        >
+                            Annehmen
+                        </Button>
+                        <Button
+                            onClick={() => setRequestToReject(friendship)}
+                            color="error"
+                            fullWidth
+                            aria-label="Anfrage ablehnen"
+                        >
+                            Ablehnen
+                        </Button>
+                    </Stack>
                 </CardActions>
             </Card>
         );
@@ -258,18 +249,16 @@ const FriendshipRequestsGallery: React.FC = () => {
                 </Box>
             )}
 
-            <AppDialog open={requestToReject !== null} onClose={() => setRequestToReject(null)} maxWidth="xs" fullWidth>
-                <DialogTitle>{`Anfrage von ${requestToReject?.sender ?? ""} ablehnen?`}</DialogTitle>
-                <DialogContent>
-                    <Typography>Die Person kann dir später erneut eine Anfrage senden.</Typography>
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setRequestToReject(null)}>Abbrechen</Button>
-                    <Button color="error" onClick={() => requestToReject && handleFriendshipReject(requestToReject)}>
-                        Ablehnen bestätigen
-                    </Button>
-                </DialogActions>
-            </AppDialog>
+            <ConfirmDialog
+                open={requestToReject !== null}
+                title={`Anfrage von ${requestToReject?.sender ?? ""} ablehnen?`}
+                confirmLabel="Ablehnen"
+                destructive
+                onConfirm={() => requestToReject && handleFriendshipReject(requestToReject)}
+                onCancel={() => setRequestToReject(null)}
+            >
+                Die Person kann dir später erneut eine Anfrage senden.
+            </ConfirmDialog>
         </Stack>
     );
 };

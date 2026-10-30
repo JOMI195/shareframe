@@ -132,7 +132,7 @@ test.describe('upload dialog on a phone', () => {
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
       await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');
-      await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+      await page.getByRole('button', { name: 'Löschen', exact: true }).click();
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before);
     });
   });

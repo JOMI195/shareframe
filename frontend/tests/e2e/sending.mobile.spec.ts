@@ -30,11 +30,12 @@ test.describe('sending on a phone', () => {
       await expect(page.getByText(/geteilte/)).toBeVisible({ timeout: 30_000 });
       await expectNoHorizontalScroll(page);
 
-      await page.locator('.MuiImageListItem-root').first().click();
+      // Real tiles only: the loading skeletons share the class but take no clicks.
+      await page.locator('.MuiImageListItem-root[role="button"]').first().click();
       await expect(page.getByRole('dialog').filter({ hasText: 'Gesendetes Foto' })).toBeVisible();
       await runSpeedDialAction(page, 'Foto deaktivieren');
-      await page.getByRole('button', { name: 'Deaktivieren bestätigen' }).click();
-      await expect(page.getByRole('button', { name: 'Deaktivieren bestätigen' })).toBeHidden({ timeout: 30_000 });
+      await page.getByRole('button', { name: 'Deaktivieren', exact: true }).click();
+      await expect(page.getByRole('button', { name: 'Deaktivieren', exact: true })).toBeHidden({ timeout: 30_000 });
     });
   });
 });

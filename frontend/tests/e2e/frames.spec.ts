@@ -81,7 +81,7 @@ test.describe('frames', () => {
     await expect(
       page.getByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
     ).toBeVisible();
-    await page.getByRole('button', { name: 'Löschen bestätigen' }).click();
+    await page.getByRole('button', { name: 'Entfernen', exact: true }).click();
 
     await expect(frameCards(page)).toHaveCount(1, { timeout: 30_000 });
     await page.reload();

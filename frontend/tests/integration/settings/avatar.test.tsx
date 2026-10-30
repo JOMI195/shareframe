@@ -129,7 +129,7 @@ describe('avatar settings', () => {
     const { user } = render();
 
     await user.click(screen.getByRole('button', { name: 'Entfernen' }));
-    await user.click(await screen.findByRole('button', { name: 'Entfernen bestätigen' }));
+    await user.click(await screen.findByRole('button', { name: 'Profilbild entfernen' }));
 
     await waitFor(() => expect(deleted).toHaveLength(1));
     await waitFor(() =>
@@ -146,7 +146,7 @@ describe('avatar settings', () => {
     await user.click(await screen.findByRole('button', { name: 'Abbrechen' }));
 
     await waitFor(() =>
-      expect(screen.queryByRole('button', { name: 'Entfernen bestätigen' })).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: 'Profilbild entfernen' })).not.toBeInTheDocument(),
     );
     expect(deleted).toHaveLength(0);
     expect(screen.getByRole('button', { name: 'Entfernen' })).toBeInTheDocument();
