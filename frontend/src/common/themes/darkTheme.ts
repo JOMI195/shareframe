@@ -17,6 +17,7 @@ const darkTheme = createTheme({
         },
         background: {
             default: '#252627',
+            paper: '#2e2f31',
         },
         accent: {
             main: "#EDBF59"

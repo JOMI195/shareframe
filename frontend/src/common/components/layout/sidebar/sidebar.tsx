@@ -125,13 +125,13 @@ const Sidebar: React.FC = () => {
                 key={item.name}
                 onClick={() => handleItemClick(itemUrl)}
                 sx={{
-                    backgroundColor: isActive ? 'primary.light' : 'inherit',
+                    backgroundColor: isActive ? 'primary.main' : 'inherit',
                     color: isActive ? 'primary.contrastText' : 'inherit',
                     borderRadius: 0.5,
                     //px: shouldShowIconsOnly ? 1 : 2,
                     minHeight: 48,
                     '&:hover': {
-                        backgroundColor: isActive ? 'primary.main' : 'action.hover',
+                        backgroundColor: isActive ? 'primary.dark' : 'action.hover',
                     },
                 }}
             >

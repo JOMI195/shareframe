@@ -17,9 +17,11 @@ const QuickAccessCard: FC<QuickAccessCardProps> = ({ title, icon, to }) => {
                 '&:hover': {
                     transform: 'translateY(-4px)',
                     boxShadow: 3
-                }
+                },
+                '@media (prefers-reduced-motion: reduce)': {
+                    '&:hover': { transform: 'none' },
+                },
             }}
-            elevation={10}
         >
             <CardActionArea component={RouterLink} to={to}>
                 <CardContent sx={{ textAlign: 'center', py: 2 }}>

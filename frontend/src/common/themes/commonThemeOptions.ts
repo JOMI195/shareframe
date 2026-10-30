@@ -38,6 +38,31 @@ declare module "@mui/material/styles" {
 
 export const commonThemeOptions = {
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        '@media (prefers-reduced-motion: reduce)': {
+          '*, *::before, *::after': {
+            transitionDuration: '0.01ms !important',
+            scrollBehavior: 'auto !important',
+          },
+        },
+      },
+    },
+    MuiButton: {
+      styleOverrides: {
+        root: { textTransform: 'none' },
+      },
+    },
+    MuiFab: {
+      styleOverrides: {
+        root: { textTransform: 'none' },
+      },
+    },
+    MuiTab: {
+      styleOverrides: {
+        root: { textTransform: 'none' },
+      },
+    },
     MuiGrid: {
       styleOverrides: {
         container: ({ ownerState, theme }: { ownerState: GridProps; theme: Theme }) => ({

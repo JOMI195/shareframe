@@ -36,7 +36,7 @@ const NotFound = () => {
                 component={Link}
                 to="/"
                 variant="contained"
-                sx={{ mt: 1, borderRadius: '10px' }}
+                sx={{ mt: 1 }}
             >
                 Zur Startseite
             </Button>

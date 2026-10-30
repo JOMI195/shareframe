@@ -81,7 +81,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                                 aria-label={actionPrimary.label ? undefined : actionPrimary.tooltip}
                                 variant='extended'
                                 sx={{
-                                    borderRadius: '10px',
+                                    borderRadius: 1,
                                     pointerEvents: 'auto'
                                 }}
                             >
@@ -107,7 +107,7 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                                 aria-label={actionSecondary.label ? undefined : actionSecondary.tooltip}
                                 variant='extended'
                                 sx={{
-                                    borderRadius: '10px',
+                                    borderRadius: 1,
                                     pointerEvents: 'auto'
                                 }}
                             >
@@ -152,10 +152,10 @@ const BottomFloatingActions: React.FC<BottomMainFloatingActionsProps> = ({
                                 whiteSpace: 'nowrap',
                             },
                             '& .MuiFab-primary': {
-                                borderRadius: '10px',
+                                borderRadius: 1,
                             },
                             '& .MuiSpeedDialAction-fab': {
-                                borderRadius: '10px',
+                                borderRadius: 1,
                             },
                         }}
                     >

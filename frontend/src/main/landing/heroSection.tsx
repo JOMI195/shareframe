@@ -29,7 +29,7 @@ const HeroSection = () => (
         <Typography sx={{ fontSize: { xs: "1.05rem", md: "1.15rem" }, lineHeight: 1.65, maxWidth: "34em", mb: 3 }}>
           {landingContent.lead}
         </Typography>
-        <Typography variant="body2" sx={{ color: "text.secondary", opacity: 0.8, maxWidth: "34em" }}>
+        <Typography variant="body2" sx={{ color: "text.secondary", maxWidth: "34em" }}>
           {landingContent.accessNote}
         </Typography>
       </Box>
