@@ -24,7 +24,10 @@ const PublicHeader = () => {
         </Box>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Tooltip title={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}>
-            <IconButton onClick={toggleColorMode}>
+            <IconButton
+              onClick={toggleColorMode}
+              aria-label={colorMode === "dark" ? "Wechsel in den hellen Modus" : "Wechsel in den dunklen Modus"}
+            >
               <IconComponent />
             </IconButton>
           </Tooltip>

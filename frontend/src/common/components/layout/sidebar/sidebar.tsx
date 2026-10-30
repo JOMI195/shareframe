@@ -168,7 +168,7 @@ const Sidebar: React.FC = () => {
                 height: '100%',
                 p: 1,
                 '&:hover': {
-                    backgroundColor: isDesktop && !open ? 'action.hover' : "none",
+                    backgroundColor: isDesktop && !open ? 'action.hover' : 'transparent',
                 },
             }}
         >

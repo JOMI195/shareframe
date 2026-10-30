@@ -214,7 +214,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='Passwort anzeigen'
+                        aria-label={`Passwort ${showPassword.current_password ? 'verbergen' : 'anzeigen'}`}
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }
@@ -258,7 +258,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='Passwort anzeigen'
+                        aria-label={`Passwort wiederholen ${showPassword.current_password ? 'verbergen' : 'anzeigen'}`}
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }

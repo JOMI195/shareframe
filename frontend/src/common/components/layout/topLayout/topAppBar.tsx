@@ -54,6 +54,7 @@ function TopAppBar() {
                         maxWidth={130}
                         marginRight={0}
                         linkUrl={getDashboardUrl()}
+                        alt="ShareFrame – Start"
                     />
                 </SeasonalLogoBadge>
                 <Box
