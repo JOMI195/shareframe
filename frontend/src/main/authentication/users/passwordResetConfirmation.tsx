@@ -240,7 +240,7 @@ export default function PasswordResetConfirmation() {
               color="secondary"
               onClick={handleCancel}
             >
-              {"abbrechen"}
+              {"Abbrechen"}
             </Button>
           </Grid>
         </Grid>

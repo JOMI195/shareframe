@@ -55,7 +55,7 @@ const Settings: React.FC<SettingsProps> = ({ title, tabs, headerAction }) => {
             scrollButtons={false}
             value={value}
             onChange={handleChange}
-            aria-label="settings tabs"
+            aria-label="Bereiche"
             sx={isSmallScreen ? {
                 "& .MuiTab-root": { minHeight: 48 },
             } : {

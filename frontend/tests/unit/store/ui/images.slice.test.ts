@@ -159,10 +159,10 @@ describe('snackbars', () => {
 
 describe('entity actions drive the snackbars', () => {
   it.each([
-    ['imagesRequestFailed', imagesRequestFailed(), 'Fotos laden fehlgeschlagen', 'error'],
-    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Foto hochladen erfolgreich', 'success'],
-    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Fotos löschen erfolgreich', 'success'],
-    ['deleteImageFailed', deleteImageFailed(), 'Fotos löschen fehlgeschlagen', 'error'],
+    ['imagesRequestFailed', imagesRequestFailed(), 'Fotos konnten nicht geladen werden', 'error'],
+    ['createImageFulfilled', createImageFulfilled(makeImage()), 'Foto hochgeladen', 'success'],
+    ['deleteImageFulfilled', deleteImageFulfilled(makeImage()), 'Fotos gelöscht', 'success'],
+    ['deleteImageFailed', deleteImageFailed(), 'Fotos konnten nicht gelöscht werden', 'error'],
   ])('%s shows an alert', (_name, action, message, severity) => {
     const state = reducer(initial(), action);
     expect(state.snackbar.alert).toEqual({ open: true, message, severity });
@@ -172,7 +172,7 @@ describe('entity actions drive the snackbars', () => {
   it('shows a loading snackbar while uploading', () => {
     expect(reducer(initial(), createImagePending()).snackbar.loading).toEqual({
       open: true,
-      message: 'Foto hochladen',
+      message: 'Foto wird hochgeladen',
     });
   });
 

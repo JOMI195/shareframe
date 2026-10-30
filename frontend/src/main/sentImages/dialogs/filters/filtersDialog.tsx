@@ -156,12 +156,12 @@ const FiltersDialog = () => {
                         </Grid>
                         <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Suche nach Sender</InputLabel>
+                                <InputLabel shrink>Absender</InputLabel>
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={senderFilterLocal}
                                     renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Sender</em>}
-                                    label="Suche nach Sender"
+                                    label="Absender"
                                     onChange={(e) => setSenderFilterLocal(e.target.value as string)}
                                     displayEmpty
                                     notched
@@ -182,12 +182,12 @@ const FiltersDialog = () => {
                         </Grid>
                         <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Suche nach Empfänger</InputLabel>
+                                <InputLabel shrink>Empfänger</InputLabel>
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={receiverFilterLocal}
                                     renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Empfänger</em>}
-                                    label="Suche nach Empfänger"
+                                    label="Empfänger"
                                     onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
                                     displayEmpty
                                     notched
@@ -216,7 +216,7 @@ const FiltersDialog = () => {
                         variant="outlined"
                         disabled={loading}
                     >
-                        Filter löschen
+                        Zurücksetzen
                     </Button>
                     <Button
                         onClick={handleApplyFilters}

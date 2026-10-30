@@ -44,7 +44,7 @@ const framesSlice = createSlice({
       .addCase(framesRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilderrahmen laden fehlgeschlagen",
+          message: "Bilderrahmen konnten nicht geladen werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -55,13 +55,13 @@ const framesSlice = createSlice({
       .addCase(registerFramePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bilderrahmen registrieren",
+          message: "Bilderrahmen wird hinzugefügt",
         };
       })
       .addCase(registerFrameFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilderrahmen registrieren erfolgreich",
+          message: "Bilderrahmen hinzugefügt",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -72,7 +72,7 @@ const framesSlice = createSlice({
       .addCase(registerFrameFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Bilderrahmen registrieren fehlgeschlagen"),
+          message: errorText(action, "Bilderrahmen konnte nicht hinzugefügt werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -83,13 +83,13 @@ const framesSlice = createSlice({
       .addCase(unregisterFramePending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Bilderrahmen vom Nutzer lösen",
+          message: "Bilderrahmen wird entfernt",
         };
       })
       .addCase(unregisterFrameFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Bilderrahmen vom Nutzer lösen erfolgreich",
+          message: "Bilderrahmen entfernt",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -100,7 +100,7 @@ const framesSlice = createSlice({
       .addCase(unregisterFrameFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Bilderrahmen vom Nutzer lösen fehlgeschlagen"),
+          message: errorText(action, "Bilderrahmen konnte nicht entfernt werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -111,13 +111,13 @@ const framesSlice = createSlice({
       .addCase(frameOTPRequested, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Generiere OTP",
+          message: "Code wird erstellt",
         };
       })
       .addCase(frameOTPRecieved, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "OTP erfolgreich generiert",
+          message: "Code erstellt",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -128,7 +128,7 @@ const framesSlice = createSlice({
       .addCase(frameOTPRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Generierung von OTP fehlgeschlagen"),
+          message: errorText(action, "Code konnte nicht erstellt werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {

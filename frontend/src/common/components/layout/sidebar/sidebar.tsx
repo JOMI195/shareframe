@@ -66,7 +66,7 @@ const Sidebar: React.FC = () => {
 
     const sidebarBottomItems = [
         {
-            name: "Account",
+            name: "Konto",
             icon: <UserAvatar username={user.me.username} url={user.me.account?.avatar} size={25} />,
             url: getSettingsUrl() + getUserSettingsUrl()
         },

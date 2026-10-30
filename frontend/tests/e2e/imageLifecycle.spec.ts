@@ -199,7 +199,7 @@ test.describe('photo lifecycle', () => {
 
       // Real tiles only: the loading skeletons share the class but take no clicks.
       await page.locator('.MuiImageListItem-root[role="button"]').first().click();
-      await expect(page.getByRole('dialog').filter({ hasText: 'Gesendetes Foto' })).toBeVisible();
+      await expect(page.getByRole('dialog').filter({ hasText: /(Gesendetes|Erhaltenes) Foto/ })).toBeVisible();
       await page.getByRole('button', { name: 'Foto deaktivieren' }).click();
       await page.getByRole('button', { name: 'Deaktivieren', exact: true }).click();
 

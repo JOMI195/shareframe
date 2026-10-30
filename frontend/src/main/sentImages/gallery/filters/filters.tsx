@@ -192,13 +192,13 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                     }}>
                     <FormControl fullWidth disabled={disabled}>
                         <InputLabel id="image-status-filter-label">
-                            Status Filter
+                            Status
                         </InputLabel>
                         <Select
                             labelId="image-status-filter-label"
                             id="image-status-filter"
                             value={statusFilter}
-                            label="Status Filter"
+                            label="Status"
                             onChange={handleStatusChange}
                         >
                             <MenuItem value="all">Alle Fotos</MenuItem>
@@ -215,13 +215,13 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                     }}>
                     <FormControl fullWidth disabled={disabled}>
                         <InputLabel id="image-shipping-filter-label">
-                            Versand Filter
+                            Richtung
                         </InputLabel>
                         <Select
                             labelId="image-shipping-filter-label"
                             id="image-shipping-filter"
                             value={shippingFilter}
-                            label="Versand Filter"
+                            label="Richtung"
                             onChange={handleShippingChange}
                         >
                             <MenuItem value="all">Alle Fotos</MenuItem>
@@ -266,7 +266,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         sx={{ height: '56px' }}
                         disabled={disabled}
                     >
-                        Filter löschen
+                        Zurücksetzen
                     </Button>
                 </Grid>
             </Grid>

@@ -55,7 +55,7 @@ export default function PasswordReset() {
   const validationSchema = yup.object({
     email: yup
       .string()
-      .email("Email muss gültig sein")
+      .email("Bitte gib eine gültige E-Mail-Adresse an")
       .required("Dieses Feld wird benötigt" as string),
   });
 
@@ -103,7 +103,7 @@ export default function PasswordReset() {
               id="email"
               name="email"
               type="email"
-              label={"Email"}
+              label={"E-Mail-Adresse"}
               value={resetPasswordForm.values.email}
               onBlur={resetPasswordForm.handleBlur}
               error={
@@ -155,7 +155,7 @@ export default function PasswordReset() {
               color="secondary"
               onClick={handleCancel}
             >
-              {"abbrechen"}
+              {"Abbrechen"}
             </Button>
           </Grid>
         </Grid>

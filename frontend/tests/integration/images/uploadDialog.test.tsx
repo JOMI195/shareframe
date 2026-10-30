@@ -107,7 +107,7 @@ describe('UploadDialog selection step', () => {
 
     expect(screen.getAllByRole('button', { name: 'a.jpg' })).toHaveLength(1);
     await waitFor(() =>
-      expect(store.getState().ui.images.snackbar.alert.message).toMatch(/bereits ausgewählt/),
+      expect(store.getState().ui.images.snackbar.alert.message).toMatch(/schon ausgewählt/),
     );
   });
 
@@ -122,7 +122,7 @@ describe('UploadDialog selection step', () => {
     expect(screen.queryByRole('button', { name: 'p0.jpg' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(store.getState().ui.images.snackbar.alert.message).toMatch(
-        /Maximal 15 Foto\(s\) können auf einmal hochgeladen werden/,
+        /höchstens 15 Fotos auf einmal hochladen/,
       ),
     );
   });

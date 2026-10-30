@@ -58,7 +58,7 @@ test.describe.serial('mails', () => {
     expect(link.startsWith(baseURL!)).toBe(true);
 
     await page.goto(link);
-    await expect(page.getByText('Nutzeraktivierung erfolgreich')).toBeVisible();
+    await expect(page.getByText('Konto aktiviert')).toBeVisible();
     await expectMail(ivy.email, { subject: 'ShareFrame - Konto aktiviert', since });
 
     await signIn(page, ivy);
@@ -68,7 +68,7 @@ test.describe.serial('mails', () => {
     const NEW_PASSWORD = 'Zurueck2026Gesetzt';
     const since = new Date();
     await page.goto('/auth/users/password-reset/form/');
-    await page.getByLabel('Email').fill(grace.email);
+    await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(grace.email);
     await page.getByRole('button', { name: 'Passwort zurücksetzen' }).click();
 
     const reset = await expectMail(grace.email, { subject: 'ShareFrame - Passwort zurücksetzen', since });

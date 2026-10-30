@@ -103,7 +103,7 @@ const BuildVersionChecker: React.FC = () => {
           }
         }}
       >
-        Eine neue Version von Shareframe ist verfügbar! Bitte lade diese Seite erneut.
+        Eine neue Version von ShareFrame ist da. Lade die Seite neu, um sie zu nutzen.
       </Alert>
     </StackedSnackbar>
   );

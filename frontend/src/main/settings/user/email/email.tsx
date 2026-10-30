@@ -109,7 +109,7 @@ const Email = () => {
                                 endAdornment: (
                                     <InputAdornment position='end'>
                                         <IconButton
-                                            aria-label='toggle current password visibility'
+                                            aria-label={showPassword ? 'Passwort verbergen' : 'Passwort anzeigen'}
                                             onClick={() => setShowPassword(!showPassword)}
                                             onMouseDown={(event) => event.preventDefault()}
                                             edge='end'

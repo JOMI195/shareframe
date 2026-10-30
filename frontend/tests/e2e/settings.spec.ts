@@ -103,7 +103,7 @@ test.describe('personal information', () => {
     const searchable = page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' });
     await expect(searchable).toBeChecked();
     await searchable.uncheck();
-    await expect(page.getByText('Nutzerupdate erfolgreich')).toBeVisible();
+    await expect(page.getByText('Gespeichert', { exact: true })).toBeVisible();
 
     await page.reload();
     await page.getByRole('tab', { name: 'Profil' }).click();
@@ -132,9 +132,9 @@ test.describe('password', () => {
     await signOut(page);
 
     await test.step('the old password is rejected', async () => {
-      await page.getByLabel('Email').fill(dave.email);
-      await page.getByLabel('Passwort').fill(dave.password);
-      await page.getByRole('button', { name: 'anmelden' }).click();
+      await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(dave.email);
+      await page.getByLabel('Passwort', { exact: true }).fill(dave.password);
+      await page.getByRole('button', { name: 'Anmelden' }).click();
 
       await expect(page.getByRole('alert').first()).toBeVisible();
       await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
@@ -167,9 +167,9 @@ test.describe('email address', () => {
   const NEW_EMAIL = 'seed.frank.neu@shareframe.local';
   const signInFails = async (page: import('@playwright/test').Page, email: string) => {
     await page.goto('/auth/sign-in/');
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Passwort').fill(frank.password);
-    await page.getByRole('button', { name: 'anmelden' }).click();
+    await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(email);
+    await page.getByLabel('Passwort', { exact: true }).fill(frank.password);
+    await page.getByRole('button', { name: 'Anmelden' }).click();
 
     await expect(page.getByRole('alert').first()).toBeVisible();
     await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
@@ -257,9 +257,9 @@ test.describe('account deletion', () => {
 
     await test.step('the account cannot sign in any more', async () => {
       await page.goto('/auth/sign-in/');
-      await page.getByLabel('Email').fill(mallory.email);
-      await page.getByLabel('Passwort').fill(mallory.password);
-      await page.getByRole('button', { name: 'anmelden' }).click();
+      await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(mallory.email);
+      await page.getByLabel('Passwort', { exact: true }).fill(mallory.password);
+      await page.getByRole('button', { name: 'Anmelden' }).click();
 
       await expect(page.getByRole('alert').first()).toBeVisible();
       await expect(page).toHaveURL(/\/auth\/sign-in\/$/);

@@ -25,13 +25,13 @@ const contactSlice = createSlice({
             .addCase(contactEmailSendingPending, (contact) => {
                 contact.snackbar.loading = {
                     open: true,
-                    message: "Senden der Kontaktemail läuft",
+                    message: "Nachricht wird gesendet",
                 };
             })
             .addCase(contactEmailSendingFulfilled, (contact) => {
                 contact.snackbar.alert = {
                     open: true,
-                    message: "Senden der Kontaktemail erfolgreich",
+                    message: "Nachricht gesendet",
                     severity: "success",
                 };
                 contact.snackbar.loading = {
@@ -42,7 +42,7 @@ const contactSlice = createSlice({
             .addCase(contactEmailSendingFailed, (contact) => {
                 contact.snackbar.alert = {
                     open: true,
-                    message: "Senden der Kontaktemail fehlgeschlagen",
+                    message: "Nachricht konnte nicht gesendet werden",
                     severity: "error",
                 };
                 contact.snackbar.loading = {

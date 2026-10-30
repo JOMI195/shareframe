@@ -31,7 +31,7 @@ const FilterControls: React.FC = () => {
                     <TextField
                         fullWidth
                         select
-                        label="Anzahl auf Seite angezeigte Fotos"
+                        label="Fotos pro Seite"
                         value={pageSize}
                         onChange={handlePageSizeChange}
                         disabled={loading}

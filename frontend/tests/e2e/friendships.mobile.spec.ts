@@ -14,11 +14,11 @@ test.describe('friendships on a phone', () => {
     expect(card.x + card.width).toBeLessThanOrEqual(page.viewportSize()!.width);
     await expectNoHorizontalScroll(page);
 
-    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
-    await expect(page.getByLabel('Freundschaftscode')).toBeInViewport();
-    await expect(page.getByRole('button', { name: 'Hinzufügen' })).toBeInViewport({ ratio: 1 });
+    await page.getByRole('button', { name: 'Freund hinzufügen' }).click();
+    await expect(page.getByLabel('Freundescode')).toBeInViewport();
+    await expect(page.getByRole('button', { name: 'Anfrage senden' })).toBeInViewport({ ratio: 1 });
 
     await page.keyboard.press('Escape');
-    await expect(page.getByLabel('Freundschaftscode')).toBeHidden();
+    await expect(page.getByLabel('Freundescode')).toBeHidden();
   });
 });

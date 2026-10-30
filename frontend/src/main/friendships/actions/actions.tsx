@@ -14,7 +14,7 @@ export const Actions: React.FC = () => {
   const action: DialogAction = {
     icon: <AddIcon />,
     onClick: handleDialogOpen,
-    label: 'Freundschaftsanfrage',
+    label: 'Freund hinzufügen',
     color: 'primary',
   };
 

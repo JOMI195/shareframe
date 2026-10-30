@@ -96,7 +96,7 @@ describe('ContactForm', () => {
     await submit(user);
 
     await waitFor(() => expect(store.getState().ui.contact.snackbar.alert.open).toBe(true));
-    expect(store.getState().ui.contact.snackbar.alert.message).toBe('Senden der Kontaktemail erfolgreich');
+    expect(store.getState().ui.contact.snackbar.alert.message).toBe('Nachricht gesendet');
   });
 
   it('surfaces a backend failure through the snackbar', async () => {

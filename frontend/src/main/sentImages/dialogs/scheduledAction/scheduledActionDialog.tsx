@@ -7,6 +7,7 @@ import { cancelScheduledSentImage, sendScheduledSentImageNow } from "@/store/ent
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import { closePreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
+import { possessive } from "@/common/utils/text/possessive";
 
 const SentImageScheduledActionDialog = () => {
     const dispatch = useAppDispatch();
@@ -18,11 +19,11 @@ const SentImageScheduledActionDialog = () => {
     const sentImage = sentImagesPaginated.results.find((sentImage => sentImage.id === scheduledActionDialog.sentImageId)) as ISentImage | undefined;
     const isSendNow = scheduledActionDialog.action === 'sendNow';
 
-    const receiverFrames = sentImage?.reciever === user.me.username ? "deine" : `${sentImage?.reciever}s`;
+    const receiverFrames = sentImage?.reciever === user.me.username ? "deine" : possessive(sentImage?.reciever ?? "");
     const scheduledFor = sentImage?.scheduled_for ? formatGermanDateTime(new Date(sentImage.scheduled_for)) : null;
 
     const texts = isSendNow ? {
-        title: "Geplantes Foto vorzeitig, sofort senden?",
+        title: "Geplantes Foto jetzt senden?",
         body: `Das Foto wird sofort ${scheduledFor ? `statt am ${scheduledFor} ` : ""}an ${receiverFrames} Bilderrahmen gesendet. Die gewählte Anzeigedauer bleibt erhalten.`,
         confirm: "Jetzt senden",
         cancel: "Abbrechen",

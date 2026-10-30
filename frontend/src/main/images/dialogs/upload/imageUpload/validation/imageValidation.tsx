@@ -87,13 +87,13 @@ export const validateImage = (file: File, fileIndex: number, totalFiles: number 
 
     if (!doesntExceedFileLimit(fileIndex, totalFiles)) {
         const maxFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE || 1;
-        errors.push(`Maximal ${maxFiles} Foto(s) können auf einmal hochgeladen werden`);
+        errors.push(`Du kannst höchstens ${maxFiles} Fotos auf einmal hochladen`);
         valid = false;
     }
 
     if (!doesntExceedTotalFileLimit(totalFiles, existingFilesCount)) {
         const maxTotalFiles = +import.meta.env.VITE_APP_UPLOADED_FILES_MAX_FILES_TOTAL || 100;
-        errors.push(`Maximale Gesamtanzahl von ${maxTotalFiles} hochgeladenen Foto(s) würde überschritten werden`);
+        errors.push(`Du kannst insgesamt höchstens ${maxTotalFiles} Fotos haben`);
         valid = false;
     }
 
@@ -119,7 +119,7 @@ export const validateImages = (files: File[], existingFilesCount: number = 0, al
         files.forEach((file) => {
             invalidFiles.push({
                 file,
-                errors: [`Maximale Gesamtanzahl von ${maxTotalFiles} Foto(s) würde überschritten`]
+                errors: [`Du kannst insgesamt höchstens ${maxTotalFiles} Fotos haben`]
             });
         });
         return { validFiles, invalidFiles };

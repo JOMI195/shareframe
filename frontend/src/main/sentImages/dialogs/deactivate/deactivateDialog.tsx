@@ -6,6 +6,7 @@ import { getApi, getSentImagesPaginated } from "@/store/entities/images/images.s
 import { deactivateSentImage } from "@/store/entities/images/images.actions";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { closePreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
+import { possessive } from "@/common/utils/text/possessive";
 
 const SentImageDeactivateDialog = () => {
     const dispatch = useAppDispatch();
@@ -39,7 +40,7 @@ const SentImageDeactivateDialog = () => {
             onConfirm={handleConfirmDeactivate}
             onCancel={handleDialogClose}
         >
-            {`Bei einer Deaktivierung wird das gesendete Foto umgehend von ${sentImageToDeactivate?.reciever === user.me.username ? "deinen" : `${sentImageToDeactivate?.reciever}s`} Bilderrahmen entfernt und dort nicht mehr angezeigt.`}
+            {`Bei einer Deaktivierung wird das gesendete Foto umgehend von ${sentImageToDeactivate?.reciever === user.me.username ? "deinen" : possessive(sentImageToDeactivate?.reciever ?? "")} Bilderrahmen entfernt und dort nicht mehr angezeigt.`}
         </ConfirmDialog>
     );
 };

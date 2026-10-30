@@ -41,26 +41,26 @@ test.describe('friendships', () => {
   test('refuses a friend code that is not searchable', async ({ signedInPage: page }) => {
     await openFriendships(page);
 
-    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
-    await page.getByLabel('Freundschaftscode').fill(mallory.code);
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
+    await page.getByRole('button', { name: 'Freund hinzufügen' }).click();
+    await page.getByLabel('Freundescode').fill(mallory.code);
+    await page.getByRole('button', { name: 'Anfrage senden' }).click();
 
     // The open dialog marks the rest of the page aria-hidden, so the snackbar is
     // matched by its text rather than its role.
     await expect(page.getByText('Zu diesem Freundescode haben wir niemanden gefunden. Prüfe den Code.')).toBeVisible({ timeout: 30_000 });
     // The dialog stays open so the code can be corrected.
-    await expect(page.getByLabel('Freundschaftscode')).toBeVisible();
+    await expect(page.getByLabel('Freundescode')).toBeVisible();
   });
 
   test('rejects a code that does not belong to anyone', async ({ signedInPage: page }) => {
     await openFriendships(page);
 
-    await page.getByRole('button', { name: 'Freundschaftsanfrage' }).click();
-    await page.getByLabel('Freundschaftscode').fill('ZZZZ9999');
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
+    await page.getByRole('button', { name: 'Freund hinzufügen' }).click();
+    await page.getByLabel('Freundescode').fill('ZZZZ9999');
+    await page.getByRole('button', { name: 'Anfrage senden' }).click();
 
     await expect(page.getByText('Zu diesem Freundescode haben wir niemanden gefunden. Prüfe den Code.')).toBeVisible({ timeout: 30_000 });
-    await expect(page.getByLabel('Freundschaftscode')).toBeVisible();
+    await expect(page.getByLabel('Freundescode')).toBeVisible();
   });
 
   test('ends a friendship after confirming', async ({ signedInPage: page }) => {

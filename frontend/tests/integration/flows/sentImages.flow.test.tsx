@@ -103,7 +103,7 @@ describe('filters on a phone', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    expect(screen.queryByLabelText('Status Filter')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Status')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Filter' }));
     await user.click(await screen.findByLabelText('Status'));
     await user.click(await within(await screen.findByRole('listbox')).findByRole('option', { name: 'Abgelaufene' }));
@@ -146,7 +146,7 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Abgelaufene');
+    await chooseOption(user, 'Status', 'Abgelaufene');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
   });
@@ -155,7 +155,7 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Versand Filter', 'Von dir gesendete');
+    await chooseOption(user, 'Richtung', 'Von dir gesendete');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('shipping=sentByYou'));
   });
@@ -164,7 +164,7 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Geplante');
+    await chooseOption(user, 'Status', 'Geplante');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=scheduled'));
   });
@@ -174,10 +174,10 @@ describe('server side filters', () => {
     const { user } = await openActivity();
     const urls = recordQueries();
 
-    await chooseOption(user, 'Status Filter', 'Abgelaufene');
+    await chooseOption(user, 'Status', 'Abgelaufene');
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
 
-    await chooseOption(user, 'Status Filter', 'Alle Fotos');
+    await chooseOption(user, 'Status', 'Alle Fotos');
 
     await waitFor(() => expect(urls[urls.length - 1]).not.toContain('status='));
   });

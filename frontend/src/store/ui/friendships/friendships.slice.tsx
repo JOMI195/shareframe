@@ -44,7 +44,7 @@ const friendshipsSlice = createSlice({
       .addCase(friendshipsRequestFailed, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundesdaten laden fehlgeschlagen",
+          message: "Freunde konnten nicht geladen werden",
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -55,13 +55,13 @@ const friendshipsSlice = createSlice({
       .addCase(sendFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage",
+          message: "Anfrage wird gesendet",
         };
       })
       .addCase(sendFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage erfolgreich",
+          message: "Anfrage gesendet",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -83,13 +83,13 @@ const friendshipsSlice = createSlice({
       .addCase(friendshipDeleteRequested, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaft löschen",
+          message: "Freundschaft wird beendet",
         };
       })
       .addCase(friendshipDeleteDeleteFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaft löschen erfolgreich",
+          message: "Freundschaft beendet",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -104,7 +104,7 @@ const friendshipsSlice = createSlice({
       .addCase(friendshipDeleteDeleteFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Freundschaft löschen fehlgeschlagen"),
+          message: errorText(action, "Freundschaft konnte nicht beendet werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -115,13 +115,13 @@ const friendshipsSlice = createSlice({
       .addCase(acceptFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage annehmen",
+          message: "Anfrage wird angenommen",
         };
       })
       .addCase(acceptFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage annehmen erfolgreich",
+          message: "Anfrage angenommen",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -132,7 +132,7 @@ const friendshipsSlice = createSlice({
       .addCase(acceptFriendshipRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Freundschaftsanfrage annehmen fehlgeschlagen"),
+          message: errorText(action, "Anfrage konnte nicht angenommen werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {
@@ -143,13 +143,13 @@ const friendshipsSlice = createSlice({
       .addCase(rejectFriendshipRequestPending, (sliceState) => {
         sliceState.snackbar.loading = {
           open: true,
-          message: "Freundschaftsanfrage ablehnen",
+          message: "Anfrage wird abgelehnt",
         };
       })
       .addCase(rejectFriendshipRequestFulfilled, (sliceState) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: "Freundschaftsanfrage ablehnen erfolgreich",
+          message: "Anfrage abgelehnt",
           severity: "success",
         };
         sliceState.snackbar.loading = {
@@ -160,7 +160,7 @@ const friendshipsSlice = createSlice({
       .addCase(rejectFriendshipRequestFailed, (sliceState, action) => {
         sliceState.snackbar.alert = {
           open: true,
-          message: errorText(action, "Freundschaftsanfrage ablehnen fehlgeschlagen"),
+          message: errorText(action, "Anfrage konnte nicht abgelehnt werden"),
           severity: "error",
         };
         sliceState.snackbar.loading = {

@@ -89,9 +89,9 @@ test.describe('share target', () => {
     await shareFromGallery(page);
     await expect(page).toHaveURL(/\/auth\/sign-in\/$/);
 
-    await page.getByLabel('Email').fill(alice.email);
-    await page.getByLabel('Passwort').fill(alice.password);
-    await page.getByRole('button', { name: 'anmelden' }).click();
+    await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(alice.email);
+    await page.getByLabel('Passwort', { exact: true }).fill(alice.password);
+    await page.getByRole('button', { name: 'Anmelden' }).click();
 
     await expect(page).toHaveURL(/\/fotos\/$/);
     // The changelog and the upload dialog open in either order, and whichever comes second

@@ -85,7 +85,7 @@ export default function SignUp() {
       .required("Dieses Feld wird benötigt" as string),
     email: yup
       .string()
-      .email("Email muss gültig sein")
+      .email("Bitte gib eine gültige E-Mail-Adresse an")
       .required("Dieses Feld wird benötigt" as string),
     password: yup
       .string()
@@ -122,7 +122,7 @@ export default function SignUp() {
           { replace: true, state: { resendActivationTo: signUpForm.values.email } }
         );
       } else {
-        setErrorMessage("Möglicherweise existiert die Email/ Nutzername bereits oder es gab ein Problem mit der Aktivierungs-Mail. Bitte überprüfe deine Emailadresse und versuche es erneut. Bei wiederholtem Fehler versuche es in 24 Stunden erneut oder kontaktiere den Support.");
+        setErrorMessage("Möglicherweise existiert die E-Mail-Adresse oder der Nutzername bereits oder es gab ein Problem mit der Aktivierungs-Mail. Bitte überprüfe deine E-Mail-Adresse und versuche es erneut. Bei wiederholtem Fehler versuche es in 24 Stunden erneut oder kontaktiere den Support.");
       }
       signUpForm.resetForm();
     },
@@ -152,7 +152,7 @@ export default function SignUp() {
             <TextField
               id='email'
               name='email'
-              label={'Email'}
+              label={'E-Mail-Adresse'}
               value={signUpForm.values.email}
               onBlur={signUpForm.handleBlur}
               error={
@@ -214,7 +214,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='toggle current password visibility'
+                        aria-label='Passwort anzeigen'
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }
@@ -258,7 +258,7 @@ export default function SignUp() {
                   endAdornment: (
                     <InputAdornment position='end'>
                       <IconButton
-                        aria-label='toggle current password visibility'
+                        aria-label='Passwort anzeigen'
                         onClick={() =>
                           handleClickShowPassword('current_password')
                         }
@@ -299,7 +299,7 @@ export default function SignUp() {
               color="secondary"
               onClick={handleCancel}
             >
-              {"abbrechen"}
+              {"Abbrechen"}
             </Button>
           </Grid>
           <Grid

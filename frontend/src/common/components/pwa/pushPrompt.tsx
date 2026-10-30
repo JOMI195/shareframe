@@ -45,7 +45,7 @@ const PushPrompt: React.FC = () => {
             onConfirm={handleEnable}
             onCancel={dismiss}
         >
-            Wir erinnern dich, wenn du länger kein Foto geteilt hast, und sagen dir Bescheid, wenn es bei ShareFrame Neuigkeiten gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
+            Wir erinnern dich, wenn du länger kein Foto geteilt hast, und sagen dir Bescheid, wenn es bei ShareFrame Neuigkeiten gibt. Du kannst das jederzeit unter Konto → Mitteilungen ändern.
         </ConfirmDialog>
     );
 };

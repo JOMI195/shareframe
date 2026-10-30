@@ -18,7 +18,7 @@ const serveVersion = (version: string, { force = false, onCall }: { force?: bool
     }),
   );
 
-const banner = () => screen.queryByText(/Eine neue Version von Shareframe ist verfügbar/);
+const banner = () => screen.queryByText(/Eine neue Version von ShareFrame ist da/);
 const settle = () => new Promise((resolve) => setTimeout(resolve, 50));
 
 describe('BuildVersionChecker', () => {
@@ -38,7 +38,7 @@ describe('BuildVersionChecker', () => {
     serveVersion('2026-09-05-deadbeef');
     renderWithProviders(<BuildVersionChecker />);
 
-    expect(await screen.findByText(/Eine neue Version von Shareframe ist verfügbar/)).toBeVisible();
+    expect(await screen.findByText(/Eine neue Version von ShareFrame ist da/)).toBeVisible();
   });
 
   // The dev server has no version file and answers unknown paths with index.html.
@@ -85,7 +85,7 @@ describe('BuildVersionChecker', () => {
 
     renderWithProviders(<BuildVersionChecker />);
 
-    expect(await screen.findByText(/Eine neue Version von Shareframe ist verfügbar/)).toBeVisible();
+    expect(await screen.findByText(/Eine neue Version von ShareFrame ist da/)).toBeVisible();
     expect(window.location.reload).toHaveBeenCalledTimes(1);
   });
 
@@ -95,7 +95,7 @@ describe('BuildVersionChecker', () => {
     server.use(mswHttp.get(VERSION_FILE, () => HttpResponse.json({ version, force: false })));
     const { user } = renderWithProviders(<BuildVersionChecker />);
 
-    await screen.findByText(/Eine neue Version von Shareframe ist verfügbar/);
+    await screen.findByText(/Eine neue Version von ShareFrame ist da/);
     await user.keyboard('{Escape}');
     await waitFor(() => expect(banner()).not.toBeInTheDocument());
 
@@ -106,7 +106,7 @@ describe('BuildVersionChecker', () => {
     version = '2026-09-06-cafebabe';
     window.dispatchEvent(new Event('focus'));
 
-    expect(await screen.findByText(/Eine neue Version von Shareframe ist verfügbar/)).toBeVisible();
+    expect(await screen.findByText(/Eine neue Version von ShareFrame ist da/)).toBeVisible();
   });
 
   it('re-checks when the window regains focus', async () => {

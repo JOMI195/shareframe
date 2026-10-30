@@ -12,9 +12,9 @@ const signInAs = async (
   email = 'alice@example.com',
   password = 'geheim123',
 ) => {
-  await user.type(screen.getByLabelText('Email'), email);
+  await user.type(screen.getByLabelText('E-Mail-Adresse'), email);
   await user.type(screen.getByLabelText('Passwort'), password);
-  await user.click(screen.getByRole('button', { name: 'anmelden' }));
+  await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 };
 
 // The mocked mirror of tests/e2e/auth.spec.ts, plus the cases that do not need
@@ -59,14 +59,14 @@ describe('signing in', () => {
     expect(router.state.location.pathname).toBe('/auth/sign-in/');
     expect(localStorage.getItem('loggedIn')).toBeNull();
     // Only the password has to be typed again.
-    expect(screen.getByLabelText('Email')).toHaveValue('alice@example.com');
+    expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue('alice@example.com');
     expect(screen.getByLabelText('Passwort')).toHaveValue('');
   });
 
   it('asks for both fields', async () => {
     const { user } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
 
-    await user.click(screen.getByRole('button', { name: 'anmelden' }));
+    await user.click(screen.getByRole('button', { name: 'Anmelden' }));
 
     expect(await screen.findAllByText('Dieses Feld wird benötigt')).toHaveLength(2);
   });
@@ -74,12 +74,12 @@ describe('signing in', () => {
   it('sends a signed-out visitor from a protected route to sign-in', async () => {
     renderRoute('/fotos/', { preloadedState: buildState() });
 
-    expect(await screen.findByRole('button', { name: 'anmelden' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Anmelden' })).toBeInTheDocument();
   });
 
   it('returns to the protected page after signing in', async () => {
     const { user, router } = renderRoute('/fotos/', { preloadedState: buildState() });
-    await screen.findByRole('button', { name: 'anmelden' });
+    await screen.findByRole('button', { name: 'Anmelden' });
 
     await signInAs(user);
 

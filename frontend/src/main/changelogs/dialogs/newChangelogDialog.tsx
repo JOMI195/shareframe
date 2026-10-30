@@ -6,6 +6,7 @@ import {
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
 import { usePromptSlot } from '@/common/components/lifecycle/promptQueue';
+import { formatDateNumeric } from "@/common/utils/date/date";
 
 // The markdown renderer loads only when there is something to announce.
 const MarkdownImagesIntercept = lazy(() => import('@/common/utils/markdown/markdownImagesIntercept'));
@@ -35,7 +36,7 @@ const NewChangelogDialog: React.FC = () => {
             open
             onDialogClose={handleClose}
             dialogTitle={"✨ Neue Änderungen während deiner Abwesenheit"}
-            dialogSubtitle={new Date(newestChangelog.date).toLocaleDateString()}
+            dialogSubtitle={formatDateNumeric(newestChangelog.date)}
             maxWidth="md"
             fullWidth
         >

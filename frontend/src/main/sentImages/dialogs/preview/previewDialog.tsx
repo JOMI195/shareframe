@@ -14,6 +14,7 @@ import PreviewImage from "@/main/images/dialogs/preview/previewImage";
 import { formatDuration, getActiveDurationMs, getSentImageState } from "../../sentImageStatus";
 import SentImageStatusLabel from "../../sentImageStatusLabel";
 import UserAvatar from "@/common/components/userAvatar";
+import { getUser } from "@/store/entities/authentication/authentication.slice";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -25,6 +26,8 @@ const ImagePreviewDialog = () => {
     const state = selectedImage ? getSentImageState(selectedImage) : 'expired';
     const isScheduled = state === 'scheduled';
     const activeDurationMs = selectedImage ? getActiveDurationMs(selectedImage) : null;
+    const me = useAppSelector(getUser).me.username;
+    const received = selectedImage !== null && selectedImage.sender !== me;
 
     const handleCloseImagePreview = () => {
         dispatch(closePreviewSentImageDialog());
@@ -84,7 +87,7 @@ const ImagePreviewDialog = () => {
         <ShareframeMainDialog
             open={dialog.open}
             onDialogClose={handleCloseImagePreview}
-            dialogTitle={"Gesendetes Foto"}
+            dialogTitle={received ? "Erhaltenes Foto" : "Gesendetes Foto"}
             dialogContentSx={{ padding: 2 }}
             //subtitle="Optional subtitle or description"
             actionsAdditional={dialogActions}
@@ -106,7 +109,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">Sender</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Absender</Typography>
                                 <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
                                     <ListItemAvatar>
                                         <UserAvatar
@@ -128,7 +131,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">Empfänger</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Empfänger</Typography>
                                 <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
                                     <ListItemAvatar>
                                         <UserAvatar
@@ -150,7 +153,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">{isScheduled ? "Geplant für" : "Gesendet am"}</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">{isScheduled ? "Geplant für" : "Gesendet am"}</Typography>
                                 <Typography>{formatGermanDateTime(new Date(isScheduled && selectedImage.scheduled_for ? selectedImage.scheduled_for : selectedImage.sent_at))}</Typography>
                             </Box>
                         </Grid>
@@ -161,7 +164,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">Läuft ab am</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Läuft ab am</Typography>
                                 <Typography>{(selectedImage && selectedImage.expires_at !== null) && formatGermanDateTime(new Date(selectedImage.expires_at))}</Typography>
                             </Box>
                         </Grid>
@@ -172,7 +175,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">Anzeigedauer</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Anzeigedauer</Typography>
                                 <Typography>{activeDurationMs !== null ? formatDuration(activeDurationMs) : "–"}</Typography>
                             </Box>
                         </Grid>
@@ -183,7 +186,7 @@ const ImagePreviewDialog = () => {
                                 md: 2
                             }}>
                             <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText">Status</Typography>
+                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Status</Typography>
                                 <SentImageStatusLabel state={state} />
                             </Box>
 

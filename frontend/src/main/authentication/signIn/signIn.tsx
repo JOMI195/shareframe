@@ -164,7 +164,7 @@ export default function SignIn() {
               id="email"
               name="email"
               type="email"
-              label={"Email"}
+              label={"E-Mail-Adresse"}
               value={signInForm.values.email}
               onBlur={signInForm.handleBlur}
               error={
@@ -183,7 +183,7 @@ export default function SignIn() {
                   endAdornment: signInForm.values.email ? (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="clear email field"
+                        aria-label="E-Mail-Adresse leeren"
                         onClick={handleClearEmail}
                         onMouseDown={handleMouseDownButton}
                         edge="end"
@@ -221,7 +221,7 @@ export default function SignIn() {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label="toggle current password visibility"
+                        aria-label={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
                         onClick={() => handleClickShowPassword()}
                         onMouseDown={handleMouseDownButton}
                         edge="end"
@@ -242,7 +242,7 @@ export default function SignIn() {
               variant="contained"
               loading={api.loading}
             >
-              {"anmelden"}
+              {"Anmelden"}
             </Button>
           </Grid>
           <Grid

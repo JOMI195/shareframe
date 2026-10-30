@@ -18,6 +18,7 @@ import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import { useMinimumLoading } from '@/hooks/loading/useMinimumLoading';
 import DataNotFound from '@/common/components/dataNotFound';
 import MarkdownImagesIntercept from '@/common/utils/markdown/markdownImagesIntercept';
+import { formatDateNumeric } from "@/common/utils/date/date";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -107,7 +108,7 @@ const Changelogs: React.FC = () => {
             <Typography sx={{
                 marginBottom: "16px"
             }}>
-                Informiere dich hier über die neusten Änderungen deines Bilderrahmens und der Shareframe Plattform.
+                Hier findest du die neuesten Änderungen an deinem Bilderrahmen und an ShareFrame.
             </Typography>
 
             {showSkeleton && (
@@ -167,7 +168,7 @@ const Changelogs: React.FC = () => {
                                                         mb: 2
                                                     }}>
                                                     <Typography variant="subtitle1">
-                                                        {new Date(changelog.date).toLocaleDateString()}
+                                                        {formatDateNumeric(changelog.date)}
                                                     </Typography>
                                                     {isNewest && (
                                                         <Chip
@@ -188,7 +189,7 @@ const Changelogs: React.FC = () => {
                                         <>
                                             <Box>
                                                 <Typography variant="subtitle1">
-                                                    {new Date(changelog.date).toLocaleDateString()} - {changelog.title}
+                                                    {formatDateNumeric(changelog.date)} - {changelog.title}
                                                 </Typography>
                                             </Box>
                                             {isNewest && (

@@ -179,7 +179,7 @@ describe('photo library', () => {
     await user.click(screen.getByRole('button', { name: 'Weiter zur Vorschau' }));
     await user.click(await screen.findByRole('button', { name: 'Hochladen' }));
 
-    expect(await screen.findByText('Foto hochgeladen')).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Foto hochgeladen' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Jetzt senden' }));
 
     await waitFor(() => expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(true));

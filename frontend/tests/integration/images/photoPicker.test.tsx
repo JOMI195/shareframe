@@ -102,7 +102,7 @@ describe('photo picker file input', () => {
 
     await waitFor(() => expect(store.getState().ui.images.snackbar.alert.open).toBe(true));
     expect(store.getState().ui.images.snackbar.alert.message).toContain(
-      'Maximale Gesamtanzahl von 100 Foto(s) würde überschritten',
+      'Du kannst insgesamt höchstens 100 Fotos haben',
     );
     expect(addImages).not.toHaveBeenCalled();
   });

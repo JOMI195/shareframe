@@ -183,7 +183,7 @@ const FriendshipCreateDialog: React.FC = () => {
               <Typography variant="body2" sx={{
                 color: "text.secondary"
               }}>
-                Bitte gebe hier den Freundschaftscode der Person ein, welche du hinzufügen möchtest
+                Gib den Freundescode der Person ein, die du hinzufügen möchtest.
               </Typography>
               <Box
                 component='form'
@@ -198,7 +198,7 @@ const FriendshipCreateDialog: React.FC = () => {
                       id='friend_code'
                       name='reciever_friendship_user_search_code'
                       autoComplete="off"
-                      label="Freundschaftscode"
+                      label="Freundescode"
                       value={form.values.reciever_friendship_user_search_code}
                       onBlur={form.handleBlur}
                       onChange={(e) => {
@@ -233,7 +233,7 @@ const FriendshipCreateDialog: React.FC = () => {
                       variant='contained'
                       loading={form.isSubmitting}
                     >
-                      {'Hinzufügen'}
+                      {'Anfrage senden'}
                     </Button>
                   </Grid>
                 </Grid>

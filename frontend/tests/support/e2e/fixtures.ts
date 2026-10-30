@@ -19,9 +19,9 @@ export const dismissChangelogDialog = async (page: Page) => {
 
 export const signIn = async (page: Page, user = alice) => {
   await page.goto('/auth/sign-in/');
-  await page.getByLabel('Email').fill(user.email);
-  await page.getByLabel('Passwort').fill(user.password);
-  await page.getByRole('button', { name: 'anmelden' }).click();
+  await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(user.email);
+  await page.getByLabel('Passwort', { exact: true }).fill(user.password);
+  await page.getByRole('button', { name: 'Anmelden' }).click();
   await expect(page).toHaveURL(/\/dashboard\/$/);
   await dismissChangelogDialog(page);
 };

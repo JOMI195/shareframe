@@ -25,12 +25,12 @@ const Header: FC<HeaderProps> = ({ username }) => {
                             Hi, {username}
                         </Typography>
                         <Typography variant="body2">
-                            {greeting ?? "Willkommen zu ShareFrame"}
+                            {greeting ?? "Willkommen bei ShareFrame"}
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "row" }}>
                         <IconButton
-                            aria-label="Account-Einstellungen"
+                            aria-label="Konto-Einstellungen"
                             sx={{ color: "inherit", width: 44, height: 44 }}
                             onClick={() => navigate("/" + getSettingsUrl() + getUserSettingsUrl())}
                         >

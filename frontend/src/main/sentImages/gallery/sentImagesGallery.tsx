@@ -230,7 +230,7 @@ const SentImagesGallery = () => {
                                 onClick={() => handleImageClick(sentImage)}
                                 role="button"
                                 tabIndex={0}
-                                aria-label={sentImage.image.display_name || sentImage.image.name}
+                                aria-label={`${sentImage.image.display_name || sentImage.image.name}, ${sentImage.sender === user.me.username ? `an ${sentImage.reciever === user.me.username ? "dich" : sentImage.reciever}` : `von ${sentImage.sender}`}`}
                                 onKeyDown={(event) => onActivateKey(event, () => handleImageClick(sentImage))}
                                 style={{ cursor: "pointer" }}
                             >

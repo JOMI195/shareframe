@@ -113,8 +113,8 @@ describe('answering a request', () => {
 
 describe('sending a request', () => {
   const openDialog = async (user: ReturnType<typeof renderRoute>['user']) => {
-    await user.click(screen.getByRole('button', { name: /Freundschaftsanfrage/ }));
-    return screen.findByLabelText('Freundschaftscode');
+    await user.click(screen.getByRole('button', { name: 'Freund hinzufügen' }));
+    return screen.findByLabelText('Freundescode');
   };
 
   it('sends the friend code that was typed', async () => {
@@ -129,7 +129,7 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'SEEDB001');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     await waitFor(() =>
       expect(bodies).toEqual([{ reciever_friendship_user_search_code: 'SEEDB001' }]),
@@ -146,7 +146,7 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'SEEDB001');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     await waitFor(() =>
       expect(store.getState().ui.friendships.snackbar.alert.message).toBe('Du hast dieser Person schon eine Anfrage geschickt.'),
@@ -165,7 +165,7 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'KURZ');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     expect(await screen.findByText('Der Code besteht aus 8 Zeichen')).toBeInTheDocument();
     expect(bodies).toHaveLength(0);
@@ -181,7 +181,7 @@ describe('sending a request', () => {
 
     const field = await openDialog(user);
     await user.type(field, 'UNBEKANN');
-    await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
+    await user.click(screen.getByRole('button', { name: 'Anfrage senden' }));
 
     await waitFor(() =>
       expect(store.getState().ui.friendships.snackbar.alert.severity).toBe('error'),

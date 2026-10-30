@@ -16,10 +16,10 @@ test.describe('authentication', () => {
 
   test('rejects a wrong password', async ({ page }) => {
     await page.goto('/auth/sign-in/');
-    await page.getByLabel('Email').fill(alice.email);
+    await page.getByRole('textbox', { name: 'E-Mail-Adresse' }).fill(alice.email);
     const since = new Date();
-    await page.getByLabel('Passwort').fill('falsches-passwort');
-    await page.getByRole('button', { name: 'anmelden' }).click();
+    await page.getByLabel('Passwort', { exact: true }).fill('falsches-passwort');
+    await page.getByRole('button', { name: 'Anmelden' }).click();
 
     await expect(page.getByRole('alert').first()).toBeVisible();
     await expect(page).toHaveURL(/\/auth\/sign-in\/$/);

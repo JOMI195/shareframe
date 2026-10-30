@@ -15,7 +15,7 @@ export const landingContent = {
     },
     {
       title: "Freunde",
-      text: "Freunde werden über einen Freundschaftscode hinzugefügt. Danach können Fotos auch an ihre Rahmen gesendet werden.",
+      text: "Freunde werden über einen Freundescode hinzugefügt. Danach können Fotos auch an ihre Rahmen gesendet werden.",
     },
     {
       title: "E-Paper-Display",
