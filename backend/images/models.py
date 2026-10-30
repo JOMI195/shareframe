@@ -61,7 +61,7 @@ class ImageVariant(models.Model):
     parent_image = models.ForeignKey(
         "Image", on_delete=models.CASCADE, related_name="variants"
     )
-    file = models.ImageField(upload_to=get_variant_upload_path)
+    file = models.ImageField(upload_to=get_variant_upload_path, db_index=True)
 
     class Meta:
         unique_together = ("image_size", "parent_image")
@@ -85,7 +85,7 @@ class Image(models.Model):
     markedAsDeleted = models.BooleanField(default=False)
     auto_delete_after_period = models.BooleanField(default=False)
 
-    image = models.ImageField(upload_to=get_original_upload_path)
+    image = models.ImageField(upload_to=get_original_upload_path, db_index=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=254)
@@ -162,19 +162,23 @@ class Image(models.Model):
         else:
             return self.image.name
 
+    @staticmethod
+    def auto_delete_cutoff():
+        """Images created at or before this are due for auto-deletion."""
+        auto_delete_interval = getattr(
+            settings, "IMAGES_AUTO_DELETE_INTERVAL_HOURS", None
+        )
+        if auto_delete_interval is None:
+            return None
+        return timezone.now() - timedelta(hours=auto_delete_interval)
+
     def should_be_auto_deleted(self):
         """Check if this image should be automatically deleted based on settings"""
         if not self.auto_delete_after_period or self.markedAsDeleted:
             return False
 
-        auto_delete_interval = getattr(
-            settings, "IMAGES_AUTO_DELETE_INTERVAL_HOURS", None
-        )
-        if auto_delete_interval is None:
-            return False
-
-        expiry_time = self.created_at + timedelta(hours=auto_delete_interval)
-        return timezone.now() >= expiry_time
+        cutoff = self.auto_delete_cutoff()
+        return cutoff is not None and self.created_at <= cutoff
 
     def generate_sized_images(self):
         """Generate different sized versions of the image based on ImageSize models"""
@@ -229,8 +233,7 @@ class Image(models.Model):
         if not width:
             return
 
-        # Make a copy to avoid modifying the original
-        img_copy = img.copy()
+        img_copy = img
 
         # PNG only for actual PNG sources; anything else (incl. MPO from phone HDR) is JPEG.
         img_format = "PNG" if source_format == "PNG" else "JPEG"
@@ -246,8 +249,8 @@ class Image(models.Model):
             wpercent = width / float(img_copy.width)
             height = int(float(img_copy.height) * float(wpercent))
 
-        # Resize the image
-        img_copy = img_copy.resize((width, height), PILImage.LANCZOS)
+        if width < img_copy.width:
+            img_copy = img_copy.resize((width, height), PILImage.LANCZOS)
 
         # Save to memory buffer
         output = BytesIO()
