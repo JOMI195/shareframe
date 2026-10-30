@@ -1,11 +1,11 @@
-import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, Box, FormControl, Select, MenuItem, InputLabel, FormControlLabel, Switch } from "@mui/material";
+import { Button, DialogContent, Grid, Typography, useMediaQuery, useTheme, Box, FormControl, Select, MenuItem, InputLabel } from "@mui/material";
 import AppDialog from '@/common/components/appDialog';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getApi as getImagesApi } from "@/store/entities/images/images.slice";
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import DialogHeader from '@/common/components/dialogHeader';
 import FormActions from '@/common/components/settings/formActions';
-import { closeFilterDialog, getDialogs, resetFilters, setHideToYouFilter, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
+import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
 import { ShippingFilter, StatusFilter } from "@/types";
 import { useState } from "react";
 import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
@@ -27,21 +27,19 @@ const FiltersDialog = () => {
 
     const [statusFilterLocal, setStatusFilterLocal] = useState<StatusFilter>('all');
     const [shippingFilterLocal, setShippingFilterLocal] = useState<ShippingFilter>('all');
-    const [hideToYouLocal, setHideToYouLocal] = useState(true);
     const [senderFilterLocal, setSenderFilterLocal] = useState('');
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
     const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
-    const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.hideToYouFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
+    const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
 
     if (dialogFilters !== syncedFilters) {
         setSyncedFilters(dialogFilters);
         if (filterDialog.open) {
             setStatusFilterLocal(filterDialog.statusFilter);
             setShippingFilterLocal(filterDialog.shippingFilter);
-            setHideToYouLocal(filterDialog.hideToYouFilter);
             setSenderFilterLocal(filterDialog.senderFilter || '');
             setReceiverFilterLocal(filterDialog.receiverFilter || '');
         }
@@ -54,7 +52,6 @@ const FiltersDialog = () => {
     const handleApplyFilters = () => {
         dispatch(setStatusFilter({ statusFilter: statusFilterLocal }));
         dispatch(setShippingFilter({ shippingFilter: shippingFilterLocal }));
-        dispatch(setHideToYouFilter({ hideToYouFilter: hideToYouLocal }));
         dispatch(setSenderFilter({ senderFilter: senderFilterLocal }));
         dispatch(setRecieverFilter({ receiverFilter: receiverFilterLocal }));
 
@@ -208,12 +205,6 @@ const FiltersDialog = () => {
                                     ))}
                                 </Select>
                             </FormControl>
-                        </Grid>
-                        <Grid size={12}>
-                            <FormControlLabel
-                                control={<Switch checked={hideToYouLocal} onChange={(e) => setHideToYouLocal(e.target.checked)} />}
-                                label="Fotos an dich unscharf zeigen"
-                            />
                         </Grid>
                     </Grid>
                 </Box>

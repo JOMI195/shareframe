@@ -9,14 +9,14 @@ import {
     Button,
     SelectChangeEvent,
     Switch,
-    FormGroup,
-    FormControlLabel,
+    Typography,
     Badge,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import BlurOnIcon from '@mui/icons-material/BlurOn';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
     getDialogs,
@@ -33,6 +33,40 @@ export interface FilterControlsProps {
     onFiltersChange: (filters: ISentImagesFilters) => void;
     disabled?: boolean;
 }
+
+interface BlurToggleProps {
+    checked: boolean;
+    onChange: () => void;
+    disabled?: boolean;
+    height: number;
+}
+
+// Outlined like the selects next to it; the whole box toggles.
+const BlurToggle: React.FC<BlurToggleProps> = ({ checked, onChange, disabled, height }) => (
+    <Box
+        component="label"
+        sx={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1.5,
+            height,
+            pl: 1.5,
+            pr: 0.5,
+            border: 1,
+            borderColor: 'action.disabled',
+            borderRadius: 1,
+            cursor: disabled ? 'default' : 'pointer',
+            opacity: disabled ? 0.6 : 1,
+            '&:hover': { borderColor: disabled ? 'action.disabled' : 'text.primary' },
+        }}
+    >
+        <BlurOnIcon color={checked ? 'primary' : 'action'} />
+        <Typography variant="body2" sx={{ flex: 1 }}>
+            Fotos an dich verbergen
+        </Typography>
+        <Switch checked={checked} onChange={onChange} disabled={disabled} />
+    </Box>
+);
 
 const FilterControls: React.FC<FilterControlsProps> = ({
     onFiltersChange,
@@ -112,32 +146,38 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     // On phones the five controls would push the photos below the fold; they live in the dialog instead.
     if (isCompact) {
         return (
-            <Box sx={{ width: '100%', mb: 2, display: 'flex', gap: 1 }}>
-                <Button
-                    variant="outlined"
-                    onClick={handleOpenExtendedFilters}
-                    disabled={disabled}
-                    aria-label={activeFilterCount > 0 ? `Filter (${activeFilterCount} aktiv)` : 'Filter'}
-                    startIcon={
-                        <Badge badgeContent={activeFilterCount} color="primary">
-                            <FilterListIcon />
-                        </Badge>
-                    }
-                    sx={{ flex: 1, minHeight: 44 }}
-                >
-                    Filter
-                </Button>
-                {activeFilterCount > 0 && (
+            <Box sx={{ width: '100%', mb: 2 }}>
+                <Box sx={{ display: 'flex', gap: 1 }}>
                     <Button
-                        variant="text"
-                        onClick={handleClearFilters}
+                        variant="outlined"
+                        onClick={handleOpenExtendedFilters}
                         disabled={disabled}
-                        startIcon={<FilterListOffIcon />}
-                        sx={{ minHeight: 44 }}
+                        aria-label={activeFilterCount > 0 ? `Filter (${activeFilterCount} aktiv)` : 'Filter'}
+                        startIcon={
+                            <Badge badgeContent={activeFilterCount} color="primary">
+                                <FilterListIcon />
+                            </Badge>
+                        }
+                        sx={{ flex: 1, minHeight: 44 }}
                     >
-                        Zurücksetzen
+                        Filter
                     </Button>
-                )}
+                    {activeFilterCount > 0 && (
+                        <Button
+                            variant="text"
+                            onClick={handleClearFilters}
+                            disabled={disabled}
+                            startIcon={<FilterListOffIcon />}
+                            sx={{ minHeight: 44 }}
+                        >
+                            Zurücksetzen
+                        </Button>
+                    )}
+                </Box>
+                {/* A display switch, not a filter: it acts at once and stays in reach. */}
+                <Box sx={{ mt: 1 }}>
+                    <BlurToggle checked={hideToYouFilter} onChange={handleHideToYouChange} disabled={disabled} height={44} />
+                </Box>
             </Box>
         );
     }
@@ -195,41 +235,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         xs: 12,
                         md: 3
                     }}>
-                    <FormControl
-                        fullWidth
-                        disabled={disabled}
-                        sx={{
-                            display: "flex",
-                            justifyContent: "center",
-                            alignItems: "center",
-                            border: (theme) => `1px solid ${theme.palette.action.disabled}`,
-                            borderRadius: 1,
-                            padding: '8px 14px',
-                            height: '56px',
-                            '&:hover': {
-                                borderColor: (theme) => theme.palette.text.primary,
-                            },
-                            '& .MuiFormControlLabel-root': {
-                                marginLeft: 0,
-                                marginRight: 0,
-                            },
-                            '& .MuiSwitch-root': {
-                                marginRight: (theme) => theme.spacing(1),
-                            }
-                        }}
-                    >
-                        <FormGroup>
-                            <FormControlLabel
-                                control={
-                                    <Switch
-                                        checked={hideToYouFilter}
-                                        onChange={handleHideToYouChange}
-                                    />
-                                }
-                                label="Fotos an dich verbergen"
-                            />
-                        </FormGroup>
-                    </FormControl>
+                    <BlurToggle checked={hideToYouFilter} onChange={handleHideToYouChange} disabled={disabled} height={56} />
                 </Grid>
                 <Grid
                     size={{
