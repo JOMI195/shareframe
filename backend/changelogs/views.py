@@ -66,7 +66,7 @@ class ChangelogViewSet(viewsets.GenericViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        entries = self.get_queryset().filter(id__in=ids)
+        entries = self.get_queryset().filter(id__in=ids).prefetch_related("images")
 
         if not entries:
             return Response(

@@ -137,7 +137,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="accept-request")
     def accept_request(self, request, pk):
         try:
-            existing_request = Friendship.objects.get(
+            existing_request = self.queryset.get(
                 pk=pk, reciever=request.user, status="pending"
             )
         except Friendship.DoesNotExist:
@@ -154,7 +154,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         ).exists()
         if existing_friendship:
             existing_request.status = "rejected"
-            existing_request.save()
+            existing_request.save(update_fields=["status", "updated_at"])
             return error_response(
                 error_codes.FRIENDSHIP_EXISTS,
                 "You are already friends with this user. The friendship request is not valid anymore has been rejected.",
@@ -162,7 +162,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             )
 
         existing_request.status = "accepted"
-        existing_request.save()
+        existing_request.save(update_fields=["status", "updated_at"])
 
         serializer = FriendshipRetrieveSerializer(existing_request)
 
@@ -171,7 +171,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["POST"], url_path="reject-request")
     def reject_request(self, request, pk=None):
         try:
-            existing_request = Friendship.objects.get(
+            existing_request = self.queryset.get(
                 pk=pk, reciever=request.user, status="pending"
             )
         except Friendship.DoesNotExist:
@@ -188,7 +188,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
         ).exists()
         if existing_friendship:
             existing_request.status = "rejected"
-            existing_request.save()
+            existing_request.save(update_fields=["status", "updated_at"])
             return error_response(
                 error_codes.FRIENDSHIP_EXISTS,
                 "You are already friends with this user. The friendship request is not valid anymore has been rejected.",
@@ -196,7 +196,7 @@ class FriendshipViewSet(viewsets.ModelViewSet):
             )
 
         existing_request.status = "rejected"
-        existing_request.save()
+        existing_request.save(update_fields=["status", "updated_at"])
 
         serializer = FriendshipRetrieveSerializer(existing_request)
 
