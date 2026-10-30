@@ -28,18 +28,22 @@ const AdjustPreview: React.FC<AdjustPreviewProps> = ({ image, adjustment, epaper
     useEffect(() => {
         if (!base) return;
         let active = true;
-        const adjusted = adjustPixels(base.data, adjustment);
-        const pixels = { ...base, data: epaper ? ditherToEpaper(adjusted, base.width, base.height) : adjusted };
-        pixelsToBlob(pixels, epaper ? 'image/png' : 'image/jpeg', 0.92)
-            .then((blob) => {
-                if (!active) return;
-                if (urlRef.current) URL.revokeObjectURL(urlRef.current);
-                urlRef.current = URL.createObjectURL(blob);
-                setUrl(urlRef.current);
-            })
-            .catch(() => undefined);
+        // Slider moves within one frame collapse into a single repaint with the latest value.
+        const frame = requestAnimationFrame(() => {
+            const adjusted = adjustPixels(base.data, adjustment);
+            const pixels = { ...base, data: epaper ? ditherToEpaper(adjusted, base.width, base.height) : adjusted };
+            pixelsToBlob(pixels, epaper ? 'image/png' : 'image/jpeg', 0.92)
+                .then((blob) => {
+                    if (!active) return;
+                    if (urlRef.current) URL.revokeObjectURL(urlRef.current);
+                    urlRef.current = URL.createObjectURL(blob);
+                    setUrl(urlRef.current);
+                })
+                .catch(() => undefined);
+        });
         return () => {
             active = false;
+            cancelAnimationFrame(frame);
         };
     }, [base, adjustment, epaper]);
 

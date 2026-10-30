@@ -421,8 +421,10 @@ describe('UploadDialog adjust step', () => {
 
     await user.click(screen.getByRole('button', { name: 'E-Paper' }));
 
-    await waitFor(() => expect(painted().width).toBe(800));
-    expect(painted().data.every((value) => value === 0 || value === 255)).toBe(true);
+    await waitFor(() => {
+      expect(painted().width).toBe(800);
+      expect(painted().data.every((value) => value === 0 || value === 255)).toBe(true);
+    });
   });
 
   it('keeps the e-paper view through the following steps', async () => {
