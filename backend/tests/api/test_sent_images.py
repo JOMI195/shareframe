@@ -55,6 +55,14 @@ def test_the_page_size_can_be_changed(alice):
     assert len(response.data["results"]) == 2
 
 
+def test_an_entry_stays_after_its_image_is_deleted_from_the_gallery(alice, alice_user):
+    entry = SentImageFactory(sender=alice_user)
+
+    assert alice.delete(f"/api/images/{entry.image_id}/").status_code == 200
+
+    assert alice.get(f"{URL}{entry.pk}/").status_code == 200
+
+
 def test_filters_to_what_was_sent_to_you(alice, alice_user):
     response = alice.get(URL, {"shipping": "sentToYou"})
 
