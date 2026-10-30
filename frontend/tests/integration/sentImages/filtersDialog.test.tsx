@@ -18,9 +18,9 @@ const render = () =>
     }),
   });
 
-// Neither MUI Select exposes an accessible name here; the sender comes first.
-// Status and direction come first in the dialog.
-const senderSelect = () => screen.getAllByRole('combobox')[2];
+// Neither MUI Select exposes an accessible name here. Outside phone width the dialog
+// holds only the sender and the receiver.
+const senderSelect = () => screen.getAllByRole('combobox')[0];
 
 describe('FiltersDialog', () => {
   it('shows the picture of every user it offers', async () => {
@@ -49,8 +49,8 @@ describe('FiltersDialog', () => {
   it('shows the placeholder while nobody is chosen', () => {
     render();
 
-    expect(senderSelect()).toHaveTextContent('Alle Sender');
-    expect(screen.getAllByRole('combobox')[3]).toHaveTextContent('Alle Empfänger');
+    expect(senderSelect()).toHaveTextContent('Alle Absender');
+    expect(screen.getAllByRole('combobox')[1]).toHaveTextContent('Alle Empfänger');
   });
 
   it('closes from the header without a separate cancel button', async () => {

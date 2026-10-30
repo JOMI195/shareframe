@@ -31,6 +31,7 @@ const FiltersDialog = () => {
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
+    const compact = useMediaQuery(theme.breakpoints.down('md'));
 
     const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
     const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
@@ -111,7 +112,7 @@ const FiltersDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            <DialogHeader title="Filter" titleId="filter-dialog-title" onClose={handleDialogClose} />
+            <DialogHeader title={compact ? "Filter" : "Mehr Filter"} titleId="filter-dialog-title" onClose={handleDialogClose} />
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
                     <Typography
@@ -123,51 +124,56 @@ const FiltersDialog = () => {
                         Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
                     <Grid container spacing={2}>
-                        <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel id="filter-dialog-status-label">Status</InputLabel>
-                                <Select
-                                    labelId="filter-dialog-status-label"
-                                    value={statusFilterLocal}
-                                    label="Status"
-                                    onChange={(e) => setStatusFilterLocal(e.target.value as StatusFilter)}
-                                >
-                                    <MenuItem value="all">Alle Fotos</MenuItem>
-                                    <MenuItem value="active">Aktive</MenuItem>
-                                    <MenuItem value="expired">Abgelaufene</MenuItem>
-                                    <MenuItem value="scheduled">Geplante</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
-                        <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel id="filter-dialog-shipping-label">Richtung</InputLabel>
-                                <Select
-                                    labelId="filter-dialog-shipping-label"
-                                    value={shippingFilterLocal}
-                                    label="Richtung"
-                                    onChange={(e) => setShippingFilterLocal(e.target.value as ShippingFilter)}
-                                >
-                                    <MenuItem value="all">Alle Fotos</MenuItem>
-                                    <MenuItem value="sentToYou">An dich gesendete</MenuItem>
-                                    <MenuItem value="sentByYou">Von dir gesendete</MenuItem>
-                                </Select>
-                            </FormControl>
-                        </Grid>
+                        {/* Wider screens show these two on the page next to the button that opens this dialog. */}
+                        {compact && (
+                            <>
+                            <Grid size={12}>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="filter-dialog-status-label">Status</InputLabel>
+                                    <Select
+                                        labelId="filter-dialog-status-label"
+                                        value={statusFilterLocal}
+                                        label="Status"
+                                        onChange={(e) => setStatusFilterLocal(e.target.value as StatusFilter)}
+                                    >
+                                        <MenuItem value="all">Alle Fotos</MenuItem>
+                                        <MenuItem value="active">Aktive</MenuItem>
+                                        <MenuItem value="expired">Abgelaufene</MenuItem>
+                                        <MenuItem value="scheduled">Geplante</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid size={12}>
+                                <FormControl fullWidth sx={{ mb: 2 }}>
+                                    <InputLabel id="filter-dialog-shipping-label">Richtung</InputLabel>
+                                    <Select
+                                        labelId="filter-dialog-shipping-label"
+                                        value={shippingFilterLocal}
+                                        label="Richtung"
+                                        onChange={(e) => setShippingFilterLocal(e.target.value as ShippingFilter)}
+                                    >
+                                        <MenuItem value="all">Alle Fotos</MenuItem>
+                                        <MenuItem value="sentToYou">An dich gesendete</MenuItem>
+                                        <MenuItem value="sentByYou">Von dir gesendete</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            </>
+                        )}
                         <Grid size={12}>
                             <FormControl fullWidth sx={{ mb: 2 }}>
                                 <InputLabel shrink>Absender</InputLabel>
                                 <Select
                                     disabled={loading || friendshipsLoading}
                                     value={senderFilterLocal}
-                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Sender</em>}
+                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Absender</em>}
                                     label="Absender"
                                     onChange={(e) => setSenderFilterLocal(e.target.value as string)}
                                     displayEmpty
                                     notched
                                 >
                                     <MenuItem value="">
-                                        <em>Alle Sender</em>
+                                        <em>Alle Absender</em>
                                     </MenuItem>
                                     {availableUsernames.map((username) => (
                                         <MenuItem

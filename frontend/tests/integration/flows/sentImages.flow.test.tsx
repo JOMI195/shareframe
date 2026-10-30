@@ -116,6 +116,20 @@ describe('filters on a phone', () => {
   });
 });
 
+describe('filters on a wide screen', () => {
+  it('keep status and direction on the page and out of the dialog', async () => {
+    const { user } = await openActivity();
+
+    expect(screen.getByLabelText('Status')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Mehr Filter' }));
+
+    const dialog = await screen.findByRole('dialog', { name: 'Mehr Filter' });
+    expect(within(dialog).queryByLabelText('Status')).not.toBeInTheDocument();
+    expect(within(dialog).queryByLabelText('Richtung')).not.toBeInTheDocument();
+    expect(within(dialog).getAllByText('Absender').length).toBeGreaterThan(0);
+  });
+});
+
 describe('blurring on a phone', () => {
   // A display switch rather than a filter: on the page, acting at once.
   it('keeps the switch on the page and out of the filter dialog', async () => {
