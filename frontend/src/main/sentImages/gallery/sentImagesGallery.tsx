@@ -1,4 +1,6 @@
 import React from "react";
+import { useNavigate } from "react-router";
+import { getImageUrl } from "@/assets/endpoints/app/appEndpoints";
 import {
     Box,
     ImageList,
@@ -45,6 +47,8 @@ const SentImagesGallery = () => {
     const sentImagesFailed = useAppSelector(getImagesApi).sentImagesFailed;
     const sentImagesStale = useAppSelector(getImagesApi).sentImagesStale;
     const appliedFilters = useAppSelector(getSentImagesFilters);
+    const unfiltered = appliedFilters.status === 'all' && appliedFilters.shipping === 'all' && !appliedFilters.sender && !appliedFilters.receiver;
+    const navigate = useNavigate();
     const sentImagesPaginated = useAppSelector(getSentImagesPaginated);
     const showSkeleton = useMinimumLoading(loading && (sentImagesStale || sentImagesPaginated.results.length === 0));
     const theme = useTheme();
@@ -273,7 +277,10 @@ const SentImagesGallery = () => {
                         action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchSentImagesPaginated(currentPage, pageSize, appliedFilters)) }}
                     />
                 ) : (
-                    <DataNotFound notFoundMessage={"Noch keine gesendeten oder erhaltenen Fotos"} />
+                    <DataNotFound
+                        notFoundMessage={"Noch keine gesendeten oder erhaltenen Fotos"}
+                        action={unfiltered ? { label: "Foto senden", icon: <SendIcon />, onClick: () => navigate("/" + getImageUrl()) } : undefined}
+                    />
                 )
             )}
 
