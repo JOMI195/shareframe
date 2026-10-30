@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       react(),
       imagetools(),
       compression({
-        algorithms: [defineAlgorithm('brotliCompress'), defineAlgorithm('gzip')],
+        algorithms: [defineAlgorithm('gzip')],
         include: /\.(js|css|html|svg|json|txt|ico|xml)$/,
         deleteOriginalAssets: false,
       }),
@@ -37,7 +37,6 @@ export default defineConfig(({ mode }) => {
           manualChunks: (id: string) => {
             if (!id.includes('node_modules')) return undefined;
             if (/node_modules\/(react|react-dom|scheduler|react-router|react-redux|@reduxjs|redux|redux-persist|immer|reselect)\//.test(id)) return 'vendor-react';
-            if (/node_modules\/(@mui\/material|@mui\/system|@mui\/utils|@mui\/styled-engine|@mui\/private-theming|@mui\/core-downloads-tracker|@emotion|@popperjs|react-transition-group|clsx)\//.test(id)) return 'vendor-mui';
             return undefined;
           },
         },
