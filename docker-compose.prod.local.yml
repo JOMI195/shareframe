@@ -57,6 +57,9 @@ services:
       - 9000
     env_file:
       - ./.env.prod.local
+    # One DB thread serves all frames; gunicorn stays at 0 so its many threads don't exhaust max_connections.
+    environment:
+      DB_CONN_MAX_AGE: "60"
     depends_on:
       backend_db:
         condition: service_healthy

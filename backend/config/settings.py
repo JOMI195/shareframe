@@ -113,8 +113,8 @@ ADMIN_URL_PREFIX = "/api/admin/"
 APP_UPLOAD_MAX_SIZE = 25 * 1024 * 1024  # 25 MB
 ADMIN_UPLOAD_MAX_SIZE = 100 * 1024 * 1024  # 100 MB
 
-# Must cover the admin ceiling: LoggingMiddleware reads request.body, whose
-# Content-Length check (files included) is gated by this setting.
+# Must cover the admin ceiling: LoggingMiddleware reads request.body of
+# small and non-multipart requests, which this setting gates.
 DATA_UPLOAD_MAX_MEMORY_SIZE = ADMIN_UPLOAD_MAX_SIZE
 # Memory -> temp-disk threshold only (rejects nothing); keeps RAM low.
 FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25 MB
@@ -345,6 +345,8 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD", "password"),
         "HOST": os.environ.get("DB_HOST", "localhost"),
         "PORT": os.environ.get("DB_PORT", "5432"),
+        "CONN_MAX_AGE": int(os.environ.get("DB_CONN_MAX_AGE", "0")),
+        "CONN_HEALTH_CHECKS": True,
     }
 }
 
