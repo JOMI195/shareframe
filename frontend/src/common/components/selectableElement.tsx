@@ -65,7 +65,7 @@ const SelectableElement = <T extends SelectableItem>({
                         backgroundColor: "white",
                         borderRadius: "50%",
                         fontSize: "20px",
-                        zIndex: 10,
+                        zIndex: 1,
                     }}
                 />
             )}
@@ -79,7 +79,7 @@ const SelectableElement = <T extends SelectableItem>({
                         backgroundColor: "rgba(0, 0, 0, 0.3)",
                         borderRadius: "50%",
                         fontSize: "20px",
-                        zIndex: 10,
+                        zIndex: 1,
                     }}
                 />
             )}

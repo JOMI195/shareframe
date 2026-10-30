@@ -18,7 +18,8 @@ const SelectionBar = () => {
             sx={{
                 position: "sticky",
                 top: (theme) => theme.layout.appbar.height + 8,
-                zIndex: 2,
+                // Above the tiles and their check marks, below the app bar.
+                zIndex: (theme) => theme.zIndex.appBar,
                 px: 2,
                 py: 1,
                 display: "flex",
