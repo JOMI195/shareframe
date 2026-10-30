@@ -206,10 +206,10 @@ services:
       - frontend_network
       - backend_network
 
-  mailhog:
+  mailpit:
     logging: *default-logging
-    container_name: mailhog
-    image: mailhog/mailhog
+    container_name: mailpit
+    image: axllent/mailpit:v1.32
     restart: unless-stopped
     ports:
       - "1025:1025"
@@ -305,7 +305,7 @@ services:
       # read by the Grafana alerting contact point
       ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
       HEALTHCHECKS_PING_URL: ${HEALTHCHECKS_PING_URL}
-      # MailHog: no auth, no TLS. Prod uses MandatoryStartTLS.
+      # Mailpit: no auth, no TLS. Prod uses MandatoryStartTLS.
       GF_SMTP_ENABLED: "true"
       GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
       GF_SMTP_USER: ""

@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { dave, erin, frank, mallory } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
-import { expectMail, linkIn } from '../support/e2e/mailhog';
+import { expectMail, linkIn } from '../support/e2e/mailpit';
 
 const FIXTURE = path.resolve(import.meta.dirname, '../support/e2e/assets/upload-fixture.jpg');
 

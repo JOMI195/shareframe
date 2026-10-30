@@ -9,7 +9,7 @@ import {
   ivy,
 } from '../support/e2e/credentials';
 import { expect, signIn, test } from '../support/e2e/fixtures';
-import { expectMail, expectNoMail, linkIn, unsubscribeUrl } from '../support/e2e/mailhog';
+import { expectMail, expectNoMail, linkIn, unsubscribeUrl } from '../support/e2e/mailpit';
 import { API_URL, runInBackend } from '../support/e2e/stack';
 
 const ADMIN_URL = `${API_URL}/admin`;
@@ -40,7 +40,7 @@ const runChangelogAction = async (page: Page, title: string, action: string) => 
 };
 
 /**
- * Every mail the backend sends, delivered through real SMTP into Mailhog. The
+ * Every mail the backend sends, delivered through real SMTP into Mailpit. The
  * account mails that other specs trigger anyway (login, password change, email
  * change, deletion) are checked there. Serial, because the notifications need
  * the channels the admin switches on first.

@@ -102,7 +102,7 @@ moves `MEDIA_ROOT` aside. Two consequences:
 ## The test stack
 
 `docker-compose.test.yml` + `.env.test`, always under `-p shareframe-test`: backend,
-postgres (tmpfs), redis, mailhog. Ports are offset from dev, so both stacks can run
+postgres (tmpfs), redis, mailpit. Ports are offset from dev, so both stacks can run
 at once. `.env.test` is committed; every value in it is fake.
 
 Playwright brings up everything; pytest needs only `backend_db`.

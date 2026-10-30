@@ -1,6 +1,6 @@
 import { expect, signIn, test } from '../support/e2e/fixtures';
 import { alice } from '../support/e2e/credentials';
-import { expectMail } from '../support/e2e/mailhog';
+import { expectMail } from '../support/e2e/mailpit';
 
 test.describe('authentication', () => {
   test('signs a seeded user in and lands on the dashboard', async ({ page }) => {
