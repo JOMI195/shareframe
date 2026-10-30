@@ -64,19 +64,6 @@ export default function SignIn() {
   const [errorMessage, setErrorMessage] = useState("");
   const [cookiesBlocked, setCookiesBlocked] = useState(() => !areCookiesEnabled());
 
-  useEffect(() => {
-    let timer: NodeJS.Timeout | undefined;
-
-    if (errorMessage) {
-      timer = setTimeout(() => {
-        setErrorMessage("");
-      }, 10000);
-    }
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [errorMessage]);
-
   // Only for an already-signed-in visitor; the post-login redirect happens in onSubmit.
   // The protected route loads the profile, so it is not requested here as well.
   useEffect(() => {
@@ -120,10 +107,12 @@ export default function SignIn() {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values) => {
+      setErrorMessage("");
       await dispatch(authenticateUser(values));
       if (localStorage.getItem("loggedIn") !== "true") {
-        setErrorMessage("Bitte überprüfe deine E-Mail-Adresse und dein Passwort auf Tippfehler (Groß-/ Kleinschreibung beachten). Falls dein Konto noch nicht aktiviert wurde, prüfe bitte deine E-Mails auf die Aktivierungsmail. Versuche es anschließend erneut. Bei wiederholten Problemen kontaktiere bitte unseren Support.");
-        signInForm.resetForm();
+        setErrorMessage("E-Mail-Adresse oder Passwort stimmen nicht. Achte auf Groß- und Kleinschreibung.");
+        signInForm.setFieldValue("password", "", false);
+        signInForm.setFieldTouched("password", false, false);
         return;
       }
       signInForm.resetForm();
@@ -251,7 +240,7 @@ export default function SignIn() {
               form="sign-in-form"
               fullWidth
               variant="contained"
-              disabled={api.loading}
+              loading={api.loading}
             >
               {"anmelden"}
             </Button>

@@ -8,7 +8,7 @@ import TextField from "@mui/material/TextField";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useNavigate } from "react-router";
-import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authEndpoints";
 import { Grid } from "@mui/material";
 
 export default function PasswordReset() {
@@ -48,7 +48,7 @@ export default function PasswordReset() {
   }
 
   const handleCancel = () => {
-    navigate(getDashboardUrl(), { replace: true });
+    navigate(getAuthenticationUrl() + getSignInUrl(), { replace: true });
     setIsDisabled(false);
   };
 
@@ -91,7 +91,7 @@ export default function PasswordReset() {
             <Typography variant="body1" sx={{
               textAlign: "center"
             }}>
-              {"Bitte gib deine Emailadresse ein und wir senden dir ein neues Passwort zu"}
+              {"Gib deine E-Mail-Adresse ein. Wir schicken dir einen Link, mit dem du ein neues Passwort vergeben kannst."}
             </Typography>
           </Grid>
           <Grid
@@ -138,7 +138,7 @@ export default function PasswordReset() {
                 <Typography variant="body2" component="span" sx={{
                   textAlign: "center"
                 }}>
-                  Bitte warte {secondsLeft} Sekunden um dein Passwort erneut zurückzusetzen
+                  Du kannst in {secondsLeft} Sekunden einen weiteren Link anfordern.
                 </Typography>
               </Box>
             )}

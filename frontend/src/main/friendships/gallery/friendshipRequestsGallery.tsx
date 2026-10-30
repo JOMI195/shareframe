@@ -43,6 +43,7 @@ const FriendshipRequestsGallery: React.FC = () => {
 
     const [currentPage, setCurrentPage] = useState(1);
     const [requestToReject, setRequestToReject] = useState<IFriendship | null>(null);
+    const [acceptingId, setAcceptingId] = useState<number | null>(null);
 
     // Filtered before paging, so every page is full and the page count is right.
     const incomingRequests = getIncomingPendingRequests(friendships, user.me.username);
@@ -62,7 +63,9 @@ const FriendshipRequestsGallery: React.FC = () => {
     }
 
     const handleFriendshipAcccept = async (friendship: IFriendship) => {
+        setAcceptingId(friendship.id);
         await dispatch(acceptFrindshipRequest(friendship.id));
+        setAcceptingId(null);
         dispatch(fetchFriendships());
     }
 
@@ -126,6 +129,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                         <Button
                             onClick={() => handleFriendshipAcccept(friendship)}
                             variant="contained"
+                            loading={acceptingId === friendship.id}
                             fullWidth
                             aria-label="Anfrage annehmen"
                         >
@@ -133,6 +137,7 @@ const FriendshipRequestsGallery: React.FC = () => {
                         </Button>
                         <Button
                             onClick={() => setRequestToReject(friendship)}
+                            disabled={acceptingId === friendship.id}
                             color="error"
                             fullWidth
                             aria-label="Anfrage ablehnen"

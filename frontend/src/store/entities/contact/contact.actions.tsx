@@ -14,5 +14,6 @@ export const sendContactEmail = (emaildata: {
     onStart: contactSlice.contactEmailSendingPending.type,
     onSuccess: contactSlice.contactEmailSendingFulfilled.type,
     onError: contactSlice.contactEmailSendingFailed.type,
+    onSuccessPayload: true,
     data: emaildata
   });

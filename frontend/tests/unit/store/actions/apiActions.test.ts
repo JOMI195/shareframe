@@ -71,6 +71,7 @@ describe('api request actions', () => {
             "onError": "contact/contactEmailSendingFailed",
             "onStart": "contact/contactEmailSendingPending",
             "onSuccess": "contact/contactEmailSendingFulfilled",
+            "onSuccessPayload": true,
             "url": "contactMe/",
           },
           "type": "api/request",

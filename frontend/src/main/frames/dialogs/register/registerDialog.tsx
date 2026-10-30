@@ -125,6 +125,7 @@ const RegisterFrameDialog: React.FC = () => {
                     fullWidth
                     form='register-frame-form'
                     variant='contained'
+                    loading={form.isSubmitting}
                   >
                     {'Hinzufügen'}
                   </Button>

@@ -46,8 +46,8 @@ export interface IUser extends ICoreUser {
 }
 
 export interface IPatchUserForm {
-    username: string;
-    account: Pick<IUserAccount, 'friendship_user_searchable' | 'friendship_user_search_code'>;
+    username?: string;
+    account?: Partial<Pick<IUserAccount, 'friendship_user_searchable'>>;
 }
 
 export interface IRequestEmailChangeForm {

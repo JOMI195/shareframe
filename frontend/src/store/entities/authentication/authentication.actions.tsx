@@ -71,6 +71,7 @@ export const setPassword = (passwords: {
     onStart: userSlice.passwordUpdatePending.type,
     onSuccess: userSlice.passwordUpdateFulfilled.type,
     onError: userSlice.passwordUpdateRejected.type,
+    onSuccessPayload: true,
     data: passwords,
   });
 
@@ -109,6 +110,7 @@ export const resetPasswordConfirm = (confirmationData: {
     onStart: userSlice.passwordUpdatePending.type,
     onSuccess: userSlice.passwordUpdateFulfilled.type,
     onError: userSlice.passwordUpdateRejected.type,
+    onSuccessPayload: true,
     method: "post",
     data: confirmationData,
   });

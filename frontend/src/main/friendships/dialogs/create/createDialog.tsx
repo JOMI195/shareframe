@@ -209,6 +209,7 @@ const FriendshipCreateDialog: React.FC = () => {
                       fullWidth
                       form='friendship-create-form'
                       variant='contained'
+                      loading={form.isSubmitting}
                     >
                       {'Hinzufügen'}
                     </Button>

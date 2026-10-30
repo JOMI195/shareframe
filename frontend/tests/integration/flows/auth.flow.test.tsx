@@ -55,9 +55,12 @@ describe('signing in', () => {
 
     await signInAs(user, 'alice@example.com', 'falsch');
 
-    expect(await screen.findByText(/Bitte überprüfe deine E-Mail-Adresse/)).toBeInTheDocument();
+    expect(await screen.findByText(/E-Mail-Adresse oder Passwort stimmen nicht/)).toBeInTheDocument();
     expect(router.state.location.pathname).toBe('/auth/sign-in/');
     expect(localStorage.getItem('loggedIn')).toBeNull();
+    // Only the password has to be typed again.
+    expect(screen.getByLabelText('Email')).toHaveValue('alice@example.com');
+    expect(screen.getByLabelText('Passwort')).toHaveValue('');
   });
 
   it('asks for both fields', async () => {
@@ -186,5 +189,38 @@ describe('confirming an email change', () => {
         severity: 'error',
       }),
     );
+  });
+});
+
+describe('setting a new password from the reset link', () => {
+  const fillNewPassword = async (user: ReturnType<typeof renderRoute>['user']) => {
+    await user.type(screen.getByLabelText(/^Neues Passwort/, { selector: 'input' }), 'geheim123');
+    await user.type(screen.getByLabelText(/^Passwort wiederholen/, { selector: 'input' }), 'geheim123');
+    await user.click(screen.getByRole('button', { name: 'Passwort neu vergeben' }));
+  };
+
+  it('goes to sign-in once the password is set', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getResetPasswordConfirmUrl()), () => new HttpResponse(null, { status: 204 })),
+    );
+    const { user, router } = renderRoute('/auth/users/password-reset/abc/token1', { preloadedState: buildState() });
+
+    await fillNewPassword(user);
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/auth/sign-in/'));
+  });
+
+  it('stays and offers a new link when the token is rejected', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getResetPasswordConfirmUrl()), () =>
+        HttpResponse.json({ token: ['Invalid token for given user.'] }, { status: 400 }),
+      ),
+    );
+    const { user, router } = renderRoute('/auth/users/password-reset/abc/token1', { preloadedState: buildState() });
+
+    await fillNewPassword(user);
+
+    expect(await screen.findByRole('link', { name: 'Neuen Link anfordern' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/auth/users/password-reset/abc/token1');
   });
 });

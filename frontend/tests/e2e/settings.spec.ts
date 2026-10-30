@@ -103,7 +103,7 @@ test.describe('personal information', () => {
     const searchable = page.getByRole('switch', { name: 'Freundschaftsanfragen erhalten' });
     await expect(searchable).toBeChecked();
     await searchable.uncheck();
-    await page.getByRole('button', { name: 'Speichern' }).click();
+    await expect(page.getByText('Nutzerupdate erfolgreich')).toBeVisible();
 
     await page.reload();
     await page.getByRole('tab', { name: 'Profil' }).click();

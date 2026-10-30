@@ -1,3 +1,4 @@
+import { useState } from "react";
 import Slide from "@mui/material/Slide";
 import { StackedSnackbar } from "./snackbarStack";
 import { RootState, useAppDispatch, useAppSelector } from "@/store";
@@ -27,6 +28,9 @@ const LoadingSnackbar = (
     const { colorMode } = useColorThemeContext();
 
     const snackbar: LoadingSnackbar = useAppSelector(getSnackbar).loading;
+    // The slices clear the text on close, while the snackbar is still sliding out.
+    const [shownMessage, setShownMessage] = useState(snackbar.message);
+    if (snackbar.message && snackbar.message !== shownMessage) setShownMessage(snackbar.message);
 
     const handleSnackbarClose = () => {
         dispatch(closeSnackbar());
@@ -62,7 +66,7 @@ const LoadingSnackbar = (
                     color="inherit"
                     size="1.1rem"
                 />
-                <Typography variant="subtitle2" sx={{ ml: 5 }}>{snackbar.message}</Typography>
+                <Typography variant="subtitle2" sx={{ ml: 5 }}>{shownMessage}</Typography>
             </ Paper>
         </StackedSnackbar>
     );
