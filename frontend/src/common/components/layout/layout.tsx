@@ -1,11 +1,11 @@
-import { Box, Container, useMediaQuery, useTheme } from "@mui/material";
-import { Outlet, ScrollRestoration, useLocation } from "react-router";
-import { useAppDispatch } from "@/store";
-import { routeChanged } from "@/store/ui/navigation/navigation.slice";
+import { Box, Container, LinearProgress, Link, useMediaQuery, useTheme } from "@mui/material";
+import { Outlet, ScrollRestoration, useLocation, useNavigation } from "react-router";
+import { useAppDispatch, useAppSelector } from "@/store";
+import { getSidebar, routeChanged } from "@/store/ui/navigation/navigation.slice";
 import TopAppbar from "./topLayout/topAppBar";
 import Sidebar from "./sidebar/sidebar";
 import { useChangelogs } from "@/hooks/changelogs/useChangelogs";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import Lifecycle from "../lifecycle/lifecycle";
 import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
@@ -14,8 +14,22 @@ const MainLayout: React.FC = () => {
     const theme = useTheme();
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down("sm"));
+    const isDesktop = useMediaQuery(theme.breakpoints.up("lg"), { noSsr: true });
     const dispatch = useAppDispatch();
     const { pathname } = useLocation();
+    const navigation = useNavigation();
+
+    const sidebarOpen = useAppSelector(getSidebar).open;
+    const mainRef = useRef<HTMLElement>(null);
+    const focusedPathname = useRef(pathname);
+
+    // Screen readers otherwise stay on the link that was activated. Waits for the phone menu,
+    // which hands focus back to its button when it closes.
+    useEffect(() => {
+        if (focusedPathname.current === pathname || (sidebarOpen && !isDesktop)) return;
+        focusedPathname.current = pathname;
+        mainRef.current?.focus({ preventScroll: true });
+    }, [pathname, sidebarOpen, isDesktop]);
 
     // On leaving a route, so it runs before the next page's mount effects can open a dialog.
     useEffect(() => () => {
@@ -50,13 +64,40 @@ const MainLayout: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+            <Link
+                href="#main"
+                sx={{
+                    position: 'absolute',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    top: -48,
+                    zIndex: (theme) => theme.zIndex.tooltip,
+                    p: 1,
+                    bgcolor: 'background.paper',
+                    borderRadius: 1,
+                    '&:focus': { top: 8 },
+                }}
+            >
+                Zum Inhalt springen
+            </Link>
+            {navigation.state === 'loading' && (
+                <LinearProgress
+                    aria-label="Seite lädt"
+                    sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: (theme) => theme.zIndex.tooltip }}
+                />
+            )}
             <TopAppbar />
             <Sidebar />
             <ScrollRestoration />
             <Container
+                component="main"
+                id="main"
+                ref={mainRef}
+                tabIndex={-1}
                 maxWidth="xl"
                 disableGutters
                 sx={{
+                    outline: 'none',
                     flex: '1 1 auto',
                     display: 'flex',
                     alignItems: "center",

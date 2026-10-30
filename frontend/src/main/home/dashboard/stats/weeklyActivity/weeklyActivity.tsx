@@ -19,7 +19,7 @@ const WeeklyActivity: FC<WeeklyActivityProps> = ({ activityData }) => {
                     alignItems: "center",
                     mb: 2
                 }}>
-                    <Typography variant="subtitle1">
+                    <Typography variant="subtitle1" component="h2">
                         Wöchentliche Aktivität
                     </Typography>
                 </Box>

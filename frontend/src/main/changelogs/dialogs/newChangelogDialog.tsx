@@ -5,6 +5,7 @@ import {
 } from '@mui/material';
 import { useChangelogs } from '@/hooks/changelogs/useChangelogs';
 import ShareframeMainDialog from '@/common/components/shareframeMainDialog';
+import { usePromptSlot } from '@/common/components/lifecycle/promptQueue';
 
 // The markdown renderer loads only when there is something to announce.
 const MarkdownImagesIntercept = lazy(() => import('@/common/utils/markdown/markdownImagesIntercept'));
@@ -23,8 +24,9 @@ const NewChangelogDialog: React.FC = () => {
     };
 
     const newestChangelog = getNewestActiveChangelog();
+    const granted = usePromptSlot('changelog', Boolean(newestChangelog));
 
-    if (!newestChangelog) {
+    if (!newestChangelog || !granted) {
         return null;
     }
 

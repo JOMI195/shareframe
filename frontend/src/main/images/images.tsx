@@ -8,6 +8,7 @@ import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendship
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
 import { closeSelectionDialog, getUploadRequested, openCreateImageDialog } from "@/store/ui/images/images.slice";
+import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const Images: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -36,6 +37,7 @@ const Images: React.FC = () => {
 
     return (
         <Container maxWidth={"md"} disableGutters>
+            <HiddenPageTitle>Fotos</HiddenPageTitle>
             <Box
                 sx={{
                     height: "100%",

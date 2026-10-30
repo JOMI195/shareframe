@@ -124,6 +124,7 @@ const Sidebar: React.FC = () => {
                 to={itemUrl}
                 key={item.name}
                 onClick={() => handleItemClick(itemUrl)}
+                aria-current={isActive ? 'page' : undefined}
                 sx={{
                     backgroundColor: isActive ? 'primary.main' : 'inherit',
                     color: isActive ? 'primary.contrastText' : 'inherit',

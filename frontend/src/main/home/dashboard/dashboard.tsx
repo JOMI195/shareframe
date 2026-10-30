@@ -48,7 +48,7 @@ const Dashboard: React.FC = () => {
             <Header username={user.me.username} />
 
             {/* Quick Access Cards */}
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
                 mb: 1
             }}>
                 Schnellzugriff
@@ -56,7 +56,7 @@ const Dashboard: React.FC = () => {
             <QuickAccess />
 
             {/* Quick Stats Row */}
-            <Typography variant="subtitle1" sx={{
+            <Typography variant="subtitle1" component="h2" sx={{
                 mb: 1
             }}>
                 Statistiken

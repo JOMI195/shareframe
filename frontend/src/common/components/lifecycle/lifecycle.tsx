@@ -5,14 +5,17 @@ import InstallPrompt from "../pwa/installPrompt";
 import PushPrompt from "../pwa/pushPrompt";
 import ShareTargetRedirect from "../pwa/shareTargetRedirect";
 import ServerStatusNotice from "../serverStatus/serverStatusNotice";
+import { PromptQueueProvider } from "./promptQueueProvider";
 
 const Lifecycle: React.FC = () => {
     return (
         <Box sx={{ display: 'flex', justifyContent: 'center', width: "100%" }}>
-            <NewChangelogDialog />
-            <BuildVersionChecker />
-            <InstallPrompt />
-            <PushPrompt />
+            <PromptQueueProvider>
+                <NewChangelogDialog />
+                <BuildVersionChecker />
+                <InstallPrompt />
+                <PushPrompt />
+            </PromptQueueProvider>
             <ShareTargetRedirect />
             <ServerStatusNotice />
         </Box>

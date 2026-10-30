@@ -11,6 +11,7 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import FriendshipsGallery from "./gallery/friendshipsGallery";
 import FriendshipRequestsGallery from "./gallery/friendshipRequestsGallery";
 import { getIncomingPendingRequests } from "./pendingRequests";
+import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const Friendships: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -38,6 +39,7 @@ const Friendships: React.FC = () => {
 
     return (
         <Container maxWidth={"md"} disableGutters>
+            <HiddenPageTitle>Freunde</HiddenPageTitle>
             <Box sx={{
                 height: "100%",
                 flexGrow: 1,

@@ -3,6 +3,7 @@ import { Button, Alert, useTheme, useMediaQuery } from '@mui/material';
 import { getVersionFileUrl } from '@/assets/endpoints/app/appEndpoints';
 import { reloadOnce } from '@/common/utils/reloadOnce';
 import { StackedSnackbar } from './snackbars/snackbarStack';
+import { usePromptSlot } from './lifecycle/promptQueue';
 
 const VERSION_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
 const FORCED_RELOAD_KEY = 'forced-reload-version';
@@ -34,6 +35,7 @@ const BuildVersionChecker: React.FC = () => {
   const open = Boolean(deployedVersion) && Boolean(frontendVersion)
     && deployedVersion !== frontendVersion
     && deployedVersion !== dismissedVersion;
+  const granted = usePromptSlot('version', open);
 
   useEffect(() => {
     let active = true;
@@ -70,7 +72,7 @@ const BuildVersionChecker: React.FC = () => {
   };
   return (
     <StackedSnackbar
-      open={open}
+      open={granted}
       onClose={handleClose}
     >
       <Alert

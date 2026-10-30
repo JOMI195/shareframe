@@ -19,7 +19,7 @@ const Header: FC<HeaderProps> = ({ username }) => {
             <CardContent>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
                     <Box sx={{ display: "flex", flexDirection: "column" }}>
-                        <Typography variant="h5" sx={{
+                        <Typography variant="h5" component="h1" sx={{
                             fontWeight: "bold"
                         }}>
                             Hi, {username}

@@ -34,7 +34,7 @@ const DataNotFound: React.FC<DataNotFoundProps> = ({ notFoundMessage, action }) 
                 />
                 <SeasonalEmptyState size={imageWidth / 4} />
             </Box>
-            <Typography variant="h6">{notFoundMessage}</Typography>
+            <Typography variant="h6" component="p">{notFoundMessage}</Typography>
             {action && (
                 <Button variant="contained" startIcon={action.icon} onClick={action.onClick} sx={{ mt: 1 }}>
                     {action.label}

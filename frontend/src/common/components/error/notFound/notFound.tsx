@@ -26,8 +26,8 @@ const NotFound = () => {
                 marginRight={0}
                 maxWidth={isSmallScreen ? 150 : 300}
             />
-            <Typography variant="h2">404</Typography>
-            <Typography variant="h6" sx={{
+            <Typography variant="h2" component="h1">404</Typography>
+            <Typography variant="h6" component="p" sx={{
                 color: "text.secondary"
             }}>
                 Seite nicht gefunden

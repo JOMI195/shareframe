@@ -98,6 +98,23 @@ describe('in-app navigation', () => {
     // Navigating closes it again on small screens.
     expect(store.getState().ui.navigation.sidebar.open).toBe(false);
   });
+
+  it('marks the current page and moves focus to the content', async () => {
+    server.use(...withUser(seedUser), ...withFrames([makeFrame()]));
+    const { user } = renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    expect(await screen.findByRole('heading', { level: 1, name: `Hi, ${seedUser.username}` })).toBeInTheDocument();
+
+    await user.click((await screen.findByTestId('MenuIcon')).closest('button')!);
+    const menu = await screen.findByRole('navigation', { name: 'Hauptmenü' });
+    expect(within(menu).getByRole('link', { name: 'Start' })).toHaveAttribute('aria-current', 'page');
+
+    await user.click(within(menu).getByRole('link', { name: 'Bilderrahmen' }));
+
+    await waitFor(() => expect(screen.getByRole('main')).toHaveFocus());
+    expect(screen.getByRole('heading', { level: 1, name: 'Bilderrahmen' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Zum Inhalt springen' })).toHaveAttribute('href', '#main');
+  });
 });
 
 describe('seo head', () => {

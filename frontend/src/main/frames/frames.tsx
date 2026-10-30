@@ -5,6 +5,7 @@ import Dialogs from "./dialogs/dialogs";
 import FramesGallery from "./gallery/framesGallery";
 import { useAppDispatch } from "@/store";
 import { fetchframes, fetchFramesIfStale } from "@/store/entities/frames/frames.actions";
+import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const Frames: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -27,6 +28,7 @@ const Frames: React.FC = () => {
 
     return (
         <Container maxWidth={"md"} disableGutters>
+            <HiddenPageTitle>Bilderrahmen</HiddenPageTitle>
             <Box sx={{
                 height: "100%",
                 flexGrow: 1,

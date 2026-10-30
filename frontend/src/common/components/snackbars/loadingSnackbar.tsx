@@ -45,6 +45,7 @@ const LoadingSnackbar = (
             }}
         >
             <Paper
+                role="status"
                 elevation={5}
                 sx={{
                     py: 1.5,

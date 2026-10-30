@@ -6,6 +6,7 @@ import { fetchSentImagesPaginated, setSentImagesPaginatedPage } from "@/store/en
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 import { getSentImagesFilters, getSentImagesPaginated, getSentImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
+import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const SentImages: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -44,6 +45,7 @@ const SentImages: React.FC = () => {
 
     return (
         <Container maxWidth={"md"} disableGutters>
+            <HiddenPageTitle>Aktivitäten</HiddenPageTitle>
             <Box sx={{
                 height: "100%",
                 flexGrow: 1,

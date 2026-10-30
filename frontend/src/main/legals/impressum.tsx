@@ -7,7 +7,7 @@ const Impressum = () => {
                 Impressum
             </Typography>
 
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom>
                 Herausgeber
             </Typography>
             <Typography variant="body1" gutterBottom>
@@ -15,7 +15,7 @@ const Impressum = () => {
                 E-Mail: <Link href="mailto:info@shareframe.de">info@shareframe.de</Link><br />
             </Typography>
 
-            <Typography sx={{ mt: 5 }} variant="h6" gutterBottom>
+            <Typography sx={{ mt: 5 }} variant="h6" component="h2" gutterBottom>
                 Urheberrecht
             </Typography>
             <Typography variant="body1" gutterBottom>
@@ -28,7 +28,7 @@ const Impressum = () => {
                 Bei Bekanntwerden von Rechtsverletzungen werde ich derartige Inhalte umgehend entfernen.
             </Typography>
 
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom>
                 Hinweis
             </Typography>
             <Typography variant="body1" gutterBottom>
@@ -37,7 +37,7 @@ const Impressum = () => {
                 Informationen zu ändern, zu ergänzen oder zu entfernen.
             </Typography>
 
-            <Typography variant="h6" gutterBottom>
+            <Typography variant="h6" component="h2" gutterBottom>
                 Haftungshinweis
             </Typography>
             <Typography variant="body1" gutterBottom>

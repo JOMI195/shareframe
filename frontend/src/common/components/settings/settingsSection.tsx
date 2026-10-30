@@ -17,7 +17,7 @@ const SettingsSection = ({ title, description, action, tone = "default", childre
             <Stack spacing={2}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 2 }}>
                     <Box sx={{ flex: "1 1 12rem", minWidth: 0, overflowWrap: "anywhere" }}>
-                        <Typography variant="h6" color={error ? "error" : undefined}>{title}</Typography>
+                        <Typography variant="h6" component="h2" color={error ? "error" : undefined}>{title}</Typography>
                         {description && (
                             <Typography variant="body2" color="text.secondary">{description}</Typography>
                         )}

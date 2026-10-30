@@ -4,6 +4,7 @@ import { useAppDispatch, useAppSelector } from '@/store';
 import { getPwa, pushPromptDismissed } from '@/store/ui/settings/settings.slice';
 import { usePwaInstall } from '@/hooks/pwa/usePwaInstall';
 import { getPushSubscription, isPushSupported, subscribePush } from '@/common/utils/pwa/push';
+import { usePromptSlot } from '../lifecycle/promptQueue';
 
 const PushPrompt: React.FC = () => {
     const dispatch = useAppDispatch();
@@ -25,6 +26,8 @@ const PushPrompt: React.FC = () => {
         };
     }, [askable]);
 
+    const open = usePromptSlot('push', askable && unsubscribed);
+
     const dismiss = () => dispatch(pushPromptDismissed());
 
     const handleEnable = async () => {
@@ -34,7 +37,7 @@ const PushPrompt: React.FC = () => {
 
     return (
         <ConfirmDialog
-            open={askable && unsubscribed}
+            open={open}
             title="Push-Benachrichtigungen aktivieren?"
             confirmLabel="Aktivieren"
             cancelLabel="Später"
@@ -42,7 +45,7 @@ const PushPrompt: React.FC = () => {
             onConfirm={handleEnable}
             onCancel={dismiss}
         >
-            Wir sagen dir Bescheid, wenn es bei ShareFrame etwas Neues gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
+            Wir erinnern dich, wenn du länger kein Foto geteilt hast, und sagen dir Bescheid, wenn es bei ShareFrame Neuigkeiten gibt. Du kannst das jederzeit unter Account → Mitteilungen ändern.
         </ConfirmDialog>
     );
 };
