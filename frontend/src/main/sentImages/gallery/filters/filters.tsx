@@ -11,12 +11,14 @@ import {
     Switch,
     Typography,
     Badge,
+    IconButton,
     useMediaQuery,
     useTheme,
 } from '@mui/material';
 import FilterListOffIcon from '@mui/icons-material/FilterListOff';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import BlurOnIcon from '@mui/icons-material/BlurOn';
+import { visuallyHidden } from '@mui/utils';
 import { useAppDispatch, useAppSelector } from '@/store';
 import {
     getDialogs,
@@ -29,7 +31,8 @@ import {
     setStatusFilter
 } from '@/store/ui/sentImages/sentImages.slice';
 import { ISentImagesFilters, ShippingFilter, StatusFilter } from '@/types';
-import { getSentImagesFilters } from '@/store/entities/images/images.slice';
+import { getSentImagesFilters, getSentImagesPaginatedPageSize } from '@/store/entities/images/images.slice';
+import { setSentImagesPaginatedPage, setSentImagesPaginatedPageSize } from '@/store/entities/images/images.actions';
 import UserFilterSelect from './userFilterSelect';
 
 export interface FilterControlsProps {
@@ -80,6 +83,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     const isCompact = useMediaQuery(theme.breakpoints.down('md'));
     const { filter: filterDialog } = useAppSelector(getDialogs);
     const appliedFilters = useAppSelector(getSentImagesFilters);
+    const pageSize = useAppSelector(getSentImagesPaginatedPageSize);
     const activeFilterCount = [
         appliedFilters.status !== 'all',
         appliedFilters.shipping !== 'all',
@@ -150,9 +154,31 @@ const FilterControls: React.FC<FilterControlsProps> = ({
         onFiltersChange({ status: statusFilter, shipping: shippingFilter, sender, receiver });
     };
 
+    const handlePageSizeChange = (event: SelectChangeEvent<number>) => {
+        dispatch(setSentImagesPaginatedPageSize(Number(event.target.value)));
+        dispatch(setSentImagesPaginatedPage(1));
+    };
+
     const handleOpenExtendedFilters = () => {
         dispatch(openFilterDialog());
     };
+
+    const pageSizeSelect = (
+        <FormControl fullWidth disabled={disabled}>
+            <InputLabel id="image-page-size-label">Fotos pro Seite</InputLabel>
+            <Select
+                labelId="image-page-size-label"
+                id="image-page-size"
+                value={pageSize}
+                label="Fotos pro Seite"
+                onChange={handlePageSizeChange}
+            >
+                <MenuItem value={10}>10</MenuItem>
+                <MenuItem value={20}>20</MenuItem>
+                <MenuItem value={30}>30</MenuItem>
+            </Select>
+        </FormControl>
+    );
 
     // On phones the five controls would push the photos below the fold; they live in the dialog instead.
     if (isCompact) {
@@ -174,16 +200,29 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         Filter
                     </Button>
                     {activeFilterCount > 0 && (
-                        <Button
-                            variant="text"
+                        <IconButton
                             onClick={handleClearFilters}
                             disabled={disabled}
-                            startIcon={<FilterListOffIcon />}
-                            sx={{ minHeight: 44 }}
+                            aria-label="Filter zurücksetzen"
+                            sx={{ width: 44, height: 44 }}
                         >
-                            Zurücksetzen
-                        </Button>
+                            <FilterListOffIcon />
+                        </IconButton>
                     )}
+                    <FormControl size="small" disabled={disabled} sx={{ width: 120 }}>
+                        <InputLabel id="image-page-size-compact-label" sx={visuallyHidden}>Fotos pro Seite</InputLabel>
+                        <Select
+                            labelId="image-page-size-compact-label"
+                            value={pageSize}
+                            onChange={handlePageSizeChange}
+                            renderValue={(value) => `${value} / Seite`}
+                            sx={{ height: 44 }}
+                        >
+                            <MenuItem value={10}>10</MenuItem>
+                            <MenuItem value={20}>20</MenuItem>
+                            <MenuItem value={30}>30</MenuItem>
+                        </Select>
+                    </FormControl>
                 </Box>
                 {/* A display switch, not a filter: it acts at once and stays in reach. */}
                 <Box sx={{ mt: 1 }}>
@@ -250,7 +289,10 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                 <Grid size={6}>
                     <BlurToggle checked={hideToYouFilter} onChange={handleHideToYouChange} disabled={disabled} height={56} />
                 </Grid>
-                <Grid size={3} offset={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
+                <Grid size={3}>
+                    {pageSizeSelect}
+                </Grid>
+                <Grid size={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     <Button
                         variant="text"
                         onClick={handleClearFilters}

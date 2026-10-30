@@ -112,7 +112,21 @@ describe('filters on a phone', () => {
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=expired'));
     // The page stays hidden from the accessibility tree until the dialog has faded out.
     expect(await screen.findByRole('button', { name: 'Filter (1 aktiv)' })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Zurücksetzen' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Filter zurücksetzen' })).toBeInTheDocument();
+  });
+
+  it('keeps the page size on the page and out of the filter dialog', async () => {
+    setSmallScreen(true);
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    await chooseOption(user, 'Fotos pro Seite', '20');
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('page_size=20'));
+
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter' })).toBeEnabled());
+    await user.click(screen.getByRole('button', { name: 'Filter' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).queryByLabelText('Fotos pro Seite')).not.toBeInTheDocument();
   });
 });
 
@@ -184,6 +198,16 @@ describe('server side filters', () => {
     await chooseOption(user, 'Status', 'Geplante');
 
     await waitFor(() => expect(urls[urls.length - 1]).toContain('status=scheduled'));
+  });
+
+  it('asks for the chosen page size from the first page', async () => {
+    const { user } = await openActivity();
+    const urls = recordQueries();
+
+    await chooseOption(user, 'Fotos pro Seite', '30');
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain('page_size=30'));
+    expect(urls[urls.length - 1]).toContain('page=1');
   });
 
   // "Alle Fotos" is a sentinel, not a value the backend understands.
