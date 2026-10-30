@@ -167,9 +167,7 @@ const Sidebar: React.FC = () => {
             sx={{
                 width: currentWidth,
                 height: '100%',
-                backgroundColor: 'background.paper',
                 p: 1,
-                borderRadius: 1,
                 '&:hover': {
                     backgroundColor: isDesktop && !open ? 'action.hover' : "none",
                 },
@@ -204,6 +202,8 @@ const Sidebar: React.FC = () => {
         height: `calc(100% - ${theme.layout.appbar.height}px)`,
         width: currentWidth,
         overflowX: 'hidden',
+        // Same surface as the desktop sidebar; dark mode would lighten the modal drawer.
+        backgroundImage: 'none',
     };
 
     if (!isDesktop) {
