@@ -393,7 +393,7 @@ describe('UploadDialog crop step', () => {
     await user.click(tab('Zuschnitt'));
     await screen.findByTestId('cropper');
 
-    fireEvent.change(screen.getByRole('slider', { name: 'Rotation' }), { target: { value: 90 } });
+    fireEvent.change(screen.getByRole('slider', { name: 'Drehen' }), { target: { value: 90 } });
     await user.click(tab('Anpassen'));
     await adjustOpen();
 

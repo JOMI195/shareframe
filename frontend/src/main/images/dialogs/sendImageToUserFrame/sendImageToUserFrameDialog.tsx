@@ -200,8 +200,9 @@ const SendImageToUserFrameDialog = () => {
                 )}
 
                 <FormControl fullWidth sx={{ mb: 1 }}>
-                    <InputLabel>Empfänger</InputLabel>
+                    <InputLabel id="send-receivers-label">Empfänger</InputLabel>
                     <Select
+                        labelId="send-receivers-label"
                         multiple
                         value={selectedReceiverUsernames}
                         onChange={handleReceiverSelectionChange}

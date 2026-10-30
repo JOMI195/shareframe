@@ -99,8 +99,9 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
 
             {selectionMode === 'predefined' ? (
                 <FormControl fullWidth disabled={disabled}>
-                    <InputLabel>Anzeigedauer</InputLabel>
+                    <InputLabel id="expiration-hours-label">Anzeigedauer</InputLabel>
                     <Select
+                        labelId="expiration-hours-label"
                         value={expirationHours ?? PREDEFINED_EXPIRATION_OPTIONS[0].hours}
                         label="Anzeigedauer"
                         onChange={(e) => onExpirationHoursChange(Number(e.target.value))}
@@ -128,8 +129,9 @@ const ExpirationSelector: React.FC<ExpirationSelectorProps> = ({
                         }}
                     />
                     <FormControl sx={styles.unitSelect} disabled={disabled}>
-                        <InputLabel>Einheit</InputLabel>
+                        <InputLabel id="expiration-unit-label">Einheit</InputLabel>
                         <Select
+                            labelId="expiration-unit-label"
                             value={customTimeUnit}
                             label="Einheit"
                             onChange={(e) => handleCustomTimeUnitChange(e.target.value as TimeUnit)}

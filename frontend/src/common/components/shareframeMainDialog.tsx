@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 import AppDialog from '@/common/components/appDialog';
 import {
     DialogProps,
@@ -41,9 +41,11 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
 }) => {
     const theme = useTheme();
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
+    const titleId = useId();
 
     return (
         <AppDialog
+            aria-labelledby={dialogTitle ? titleId : undefined}
             maxWidth="xl"
             fullWidth
             fullScreen={isSmallScreen}
@@ -61,7 +63,7 @@ const ShareframeMainDialog: React.FC<ReusableDialogProps> = ({
                     }
                 }
             }}>
-            <DialogHeader title={dialogTitle} subtitle={dialogSubtitle} onClose={onDialogClose} />
+            <DialogHeader title={dialogTitle} subtitle={dialogSubtitle} titleId={titleId} onClose={onDialogClose} />
 
             <DialogContent
                 sx={{

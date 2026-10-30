@@ -121,7 +121,7 @@ describe('avatar settings', () => {
     await user.click(within(dialog).getByRole('button', { name: 'Zurücksetzen' }));
     expect(JSON.parse(cropper.dataset.crop!)).toEqual({ x: 0, y: 0 });
     expect(cropper.dataset.zoom).toBe('1');
-    expect(within(dialog).queryByRole('slider', { name: 'Rotation' })).not.toBeInTheDocument();
+    expect(within(dialog).queryByRole('slider', { name: 'Drehen' })).not.toBeInTheDocument();
   });
 
   it('removes the picture after confirming', async () => {

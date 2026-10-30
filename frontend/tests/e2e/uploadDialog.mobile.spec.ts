@@ -51,7 +51,7 @@ test.describe('upload dialog on a phone', () => {
       for (const control of [
         cropArea,
         sliderTrack(page, 'Zoom'),
-        sliderTrack(page, 'Rotation'),
+        sliderTrack(page, 'Drehen'),
         page.getByRole('button', { name: 'Nach links verschieben' }),
         page.getByRole('button', { name: 'Nach oben verschieben' }),
         page.getByRole('button', { name: 'Nach unten verschieben' }),

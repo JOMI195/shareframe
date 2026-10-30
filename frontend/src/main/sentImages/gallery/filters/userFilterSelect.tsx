@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Box, FormControl, InputLabel, MenuItem, Select, SxProps, Theme } from "@mui/material";
 import { useAppSelector } from "@/store";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
@@ -17,6 +18,7 @@ interface UserFilterSelectProps {
 // Picks one of your friends or yourself, each shown with their avatar.
 const UserFilterSelect = ({ label, emptyLabel, value, onChange, disabled, sx }: UserFilterSelectProps) => {
     const user = useAppSelector(getUser);
+    const labelId = useId();
     const friendships = useAppSelector(getFriendships);
     const avatars = getFriendAvatars(friendships, user.me);
 
@@ -29,8 +31,9 @@ const UserFilterSelect = ({ label, emptyLabel, value, onChange, disabled, sx }: 
 
     return (
         <FormControl fullWidth sx={sx} disabled={disabled}>
-            <InputLabel shrink>{label}</InputLabel>
+            <InputLabel id={labelId} shrink>{label}</InputLabel>
             <Select
+                labelId={labelId}
                 value={value}
                 renderValue={(selected) => selected ? renderUser(selected) : <em>{emptyLabel}</em>}
                 label={label}

@@ -73,7 +73,8 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 min={MIN_ROTATION}
                 max={MAX_ROTATION}
                 step={1}
-                aria-label="Rotation"
+                aria-label="Drehen"
+                getAriaValueText={(value) => `${value} Grad`}
                 style={{ flex: 1 }}
                 sx={{
                     flex: 1,
@@ -192,6 +193,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     max={MAX_ZOOM}
                     step={0.01}
                     aria-label="Zoom"
+                    getAriaValueText={(value) => `${Math.round(value * 100)} %`}
                     style={{ flex: 1 }}
                     sx={{
                         flex: 1,
