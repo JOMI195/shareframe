@@ -10,6 +10,11 @@ beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 // jsdom's XMLHttpRequest never finishes a multipart body under MSW; the fetch
 // adapter does, and the request itself is identical.
 axiosInstance.defaults.adapter = 'fetch';
+// The fetch adapter streams the body to report upload progress, which never finishes here either.
+axiosInstance.interceptors.request.use((config) => {
+  delete config.onUploadProgress;
+  return config;
+});
 afterAll(() => server.close());
 
 // --- jsdom gaps ---

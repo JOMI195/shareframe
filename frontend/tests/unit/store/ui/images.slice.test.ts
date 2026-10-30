@@ -23,6 +23,7 @@ import {
   createImageFailed,
   createImageFulfilled,
   createImagePending,
+  createImageProgress,
   deleteImageFailed,
   deleteImageFulfilled,
   imagesRequestFailed,
@@ -173,6 +174,13 @@ describe('entity actions drive the snackbars', () => {
     expect(reducer(initial(), createImagePending()).snackbar.loading).toEqual({
       open: true,
       message: 'Foto wird hochgeladen',
+    });
+  });
+
+  it('counts the upload progress in the loading snackbar', () => {
+    expect(reducer(initial(), createImageProgress(42)).snackbar.loading).toEqual({
+      open: true,
+      message: 'Foto wird hochgeladen (42 %)',
     });
   });
 

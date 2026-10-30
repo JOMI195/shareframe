@@ -39,6 +39,7 @@ export const uploadImage = (
     onStart: ImagesSlice.createImagePending.type,
     onSuccess: ImagesSlice.createImageFulfilled.type,
     onError: ImagesSlice.createImageFailed.type,
+    onUploadProgress: ImagesSlice.createImageProgress.type,
 
     onStartPayload: image.name ? image.name : null,
     data: {

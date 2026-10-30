@@ -111,6 +111,8 @@ const imagesSlice = createSlice({
     createImagePending: (sliceState) => {
       sliceState.api.sending = true;
     },
+    createImageProgress: (_sliceState, _action: PayloadAction<number>) => {
+    },
     createImageFulfilled: (sliceState, action) => {
       sliceState.imagesPaginated.results.unshift(action.payload);
       sliceState.imagesPaginated.count += 1;
@@ -251,6 +253,7 @@ export const {
   imagesPageSet,
   imagesPageSizeSet,
   createImagePending,
+  createImageProgress,
   createImageFailed,
   createImageFulfilled,
   deleteImageFailed,

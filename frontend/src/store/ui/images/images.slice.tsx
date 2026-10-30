@@ -1,5 +1,5 @@
 import { RootState } from "@/store";
-import { createImageFailed, createImageFulfilled, createImagePending, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
+import { createImageFailed, createImageFulfilled, createImagePending, createImageProgress, deactivateSentImageFailed, deactivateSentImageFulfilled, deactivateSentImagePending, cancelScheduledSentImageFailed, cancelScheduledSentImageFulfilled, cancelScheduledSentImagePending, sendScheduledSentImageNowFailed, sendScheduledSentImageNowFulfilled, sendScheduledSentImageNowPending, deleteImageFailed, deleteImageFulfilled, deleteImagePending, imagesRequestFailed, sendImageToUserFramePending, sentImagesRequestFailed, createTextPresetFailed, createTextPresetFulfilled, deleteTextPresetFailed, deleteTextPresetFulfilled, textPresetsRequestFailed } from "@/store/entities/images/images.slice";
 import { IImage } from "@/types";
 import { AlertColor } from "@mui/material";
 import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation.slice";
@@ -114,6 +114,12 @@ const imagesSlice = createSlice({
         sliceState.snackbar.loading = {
           open: true,
           message: "Foto wird hochgeladen",
+        };
+      })
+      .addCase(createImageProgress, (sliceState, action: PayloadAction<number>) => {
+        sliceState.snackbar.loading = {
+          open: true,
+          message: `Foto wird hochgeladen (${action.payload} %)`,
         };
       })
       .addCase(createImageFulfilled, (sliceState) => {
