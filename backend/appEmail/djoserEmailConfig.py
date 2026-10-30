@@ -9,9 +9,20 @@ from djoser.email import (
     PasswordResetEmail,
 )
 
-from .tasks import send_django_mail_with_logo
+from .tasks import send_account_mail
 
 logger = logging.getLogger(__name__)
+
+
+def _task_context(context):
+    task_context = {
+        k: v
+        for k, v in context.items()
+        if isinstance(v, (str, int, float, bool, type(None)))
+    }
+    if "user" in context:
+        task_context["user"] = {"username": context["user"].username}
+    return task_context
 
 
 class _LogoMail:
@@ -23,11 +34,11 @@ class _LogoMail:
         return context
 
     def send(self, to, *args, **kwargs):
-        send_django_mail_with_logo(
+        send_account_mail.delay(
             template_name=self.template_name,
-            context=self.get_context_data(),
+            context=_task_context(self.get_context_data()),
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to_emails=to,
+            to_emails=list(to),
         )
 
 
