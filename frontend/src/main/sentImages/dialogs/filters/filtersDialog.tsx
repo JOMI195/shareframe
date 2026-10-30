@@ -8,11 +8,9 @@ import FormActions from '@/common/components/settings/formActions';
 import { closeFilterDialog, getDialogs, resetFilters, setRecieverFilter, setSenderFilter, setShippingFilter, setStatusFilter } from "@/store/ui/sentImages/sentImages.slice";
 import { ShippingFilter, StatusFilter } from "@/types";
 import { useState } from "react";
-import { getApi as getFriendshipsApi, getFriendships } from "@/store/entities/friendships/friendships.slice";
-import { getUser } from "@/store/entities/authentication/authentication.slice";
+import { getApi as getFriendshipsApi } from "@/store/entities/friendships/friendships.slice";
 import { setSentImagesFilters, setSentImagesPaginatedPage } from "@/store/entities/images/images.actions";
-import UserAvatar from "@/common/components/userAvatar";
-import { getFriendAvatars } from "@/common/utils/avatar/friendAvatars";
+import UserFilterSelect from "@/main/sentImages/gallery/filters/userFilterSelect";
 
 const FiltersDialog = () => {
     const theme = useTheme();
@@ -22,8 +20,6 @@ const FiltersDialog = () => {
     const loading = useAppSelector(getImagesApi).loading;
     const friendshipsLoading = useAppSelector(getFriendshipsApi).loading;
 
-    const user = useAppSelector(getUser);
-    const friendships = useAppSelector(getFriendships);
 
     const [statusFilterLocal, setStatusFilterLocal] = useState<StatusFilter>('all');
     const [shippingFilterLocal, setShippingFilterLocal] = useState<ShippingFilter>('all');
@@ -31,7 +27,6 @@ const FiltersDialog = () => {
     const [receiverFilterLocal, setReceiverFilterLocal] = useState('');
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
-    const compact = useMediaQuery(theme.breakpoints.down('md'));
 
     const [syncedFilters, setSyncedFilters] = useState<string | null>(null);
     const dialogFilters = `${filterDialog.open}|${filterDialog.statusFilter}|${filterDialog.shippingFilter}|${filterDialog.senderFilter || ''}|${filterDialog.receiverFilter || ''}`;
@@ -86,20 +81,6 @@ const FiltersDialog = () => {
         handleDialogClose();
     };
 
-    const userAvatars = getFriendAvatars(friendships, user.me);
-    const availableUsernames = [...userAvatars.keys()];
-
-    const getUserDisplayName = (username: string) => {
-        return username === user.me.username ? 'Du' : username;
-    };
-
-    const renderUser = (username: string) => (
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-            <UserAvatar username={username} url={userAvatars.get(username)} size={24} />
-            {getUserDisplayName(username)}
-        </Box>
-    );
-
     return (
         <AppDialog
             fullScreen={!matches}
@@ -112,7 +93,7 @@ const FiltersDialog = () => {
                 transition: matches ? ZoomTransition : SlideTransition
             }}
         >
-            <DialogHeader title={compact ? "Filter" : "Mehr Filter"} titleId="filter-dialog-title" onClose={handleDialogClose} />
+            <DialogHeader title="Filter" titleId="filter-dialog-title" onClose={handleDialogClose} />
             <DialogContent>
                 <Box sx={{ mb: 4 }}>
                     <Typography
@@ -124,9 +105,6 @@ const FiltersDialog = () => {
                         Verfeinere deine Suche nach geteilten Fotos.
                     </Typography>
                     <Grid container spacing={2}>
-                        {/* Wider screens show these two on the page next to the button that opens this dialog. */}
-                        {compact && (
-                            <>
                             <Grid size={12}>
                                 <FormControl fullWidth sx={{ mb: 2 }}>
                                     <InputLabel id="filter-dialog-status-label">Status</InputLabel>
@@ -158,59 +136,25 @@ const FiltersDialog = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            </>
-                        )}
                         <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Absender</InputLabel>
-                                <Select
-                                    disabled={loading || friendshipsLoading}
-                                    value={senderFilterLocal}
-                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Absender</em>}
-                                    label="Absender"
-                                    onChange={(e) => setSenderFilterLocal(e.target.value as string)}
-                                    displayEmpty
-                                    notched
-                                >
-                                    <MenuItem value="">
-                                        <em>Alle Absender</em>
-                                    </MenuItem>
-                                    {availableUsernames.map((username) => (
-                                        <MenuItem
-                                            key={username}
-                                            value={username}
-                                        >
-                                            {renderUser(username)}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <UserFilterSelect
+                                label="Absender"
+                                emptyLabel="Alle Absender"
+                                value={senderFilterLocal}
+                                onChange={setSenderFilterLocal}
+                                disabled={loading || friendshipsLoading}
+                                sx={{ mb: 2 }}
+                            />
                         </Grid>
                         <Grid size={12}>
-                            <FormControl fullWidth sx={{ mb: 2 }}>
-                                <InputLabel shrink>Empfänger</InputLabel>
-                                <Select
-                                    disabled={loading || friendshipsLoading}
-                                    value={receiverFilterLocal}
-                                    renderValue={(selected) => selected ? renderUser(selected) : <em>Alle Empfänger</em>}
-                                    label="Empfänger"
-                                    onChange={(e) => setReceiverFilterLocal(e.target.value as string)}
-                                    displayEmpty
-                                    notched
-                                >
-                                    <MenuItem value="">
-                                        <em>Alle Empfänger</em>
-                                    </MenuItem>
-                                    {availableUsernames.map((username) => (
-                                        <MenuItem
-                                            key={username}
-                                            value={username}
-                                        >
-                                            {renderUser(username)}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
+                            <UserFilterSelect
+                                label="Empfänger"
+                                emptyLabel="Alle Empfänger"
+                                value={receiverFilterLocal}
+                                onChange={setReceiverFilterLocal}
+                                disabled={loading || friendshipsLoading}
+                                sx={{ mb: 2 }}
+                            />
                         </Grid>
                     </Grid>
                 </Box>

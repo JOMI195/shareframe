@@ -18,9 +18,8 @@ const render = () =>
     }),
   });
 
-// Neither MUI Select exposes an accessible name here. Outside phone width the dialog
-// holds only the sender and the receiver.
-const senderSelect = () => screen.getAllByRole('combobox')[0];
+// Neither MUI Select exposes an accessible name here; status and direction come first.
+const senderSelect = () => screen.getAllByRole('combobox')[2];
 
 describe('FiltersDialog', () => {
   it('shows the picture of every user it offers', async () => {
@@ -50,7 +49,7 @@ describe('FiltersDialog', () => {
     render();
 
     expect(senderSelect()).toHaveTextContent('Alle Absender');
-    expect(screen.getAllByRole('combobox')[1]).toHaveTextContent('Alle Empfänger');
+    expect(screen.getAllByRole('combobox')[3]).toHaveTextContent('Alle Empfänger');
   });
 
   it('closes from the header without a separate cancel button', async () => {

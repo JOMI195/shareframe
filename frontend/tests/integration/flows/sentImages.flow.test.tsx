@@ -117,16 +117,19 @@ describe('filters on a phone', () => {
 });
 
 describe('filters on a wide screen', () => {
-  it('keep status and direction on the page and out of the dialog', async () => {
+  it('shows every filter on the page and applies a sender at once', async () => {
     const { user } = await openActivity();
+    const urls = recordQueries();
 
     expect(screen.getByLabelText('Status')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Mehr Filter' }));
+    expect(screen.getByLabelText('Richtung')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Mehr Filter/ })).not.toBeInTheDocument();
 
-    const dialog = await screen.findByRole('dialog', { name: 'Mehr Filter' });
-    expect(within(dialog).queryByLabelText('Status')).not.toBeInTheDocument();
-    expect(within(dialog).queryByLabelText('Richtung')).not.toBeInTheDocument();
-    expect(within(dialog).getAllByText('Absender').length).toBeGreaterThan(0);
+    await user.click(screen.getAllByRole('combobox')[2]);
+    await user.click(within(await screen.findByRole('listbox')).getByRole('option', { name: 'Du' }));
+
+    await waitFor(() => expect(urls[urls.length - 1]).toContain(`sender=${ME}`));
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Filter zurücksetzen' })).toBeEnabled());
   });
 });
 

@@ -23,11 +23,14 @@ import {
     openFilterDialog,
     resetFilters,
     setHideToYouFilter,
+    setRecieverFilter,
+    setSenderFilter,
     setShippingFilter,
     setStatusFilter
 } from '@/store/ui/sentImages/sentImages.slice';
 import { ISentImagesFilters, ShippingFilter, StatusFilter } from '@/types';
 import { getSentImagesFilters } from '@/store/entities/images/images.slice';
+import UserFilterSelect from './userFilterSelect';
 
 export interface FilterControlsProps {
     onFiltersChange: (filters: ISentImagesFilters) => void;
@@ -139,6 +142,14 @@ const FilterControls: React.FC<FilterControlsProps> = ({
         }, 0);
     };
 
+    const applyUserFilter = (change: { sender?: string; receiver?: string }) => {
+        const sender = change.sender ?? senderFilter;
+        const receiver = change.receiver ?? receiverFilter;
+        if (change.sender !== undefined) dispatch(setSenderFilter({ senderFilter: sender }));
+        if (change.receiver !== undefined) dispatch(setRecieverFilter({ receiverFilter: receiver }));
+        onFiltersChange({ status: statusFilter, shipping: shippingFilter, sender, receiver });
+    };
+
     const handleOpenExtendedFilters = () => {
         dispatch(openFilterDialog());
     };
@@ -185,15 +196,9 @@ const FilterControls: React.FC<FilterControlsProps> = ({
     return (
         <Box sx={{ width: '100%', mb: 2 }}>
             <Grid container spacing={2}>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}>
+                <Grid size={3}>
                     <FormControl fullWidth disabled={disabled}>
-                        <InputLabel id="image-status-filter-label">
-                            Status
-                        </InputLabel>
+                        <InputLabel id="image-status-filter-label">Status</InputLabel>
                         <Select
                             labelId="image-status-filter-label"
                             id="image-status-filter"
@@ -208,15 +213,9 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}>
+                <Grid size={3}>
                     <FormControl fullWidth disabled={disabled}>
-                        <InputLabel id="image-shipping-filter-label">
-                            Richtung
-                        </InputLabel>
+                        <InputLabel id="image-shipping-filter-label">Richtung</InputLabel>
                         <Select
                             labelId="image-shipping-filter-label"
                             id="image-shipping-filter"
@@ -230,43 +229,36 @@ const FilterControls: React.FC<FilterControlsProps> = ({
                         </Select>
                     </FormControl>
                 </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}>
+                <Grid size={3}>
+                    <UserFilterSelect
+                        label="Absender"
+                        emptyLabel="Alle Absender"
+                        value={senderFilter}
+                        onChange={(sender) => applyUserFilter({ sender })}
+                        disabled={disabled}
+                    />
+                </Grid>
+                <Grid size={3}>
+                    <UserFilterSelect
+                        label="Empfänger"
+                        emptyLabel="Alle Empfänger"
+                        value={receiverFilter}
+                        onChange={(receiver) => applyUserFilter({ receiver })}
+                        disabled={disabled}
+                    />
+                </Grid>
+                <Grid size={6}>
                     <BlurToggle checked={hideToYouFilter} onChange={handleHideToYouChange} disabled={disabled} height={56} />
                 </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}>
+                <Grid size={3} offset={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
                     <Button
-                        fullWidth
-                        variant="outlined"
-                        onClick={handleOpenExtendedFilters}
-                        startIcon={<FilterListIcon />}
-                        sx={{ height: '56px' }}
-                        disabled={disabled}
-                    >
-                        Mehr Filter
-                    </Button>
-                </Grid>
-                <Grid
-                    size={{
-                        xs: 12,
-                        md: 3
-                    }}>
-                    <Button
-                        fullWidth
-                        variant="outlined"
+                        variant="text"
                         onClick={handleClearFilters}
                         startIcon={<FilterListOffIcon />}
-                        sx={{ height: '56px' }}
-                        disabled={disabled}
+                        disabled={disabled || activeFilterCount === 0}
+                        sx={{ minHeight: 44 }}
                     >
-                        Zurücksetzen
+                        Filter zurücksetzen
                     </Button>
                 </Grid>
             </Grid>
