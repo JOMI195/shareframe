@@ -49,11 +49,18 @@ describe('ConfirmDialog', () => {
     expect(onCancel).toHaveBeenCalledOnce();
   });
 
-  it('locks both choices while the action runs', () => {
-    renderDialog({ loading: true });
+  // aria-disabled, not disabled: focus has to stay on the button that was pressed.
+  it('locks both choices while the action runs without dropping focus', async () => {
+    const { onConfirm, onCancel, user } = renderDialog({ loading: true, destructive: true });
 
-    expect(screen.getByRole('button', { name: 'Löschen' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Abbrechen' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Löschen/ })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Abbrechen' })).toHaveAttribute('aria-disabled', 'true');
+    expect(screen.getByRole('button', { name: 'Abbrechen' })).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: /Löschen/ }));
+    await user.click(screen.getByRole('button', { name: 'Abbrechen' }));
+
+    expect(onConfirm).not.toHaveBeenCalled();
+    expect(onCancel).not.toHaveBeenCalled();
   });
 
   it('can block only the action', () => {

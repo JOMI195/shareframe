@@ -31,8 +31,9 @@ const Profile = () => {
         initialValues: initialUserPatchValues,
         validationSchema: userPatchValidationSchema,
         enableReinitialize: true,
-        onSubmit: (values) => {
-            dispatch(updateMyUserData(values));
+        // Awaited, so isSubmitting lasts until the server answered.
+        onSubmit: async (values) => {
+            await dispatch(updateMyUserData(values));
         },
     });
 
@@ -41,6 +42,7 @@ const Profile = () => {
     const searchable = pendingSearchable ?? me.account.friendship_user_searchable;
 
     const handleSearchableChange = async (checked: boolean) => {
+        if (pendingSearchable !== null) return;
         setPendingSearchable(checked);
         await dispatch(updateMyUserData({ account: { friendship_user_searchable: checked } }));
         setPendingSearchable(null);
@@ -105,7 +107,6 @@ const Profile = () => {
                 action={
                     <Switch
                         checked={searchable}
-                        disabled={pendingSearchable !== null}
                         onChange={(event) => handleSearchableChange(event.target.checked)}
                         slotProps={{ input: { 'aria-label': 'Freundschaftsanfragen erhalten' } }}
                     />

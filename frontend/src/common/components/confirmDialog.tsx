@@ -1,5 +1,5 @@
 import React, { ReactNode } from 'react';
-import { Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import AppDialog from '@/common/components/appDialog';
 
 interface ConfirmDialogProps {
@@ -46,16 +46,19 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
                 disableSpacing
                 sx={{ px: 3, pb: 2, gap: 1, flexWrap: 'wrap-reverse', '& .MuiButton-root': { whiteSpace: 'nowrap' } }}
             >
-                {/* Focus starts on the safe choice, so Enter never destroys anything. */}
-                <Button onClick={onCancel} disabled={loading} autoFocus={destructive}>
+                {/* Focus starts on the safe choice, so Enter never destroys anything.
+                    aria-disabled while busy: a disabled button would drop focus to the page. */}
+                <Button onClick={loading ? undefined : onCancel} aria-disabled={loading || undefined} autoFocus={destructive}>
                     {cancelLabel}
                 </Button>
                 <Button
-                    onClick={onConfirm}
-                    disabled={loading || confirmDisabled}
+                    onClick={loading ? undefined : onConfirm}
+                    aria-disabled={loading || undefined}
+                    disabled={confirmDisabled}
                     variant="contained"
                     color={destructive ? 'error' : 'primary'}
                     autoFocus={!destructive}
+                    startIcon={loading ? <CircularProgress size={16} color="inherit" aria-label="Wird ausgeführt" /> : undefined}
                 >
                     {confirmLabel}
                 </Button>
