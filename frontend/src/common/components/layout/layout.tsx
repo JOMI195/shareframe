@@ -11,6 +11,18 @@ import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
 import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from "./sidebar/sidebarWidth";
 
+// Own component, so a navigation state change doesn't re-render the whole shell.
+const NavigationProgress: React.FC = () => {
+    const navigation = useNavigation();
+    if (navigation.state !== 'loading') return null;
+    return (
+        <LinearProgress
+            aria-label="Seite lädt"
+            sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: (theme) => theme.zIndex.tooltip }}
+        />
+    );
+};
+
 const MainLayout: React.FC = () => {
     const theme = useTheme();
 
@@ -18,7 +30,6 @@ const MainLayout: React.FC = () => {
     const isDesktop = useMediaQuery(theme.breakpoints.up("lg"), { noSsr: true });
     const dispatch = useAppDispatch();
     const { pathname } = useLocation();
-    const navigation = useNavigation();
 
     const sidebarOpen = useAppSelector(getSidebar).open;
     const mainRef = useRef<HTMLElement>(null);
@@ -81,12 +92,7 @@ const MainLayout: React.FC = () => {
             >
                 Zum Inhalt springen
             </Link>
-            {navigation.state === 'loading' && (
-                <LinearProgress
-                    aria-label="Seite lädt"
-                    sx={{ position: 'fixed', top: 0, left: 0, right: 0, zIndex: (theme) => theme.zIndex.tooltip }}
-                />
-            )}
+            <NavigationProgress />
             <TopAppbar />
             <Sidebar />
             <ScrollRestoration />

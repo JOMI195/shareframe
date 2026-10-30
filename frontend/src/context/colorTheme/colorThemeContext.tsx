@@ -53,19 +53,20 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
         document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme.palette.background.default);
     }, [theme]);
 
-    const setColorPreference = (preference: ColorPreference) => {
-        dispatch(designSelected(preference));
-    };
-
-    const contextValue: ColorThemeContextType = {
-        theme,
-        colorMode,
-        season,
-        colorPreference,
-        setColorPreference,
-        toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
-        iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
-    };
+    const contextValue = useMemo<ColorThemeContextType>(() => {
+        const setColorPreference = (preference: ColorPreference) => {
+            dispatch(designSelected(preference));
+        };
+        return {
+            theme,
+            colorMode,
+            season,
+            colorPreference,
+            setColorPreference,
+            toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
+            iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
+        };
+    }, [theme, colorMode, season, colorPreference, dispatch]);
 
     return (
         <ColorThemeContext.Provider value={contextValue}>
