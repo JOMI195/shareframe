@@ -1,13 +1,13 @@
 {
   "uid": "shareframe-logs",
   "title": "Backend",
-  "description": "Django request metrics, Celery task health and backend logs. The search, level and logger filters apply to the log panels.",
+  "description": "Django request metrics, an auth summary, Celery task health and backend logs. The search, level and logger filters apply to the log panels.",
   "tags": [
     "shareframe"
   ],
   "timezone": "browser",
   "schemaVersion": 39,
-  "version": 10,
+  "version": 11,
   "editable": true,
   "graphTooltip": 1,
   "refresh": "1m",
@@ -399,7 +399,7 @@
     },
     {
       "type": "row",
-      "title": "API",
+      "title": "Auth",
       "collapsed": false,
       "panels": [],
       "gridPos": {
@@ -407,6 +407,305 @@
         "w": 24,
         "x": 0,
         "y": 4
+      },
+      "id": 22
+    },
+    {
+      "type": "stat",
+      "title": "App logins",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0,
+          "links": [
+            {
+              "title": "Auth",
+              "url": "/d/shareframe-auth?${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"backend\", logger=\"admin.audit\"} |= \"Login: \" [$__range])) or vector(0)"
+        }
+      ],
+      "description": "Successful sign-ins in the time range. Click through for the Auth dashboard.",
+      "id": 23
+    },
+    {
+      "type": "stat",
+      "title": "Failed logins",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 10
+              }
+            ]
+          },
+          "decimals": 0,
+          "links": [
+            {
+              "title": "Auth",
+              "url": "/d/shareframe-auth?${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"backend\", logger=\"admin.audit\"} |= \"Failed login attempt\" [$__range])) or vector(0)"
+        }
+      ],
+      "description": "Wrong email or password in the time range. Ten per minute from one IP trip the login throttle. Click through for the Auth dashboard.",
+      "id": 24
+    },
+    {
+      "type": "stat",
+      "title": "Token rejections",
+      "datasource": {
+        "type": "loki",
+        "uid": "loki"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "orange",
+                "value": 20
+              }
+            ]
+          },
+          "decimals": 0,
+          "links": [
+            {
+              "title": "Auth",
+              "url": "/d/shareframe-auth?${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "expr": "sum(count_over_time({job=\"backend\", logger=\"admin.audit\"} |~ \"Access token rejected|Token refresh rejected\" [$__range])) or vector(0)"
+        }
+      ],
+      "description": "Requests with an invalid, expired or forged access or refresh cookie. Click through for the Auth dashboard.",
+      "id": 25
+    },
+    {
+      "type": "stat",
+      "title": "Valid sessions",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 18,
+        "y": 5
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0,
+          "links": [
+            {
+              "title": "Auth",
+              "url": "/d/shareframe-auth?${__url_time_range}"
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {
+          "values": false,
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": ""
+        },
+        "orientation": "auto",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "wideLayout": true,
+        "showPercentChange": false,
+        "percentChangeColorMode": "standard"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "shareframe_auth_sessions_active",
+          "instant": true,
+          "range": false
+        }
+      ],
+      "description": "Refresh tokens that are neither expired nor blacklisted. Every sign-in without logout keeps one for the refresh lifetime, so this counts usable sessions, not people online. Click through for the Auth dashboard.",
+      "id": 26
+    },
+    {
+      "type": "row",
+      "title": "API",
+      "collapsed": false,
+      "panels": [],
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 9
       },
       "id": 5
     },
@@ -474,7 +773,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 5
+        "y": 10
       },
       "id": 6,
       "interval": "2m"
@@ -570,7 +869,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 5
+        "y": 10
       },
       "id": 7,
       "interval": "2m"
@@ -639,7 +938,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 5
+        "y": 10
       },
       "id": 8,
       "interval": "2m"
@@ -707,7 +1006,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 13
+        "y": 18
       },
       "id": 9,
       "interval": "2m"
@@ -775,7 +1074,7 @@
         "h": 8,
         "w": 8,
         "x": 8,
-        "y": 13
+        "y": 18
       },
       "id": 10,
       "interval": "2m"
@@ -872,7 +1171,7 @@
         "h": 8,
         "w": 8,
         "x": 16,
-        "y": 13
+        "y": 18
       },
       "id": 11,
       "interval": "2m"
@@ -886,7 +1185,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 21
+        "y": 26
       },
       "id": 12
     },
@@ -1082,7 +1381,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 22
+        "y": 27
       },
       "id": 13
     },
@@ -1166,7 +1465,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 31
+        "y": 36
       },
       "id": 14
     },
@@ -1245,7 +1544,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 31
+        "y": 36
       },
       "id": 15
     },
@@ -1312,7 +1611,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 31
+        "y": 36
       },
       "id": 16,
       "interval": "2m"
@@ -1349,7 +1648,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 38
+        "y": 43
       },
       "id": 17
     },
@@ -1362,7 +1661,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 48
+        "y": 53
       },
       "id": 18
     },
@@ -1377,7 +1676,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 49
+        "y": 54
       },
       "fieldConfig": {
         "defaults": {
@@ -1503,7 +1802,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 49
+        "y": 54
       },
       "fieldConfig": {
         "defaults": {
@@ -1630,7 +1929,7 @@
         "h": 18,
         "w": 24,
         "x": 0,
-        "y": 56
+        "y": 61
       },
       "options": {
         "showTime": true,
