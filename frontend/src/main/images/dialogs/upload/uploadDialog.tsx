@@ -10,6 +10,7 @@ import {
     useTheme,
 } from '@mui/material'
 import { TransitionProps } from '@mui/material/transitions'
+import { visuallyHidden } from '@mui/utils'
 import Slide from '@mui/material/Slide'
 import Zoom from '@mui/material/Zoom'
 import CloudUploadIcon from '@mui/icons-material/CloudUpload'
@@ -398,6 +399,9 @@ const UploadDialog: React.FC = () => {
                 isPreparing={isPreparing}
               />
               <LinearProgress sx={{ visibility: busy || exportRequested ? 'visible' : 'hidden' }} />
+              <Box role="status" sx={visuallyHidden}>
+                {sending ? 'Wird hochgeladen…' : busy || exportRequested ? 'Foto wird vorbereitet…' : ''}
+              </Box>
             </>
           )}
           footer={currentImage && (previewing && finalImage ? (

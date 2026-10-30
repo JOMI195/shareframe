@@ -59,7 +59,8 @@ const AlertSnackbar = (
   return (
     <StackedSnackbar
       open={snackbar.open}
-      autoHideDuration={10000}
+      // Errors stay until dismissed, so there is time to read them.
+      autoHideDuration={snackbar.severity === 'error' ? null : 10000}
       onClose={handleSnackbarClose}
       slots={{
         transition: Slide
