@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import AlertSnackbar from '@/common/components/snackbars/alertSnackbar';
 import LoadingSnackbar from '@/common/components/snackbars/loadingSnackbar';
-import { closeImagesAlertSnackbar, getImagesSnackbar } from '@/store/ui/images/images.slice';
+import { closeImagesAlertSnackbar, closeImagesLoadingSnackbar, getImagesSnackbar } from '@/store/ui/images/images.slice';
 import { closeAuthAlertSnackbar, getAuthSnackbar } from '@/store/ui/authentication/authentication.slice';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 
@@ -65,12 +65,26 @@ describe('AlertSnackbar', () => {
 });
 
 describe('LoadingSnackbar', () => {
-  it('renders the loading message', () => {
+  const loadingState = { ui: { images: { snackbar: { loading: { open: true, message: 'Bild hochladen' } } } } };
+
+  it('renders the loading message once the request takes long', async () => {
     renderWithProviders(
       <LoadingSnackbar getSnackbar={getImagesSnackbar} closeSnackbar={closeImagesAlertSnackbar} />,
-      { preloadedState: { ui: { images: { snackbar: { loading: { open: true, message: 'Bild hochladen' } } } } } },
+      { preloadedState: loadingState },
     );
 
-    expect(screen.getByText('Bild hochladen')).toBeInTheDocument();
+    expect(screen.queryByText('Bild hochladen')).not.toBeInTheDocument();
+    expect(await screen.findByText('Bild hochladen')).toBeInTheDocument();
+  });
+
+  it('shows nothing for a request that finishes quickly', () => {
+    const { store } = renderWithProviders(
+      <LoadingSnackbar getSnackbar={getImagesSnackbar} closeSnackbar={closeImagesAlertSnackbar} />,
+      { preloadedState: loadingState },
+    );
+
+    act(() => store.dispatch(closeImagesLoadingSnackbar()));
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
   });
 });

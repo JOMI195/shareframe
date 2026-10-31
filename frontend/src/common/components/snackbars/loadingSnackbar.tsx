@@ -5,6 +5,7 @@ import { RootState, useAppDispatch, useAppSelector } from "@/store";
 import { UnknownAction } from "redux";
 import { CircularProgress, Paper, Typography } from "@mui/material";
 import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
+import { useDelayedLoading } from "@/hooks/loading/useDelayedLoading";
 
 
 interface LoadingSnackbar {
@@ -28,6 +29,7 @@ const LoadingSnackbar = (
     const { colorMode } = useColorThemeContext();
 
     const snackbar: LoadingSnackbar = useAppSelector(getSnackbar).loading;
+    const open = useDelayedLoading(snackbar.open);
     // The slices clear the text on close, while the snackbar is still sliding out.
     const [shownMessage, setShownMessage] = useState(snackbar.message);
     if (snackbar.message && snackbar.message !== shownMessage) setShownMessage(snackbar.message);
@@ -38,7 +40,7 @@ const LoadingSnackbar = (
 
     return (
         <StackedSnackbar
-            open={snackbar.open}
+            open={open}
             onClose={handleSnackbarClose}
             autoHideDuration={30000}
             slots={{
