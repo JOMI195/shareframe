@@ -119,6 +119,14 @@ describe('registering a frame', () => {
     await waitFor(() => expect(store.getState().ui.frames.dialogs.register.open).toBe(false));
   });
 
+  it('opens prefilled from the link on the frame', async () => {
+    server.use(...withFrames([]));
+    const { store } = renderRoute(`/bilderrahmen/?register=${SERIAL.toLowerCase()}`, { preloadedState: signedInState() });
+
+    expect(await screen.findByLabelText('Seriennummer')).toHaveValue(SERIAL);
+    expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
+  });
+
   it('insists on the serial number format', async () => {
     const calls: string[] = [];
     server.use(
