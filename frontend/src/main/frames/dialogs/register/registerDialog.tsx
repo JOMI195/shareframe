@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect } from "react";
+import { useSearchParams } from "react-router";
 import AppDialog from '@/common/components/appDialog';
 import Button from "@mui/material/Button";
 import DialogContent from "@mui/material/DialogContent";
@@ -7,7 +8,7 @@ import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { IRegisterFrameForm, isIFrameResponse } from "@/types";
 import { Box, Grid, Stack, TextField, Typography, useMediaQuery, useTheme } from "@mui/material";
-import { closeRegisterFrameDialog, getDialogs } from "@/store/ui/frames/frames.slice";
+import { closeRegisterFrameDialog, getDialogs, openRegisterFrameDialog } from "@/store/ui/frames/frames.slice";
 import { registerFrame } from "@/store/entities/frames/frames.actions";
 import DialogHeader from '@/common/components/dialogHeader';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
@@ -17,13 +18,23 @@ const RegisterFrameDialog: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
-  const open = useAppSelector(getDialogs).register.open;
+  const { open, serial } = useAppSelector(getDialogs).register;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const serialFromLink = searchParams.get("register");
+
+  // The frame's setup screen links here with its serial.
+  useEffect(() => {
+    if (serialFromLink === null) return;
+    dispatch(openRegisterFrameDialog({ serial: formatSerial(serialFromLink) }));
+    setSearchParams((params) => {
+      params.delete("register");
+      return params;
+    }, { replace: true });
+  }, [serialFromLink, dispatch, setSearchParams]);
 
   const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-  const [initialValues] = useState<IRegisterFrameForm>({
-    public_serial_number: "",
-  });
+  const initialValues: IRegisterFrameForm = { public_serial_number: serial };
 
   const validationSchema = yup.object({
     public_serial_number: yup

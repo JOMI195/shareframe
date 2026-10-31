@@ -39,6 +39,7 @@ from .auth import (
 )
 from .consumers import FrameWebSocketConsumer
 from .models import Frame, FrameCommand, FrameDiagnostics, FrameToken
+from .permissions import IsRegisteredFrame
 from .serializers import FrameRetrieveSerializer
 
 telemetry_logger = logging.getLogger("frames.telemetry")
@@ -393,7 +394,7 @@ class FramesViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["POST"],
         authentication_classes=[FrameSignatureAuthentication],
-        permission_classes=[IsAuthenticated],
+        permission_classes=[IsRegisteredFrame],
         throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="obtain-frame-token",
     )

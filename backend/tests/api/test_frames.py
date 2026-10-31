@@ -427,6 +427,17 @@ class TestObtainToken:
         assert response.status_code == 200
         assert response.data["access_token"]
 
+    def test_an_unowned_frame_is_told_to_get_registered(self, client, spare_entry):
+        response = client.post(
+            f"{URL}obtain-frame-token/",
+            {},
+            format="json",
+            headers=signature_headers(spare_entry["seed_b64"]),
+        )
+
+        assert response.status_code == 403
+        assert response.data["code"] == "frame_unregistered"
+
     def test_without_a_signature_it_is_forbidden(self, client):
         # DRF answers 403, not 401: no authenticator sets a WWW-Authenticate header.
         assert (
