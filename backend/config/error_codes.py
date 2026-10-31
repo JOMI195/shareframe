@@ -2,6 +2,7 @@
 SERIAL_REQUIRED = "serial_required"
 FRAME_UNAVAILABLE = "frame_unavailable"
 FRAME_NOT_FOUND = "frame_not_found"
+FRAME_UNREGISTERED = "frame_unregistered"
 
 RECEIVER_REQUIRED = "receiver_required"
 IMAGE_REQUIRED = "image_required"
