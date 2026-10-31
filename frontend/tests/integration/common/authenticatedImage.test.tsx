@@ -94,14 +94,6 @@ describe('AuthenticatedImage', () => {
     expect(URL.revokeObjectURL).toHaveBeenCalledWith(src);
   });
 
-  it('reserves the box with a ratio placeholder while loading', () => {
-    const { container } = render(<AuthenticatedImage url={URL_PATH} alt="Foto" aspectRatio={16 / 9} />);
-
-    const placeholder = container.querySelector('img[alt=""]');
-    expect(placeholder).toBeInTheDocument();
-    expect(placeholder?.getAttribute('src')).toContain('svg%20xmlns');
-  });
-
   it('blurs the image when the hideToYou filter is on', async () => {
     serveImage();
     render(<AuthenticatedImage url={URL_PATH} alt="Foto" hideToYouFilter />);

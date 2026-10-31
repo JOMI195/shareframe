@@ -11,7 +11,6 @@ interface AuthenticatedImageProps {
     onClick?: () => void;
     onError?: (error: Error) => void;
     hideToYouFilter?: boolean;
-    aspectRatio?: number;
 }
 
 const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
@@ -21,8 +20,7 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     style,
     onClick,
     onError,
-    hideToYouFilter,
-    aspectRatio
+    hideToYouFilter
 }) => {
     const [loaded, setLoaded] = useState<{ url: string; src: string } | null>(null);
     const [failedUrl, setFailedUrl] = useState<string | null>(null);
@@ -99,7 +97,6 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
                     justifyContent: 'center',
                     width: '100%',
                     minHeight: 80,
-                    aspectRatio,
                     bgcolor: 'action.hover',
                     color: 'text.disabled',
                 }}
@@ -111,27 +108,6 @@ const AuthenticatedImage: React.FC<AuthenticatedImageProps> = ({
     }
 
     if (showSkeleton) {
-        // A hidden img of the same ratio reserves the box: percentage widths collapse when the parent is shrink-to-fit.
-        if (aspectRatio) {
-            const ratioSrc = `data:image/svg+xml;utf8,${encodeURIComponent(
-                `<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="${Math.round(1000 / aspectRatio)}"/>`
-            )}`;
-
-            return (
-                <div
-                    ref={imgRef}
-                    style={{ position: 'relative', display: 'inline-block', overflow: 'hidden', ...style }}
-                >
-                    <img src={ratioSrc} alt="" style={{ ...style, display: 'block', visibility: 'hidden' }} />
-                    <Skeleton
-                        variant="rectangular"
-                        animation="wave"
-                        style={{ position: 'absolute', inset: 0, borderRadius: style?.borderRadius }}
-                    />
-                </div>
-            );
-        }
-
         return (
             <Skeleton
                 variant="rectangular"
