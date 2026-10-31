@@ -145,6 +145,18 @@ class TestFrameCollector:
             Frame.objects.values_list("public_serial_number", flat=True)
         )
 
+    def test_the_info_series_carry_the_owner_email(self):
+        owned = FrameFactory(user=UserFactory())
+        unowned = FrameFactory()
+
+        owners = {
+            s.labels["serial_number"]: s.labels["owner_email"]
+            for s in series(ShareframeFrameCollector(), "shareframe_frame_info")
+        }
+
+        assert owners[owned.public_serial_number] == owned.user.email
+        assert owners[unowned.public_serial_number] == ""
+
     def test_a_broken_query_does_not_raise(self, monkeypatch):
         monkeypatch.setattr(
             ShareframeFrameCollector,
