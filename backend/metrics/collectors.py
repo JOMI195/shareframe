@@ -376,6 +376,7 @@ class ShareframeFrameCollector:
                 "public_serial_number",
                 "version",
                 "local_ip_address",
+                "user__email",
                 "is_active",
                 "last_telemetry",
                 *[field for _, field, _ in _FRAME_TIMESTAMPS],
@@ -384,8 +385,8 @@ class ShareframeFrameCollector:
 
         info = GaugeMetricFamily(
             "shareframe_frame_info",
-            "Registered frames, labelled with their current version and address",
-            labels=["serial_number", "version", "local_ip_address"],
+            "Registered frames, labelled with their current version, address and owner",
+            labels=["serial_number", "version", "local_ip_address", "owner_email"],
         )
         active = GaugeMetricFamily(
             "shareframe_frame_active",
@@ -421,7 +422,13 @@ class ShareframeFrameCollector:
                         )
                     telemetry[name].add_metric(serial + list(labels.values()), value)
             info.add_metric(
-                serial + [row["version"] or "", row["local_ip_address"] or ""], 1
+                serial
+                + [
+                    row["version"] or "",
+                    row["local_ip_address"] or "",
+                    row["user__email"] or "",
+                ],
+                1,
             )
             active.add_metric(serial, int(row["is_active"]))
             connected.add_metric(

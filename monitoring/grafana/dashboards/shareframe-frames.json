@@ -897,7 +897,7 @@
       "id": 47,
       "type": "table",
       "title": "Fleet roster",
-      "description": "Every registered frame, straight from the database. One row per frame by construction: public_serial_number is unique, so nothing here can duplicate or go missing when a frame changes address or firmware. Last seen is the Frame.last_seen column, refreshed by websocket traffic as well as heartbeats, so it can be newer than Last heartbeat below.",
+      "description": "Every registered frame, straight from the database. One row per frame by construction: public_serial_number is unique, so nothing here can duplicate or go missing when a frame changes address or firmware. Last seen is the Frame.last_seen column, refreshed by websocket traffic as well as heartbeats, so it can be newer than Last heartbeat below. Owner is the email of the assigned user, blank if the frame has none.",
       "datasource": {
         "type": "prometheus",
         "uid": "prometheus"
@@ -915,7 +915,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (serial_number, version, local_ip_address) (shareframe_frame_info{serial_number=~\"$frame\"})",
+          "expr": "sum by (serial_number, version, local_ip_address, owner_email) (shareframe_frame_info{serial_number=~\"$frame\"})",
           "instant": true,
           "range": false,
           "format": "table",
@@ -1036,19 +1036,21 @@
               "Value #E": "Websocket",
               "Value #F": "Registered",
               "Value #G": "Last update check",
-              "Value #H": "Last update attempt"
+              "Value #H": "Last update attempt",
+              "owner_email": "Owner"
             },
             "indexByName": {
               "serial_number": 0,
-              "Active": 1,
-              "version": 2,
-              "local_ip_address": 3,
-              "Last seen": 4,
-              "Last connected": 5,
-              "Last update check": 6,
-              "Last update attempt": 7,
-              "Websocket": 8,
-              "Registered": 9
+              "owner_email": 1,
+              "Active": 2,
+              "version": 3,
+              "local_ip_address": 4,
+              "Last seen": 5,
+              "Last connected": 6,
+              "Last update check": 7,
+              "Last update attempt": 8,
+              "Websocket": 9,
+              "Registered": 10
             }
           }
         }
