@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Typography, Grid, Link } from '@mui/material';
+import { Box, Button, Typography, Grid, Link } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import { resendActivationEmail } from '@/store/entities/authentication/authentication.actions';
-import { useLocation } from 'react-router';
+import { Link as RouterLink, useLocation } from 'react-router';
+import { getAuthenticationUrl, getSignInUrl } from '@/assets/endpoints/app/authEndpoints';
+import { getDashboardUrl } from '@/assets/endpoints/app/appEndpoints';
 
 interface SignUpConfirmationProps {
     resendActivationTo: string | null;
@@ -70,6 +72,11 @@ const SignUpConfirmation: React.FC = () => {
                         Du kannst diese Seite jetzt schließen
                     </Typography>
                 </Grid>
+                <Grid size={12}>
+                    <Button component={RouterLink} to={getDashboardUrl()} fullWidth variant="outlined" color="secondary">
+                        {"Zum Dashboard"}
+                    </Button>
+                </Grid>
             </Grid>
         );
     }
@@ -120,6 +127,11 @@ const SignUpConfirmation: React.FC = () => {
                             </Box>
                         </Grid>
                     )}
+                    <Grid size={12}>
+                        <Button component={RouterLink} to={getAuthenticationUrl() + getSignInUrl()} fullWidth variant="outlined" color="secondary">
+                            {"Zur Anmeldung"}
+                        </Button>
+                    </Grid>
                 </Grid>
             </Box>
         </Box>

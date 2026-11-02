@@ -138,12 +138,34 @@ describe('landing page', () => {
     await waitFor(() => expect(router.state.location.pathname).toBe('/'));
   });
 
-  // Already on the way in, so the header drops its own sign-in button.
-  it('keeps the header but hides its sign-in button on the sign-in page', async () => {
+  // The auth pages keep their own centred logo instead of the public header.
+  it('shows the auth logo without the public header on the sign-in page', async () => {
+    const user = userEvent.setup();
+    const { router } = renderRoute('/auth/sign-in/');
+
+    await user.click(await screen.findByRole('img', { name: 'ShareFrame' }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe('/'));
+  });
+
+  it('has no theme switch or header sign-in link on the sign-in page', async () => {
     renderRoute('/auth/sign-in/');
 
     expect(await screen.findByRole('img', { name: 'ShareFrame' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Modus/ })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
+  });
+
+  it.each([
+    ['/auth/sign-in/', 'Zurück zur Startseite', '/'],
+    ['/auth/users/sign-up-confirmation/', 'Zur Anmeldung', '/auth/sign-in/'],
+  ])('%s offers a way back', async (path, name, target) => {
+    const user = userEvent.setup();
+    const { router } = renderRoute(path);
+
+    await user.click(await screen.findByRole('link', { name }));
+
+    await waitFor(() => expect(router.state.location.pathname).toBe(target));
   });
 
   // Seasonal decorations are a perk of the signed-in app.
