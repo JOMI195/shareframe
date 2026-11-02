@@ -1,5 +1,6 @@
 import Box from "@mui/material/Box";
 import Container from "@mui/material/Container";
+import Stack from "@mui/material/Stack";
 import { Outlet } from "react-router";
 import Logo from "@/common/components/logo";
 import PublicFooter from "@/common/components/layout/bottomLayout/publicFooter";
@@ -16,14 +17,28 @@ export default function Layout() {
           mb: 5
         }}
       >
-        <Box sx={{ display: "flex", justifyContent: "center", my: 1, width: "100%" }}>
+        <Stack
+          spacing={0}
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            my: 1,
+            width: "100%"
+          }}>
+          <Logo
+            darkLogoSrc="/logo-dark-full-shareframe.svg"
+            lightLogoSrc="/logo-light-full-shareframe.svg"
+            alt="ShareFrame"
+            marginRight={0}
+            maxWidth={220}
+          />
           <Logo
             darkLogoSrc="/frame-3d.svg"
             lightLogoSrc="/frame-3d.svg"
             clickable={false}
             maxWidth={230}
           />
-        </Box>
+        </Stack>
         <Outlet />
       </Box>
       <PublicFooter />

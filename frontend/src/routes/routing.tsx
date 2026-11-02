@@ -12,7 +12,6 @@ import settingsRoutes from '@/main/settings/settings';
 import ProtectedRoute from '@/common/components/protectedRoute';
 import PublicLayout from '@/main/legals/layout';
 import SessionLayout from '@/common/components/layout/sessionLayout';
-import PublicHeader from '@/common/components/layout/topLayout/publicHeader';
 import Landing from '@/main/landing/landing';
 import SeoHead from '@/seo/seoHead';
 import { getUnsubscribePageUrl } from '@/assets/endpoints/app/notificationEndpoints';
@@ -40,12 +39,7 @@ export const routes = [
           },
           {
             path: getAuthenticationUrl(),
-            element: (
-              <>
-                <PublicHeader />
-                <FeatureSelectorWrapper feature="authentication" />
-              </>
-            ),
+            element: <FeatureSelectorWrapper feature="authentication" />,
             children: authenticationRoutes,
           },
           {
