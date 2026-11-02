@@ -9,6 +9,7 @@ import { makeFriendship, makeImage, makeImages, makePage, seedUser } from '@test
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withFriendships, withImages } from '@tests/mocks';
 import { clickSpeedDialAction } from '@tests/helpers/speedDial';
+import { desktopViewport, floatingButton } from '@tests/helpers/viewport';
 import { triggerIntersection } from '@tests/setup/vitest.setup';
 
 vi.mock('react-easy-crop', async () => {
@@ -279,5 +280,51 @@ describe('deleting photos', () => {
 
     expect(deleted).toEqual([]);
     expect(screen.getByText('3 Fotos')).toBeInTheDocument();
+  });
+});
+
+describe('photo actions on desktop', () => {
+  it('shows the actions inline instead of floating', async () => {
+    desktopViewport();
+    const { user, store } = await openLibrary();
+
+    expect(floatingButton()).toBeNull();
+    await user.click(screen.getByRole('button', { name: 'Foto hinzufügen' }));
+
+    expect(store.getState().ui.images.dialogs.create.open).toBe(true);
+  });
+
+  it('shows the preview actions inline', async () => {
+    desktopViewport();
+    const { user, store } = await openLibrary();
+
+    await user.click(screen.getByRole('button', { name: library[0].display_name || library[0].name }));
+    const dialog = await screen.findByRole('dialog');
+    expect(floatingButton()).toBeNull();
+    await user.click(within(dialog).getByRole('button', { name: 'Foto senden' }));
+
+    expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(true);
+  });
+
+  it('deletes the selection from the actions row', async () => {
+    desktopViewport();
+    const deleted: string[] = [];
+    server.use(
+      mswHttp.delete(apiUrl(imageEndpoints.getImagesDetailUrl(library[0].id)), () => {
+        deleted.push(String(library[0].id));
+        return HttpResponse.json(library[0]);
+      }),
+    );
+
+    const { user } = await openLibrary();
+    await user.click(screen.getByRole('button', { name: 'Mehrere Fotos auswählen' }));
+    expect(screen.getByRole('button', { name: 'Löschen' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Mehrere Fotos auswählen' })).not.toBeInTheDocument();
+
+    await selectFirstPhoto(user);
+    await user.click(screen.getByRole('button', { name: 'Löschen' }));
+    await user.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Löschen' }));
+
+    await waitFor(() => expect(deleted).toEqual([String(library[0].id)]));
   });
 });
