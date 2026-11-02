@@ -1,26 +1,16 @@
-import { Add as AddIcon } from "@mui/icons-material";
-import { openCreateFriendshipsDialog } from "@/store/ui/friendships/friendships.slice";
-import { useAppDispatch } from "@/store";
-import { DialogAction } from "@/types";
 import BottomFloatingActions from "@/common/components/bottomFloatingActions";
+import { useDesktopActions } from "@/hooks/layout/useDesktopActions";
+import { useFriendshipsPageActions } from "./useFriendshipsPageActions";
 
 export const Actions: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const { primary } = useFriendshipsPageActions();
+  const isDesktop = useDesktopActions();
 
-  const handleDialogOpen = () => {
-    dispatch(openCreateFriendshipsDialog());
-  };
-
-  const action: DialogAction = {
-    icon: <AddIcon />,
-    onClick: handleDialogOpen,
-    label: 'Freund hinzufügen',
-    color: 'primary',
-  };
+  if (isDesktop) return null;
 
   return (
     <BottomFloatingActions
-      actionPrimary={action}
+      actionPrimary={primary}
     />
   );
 };

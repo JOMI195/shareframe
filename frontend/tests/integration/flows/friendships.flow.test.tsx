@@ -4,6 +4,7 @@ import { HttpResponse, http as mswHttp } from 'msw';
 import * as friendshipEndpoints from '@/assets/endpoints/api/friendshipsEndpoints';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
+import { desktopViewport, floatingButton } from '@tests/helpers/viewport';
 import { makeFriendship, seedUser } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withFriendships } from '@tests/mocks';
@@ -116,6 +117,14 @@ describe('sending a request', () => {
     await user.click(screen.getByRole('button', { name: 'Freund hinzufügen' }));
     return screen.findByLabelText('Freundescode');
   };
+
+  it('offers the add button inline on desktop', async () => {
+    desktopViewport();
+    const { user } = await openFriendships();
+
+    expect(floatingButton()).toBeNull();
+    expect(await openDialog(user)).toBeInTheDocument();
+  });
 
   it('sends the friend code that was typed', async () => {
     const bodies: Record<string, unknown>[] = [];

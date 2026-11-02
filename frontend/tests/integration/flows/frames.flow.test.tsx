@@ -4,6 +4,7 @@ import { HttpResponse, http as mswHttp } from 'msw';
 import * as frameEndpoints from '@/assets/endpoints/api/framesEndpoints';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { signedInState } from '@tests/helpers/preloadedState';
+import { desktopViewport, floatingButton } from '@tests/helpers/viewport';
 import { makeFrame } from '@tests/fixtures';
 import { apiUrl } from '@tests/mocks/apiUrl';
 import { server, withFrames } from '@tests/mocks';
@@ -99,6 +100,14 @@ describe('registering a frame', () => {
     await user.click(screen.getByRole('button', { name: /Bilderrahmen hinzufügen/ }));
     return screen.findByLabelText('Seriennummer');
   };
+
+  it('offers the register button inline on desktop', async () => {
+    desktopViewport();
+    const { user } = await openFrames();
+
+    expect(floatingButton()).toBeNull();
+    expect(await openDialog(user)).toBeInTheDocument();
+  });
 
   it('registers the serial that was typed and closes', async () => {
     const bodies: Record<string, unknown>[] = [];
