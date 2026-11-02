@@ -1,4 +1,4 @@
-import { Box, Typography, Stack, ListItemAvatar, ListItemText, Grid } from "@mui/material";
+import { Typography, Stack } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { openDeactivateSendImageFrameDialog, openScheduledSentImageDialog, ScheduledSentImageAction } from "@/store/ui/images/images.slice";
 import HideImageIcon from '@mui/icons-material/HideImage';
@@ -11,12 +11,20 @@ import ShareframeMainDialog from "@/common/components/shareframeMainDialog";
 import { DialogAction } from "@/types";
 import { closePreviewSentImageDialog, getDialogs } from "@/store/ui/sentImages/sentImages.slice";
 import PreviewImage from "@/main/images/dialogs/preview/previewImage";
+import { PreviewField } from "@/main/images/dialogs/preview/previewLayout";
 import { formatDuration, getActiveDurationMs, getSentImageState } from "../../sentImageStatus";
 import SentImageStatusLabel from "../../sentImageStatusLabel";
 import UserAvatar from "@/common/components/userAvatar";
 import { getUser } from "@/store/entities/authentication/authentication.slice";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
+
+const PreviewUser: React.FC<{ username: string; avatar?: string | null }> = ({ username, avatar }) => (
+    <Stack direction="row" sx={{ alignItems: "center", gap: 1, minWidth: 0 }}>
+        <UserAvatar username={username} url={avatar} size={36} />
+        <Typography noWrap>{username}</Typography>
+    </Stack>
+);
 
 const ImagePreviewDialog = () => {
     const dispatch = useAppDispatch();
@@ -88,115 +96,40 @@ const ImagePreviewDialog = () => {
             open={dialog.open}
             onDialogClose={handleCloseImagePreview}
             dialogTitle={received ? "Erhaltenes Foto" : "Gesendetes Foto"}
-            dialogContentSx={{ padding: 2 }}
-            //subtitle="Optional subtitle or description"
+            dialogContentSx={{ padding: { xs: 2, md: 3 } }}
             actionsAdditional={dialogActions}
             actionPrimary={primaryAction}
             actionsShown={true}
         >
-            <Box
-                sx={{
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}>
-                {selectedImage && (
-                    <Grid container spacing={2} sx={{ pb: 2 }}>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Absender</Typography>
-                                <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
-                                    <ListItemAvatar>
-                                        <UserAvatar
-                                            username={selectedImage.sender}
-                                            url={selectedImage.sender_avatar}
-                                            size={36}
-                                        />
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={selectedImage.sender}
-                                    />
-                                </Stack>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Empfänger</Typography>
-                                <Stack direction="row" spacing={-1.5} sx={{ alignItems: "center" }}>
-                                    <ListItemAvatar>
-                                        <UserAvatar
-                                            username={selectedImage.reciever}
-                                            url={selectedImage.reciever_avatar}
-                                            size={36}
-                                        />
-                                    </ListItemAvatar>
-                                    <ListItemText
-                                        primary={selectedImage.reciever}
-                                    />
-                                </Stack>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">{isScheduled ? "Geplant für" : "Gesendet am"}</Typography>
+            {selectedImage && (
+                <PreviewImage
+                    key={selectedImage.id}
+                    image={selectedImage.image}
+                    details={{
+                        columns: { xs: 2, sm: 3 },
+                        fields: <>
+                            <PreviewField label="Absender">
+                                <PreviewUser username={selectedImage.sender} avatar={selectedImage.sender_avatar} />
+                            </PreviewField>
+                            <PreviewField label="Empfänger">
+                                <PreviewUser username={selectedImage.reciever} avatar={selectedImage.reciever_avatar} />
+                            </PreviewField>
+                            <PreviewField label={isScheduled ? "Geplant für" : "Gesendet am"}>
                                 <Typography>{formatGermanDateTime(new Date(isScheduled && selectedImage.scheduled_for ? selectedImage.scheduled_for : selectedImage.sent_at))}</Typography>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Läuft ab am</Typography>
-                                <Typography>{(selectedImage && selectedImage.expires_at !== null) && formatGermanDateTime(new Date(selectedImage.expires_at))}</Typography>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Anzeigedauer</Typography>
+                            </PreviewField>
+                            <PreviewField label="Läuft ab am">
+                                <Typography>{selectedImage.expires_at !== null ? formatGermanDateTime(new Date(selectedImage.expires_at)) : "–"}</Typography>
+                            </PreviewField>
+                            <PreviewField label="Anzeigedauer">
                                 <Typography>{activeDurationMs !== null ? formatDuration(activeDurationMs) : "–"}</Typography>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 6,
-                                sm: 4,
-                                md: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="text.secondary">Status</Typography>
+                            </PreviewField>
+                            <PreviewField label="Status">
                                 <SentImageStatusLabel state={state} />
-                            </Box>
-
-                        </Grid>
-                    </Grid>
-                )}
-                {selectedImage && <PreviewImage key={selectedImage.id} image={selectedImage.image} />}
-
-            </Box>
+                            </PreviewField>
+                        </>,
+                    }}
+                />
+            )}
         </ShareframeMainDialog>
     );
 };

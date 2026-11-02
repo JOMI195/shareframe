@@ -1,4 +1,4 @@
-import { Box, Typography, Chip, Grid } from "@mui/material";
+import { Typography, Chip } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closePreviewImageDialog, getDialogs, openDeleteImageDialog, openSendImageToUserFrameDialog, selectImage } from "@/store/ui/images/images.slice";
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -10,6 +10,7 @@ import ShareframeMainDialog from "@/common/components/shareframeMainDialog";
 import { DialogAction } from "@/types";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import PreviewImage from "./previewImage";
+import { PreviewField } from "./previewLayout";
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 const IMAGES_AUTO_DELETE_INTERVAL_HOURS = import.meta.env.VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS
@@ -95,38 +96,23 @@ const ImagePreviewDialog = () => {
             open={dialog.open}
             onDialogClose={handleCloseImagePreview}
             dialogTitle={"Hochgeladenes Foto"}
-            dialogContentSx={{ padding: 2 }}
+            dialogContentSx={{ padding: { xs: 2, md: 3 } }}
             actionsAdditional={dialogActions}
             actionPrimary={primaryAction}
             actionsShown={true}
         >
-            <Box
-                sx={{
-                    width: "100%",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center"
-                }}>
-                {selectedImage && (
-                    <Grid container spacing={2} sx={{ pb: { xs: selectedImage.auto_delete_after_period ? 2 : 0, sm: 2 } }}>
-                        <Grid
-                            size={{
-                                xs: 12,
-                                sm: 2
-                            }}>
-                            <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                <Typography sx={{ mb: 0.5 }} color="GrayText" >Hochgeladen am</Typography>
+            {selectedImage && (
+                <PreviewImage
+                    key={selectedImage.id}
+                    image={selectedImage}
+                    details={{
+                        columns: { xs: 1, sm: 2 },
+                        fields: <>
+                            <PreviewField label="Hochgeladen am">
                                 <Typography>{formatGermanDateTime(new Date(selectedImage.created_at))}</Typography>
-                            </Box>
-                        </Grid>
-                        <Grid
-                            size={{
-                                xs: 12,
-                                sm: 4
-                            }}>
+                            </PreviewField>
                             {selectedImage.auto_delete_after_period && (
-                                <Box sx={{ display: "flex", flexDirection: "column" }}>
-                                    <Typography sx={{ mb: 0.5 }} color="text.secondary">Speicherdauer</Typography>
+                                <PreviewField label="Speicherdauer">
                                     <Chip
                                         icon={<AccessTimeIcon />}
                                         label={getTimeUntilDeletion(selectedImage.created_at)}
@@ -134,6 +120,7 @@ const ImagePreviewDialog = () => {
                                         size="small"
                                         variant="outlined"
                                         sx={{
+                                            alignSelf: 'flex-start',
                                             maxWidth: '100%',
                                             height: 'auto',
                                             '& .MuiChip-label': {
@@ -144,15 +131,12 @@ const ImagePreviewDialog = () => {
                                             }
                                         }}
                                     />
-                                </Box>
+                                </PreviewField>
                             )}
-                        </Grid>
-                    </Grid>
-                )}
-
-                {selectedImage && <PreviewImage key={selectedImage.id} image={selectedImage} />}
-
-            </Box>
+                        </>,
+                    }}
+                />
+            )}
         </ShareframeMainDialog>
     );
 };
