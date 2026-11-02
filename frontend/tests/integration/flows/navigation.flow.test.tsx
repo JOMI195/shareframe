@@ -4,6 +4,7 @@ import { server, withFrames, withUser } from '@tests/mocks';
 import { makeFrame, seedUser } from '@tests/fixtures';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
+import { desktopViewport, floatingButton } from '@tests/helpers/viewport';
 
 const publicRoutes: [string, RegExp][] = [
   ['/', /Teile deine schönsten Momente|Anmelden/i],
@@ -170,5 +171,16 @@ describe('start page', () => {
 
     await waitFor(() => expect(router.state.location.pathname).toBe('/fotos/'));
     await waitFor(() => expect(store.getState().ui.images.dialogs.create.open).toBe(true));
+  });
+
+  it('leaves the photo button out on desktop', async () => {
+    desktopViewport();
+    server.use(...withFrames([]));
+    renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    await screen.findByText('Schnellzugriff');
+
+    expect(screen.queryByRole('button', { name: 'Foto hinzufügen' })).not.toBeInTheDocument();
+    expect(floatingButton()).toBeNull();
   });
 });
