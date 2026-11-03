@@ -28,7 +28,7 @@ import {
   getResetPasswordUrl,
   getUsersUrl,
 } from "@/assets/endpoints/app/authEndpoints";
-import { getDashboardUrl } from "@/assets/endpoints/app/appEndpoints";
+import { getDashboardUrl, getHomeUrl } from "@/assets/endpoints/app/appEndpoints";
 import { getIn, useFormik } from "formik";
 import { Alert } from "@mui/material";
 import { areCookiesEnabled } from "@/common/utils/cookies";
@@ -243,6 +243,17 @@ export default function SignIn() {
               loading={api.loading}
             >
               {"Anmelden"}
+            </Button>
+          </Grid>
+          <Grid size={12}>
+            <Button
+              component={RouterLink}
+              to={getHomeUrl()}
+              fullWidth
+              variant="outlined"
+              color="secondary"
+            >
+              {"Zurück zur Startseite"}
             </Button>
           </Grid>
           <Grid

@@ -1,6 +1,7 @@
 import { Box, Typography } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import BottomFloatingActions from "@/common/components/bottomFloatingActions";
+import { useDesktopActions } from "@/hooks/layout/useDesktopActions";
 import { useNavigate } from "react-router";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { uploadRequested } from "@/store/ui/images/images.slice";
@@ -19,6 +20,7 @@ const Dashboard: React.FC = () => {
     const navigate = useNavigate();
     const dashboardStats = useAppSelector(getDashboardData);
 
+    const isDesktop = useDesktopActions();
     const dashboardApi = useAppSelector(getDashboardApi);
     const showSkeleton = useMinimumLoading(dashboardApi.loading && dashboardApi.lastFetch === null);
 
@@ -72,17 +74,19 @@ const Dashboard: React.FC = () => {
                     activityData={activityData}
                 />
             )}
-            <BottomFloatingActions
-                actionPrimary={{
-                    icon: <AddIcon />,
-                    label: "Foto hinzufügen",
-                    color: "primary",
-                    onClick: () => {
-                        dispatch(uploadRequested());
-                        navigate("/" + getImageUrl());
-                    },
-                }}
-            />
+            {!isDesktop && (
+                <BottomFloatingActions
+                    actionPrimary={{
+                        icon: <AddIcon />,
+                        label: "Foto hinzufügen",
+                        color: "primary",
+                        onClick: () => {
+                            dispatch(uploadRequested());
+                            navigate("/" + getImageUrl());
+                        },
+                    }}
+                />
+            )}
         </Box>
     );
 };

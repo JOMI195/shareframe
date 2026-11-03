@@ -109,6 +109,7 @@ const UploadDialog: React.FC = () => {
   const [finalImage, replaceFinalImage] = useBlobImage()
   const [epaperView, setEpaperView] = useState<EpaperView>('original')
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [removeId, setRemoveId] = useState<string | null>(null)
   const [sendPrompt, setSendPrompt] = useState<IImage[]>([])
   const uploadedThisSession = useRef<IImage[]>([])
 
@@ -137,6 +138,7 @@ const UploadDialog: React.FC = () => {
   const closeDialog = () => {
     uploadedThisSession.current = [];
     setConfirmDiscard(false);
+    setRemoveId(null);
     dispatch(closeCreateImageDialog());
     resetQueue();
     setCurrentImageIndex(null);
@@ -196,6 +198,12 @@ const UploadDialog: React.FC = () => {
     } else {
       setCurrentImageIndex(prev => (prev !== null && indexToRemove < prev ? prev - 1 : prev))
     }
+  }
+
+  const removeIndex = imageStatuses.findIndex(status => status.id === removeId)
+  const confirmRemove = () => {
+    setRemoveId(null)
+    if (removeIndex !== -1) removeImage(removeIndex)
   }
 
   const currentImage = currentImageIndex !== null ? imageStatuses[currentImageIndex] ?? null : null
@@ -393,7 +401,7 @@ const UploadDialog: React.FC = () => {
                 previewErrors={previewErrors}
                 markPreviewBroken={markPreviewBroken}
                 onSelect={handleSelectPhoto}
-                onRemove={removeImage}
+                onRemove={index => setRemoveId(imageStatuses[index].id)}
                 onAdd={() => openPicker('gallery')}
                 canAdd={imageStatuses.length < maxFilesOnce}
                 isPreparing={isPreparing}
@@ -510,6 +518,17 @@ const UploadDialog: React.FC = () => {
           onCancel={() => setConfirmDiscard(false)}
         >
           Noch nicht hochgeladene Fotos und ihre Bearbeitung gehen verloren.
+        </ConfirmDialog>
+        <ConfirmDialog
+          open={removeIndex !== -1}
+          title="Foto entfernen?"
+          confirmLabel="Entfernen"
+          cancelLabel="Behalten"
+          destructive
+          onConfirm={confirmRemove}
+          onCancel={() => setRemoveId(null)}
+        >
+          {`${imageStatuses[removeIndex]?.file.name ?? ''} und seine Bearbeitung werden aus der Auswahl entfernt.`}
         </ConfirmDialog>
       </AppDialog>
       <ConfirmDialog

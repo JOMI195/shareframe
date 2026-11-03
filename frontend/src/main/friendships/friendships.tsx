@@ -12,9 +12,12 @@ import FriendshipsGallery from "./gallery/friendshipsGallery";
 import FriendshipRequestsGallery from "./gallery/friendshipRequestsGallery";
 import { getIncomingPendingRequests } from "./pendingRequests";
 import HiddenPageTitle from "@/common/components/hiddenPageTitle";
+import PageActionsBar from "@/common/components/pageActionsBar";
+import { useFriendshipsPageActions } from "./actions/useFriendshipsPageActions";
 
 const Friendships: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { primary } = useFriendshipsPageActions();
     const [selectedTabIndex, setSelectedTabIndex] = React.useState(0);
 
     const user = useAppSelector(getUser);
@@ -46,6 +49,7 @@ const Friendships: React.FC = () => {
                 display: "flex",
                 flexDirection: "column"
             }}>
+                <PageActionsBar actions={[primary]} sx={{ mb: 2 }} />
                 <Tabs
                     value={selectedTabIndex}
                     onChange={handleChange}

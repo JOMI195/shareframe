@@ -1,5 +1,5 @@
 import { Box, Button, Container, IconButton, Tooltip } from "@mui/material";
-import { Link as RouterLink, useLocation } from "react-router";
+import { Link as RouterLink } from "react-router";
 import Logo from "@/common/components/logo";
 import { useColorThemeContext } from "@/context/colorTheme/colorThemeContextValue";
 import { landingContent } from "@/seo/landingContent";
@@ -7,7 +7,6 @@ import { getAuthenticationUrl, getSignInUrl } from "@/assets/endpoints/app/authE
 
 const PublicHeader = () => {
   const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
-  const onAuthPage = useLocation().pathname.startsWith(getAuthenticationUrl());
 
   return (
     <Container component="header" maxWidth="lg" sx={{ py: { xs: 2, md: 3 } }}>
@@ -31,11 +30,9 @@ const PublicHeader = () => {
               <IconComponent />
             </IconButton>
           </Tooltip>
-          {!onAuthPage && (
-            <Button component={RouterLink} to={getAuthenticationUrl() + getSignInUrl()} variant="contained">
-              {landingContent.signInLabel}
-            </Button>
-          )}
+          <Button component={RouterLink} to={getAuthenticationUrl() + getSignInUrl()} variant="contained">
+            {landingContent.signInLabel}
+          </Button>
         </Box>
       </Box>
     </Container>

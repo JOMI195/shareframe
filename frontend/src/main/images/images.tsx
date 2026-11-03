@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Box, Container } from "@mui/material";
-import { Actions } from "./actions/actions";
+import { Actions, DesktopActions } from "./actions/actions";
 import Dialogs from "./dialogs/dialogs";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/images.actions";
@@ -38,6 +38,7 @@ const Images: React.FC = () => {
     return (
         <Container maxWidth={"md"} disableGutters>
             <HiddenPageTitle>Fotos</HiddenPageTitle>
+            <DesktopActions />
             <Box
                 sx={{
                     height: "100%",

@@ -1,26 +1,16 @@
-import { Add as AddIcon } from "@mui/icons-material";
-import { useAppDispatch } from "@/store";
-import { openRegisterFrameDialog } from "@/store/ui/frames/frames.slice";
-import { DialogAction } from "@/types";
 import BottomFloatingActions from "@/common/components/bottomFloatingActions";
+import { useDesktopActions } from "@/hooks/layout/useDesktopActions";
+import { useFramesPageActions } from "./useFramesPageActions";
 
 export const Actions: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const { primary } = useFramesPageActions();
+  const isDesktop = useDesktopActions();
 
-  const handleDialogOpen = () => {
-    dispatch(openRegisterFrameDialog());
-  };
-
-  const action: DialogAction = {
-    icon: <AddIcon />,
-    onClick: handleDialogOpen,
-    label: 'Bilderrahmen hinzufügen',
-    color: 'primary',
-  };
+  if (isDesktop) return null;
 
   return (
     <BottomFloatingActions
-      actionPrimary={action}
+      actionPrimary={primary}
     />
   );
 };

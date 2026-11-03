@@ -6,9 +6,12 @@ import FramesGallery from "./gallery/framesGallery";
 import { useAppDispatch } from "@/store";
 import { fetchframes, fetchFramesIfStale } from "@/store/entities/frames/frames.actions";
 import HiddenPageTitle from "@/common/components/hiddenPageTitle";
+import PageActionsBar from "@/common/components/pageActionsBar";
+import { useFramesPageActions } from "./actions/useFramesPageActions";
 
 const Frames: React.FC = () => {
     const dispatch = useAppDispatch();
+    const { primary } = useFramesPageActions();
 
     useEffect(() => {
         dispatch(fetchframes());
@@ -35,6 +38,7 @@ const Frames: React.FC = () => {
                 display: "flex",
                 flexDirection: "column"
             }}>
+                <PageActionsBar actions={[primary]} sx={{ mb: 2 }} />
                 <FramesGallery />
             </Box>
             <Actions />

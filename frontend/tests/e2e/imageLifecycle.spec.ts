@@ -1,6 +1,6 @@
 import type Konva from 'konva';
 import { expect, test } from '../support/e2e/fixtures';
-import { FIXTURE, enterSelectionMode, photoCount, runSpeedDialAction } from '../support/e2e/photos';
+import { FIXTURE, enterSelectionMode, photoCount } from '../support/e2e/photos';
 
 const textEditorState = (page: import('@playwright/test').Page) =>
   page.evaluate(() => {
@@ -180,7 +180,7 @@ test.describe('photo lifecycle', () => {
     await test.step('send it to a friend', async () => {
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
-      await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
+      await page.getByRole('button', { name: 'Senden', exact: true }).click();
 
       await page.getByRole('dialog').getByRole('combobox', { name: 'Empfänger' }).click();
       await page.getByRole('option', { name: 'seed_bob' }).click();
@@ -211,7 +211,7 @@ test.describe('photo lifecycle', () => {
       await page.goto('/fotos/');
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
-      await runSpeedDialAction(page, 'Ausgewählte Fotos senden');
+      await page.getByRole('button', { name: 'Senden', exact: true }).click();
 
       await page.getByRole('dialog').getByRole('combobox', { name: 'Empfänger' }).click();
       await page.getByRole('option', { name: 'seed_bob' }).click();
@@ -227,8 +227,9 @@ test.describe('photo lifecycle', () => {
       await expect(newest.getByText('Geplant')).toBeVisible({ timeout: 30_000 });
 
       await newest.click();
-      await runSpeedDialAction(page, 'Jetzt senden');
-      await page.getByRole('button', { name: 'Jetzt senden', exact: true }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Jetzt senden', exact: true }).click();
+      await page.getByRole('dialog').filter({ hasText: 'Geplantes Foto jetzt senden?' })
+        .getByRole('button', { name: 'Jetzt senden', exact: true }).click();
 
       await expect(newest.getByText('Aktiv')).toBeVisible({ timeout: 30_000 });
     });
@@ -239,8 +240,8 @@ test.describe('photo lifecycle', () => {
 
       await enterSelectionMode(page);
       await page.locator('.MuiImageListItem-root img[src^="blob:"]').first().click();
-      await runSpeedDialAction(page, 'Ausgewählte Fotos löschen');
       await page.getByRole('button', { name: 'Löschen', exact: true }).click();
+      await page.getByRole('dialog').getByRole('button', { name: 'Löschen', exact: true }).click();
 
       await expect.poll(() => photoCount(page), { timeout: 30_000 }).toBe(before);
     });

@@ -172,10 +172,25 @@ describe('UploadDialog selection step', () => {
     await screen.findByTestId('cropper');
 
     await user.click(screen.getByRole('button', { name: 'a.jpg entfernen' }));
+    await user.click(await screen.findByRole('button', { name: 'Entfernen' }));
 
     expect(screen.queryByRole('button', { name: 'a.jpg' })).not.toBeInTheDocument();
     expect(await screen.findByRole('heading', { name: 'Foto 1 von 1' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'b.jpg' })).toHaveAttribute('aria-current', 'true');
+  });
+
+  it('keeps the photo when removing is cancelled', async () => {
+    const { user } = render();
+    await user.upload(fileInput(), [photo('a.jpg'), photo('b.jpg', 2)]);
+    await screen.findByTestId('cropper');
+
+    await user.click(screen.getByRole('button', { name: 'a.jpg entfernen' }));
+    expect(await screen.findByText('a.jpg und seine Bearbeitung werden aus der Auswahl entfernt.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Behalten' }));
+
+    await waitFor(() => expect(screen.queryByText('Foto entfernen?')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: 'a.jpg' })).toHaveAttribute('aria-current', 'true');
+    expect(screen.getByRole('heading', { name: 'Foto 1 von 2' })).toBeInTheDocument();
   });
 
   it('returns to the picker when the last photo is removed', async () => {
@@ -184,8 +199,9 @@ describe('UploadDialog selection step', () => {
     await screen.findByTestId('cropper');
 
     await user.click(screen.getByRole('button', { name: 'a.jpg entfernen' }));
+    await user.click(await screen.findByRole('button', { name: 'Entfernen' }));
 
-    expect(screen.getByRole('button', { name: 'Fotos auswählen' })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'Fotos auswählen' })).toBeInTheDocument();
     expect(screen.queryByTestId('cropper')).not.toBeInTheDocument();
   });
 
