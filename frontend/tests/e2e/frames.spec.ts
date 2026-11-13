@@ -1,6 +1,9 @@
-import { expect, test } from '../support/e2e/fixtures';
+import { spareFrameClaim } from '../support/e2e/board';
+import { dave } from '../support/e2e/credentials';
+import { expect, signIn, test } from '../support/e2e/fixtures';
 
-const UNKNOWN_SERIAL = 'ZZZZ-ZZZZ-ZZZZ-ZZZZ';
+// The alphabet has no 0, so the backend never hands this one out.
+const UNKNOWN_CODE = '0000-0000';
 
 // The loading skeletons are Cards too, so frame cards are the ones showing a serial.
 const SERIAL = /[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}/;
@@ -56,20 +59,19 @@ test.describe('frames', () => {
       .not.toBe(first);
   });
 
-  test('reports an unknown serial number', async ({ signedInPage: page }) => {
+  test('reports a code no frame shows', async ({ signedInPage: page }) => {
     await openFrames(page);
 
     await page.getByRole('button', { name: 'Bilderrahmen hinzufügen' }).click();
-    await page.getByLabel('Seriennummer').fill(UNKNOWN_SERIAL);
-    await page.getByRole('button', { name: 'Hinzufügen' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Bilderrahmen hinzufügen' });
+    await dialog.getByRole('textbox', { name: 'Code' }).fill(UNKNOWN_CODE);
+    await dialog.getByRole('button', { name: 'Hinzufügen' }).click();
 
     // The open dialog marks the rest of the page aria-hidden, so the snackbar is
     // matched by its text rather than its role.
-    await expect(page.getByText(/Diesen Bilderrahmen können wir nicht hinzufügen/)).toBeVisible({
-      timeout: 30_000,
-    });
-    // The dialog stays open so the serial can be corrected.
-    await expect(page.getByLabel('Seriennummer')).toBeVisible();
+    await expect(page.getByText(/Kein Bilderrahmen zeigt diesen Code/)).toBeVisible({ timeout: 30_000 });
+    // The dialog stays open so the code can be corrected.
+    await expect(dialog.getByRole('textbox', { name: 'Code' })).toBeVisible();
   });
 
   test('releases a frame after confirming', async ({ signedInPage: page }) => {
@@ -79,12 +81,25 @@ test.describe('frames', () => {
 
     await frameCards(page).first().getByRole('button', { name: 'Bilderrahmen entfernen' }).click();
     await expect(
-      page.getByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen'),
+      page.getByText('Um ihn wieder hinzuzufügen, starte den Bilderrahmen neu'),
     ).toBeVisible();
     await page.getByRole('button', { name: 'Entfernen', exact: true }).click();
 
     await expect(frameCards(page)).toHaveCount(1, { timeout: 30_000 });
     await page.reload();
     await expect(page.getByText(serial!)).toBeHidden({ timeout: 30_000 });
+  });
+
+  // Claims the seeded spare frame, so it uses the account reserved for destructive specs.
+  test('adds the frame from the link on its panel', async ({ page, request }) => {
+    const { serial, code } = await spareFrameClaim(request);
+    await signIn(page, dave);
+
+    await page.goto(`/bilderrahmen/?code=${code}`);
+    const dialog = page.getByRole('dialog', { name: 'Bilderrahmen hinzufügen' });
+    await expect(dialog.getByRole('textbox', { name: 'Code' })).toHaveValue(`${code.slice(0, 4)}-${code.slice(4)}`);
+    await dialog.getByRole('button', { name: 'Hinzufügen' }).click();
+
+    await expect(frameCards(page).filter({ hasText: serial })).toBeVisible({ timeout: 30_000 });
   });
 });

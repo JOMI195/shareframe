@@ -8,7 +8,7 @@ export interface IFrame {
 }
 
 export interface IRegisterFrameForm {
-    public_serial_number: string
+    claim_code: string
 }
 
 export const isIFrameResponse = (obj: unknown): obj is IFrame => {

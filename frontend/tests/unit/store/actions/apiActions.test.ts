@@ -18,7 +18,7 @@ describe('api request actions', () => {
       dashboard: dashboard.fetchDashboardStats(),
       contact: contact.sendContactEmail({ name: 'A', email: 'a@b.de', subject: 'S', message: 'M' }),
       framesFetch: frames.fetchframes(),
-      framesRegister: frames.registerFrame('AAAA-BBBB-CCCC-DDDD'),
+      framesRegister: frames.registerFrame('K7M2-QX9P'),
       framesUnregister: frames.unregisterFrame('AAAA-BBBB-CCCC-DDDD'),
       framesOtp: frames.obtainFrameOTP(7),
       friendshipsFetch: friendships.fetchFriendships(),
@@ -107,7 +107,7 @@ describe('api request actions', () => {
         "framesRegister": {
           "payload": {
             "data": {
-              "public_serial_number": "AAAA-BBBB-CCCC-DDDD",
+              "claim_code": "K7M2-QX9P",
             },
             "method": "post",
             "onError": "frames/registerFrameFailed",

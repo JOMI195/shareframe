@@ -12,39 +12,35 @@ import { closeRegisterFrameDialog, getDialogs, openRegisterFrameDialog } from "@
 import { registerFrame } from "@/store/entities/frames/frames.actions";
 import DialogHeader from '@/common/components/dialogHeader';
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
-import { formatSerial } from "./serial";
+import { formatClaimCode } from "./claimCode";
 
 const RegisterFrameDialog: React.FC = () => {
   const theme = useTheme();
   const dispatch = useAppDispatch();
 
-  const { open, serial } = useAppSelector(getDialogs).register;
+  const { open, code } = useAppSelector(getDialogs).register;
   const [searchParams, setSearchParams] = useSearchParams();
-  const serialFromLink = searchParams.get("register");
+  const codeFromLink = searchParams.get("code");
 
-  // The frame's setup screen links here with its serial.
+  // The QR code on the frame's panel links here with its claim code.
   useEffect(() => {
-    if (serialFromLink === null) return;
-    dispatch(openRegisterFrameDialog({ serial: formatSerial(serialFromLink) }));
+    if (codeFromLink === null) return;
+    dispatch(openRegisterFrameDialog({ code: formatClaimCode(codeFromLink) }));
     setSearchParams((params) => {
-      params.delete("register");
+      params.delete("code");
       return params;
     }, { replace: true });
-  }, [serialFromLink, dispatch, setSearchParams]);
+  }, [codeFromLink, dispatch, setSearchParams]);
 
   const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-  const initialValues: IRegisterFrameForm = { public_serial_number: serial };
+  const initialValues: IRegisterFrameForm = { claim_code: code };
 
   const validationSchema = yup.object({
-    public_serial_number: yup
+    claim_code: yup
       .string()
       .required("Dieses Feld wird benötigt" as string)
-      .matches(
-        /^[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}-[A-Z0-9]{4}$/,
-        "Der Code muss das Format EOJ8-WXBV-Y86U-3LL3 haben" as string
-      )
-    ,
+      .matches(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/, "Der Code muss das Format K7M2-QX9P haben" as string),
   });
 
   const form = useFormik({
@@ -52,7 +48,7 @@ const RegisterFrameDialog: React.FC = () => {
     validationSchema: validationSchema,
     enableReinitialize: true,
     onSubmit: async (values: IRegisterFrameForm) => {
-      const newFrame = await dispatch(registerFrame(values.public_serial_number));
+      const newFrame = await dispatch(registerFrame(values.claim_code));
       if (isIFrameResponse(newFrame)) {
         dispatch(closeRegisterFrameDialog());
         form.resetForm();
@@ -89,7 +85,8 @@ const RegisterFrameDialog: React.FC = () => {
             <Typography variant="body2" sx={{
               color: "text.secondary"
             }}>
-              Gib die Seriennummer ein, die du zusammen mit deinem Bilderrahmen bekommen hast.
+              Scanne den QR-Code auf deinem Bilderrahmen oder gib den Code ein, den er anzeigt.
+              Zeigt er keinen Code, starte ihn neu.
             </Typography>
             <Box
               component='form'
@@ -101,20 +98,17 @@ const RegisterFrameDialog: React.FC = () => {
               <Grid container spacing={2}>
                 <Grid size={12}>
                   <TextField
-                    id='frame_serial'
-                    name='public_serial_number'
+                    id='frame_claim_code'
+                    name='claim_code'
                     autoComplete="off"
-                    label="Seriennummer"
-                    value={form.values.public_serial_number}
+                    label="Code"
+                    value={form.values.claim_code}
                     onBlur={form.handleBlur}
-                    onChange={(e) => form.setFieldValue('public_serial_number', formatSerial(e.target.value))}
-                    error={
-                      form.touched.public_serial_number &&
-                      Boolean(form.errors.public_serial_number)
-                    }
+                    onChange={(e) => form.setFieldValue('claim_code', formatClaimCode(e.target.value))}
+                    error={form.touched.claim_code && Boolean(form.errors.claim_code)}
                     helperText={
-                      (getIn(form.touched, "public_serial_number") &&
-                        getIn(form.errors, "public_serial_number")) || "Format XXXX-XXXX-XXXX-XXXX, die Bindestriche kommen von selbst"
+                      (getIn(form.touched, "claim_code") && getIn(form.errors, "claim_code")) ||
+                      "Steht auf dem Display des Bilderrahmens, Format XXXX-XXXX"
                     }
                     fullWidth
                     variant='outlined'

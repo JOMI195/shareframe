@@ -36,7 +36,7 @@ const UnregisterFrameDialog = () => {
             onConfirm={handleConfirmUnregister}
             onCancel={handleDialogClose}
         >
-            Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen.
+            Um ihn wieder hinzuzufügen, starte den Bilderrahmen neu. Er zeigt dann einen Code an.
         </ConfirmDialog>
     );
 };

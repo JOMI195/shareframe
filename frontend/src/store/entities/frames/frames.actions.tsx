@@ -16,14 +16,14 @@ const FRAMES_MAX_AGE_MS = 30 * 1000;
 export const fetchFramesIfStale = () =>
   fetchIfStale((state) => framesSlice.getApi(state).lastFetch, FRAMES_MAX_AGE_MS, fetchframes);
 
-export const registerFrame = (public_serial_number: string) =>
+export const registerFrame = (claim_code: string) =>
   apiRequest({
     url: framesEndpoints.getRegisterFrameUrl(),
     method: "post",
     onStart: framesSlice.registerFramePending.type,
     onSuccess: framesSlice.registerFrameFulfilled.type,
     onError: framesSlice.registerFrameFailed.type,
-    data: { "public_serial_number": public_serial_number }
+    data: { "claim_code": claim_code }
   });
 
 export const unregisterFrame = (public_serial_number: string) =>
