@@ -7,7 +7,7 @@ import uuid
 
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import IntegrityError, models, transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
@@ -155,6 +155,23 @@ class Frame(models.Model):
         except FrameOTP.DoesNotExist:
             return False
 
+    def get_or_create_claim_code(self, expiry_minutes=15):
+        claim = FrameClaimCode.objects.filter(frame=self).first()
+        if claim and timezone.now() < claim.expires_at:
+            return claim
+        if claim:
+            claim.delete()
+        expires_at = timezone.now() + timezone.timedelta(minutes=int(expiry_minutes))
+        while True:
+            try:
+                with transaction.atomic():
+                    return FrameClaimCode.objects.create(
+                        frame=self, expires_at=expires_at
+                    )
+            except IntegrityError:
+                if FrameClaimCode.objects.filter(frame=self).exists():
+                    raise
+
 
 class FrameToken(models.Model):
     frame = models.OneToOneField(
@@ -202,6 +219,37 @@ class FrameOTP(models.Model):
 
     def is_valid(self):
         return self.expires_at is not None and timezone.now() < self.expires_at
+
+
+# Without 0/O and 1/I, so the code reads unambiguously off the panel.
+CLAIM_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+CLAIM_CODE_LENGTH = 8
+
+
+def generate_claim_code():
+    return "".join(
+        secrets.choice(CLAIM_CODE_ALPHABET) for _ in range(CLAIM_CODE_LENGTH)
+    )
+
+
+def normalize_claim_code(code):
+    return "".join(ch for ch in str(code).upper() if ch.isalnum())
+
+
+class FrameClaimCode(models.Model):
+    """Shown on an unowned frame's panel; proves the claimer stands in front of it."""
+
+    frame = models.OneToOneField(
+        Frame, on_delete=models.CASCADE, related_name="claim_code"
+    )
+    code = models.CharField(
+        max_length=CLAIM_CODE_LENGTH, unique=True, default=generate_claim_code
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"Claim code for frame {self.frame_id}"
 
 
 class FrameWebsocketConnection(models.Model):

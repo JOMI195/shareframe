@@ -7,6 +7,7 @@ from datetime import UTC, datetime, timedelta
 from asgiref.sync import async_to_sync
 from django.conf import settings
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
 from django.utils.timezone import now
@@ -19,6 +20,10 @@ from config import error_codes
 from config.throttles import (
     BurstRateThrottle,
     FrameBurstRateThrottle,
+    FrameClaimBurstRateThrottle,
+    FrameClaimIpBurstRateThrottle,
+    FrameClaimIpSustainedRateThrottle,
+    FrameClaimSustainedRateThrottle,
     FrameSustainedRateThrottle,
     SustainedRateThrottle,
 )
@@ -38,8 +43,15 @@ from .auth import (
     FrameTokenAuthentication,
 )
 from .consumers import FrameWebSocketConsumer
-from .models import Frame, FrameCommand, FrameDiagnostics, FrameToken
-from .permissions import IsRegisteredFrame
+from .models import (
+    Frame,
+    FrameClaimCode,
+    FrameCommand,
+    FrameDiagnostics,
+    FrameToken,
+    normalize_claim_code,
+)
+from .permissions import IsSignedFrame
 from .serializers import FrameRetrieveSerializer
 
 telemetry_logger = logging.getLogger("frames.telemetry")
@@ -137,44 +149,57 @@ class FramesViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["POST"],
         permission_classes=[IsAuthenticated],
+        throttle_classes=[
+            FrameClaimBurstRateThrottle,
+            FrameClaimSustainedRateThrottle,
+            FrameClaimIpBurstRateThrottle,
+            FrameClaimIpSustainedRateThrottle,
+        ],
         url_path="register-user",
     )
     def register_user(self, request):
-        public_serial_number = request.data.get("public_serial_number")
+        claim_code = normalize_claim_code(request.data.get("claim_code") or "")
 
-        if not public_serial_number:
+        if not claim_code:
             return error_response(
-                error_codes.SERIAL_REQUIRED,
-                "Public serial number is required.",
+                error_codes.CLAIM_CODE_REQUIRED,
+                "Claim code is required.",
                 status.HTTP_400_BAD_REQUEST,
             )
 
-        # One answer for unknown and taken serials, so nobody can probe which exist.
-        error_mess = "Frame not found because of invalid serial number or already registered to a user."
-
-        try:
-            frame = Frame.objects.get(
-                public_serial_number=public_serial_number, is_active=True
+        with transaction.atomic():
+            frame = (
+                Frame.objects.select_for_update(of=("self",))
+                .filter(
+                    claim_code__code=claim_code,
+                    claim_code__expires_at__gt=timezone.now(),
+                    is_active=True,
+                    user__isnull=True,
+                    public_key__isnull=False,
+                )
+                .first()
             )
-        except Frame.DoesNotExist:
-            return error_response(
-                error_codes.FRAME_UNAVAILABLE, error_mess, status.HTTP_404_NOT_FOUND
-            )
+            if frame is None:
+                audit_logger.warning(
+                    "Frame claim by %s rejected: code unknown or expired",
+                    request.user.email,
+                )
+                return error_response(
+                    error_codes.FRAME_UNAVAILABLE,
+                    "No frame shows this code.",
+                    status.HTTP_404_NOT_FOUND,
+                )
 
-        if frame.user:
-            return error_response(
-                error_codes.FRAME_UNAVAILABLE, error_mess, status.HTTP_400_BAD_REQUEST
-            )
-
-        frame.user = request.user
-        frame.save()
+            FrameClaimCode.objects.filter(frame=frame).delete()
+            frame.user = request.user
+            frame.save()
         audit_logger.info(
-            "Frame %s registered to %s", public_serial_number, request.user.email
+            "Frame %s registered to %s",
+            frame.public_serial_number,
+            request.user.email,
         )
 
-        serializer = FrameRetrieveSerializer(frame)
-
-        return Response(serializer.data)
+        return Response(FrameRetrieveSerializer(frame).data)
 
     @action(
         detail=False,
@@ -394,12 +419,26 @@ class FramesViewSet(viewsets.ModelViewSet):
         detail=False,
         methods=["POST"],
         authentication_classes=[FrameSignatureAuthentication],
-        permission_classes=[IsRegisteredFrame],
+        permission_classes=[IsSignedFrame],
         throttle_classes=[FrameBurstRateThrottle, FrameSustainedRateThrottle],
         url_path="obtain-frame-token",
     )
     def obtain_frame_token(self, request):
-        return self._issue_token(request.auth)
+        frame = request.auth
+        if frame.user is None:
+            claim = frame.get_or_create_claim_code(
+                expiry_minutes=settings.FRAME_CLAIM_CODE_EXPIRY_MINUTES
+            )
+            return Response(
+                {
+                    "detail": "Frame is not registered to a user.",
+                    "code": error_codes.FRAME_UNREGISTERED,
+                    "claim_code": claim.code,
+                    "claim_expires_at": claim.expires_at,
+                },
+                status=status.HTTP_403_FORBIDDEN,
+            )
+        return self._issue_token(frame)
 
     # ------- LEGACY (HMAC). Deletable once no legacy boards remain.
     @action(

@@ -5,7 +5,12 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 from django.core.exceptions import ValidationError
 
 from frames.keys import public_key_fingerprint
-from frames.models import Frame
+from frames.models import (
+    CLAIM_CODE_ALPHABET,
+    Frame,
+    generate_claim_code,
+    normalize_claim_code,
+)
 
 
 def frame_with(public_key):
@@ -66,3 +71,15 @@ def test_a_blank_private_serial_gets_a_random_one():
 
     assert first.private_serial_number
     assert first.private_serial_number != second.private_serial_number
+
+
+class TestClaimCode:
+    def test_is_eight_unambiguous_characters(self):
+        code = generate_claim_code()
+
+        assert len(code) == 8
+        assert set(code) <= set(CLAIM_CODE_ALPHABET)
+        assert not set(code) & set("0O1I")
+
+    def test_normalizing_drops_case_dashes_and_spaces(self):
+        assert normalize_claim_code(" abcd-ef23 ") == "ABCDEF23"

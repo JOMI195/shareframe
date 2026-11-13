@@ -2,7 +2,7 @@ import pytest
 from django.utils import timezone
 from freezegun import freeze_time
 
-from frames.models import Frame, FrameOTP, FrameToken
+from frames.models import Frame, FrameClaimCode, FrameOTP, FrameToken
 from tests.support import seed
 from tests.support.factories import FrameTokenFactory
 
@@ -120,3 +120,27 @@ def test_a_frame_may_be_unowned():
         Frame.objects.get(private_serial_number=entry["private_serial_number"]).user
         is None
     )
+
+
+class TestClaimCode:
+    def test_the_same_code_comes_back_until_it_expires(self, frame):
+        first = frame.get_or_create_claim_code()
+
+        assert frame.get_or_create_claim_code().code == first.code
+
+    def test_an_expired_code_is_replaced(self, frame):
+        with freeze_time("2026-01-01 12:00"):
+            first = frame.get_or_create_claim_code(expiry_minutes=15)
+        with freeze_time("2026-01-01 12:16"):
+            second = frame.get_or_create_claim_code(expiry_minutes=15)
+
+        assert second.pk != first.pk
+        assert FrameClaimCode.objects.filter(frame=frame).count() == 1
+
+    def test_a_taken_code_is_drawn_again(self, frame, monkeypatch):
+        other = Frame.objects.get(private_serial_number="SEED-PRIVATE-0005")
+        taken = other.get_or_create_claim_code().code
+        letters = iter(taken + "FRESHCDE")
+        monkeypatch.setattr("frames.models.secrets.choice", lambda _: next(letters))
+
+        assert frame.get_or_create_claim_code().code == "FRESHCDE"

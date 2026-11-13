@@ -1,12 +1,14 @@
 import gzip
 import json
 import time
+from datetime import timedelta
 from types import SimpleNamespace
 
 import pytest
+from django.utils import timezone
 
 from frames.consumers import FrameWebSocketConsumer
-from frames.models import Frame, FrameCommand, FrameDiagnostics
+from frames.models import Frame, FrameClaimCode, FrameCommand, FrameDiagnostics
 from securePayload.securePayload import SecurePayload
 from sent_images.models import SentImage, SentImageStatus
 from tests.support import seed
@@ -44,6 +46,17 @@ def alice_frame(alice_entry):
 @pytest.fixture
 def spare_entry():
     return seed.unowned_frame()
+
+
+@pytest.fixture
+def spare_frame(spare_entry):
+    return Frame.objects.get(private_serial_number=spare_entry["private_serial_number"])
+
+
+def claim(client, frame, code=None):
+    if code is None:
+        code = frame.get_or_create_claim_code().code
+    return client.post(f"{URL}register-user/", {"claim_code": code}, format="json")
 
 
 @pytest.fixture
@@ -93,73 +106,125 @@ def test_the_crud_verbs_are_disabled(alice, method, path):
 
 
 class TestRegister:
-    def test_claims_an_unowned_frame(self, alice, spare_entry):
-        serial = serial_for(spare_entry["seed_b64"])
-
-        response = alice.post(
-            f"{URL}register-user/", {"public_serial_number": serial}, format="json"
-        )
+    def test_claims_the_frame_showing_the_code(self, alice, spare_frame):
+        response = claim(alice, spare_frame)
 
         assert response.status_code == 200
-        assert (
-            Frame.objects.get(public_serial_number=serial).user.username == seed.ALICE
-        )
+        assert response.data["public_serial_number"] == spare_frame.public_serial_number
+        spare_frame.refresh_from_db()
+        assert spare_frame.user.username == seed.ALICE
 
-    def test_the_claim_is_audited(self, alice, spare_entry, caplog):
-        serial = serial_for(spare_entry["seed_b64"])
+    def test_the_code_is_read_like_the_panel_shows_it(self, alice, spare_frame):
+        code = spare_frame.get_or_create_claim_code().code
 
+        response = claim(alice, spare_frame, code=f" {code[:4].lower()}-{code[4:]} ")
+
+        assert response.status_code == 200
+
+    def test_the_claim_code_is_used_up(self, alice, bob, spare_frame):
+        code = spare_frame.get_or_create_claim_code().code
+        claim(alice, spare_frame, code=code)
+
+        assert not FrameClaimCode.objects.filter(frame=spare_frame).exists()
+        Frame.objects.filter(pk=spare_frame.pk).update(user=None)
+        assert claim(bob, spare_frame, code=code).status_code == 404
+
+    def test_the_claim_is_audited(self, alice, spare_frame, caplog):
         with caplog.at_level("INFO", logger="admin.audit"):
-            alice.post(
-                f"{URL}register-user/", {"public_serial_number": serial}, format="json"
-            )
+            claim(alice, spare_frame)
 
-        assert f"Frame {serial} registered to" in caplog.text
+        assert f"Frame {spare_frame.public_serial_number} registered to" in caplog.text
 
-    def test_the_serial_is_required(self, alice):
-        response = alice.post(f"{URL}register-user/", {}, format="json")
-
-        assert response.status_code == 400
-        assert response.data["code"] == "serial_required"
-
-    def test_an_unknown_serial_is_not_found(self, alice):
+    def test_the_claim_code_is_required(self, alice, spare_frame):
         response = alice.post(
             f"{URL}register-user/",
-            {"public_serial_number": "AAAA-BBBB-CCCC-DDDD"},
+            {"public_serial_number": spare_frame.public_serial_number},
             format="json",
         )
+
+        assert response.status_code == 400
+        assert response.data["code"] == "claim_code_required"
+        spare_frame.refresh_from_db()
+        assert spare_frame.user is None
+
+    def test_an_unknown_code_is_refused(self, alice, spare_frame):
+        spare_frame.get_or_create_claim_code()
+
+        response = claim(alice, spare_frame, code="WRONGCDE")
 
         assert response.status_code == 404
         assert response.data["code"] == "frame_unavailable"
+        spare_frame.refresh_from_db()
+        assert spare_frame.user is None
 
-    def test_a_frame_someone_else_owns_is_refused(self, alice, alice_entry):
-        other = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
+    def test_a_refused_claim_is_audited(self, alice, spare_frame, caplog):
+        with caplog.at_level("WARNING", logger="admin.audit"):
+            claim(alice, spare_frame, code="WRONGCDE")
 
-        response = alice.post(
-            f"{URL}register-user/",
-            {"public_serial_number": other.public_serial_number},
-            format="json",
+        assert "Frame claim by" in caplog.text
+
+    def test_an_expired_claim_code_is_refused(self, alice, spare_frame):
+        code = spare_frame.get_or_create_claim_code().code
+        FrameClaimCode.objects.filter(frame=spare_frame).update(
+            expires_at=timezone.now() - timedelta(seconds=1)
         )
 
-        assert response.status_code == 400
-        # Same code as an unknown serial, so serials cannot be probed.
+        assert claim(alice, spare_frame, code=code).status_code == 404
+
+    def test_a_legacy_frame_cannot_be_claimed(self, alice):
+        legacy = FrameFactory(
+            public_key=None, public_serial_number="LEGA-CYFR-AME0-0001"
+        )
+
+        response = claim(alice, legacy)
+
+        assert response.status_code == 404
+        legacy.refresh_from_db()
+        assert legacy.user is None
+
+    def test_a_frame_someone_else_owns_is_refused(self, alice):
+        other = Frame.objects.get(private_serial_number="SEED-PRIVATE-0001")
+
+        response = claim(alice, other)
+
+        assert response.status_code == 404
         assert response.data["code"] == "frame_unavailable"
+        other.refresh_from_db()
+        assert other.user.username == seed.BOB
+
+    def test_an_inactive_frame_is_refused(self, alice, spare_frame):
+        Frame.objects.filter(pk=spare_frame.pk).update(is_active=False)
+
+        response = claim(alice, spare_frame)
+
+        assert response.status_code == 404
+        spare_frame.refresh_from_db()
+        assert spare_frame.user is None
 
     def test_the_serial_format_is_four_groups_of_four(self, spare_entry):
-        """The register dialog's schema matches this shape."""
+        """The frame cards and the unregister call use this shape."""
         serial = serial_for(spare_entry["seed_b64"])
 
         assert len(serial.split("-")) == 4
 
-    def test_an_inactive_frame_is_not_found(self, alice, spare_entry):
-        serial = serial_for(spare_entry["seed_b64"])
-        Frame.objects.filter(public_serial_number=serial).update(is_active=False)
+    def test_guessing_codes_is_throttled(self, alice, spare_frame, throttled):
+        statuses = [
+            claim(alice, spare_frame, code="WRONGCDE").status_code for _ in range(11)
+        ]
 
-        response = alice.post(
-            f"{URL}register-user/", {"public_serial_number": serial}, format="json"
-        )
+        assert statuses[-1] == 429
 
-        assert response.status_code == 404
-        assert Frame.objects.get(public_serial_number=serial).user is None
+    def test_guessing_from_many_accounts_is_throttled_per_ip(
+        self, client_as, spare_frame, throttled
+    ):
+        statuses = [
+            claim(
+                client_as(UserFactory(is_active=True)), spare_frame, code="WRONGCDE"
+            ).status_code
+            for _ in range(21)
+        ]
+
+        assert statuses[-1] == 429
 
 
 class TestUnregister:
@@ -437,6 +502,32 @@ class TestObtainToken:
 
         assert response.status_code == 403
         assert response.data["code"] == "frame_unregistered"
+
+    def test_an_unowned_frame_gets_a_claim_code_to_show(self, client, spare_entry):
+        def ask():
+            return client.post(
+                f"{URL}obtain-frame-token/",
+                {},
+                format="json",
+                headers=signature_headers(spare_entry["seed_b64"]),
+            ).data
+
+        first = ask()
+
+        assert len(first["claim_code"]) == 8
+        assert first["claim_expires_at"]
+        # The board retries; a stable code keeps the panel from repainting.
+        assert ask()["claim_code"] == first["claim_code"]
+
+    def test_an_owned_frame_gets_no_claim_code(self, client, alice_entry):
+        response = client.post(
+            f"{URL}obtain-frame-token/",
+            {},
+            format="json",
+            headers=signature_headers(alice_entry["seed_b64"]),
+        )
+
+        assert "claim_code" not in response.data
 
     def test_without_a_signature_it_is_forbidden(self, client):
         # DRF answers 403, not 401: no authenticator sets a WWW-Authenticate header.

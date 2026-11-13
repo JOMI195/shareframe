@@ -23,7 +23,13 @@ def frame_form(**fields):
 
 
 def management_forms():
-    prefixes = ("frame_token", "frame_websocket_connections", "commands", "diagnostics")
+    prefixes = (
+        "frame_token",
+        "claim_code",
+        "frame_websocket_connections",
+        "commands",
+        "diagnostics",
+    )
     data = {}
     for prefix in prefixes:
         data[f"{prefix}-TOTAL_FORMS"] = "0"
