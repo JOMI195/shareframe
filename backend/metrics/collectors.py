@@ -304,6 +304,9 @@ _HEALTH_CHECKS = {
     "health_disk": "disk",
     "display_health": "display",
 }
+_STATES = {"display_screen": "screen", "wifi_mode": "wifi", "update_phase": "update"}
+# Bounds the label values a frame can create.
+_STATE_VALUE = re.compile(r"^[a-z][a-z0-9_-]{0,31}$")
 _BUILD_LABELS = ("version", "app_sha", "os_sha", "kernel", "boot_slot", "sd_card")
 
 
@@ -324,6 +327,14 @@ def telemetry_samples(telemetry):
                 yield (
                     "shareframe_frame_health",
                     {"check": _HEALTH_CHECKS[key], "status": value},
+                    1,
+                )
+            continue
+        if key in _STATES:
+            if isinstance(value, str) and _STATE_VALUE.match(value):
+                yield (
+                    "shareframe_frame_state",
+                    {"machine": _STATES[key], "state": value},
                     1,
                 )
             continue

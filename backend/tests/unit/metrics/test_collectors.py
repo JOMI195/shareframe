@@ -85,6 +85,33 @@ class TestTelemetrySamples:
             (("check", "display"), ("status", "failed")): 1,
         }
 
+    def test_state_strings_become_machine_state_pairs(self):
+        samples = self.samples(
+            {
+                "display_screen": "ap_setup",
+                "wifi_mode": "ap",
+                "update_phase": "awaiting-reboot",
+            }
+        )
+
+        states = {
+            labels: value
+            for (name, labels), value in samples.items()
+            if name == "shareframe_frame_state"
+        }
+        assert states == {
+            (("machine", "screen"), ("state", "ap_setup")): 1,
+            (("machine", "wifi"), ("state", "ap")): 1,
+            (("machine", "update"), ("state", "awaiting-reboot")): 1,
+        }
+
+    def test_a_state_a_frame_made_up_never_becomes_a_label(self):
+        samples = self.samples(
+            {"display_screen": "x" * 33, "wifi_mode": "AP mode", "update_phase": 3}
+        )
+
+        assert not any(name == "shareframe_frame_state" for name, _ in samples)
+
     def test_safe_mode_reason_is_a_label(self):
         assert (
             self.samples({"safe_mode": "display-crash"})[
