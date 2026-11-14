@@ -1037,20 +1037,22 @@
               "Value #F": "Registered",
               "Value #G": "Last update check",
               "Value #H": "Last update attempt",
-              "owner_email": "Owner"
+              "owner_email": "Owner",
+              "version": "Version",
+              "local_ip_address": "IP address"
             },
             "indexByName": {
               "serial_number": 0,
               "owner_email": 1,
-              "Value #B": 2,
-              "Value #C": 3,
+              "Value #F": 2,
+              "Value #B": 3,
               "Value #E": 4,
               "Value #D": 5,
-              "version": 6,
-              "local_ip_address": 7,
-              "Value #G": 8,
-              "Value #H": 9,
-              "Value #F": 10
+              "Value #C": 6,
+              "version": 7,
+              "local_ip_address": 8,
+              "Value #G": 9,
+              "Value #H": 10
             }
           }
         }
