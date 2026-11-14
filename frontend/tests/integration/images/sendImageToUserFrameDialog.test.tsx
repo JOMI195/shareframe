@@ -79,6 +79,29 @@ describe('SendImageToUserFrameDialog', () => {
     expect(within(await screen.findByRole('listbox')).queryByRole('option', { name: 'deine eigenen Bilderrahmen' })).toBeNull();
   });
 
+  it('drops my own frames from the choice once it turns out I have none', async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    server.use(
+      mswHttp.get(apiUrl(frameEndpoints.getFramesUrl()), async () => {
+        await gate;
+        return HttpResponse.json([]);
+      }),
+    );
+    const { user } = renderWithProviders(<SendImageToUserFrameDialog />, {
+      preloadedState: signedInState({
+        entities: { friendships: { friendships }, frames: { frames: [], api: { lastFetch: null } } },
+        ui: { images: { dialogs: { sendToFrame: { open: true, imagesToSend: [photo] } } } },
+      }),
+    });
+
+    await chooseReceivers(user, 'bob', 'deine eigenen Bilderrahmen');
+    expect(screen.getByRole('button', { name: '1 Foto an 2 Empfänger senden' })).toBeInTheDocument();
+    release();
+
+    expect(await screen.findByRole('button', { name: '1 Foto an 1 Empfänger senden' })).toBeInTheDocument();
+  });
+
   it('keeps the picker open to choose several receivers', async () => {
     const { user } = render();
 

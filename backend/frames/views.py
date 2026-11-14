@@ -325,7 +325,14 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status.HTTP_404_NOT_FOUND,
             )
 
-        if reciever != user:
+        if reciever == user:
+            if not Frame.objects.filter(user=user, is_active=True).exists():
+                return error_response(
+                    error_codes.NO_OWN_FRAME,
+                    "Sending to yourself needs an active frame of your own.",
+                    status.HTTP_400_BAD_REQUEST,
+                )
+        else:
             try:
                 Friendship.objects.get(
                     (Q(sender=user) & Q(reciever=reciever))

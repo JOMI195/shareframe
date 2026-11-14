@@ -345,11 +345,31 @@ class TestSendImage:
         assert not UserStats.objects.filter(user=world.sender).exists()
 
     def test_sends_to_your_own_frames(self, world):
+        FrameFactory(user=world.sender)
+
         response = self.send(
             world, reciever_username=world.sender.username, image_id=world.image.id
         )
 
         assert response.status_code == 200
+
+    @pytest.mark.parametrize("scheduled", [False, True])
+    def test_sending_to_yourself_needs_an_active_frame(self, world, scheduled):
+        FrameFactory(user=world.sender, is_active=False)
+        payload = (
+            {"scheduled_unix_timestamp": int(time.time()) + 3600} if scheduled else {}
+        )
+
+        response = self.send(
+            world,
+            reciever_username=world.sender.username,
+            image_id=world.image.id,
+            **payload,
+        )
+
+        assert response.status_code == 400
+        assert response.json()["code"] == "no_own_frame"
+        assert not SentImage.objects.filter(sender=world.sender).exists()
 
     def test_a_receiver_is_required(self, world):
         assert self.send(world, image_id=world.image.id).status_code == 400

@@ -13,6 +13,7 @@ SCHEDULE_TOO_FAR = "schedule_too_far"
 EXPIRY_BEFORE_SCHEDULE = "expiry_before_schedule"
 IMAGE_NOT_FOUND = "image_not_found"
 RECEIVER_NOT_FOUND = "receiver_not_found"
+NO_OWN_FRAME = "no_own_frame"
 
 FRIEND_CODE_UNKNOWN = "friend_code_unknown"
 FRIEND_REQUEST_SELF = "friend_request_self"
