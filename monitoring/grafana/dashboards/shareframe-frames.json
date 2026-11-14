@@ -2551,6 +2551,329 @@
     },
     {
       "type": "row",
+      "title": "States",
+      "id": 70,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "panels": []
+    },
+    {
+      "id": 71,
+      "type": "table",
+      "title": "Current state per frame",
+      "description": "What each frame reported with its latest heartbeat: the screen on the panel, the Wi-Fi mode and where an update stands. Empty for a frame that is silent or runs software without these fields.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (serial_number, machine, state) (shareframe_frame_state{serial_number=~\"$frame\"})",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "machine",
+            "rowField": "serial_number",
+            "valueField": "state"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "renameByName": {
+              "serial_number\\machine": "Frame",
+              "screen": "Screen",
+              "wifi": "Wi-Fi mode",
+              "update": "Update phase"
+            },
+            "indexByName": {
+              "serial_number\\machine": 0,
+              "screen": 1,
+              "wifi": 2,
+              "update": 3
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by screen",
+      "id": 72,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"screen\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each screen, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by Wi-Fi mode",
+      "id": 73,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"wifi\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each Wi-Fi mode, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by update phase",
+      "id": 74,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"update\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each update phase, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
+    },
+    {
+      "type": "row",
       "title": "Connectivity",
       "id": 35,
       "collapsed": false,
@@ -2558,7 +2881,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 45
       },
       "panels": []
     },
@@ -2574,7 +2897,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 46
       },
       "fieldConfig": {
         "defaults": {
@@ -2641,7 +2964,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2738,7 +3061,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2815,7 +3138,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2889,7 +3212,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 60
       },
       "panels": []
     },
@@ -2905,7 +3228,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -2978,7 +3301,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -3056,7 +3379,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -3136,7 +3459,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 68
       },
       "targets": [
         {
@@ -3321,7 +3644,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 62
+        "y": 76
       },
       "panels": []
     },
@@ -3337,7 +3660,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 63
+        "y": 77
       },
       "fieldConfig": {
         "defaults": {
@@ -3417,7 +3740,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 63
+        "y": 77
       },
       "fieldConfig": {
         "defaults": {
@@ -3493,7 +3816,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 70
+        "y": 84
       },
       "fieldConfig": {
         "defaults": {
@@ -3578,7 +3901,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 70
+        "y": 84
       },
       "fieldConfig": {
         "defaults": {
@@ -3655,7 +3978,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 78
+        "y": 92
       },
       "fieldConfig": {
         "defaults": {
@@ -3732,7 +4055,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 78
+        "y": 92
       },
       "fieldConfig": {
         "defaults": {
@@ -3828,7 +4151,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 100
       },
       "panels": []
     },
@@ -3844,7 +4167,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 87
+        "y": 101
       },
       "fieldConfig": {
         "defaults": {
@@ -3920,7 +4243,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 87
+        "y": 101
       },
       "fieldConfig": {
         "defaults": {
@@ -3998,7 +4321,7 @@
         "h": 7,
         "w": 16,
         "x": 0,
-        "y": 94
+        "y": 108
       },
       "fieldConfig": {
         "defaults": {
@@ -4055,7 +4378,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 94
+        "y": 108
       },
       "targets": [
         {
@@ -4170,7 +4493,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 101
+        "y": 115
       },
       "panels": []
     },
@@ -4186,7 +4509,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 116
       },
       "fieldConfig": {
         "defaults": {
@@ -4265,7 +4588,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 102
+        "y": 116
       },
       "fieldConfig": {
         "defaults": {
@@ -4355,7 +4678,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 109
+        "y": 123
       },
       "fieldConfig": {
         "defaults": {
@@ -4434,7 +4757,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 109
+        "y": 123
       },
       "fieldConfig": {
         "defaults": {
@@ -4513,7 +4836,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 116
+        "y": 130
       },
       "fieldConfig": {
         "defaults": {
@@ -4590,7 +4913,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 123
+        "y": 137
       },
       "panels": []
     },
@@ -4606,7 +4929,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4685,7 +5008,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4764,7 +5087,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4843,7 +5166,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 131
+        "y": 145
       },
       "fieldConfig": {
         "defaults": {
@@ -4922,7 +5245,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 131
+        "y": 145
       },
       "fieldConfig": {
         "defaults": {
@@ -5001,7 +5324,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 138
+        "y": 152
       },
       "fieldConfig": {
         "defaults": {
@@ -5091,7 +5414,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 138
+        "y": 152
       },
       "fieldConfig": {
         "defaults": {
@@ -5178,7 +5501,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 145
+        "y": 159
       },
       "panels": []
     },
@@ -5194,7 +5517,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 146
+        "y": 160
       },
       "options": {
         "showTime": true,
@@ -5227,7 +5550,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 158
+        "y": 172
       },
       "panels": []
     },
@@ -5243,7 +5566,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 159
+        "y": 173
       },
       "options": {
         "showTime": true,
