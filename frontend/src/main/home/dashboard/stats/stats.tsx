@@ -6,6 +6,9 @@ import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FilterFramesIcon from '@mui/icons-material/FilterFrames';
 import WifiIcon from '@mui/icons-material/Wifi';
+import AddIcon from '@mui/icons-material/Add';
+import { Link as RouterLink } from "react-router";
+import { getFramesUrl } from "@/assets/endpoints/app/appEndpoints";
 import { Chip, Stack, } from "@mui/material";
 import { isFrameActive } from "@/common/utils/frame";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
@@ -56,6 +59,17 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                     title="Bilderrahmen"
                     customContent={
                         <Stack spacing={1}>
+                            {frameStats.length === 0 && (
+                                <Chip
+                                    component={RouterLink}
+                                    to={"/" + getFramesUrl()}
+                                    clickable
+                                    icon={<AddIcon />}
+                                    label="Hinzufügen"
+                                    size="small"
+                                    sx={{ height: "28px" }}
+                                />
+                            )}
                             {frameStats.map((frameStat, index) => {
                                 const hasConnection = isFrameActive(frameStat.last_seen);
                                 return (
