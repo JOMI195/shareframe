@@ -19,6 +19,7 @@ from .commands import SERVICES, TIERS, FrameOffline, required_permission, send_c
 from .forms import FrameAdminForm
 from .models import (
     Frame,
+    FrameClaimCode,
     FrameCommand,
     FrameDiagnostics,
     FrameGroup,
@@ -34,6 +35,14 @@ class FrameTokenInline(admin.TabularInline):
     model = FrameToken
     extra = 0
     readonly_fields = ("access_token", "access_token_expires_at", "last_obtained")
+    can_delete = False
+
+
+class FrameClaimCodeInline(admin.TabularInline):
+    fields = ("code", "created_at", "expires_at")
+    model = FrameClaimCode
+    extra = 0
+    readonly_fields = fields
     can_delete = False
 
 
@@ -263,6 +272,7 @@ class FrameAdmin(InlineActionsModelAdminMixin, admin.ModelAdmin):
 
     inlines = [
         FrameTokenInline,
+        FrameClaimCodeInline,
         FrameWebsocketConnectionInline,
         FrameCommandInline,
         FrameDiagnosticsInline,

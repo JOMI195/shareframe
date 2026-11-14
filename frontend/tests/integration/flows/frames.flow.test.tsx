@@ -98,7 +98,7 @@ describe('frame list', () => {
 describe('registering a frame', () => {
   const openDialog = async (user: ReturnType<typeof renderRoute>['user']) => {
     await user.click(screen.getByRole('button', { name: /Bilderrahmen hinzufügen/ }));
-    return screen.findByLabelText('Seriennummer');
+    return screen.findByRole('textbox', { name: 'Code' });
   };
 
   it('offers the register button inline on desktop', async () => {
@@ -109,7 +109,15 @@ describe('registering a frame', () => {
     expect(await openDialog(user)).toBeInTheDocument();
   });
 
-  it('registers the serial that was typed and closes', async () => {
+  it('asks only for the code the frame shows', async () => {
+    const { user } = await openFrames();
+
+    await openDialog(user);
+
+    expect(screen.queryByRole('textbox', { name: 'Seriennummer' })).not.toBeInTheDocument();
+  });
+
+  it('registers the code that was typed and closes', async () => {
     const bodies: Record<string, unknown>[] = [];
     server.use(
       ...withFrames([]),
@@ -121,22 +129,22 @@ describe('registering a frame', () => {
     const { user, store } = renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
 
     const field = await openDialog(user);
-    await user.type(field, SERIAL);
+    await user.type(field, 'k7m2qx9p');
     await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
 
-    await waitFor(() => expect(bodies).toEqual([{ public_serial_number: SERIAL }]));
+    await waitFor(() => expect(bodies).toEqual([{ claim_code: 'K7M2-QX9P' }]));
     await waitFor(() => expect(store.getState().ui.frames.dialogs.register.open).toBe(false));
   });
 
   it('opens prefilled from the link on the frame', async () => {
     server.use(...withFrames([]));
-    const { store } = renderRoute(`/bilderrahmen/?register=${SERIAL.toLowerCase()}`, { preloadedState: signedInState() });
+    const { store } = renderRoute('/bilderrahmen/?code=k7m2qx9p', { preloadedState: signedInState() });
 
-    expect(await screen.findByLabelText('Seriennummer')).toHaveValue(SERIAL);
+    expect(await screen.findByRole('textbox', { name: 'Code' })).toHaveValue('K7M2-QX9P');
     expect(store.getState().ui.frames.dialogs.register.open).toBe(true);
   });
 
-  it('insists on the serial number format', async () => {
+  it('insists on the code format', async () => {
     const calls: string[] = [];
     server.use(
       mswHttp.post(apiUrl(frameEndpoints.getRegisterFrameUrl()), () => {
@@ -150,23 +158,21 @@ describe('registering a frame', () => {
     await user.type(field, 'ABC');
     await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
 
-    expect(
-      await screen.findByText('Der Code muss das Format EOJ8-WXBV-Y86U-3LL3 haben'),
-    ).toBeInTheDocument();
+    expect(await screen.findByText('Der Code muss das Format K7M2-QX9P haben')).toBeInTheDocument();
     expect(calls).toHaveLength(0);
   });
 
-  it('stays open when the serial is unknown', async () => {
+  it('stays open when no frame shows the code', async () => {
     server.use(
       ...withFrames([]),
       mswHttp.post(apiUrl(frameEndpoints.getRegisterFrameUrl()), () =>
-        HttpResponse.json({ detail: 'Kein Bilderrahmen gefunden.' }, { status: 404 }),
+        HttpResponse.json({ detail: 'No frame shows this code.', code: 'frame_unavailable' }, { status: 404 }),
       ),
     );
     const { user, store } = renderRoute('/bilderrahmen/', { preloadedState: signedInState() });
 
     const field = await openDialog(user);
-    await user.type(field, SERIAL);
+    await user.type(field, 'K7M2QX9P');
     await user.click(screen.getByRole('button', { name: 'Hinzufügen' }));
 
     await waitFor(() => expect(store.getState().ui.frames.snackbar.alert.severity).toBe('error'));
@@ -197,7 +203,7 @@ describe('unregistering a frame', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Bilderrahmen entfernen' }));
     expect(
-      await screen.findByText('Du kannst den Bilderrahmen jederzeit wieder mit seiner Seriennummer hinzufügen.'),
+      await screen.findByText('Um ihn wieder hinzuzufügen, starte den Bilderrahmen neu. Er zeigt dann einen Code an.'),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Entfernen' }));
 

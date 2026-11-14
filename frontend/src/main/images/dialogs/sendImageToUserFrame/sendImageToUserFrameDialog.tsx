@@ -64,7 +64,7 @@ const SendImageToUserFrameDialog = () => {
 
     const matches = useMediaQuery(theme.breakpoints.up('sm'));
 
-    const [selectedReceiverUsernames, setSelectedReceiverUsernames] = useState<string[]>([]);
+    const [pickedReceiverUsernames, setPickedReceiverUsernames] = useState<string[]>([]);
     const [expirationHours, setExpirationHours] = useState<number | null>(DEFAULT_EXPIRATION_HOURS);
     const [isScheduled, setIsScheduled] = useState(false);
     const [scheduledAt, setScheduledAt] = useState<Date | null>(null);
@@ -84,12 +84,13 @@ const SendImageToUserFrameDialog = () => {
     const availableReceivers = [...receiverAvatars.keys()].filter(
         (receiver) => receiver !== user.me.username || !framesLoaded || frames.length > 0
     );
+    const selectedReceiverUsernames = pickedReceiverUsernames.filter((receiver) => availableReceivers.includes(receiver));
     const photoWord = imagesToSend.length === 1 ? "Foto" : "Fotos";
 
     const handleDialogClose = () => {
         if (!isSendingInProgress) {
             dispatch(closeSendImageToUserFrameDialog());
-            setSelectedReceiverUsernames([]);
+            setPickedReceiverUsernames([]);
             setExpirationHours(DEFAULT_EXPIRATION_HOURS);
             handleScheduleEnabledChange(false);
         }
@@ -107,7 +108,7 @@ const SendImageToUserFrameDialog = () => {
 
     const handleReceiverSelectionChange = (event: SelectChangeEvent<typeof selectedReceiverUsernames>) => {
         const value = event.target.value;
-        setSelectedReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
+        setPickedReceiverUsernames(typeof value === 'string' ? value.split(',') : value);
     };
 
     const handleConfirmSend = async () => {

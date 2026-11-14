@@ -430,6 +430,10 @@ REST_FRAMEWORK = {
         # frames
         "frame_burst": "60/min",
         "frame_sustained": "5000/day",
+        "frame_claim_burst": "10/min",
+        "frame_claim_sustained": "50/day",
+        "frame_claim_ip_burst": "20/min",
+        "frame_claim_ip_sustained": "200/day",
         # images
         "images_burst": "3000/min",
         "images_sustained": "10000/day",
@@ -573,6 +577,9 @@ FRAME_SENT_IMAGE_COOLDOWN_PERIOD_SECONDS = 300  # seconds
 FRAME_AUTH_SECRET_KEY = os.environ.get("DJANGO_FRAME_AUTH_SECRET_KEY")
 FRAME_AUTH_TIMESTAMP_VALIDATION_WINDOW_MIN = 15
 FRAME_HEARTBEAT_TIMEOUT_MINUTES = 60
+FRAME_CLAIM_CODE_EXPIRY_MINUTES = int(
+    os.environ.get("DJANGO_FRAME_CLAIM_CODE_EXPIRY_MINUTES", 15)
+)
 
 #### Frontend URLS
 FRONTEND_CONTACT_URL = "kontakt/"

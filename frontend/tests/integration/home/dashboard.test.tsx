@@ -5,6 +5,7 @@ import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { signedInState } from '@tests/helpers/preloadedState';
 import { makeDashboardData, makeWeeklyActivity, seedUser } from '@tests/fixtures';
 import { server, withDashboard } from '@tests/mocks';
+import { getFramesUrl } from '@/assets/endpoints/app/appEndpoints';
 
 const render = () => renderWithProviders(<Home />, { preloadedState: signedInState() });
 
@@ -48,6 +49,13 @@ describe('dashboard', () => {
     render();
 
     expect(await screen.findByText('Keine aktiven Fotos')).toBeInTheDocument();
+  });
+
+  it('links to adding a frame when there is none', async () => {
+    server.use(...withDashboard(makeDashboardData({ frames: [] })));
+    render();
+
+    expect(await screen.findByRole('link', { name: 'Hinzufügen' })).toHaveAttribute('href', '/' + getFramesUrl());
   });
 
   // last_seen drives the online badge, so a stale heartbeat must read as offline.

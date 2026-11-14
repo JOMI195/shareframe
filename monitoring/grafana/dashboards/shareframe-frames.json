@@ -1037,20 +1037,22 @@
               "Value #F": "Registered",
               "Value #G": "Last update check",
               "Value #H": "Last update attempt",
-              "owner_email": "Owner"
+              "owner_email": "Owner",
+              "version": "Version",
+              "local_ip_address": "IP address"
             },
             "indexByName": {
               "serial_number": 0,
               "owner_email": 1,
-              "Active": 2,
-              "version": 3,
-              "local_ip_address": 4,
-              "Last seen": 5,
-              "Last connected": 6,
-              "Last update check": 7,
-              "Last update attempt": 8,
-              "Websocket": 9,
-              "Registered": 10
+              "Value #F": 2,
+              "Value #B": 3,
+              "Value #E": 4,
+              "Value #D": 5,
+              "Value #C": 6,
+              "version": 7,
+              "local_ip_address": 8,
+              "Value #G": 9,
+              "Value #H": 10
             }
           }
         }
@@ -1965,6 +1967,54 @@
                 "value": 0
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Screen"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Wi-Fi mode"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Update phase"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "string"
+              },
+              {
+                "id": "custom.align",
+                "value": "left"
+              }
+            ]
           }
         ]
       },
@@ -2263,9 +2313,42 @@
           "range": false,
           "legendFormat": "",
           "expr": "label_replace(sum by (serial_number) (shareframe_frame_safe_mode) * on (serial_number) group_left (version, os_sha, app_sha, kernel) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"metric\", \"Safe mode\", \"\", \"\")"
+        },
+        {
+          "refId": "Z",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number, screen) (label_replace(shareframe_frame_state{machine=\"screen\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"screen\", \"$1\", \"state\", \"(.+)\")), \"metric\", \"State\", \"\", \"\")"
+        },
+        {
+          "refId": "AA",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number, wifi_mode) (label_replace(shareframe_frame_state{machine=\"wifi\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"wifi_mode\", \"$1\", \"state\", \"(.+)\")), \"metric\", \"State\", \"\", \"\")"
+        },
+        {
+          "refId": "AB",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": true,
+          "range": false,
+          "legendFormat": "",
+          "expr": "label_replace(sum by (serial_number, update_phase) (label_replace(shareframe_frame_state{machine=\"update\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"}, \"update_phase\", \"$1\", \"state\", \"(.+)\")), \"metric\", \"State\", \"\", \"\")"
         }
       ],
-      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it is offline - telemetry columns stay empty then, because telemetry is only exported for frames that sent a heartbeat within the last 15 minutes. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat.",
+      "description": "One row per registered frame, newest values. Identity and Last seen come from the database, so a frame appears even when it is offline - telemetry columns stay empty then, because telemetry is only exported for frames that sent a heartbeat within the last 15 minutes. Last seen tracks websocket traffic too, so it can be newer than Last heartbeat. Screen, Wi-Fi mode and Update phase are what the frame's state machines reported; they stay empty for software that does not send them yet.",
       "maxDataPoints": 1,
       "transformations": [
         {
@@ -2277,7 +2360,10 @@
               "version",
               "os_sha",
               "app_sha",
-              "kernel"
+              "kernel",
+              "screen",
+              "wifi_mode",
+              "update_phase"
             ]
           }
         },
@@ -2474,6 +2560,24 @@
                   "lastNotNull"
                 ],
                 "operation": "aggregate"
+              },
+              "screen": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "wifi_mode": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
+              },
+              "update_phase": {
+                "aggregations": [
+                  "lastNotNull"
+                ],
+                "operation": "aggregate"
               }
             }
           }
@@ -2511,7 +2615,10 @@
               "os_sha (lastNotNull)": "OS SHA",
               "app_sha (lastNotNull)": "App SHA",
               "kernel (lastNotNull)": "Kernel",
-              "Safe mode (lastNotNull)": "Safe mode"
+              "Safe mode (lastNotNull)": "Safe mode",
+              "screen (lastNotNull)": "Screen",
+              "wifi_mode (lastNotNull)": "Wi-Fi mode",
+              "update_phase (lastNotNull)": "Update phase"
             },
             "indexByName": {
               "serial_number": 0,
@@ -2519,35 +2626,361 @@
               "Last seen (max)": 2,
               "Last heartbeat (max)": 3,
               "Health (lastNotNull)": 4,
-              "Boot slot (lastNotNull)": 5,
-              "CPU temp (lastNotNull)": 6,
-              "CPU % (lastNotNull)": 7,
-              "CPU MHz (lastNotNull)": 8,
-              "RAM % (lastNotNull)": 9,
-              "RAM free (lastNotNull)": 10,
-              "RAM total (lastNotNull)": 11,
-              "Disk % (lastNotNull)": 12,
-              "Disk free (lastNotNull)": 13,
-              "Disk total (lastNotNull)": 14,
-              "Images (lastNotNull)": 15,
-              "Load 1m (lastNotNull)": 16,
-              "Load 5m (lastNotNull)": 17,
-              "Load 15m (lastNotNull)": 18,
-              "Uptime (lastNotNull)": 19,
-              "Boots (lastNotNull)": 20,
-              "Dashboard (lastNotNull)": 21,
-              "Display (lastNotNull)": 22,
-              "Update (lastNotNull)": 23,
-              "Websocket (lastNotNull)": 24,
-              "version (lastNotNull)": 25,
-              "os_sha (lastNotNull)": 26,
-              "app_sha (lastNotNull)": 27,
-              "kernel (lastNotNull)": 28,
-              "Safe mode (lastNotNull)": 29
+              "Safe mode (lastNotNull)": 5,
+              "screen (lastNotNull)": 6,
+              "wifi_mode (lastNotNull)": 7,
+              "update_phase (lastNotNull)": 8,
+              "Websocket (lastNotNull)": 9,
+              "Display (lastNotNull)": 10,
+              "Dashboard (lastNotNull)": 11,
+              "Update (lastNotNull)": 12,
+              "version (lastNotNull)": 13,
+              "Boot slot (lastNotNull)": 14,
+              "Uptime (lastNotNull)": 15,
+              "Boots (lastNotNull)": 16,
+              "Images (lastNotNull)": 17,
+              "CPU temp (lastNotNull)": 18,
+              "CPU % (lastNotNull)": 19,
+              "CPU MHz (lastNotNull)": 20,
+              "Load 1m (lastNotNull)": 21,
+              "Load 5m (lastNotNull)": 22,
+              "Load 15m (lastNotNull)": 23,
+              "RAM % (lastNotNull)": 24,
+              "RAM free (lastNotNull)": 25,
+              "RAM total (lastNotNull)": 26,
+              "Disk % (lastNotNull)": 27,
+              "Disk free (lastNotNull)": 28,
+              "Disk total (lastNotNull)": 29,
+              "os_sha (lastNotNull)": 30,
+              "app_sha (lastNotNull)": 31,
+              "kernel (lastNotNull)": 32
             }
           }
         }
       ]
+    },
+    {
+      "type": "row",
+      "title": "States",
+      "id": 70,
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 31
+      },
+      "panels": []
+    },
+    {
+      "id": 71,
+      "type": "table",
+      "title": "Current state per frame",
+      "description": "What each frame reported with its latest heartbeat: the screen on the panel, the Wi-Fi mode and where an update stands. Empty for a frame that is silent or runs software without these fields.",
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 6,
+        "w": 24,
+        "x": 0,
+        "y": 32
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "expr": "sum by (serial_number, machine, state) (shareframe_frame_state{serial_number=~\"$frame\"})",
+          "instant": true,
+          "range": false,
+          "format": "table",
+          "legendFormat": ""
+        }
+      ],
+      "transformations": [
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "machine",
+            "rowField": "serial_number",
+            "valueField": "state"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {},
+            "renameByName": {
+              "serial_number\\machine": "Frame",
+              "screen": "Screen",
+              "wifi": "Wi-Fi mode",
+              "update": "Update phase"
+            },
+            "indexByName": {
+              "serial_number\\machine": 0,
+              "screen": 1,
+              "wifi": 2,
+              "update": 3
+            }
+          }
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            }
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by screen",
+      "id": 72,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 0,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"screen\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each screen, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by Wi-Fi mode",
+      "id": 73,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 8,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"wifi\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each Wi-Fi mode, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
+    },
+    {
+      "type": "timeseries",
+      "title": "Frames by update phase",
+      "id": 74,
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus"
+      },
+      "gridPos": {
+        "h": 7,
+        "w": 8,
+        "x": 16,
+        "y": 38
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {
+            "mode": "palette-classic"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 40,
+            "gradientMode": "none",
+            "showPoints": "never",
+            "pointSize": 5,
+            "spanNulls": false,
+            "axisPlacement": "auto",
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            },
+            "lineInterpolation": "stepAfter"
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "options": {
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        },
+        "legend": {
+          "showLegend": true,
+          "displayMode": "table",
+          "placement": "right",
+          "calcs": [
+            "last"
+          ]
+        }
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "instant": false,
+          "range": true,
+          "legendFormat": "{{state}}",
+          "expr": "count by (state) (shareframe_frame_state{machine=\"update\"} and on (serial_number) shareframe_frame_build_info{serial_number=~\"$frame\", version=~\"$version\", os_sha=~\"$os_sha\", app_sha=~\"$app_sha\"})"
+        }
+      ],
+      "description": "How many frames report each update phase, from their latest heartbeat. A band that stays where it should not be is a frame that is stuck."
     },
     {
       "type": "row",
@@ -2558,7 +2991,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 31
+        "y": 45
       },
       "panels": []
     },
@@ -2574,7 +3007,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 32
+        "y": 46
       },
       "fieldConfig": {
         "defaults": {
@@ -2641,7 +3074,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2738,7 +3171,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2815,7 +3248,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 39
+        "y": 53
       },
       "fieldConfig": {
         "defaults": {
@@ -2889,7 +3322,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 46
+        "y": 60
       },
       "panels": []
     },
@@ -2905,7 +3338,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -2978,7 +3411,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -3056,7 +3489,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 47
+        "y": 61
       },
       "fieldConfig": {
         "defaults": {
@@ -3136,7 +3569,7 @@
         "h": 8,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 68
       },
       "targets": [
         {
@@ -3321,7 +3754,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 62
+        "y": 76
       },
       "panels": []
     },
@@ -3337,7 +3770,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 63
+        "y": 77
       },
       "fieldConfig": {
         "defaults": {
@@ -3417,7 +3850,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 63
+        "y": 77
       },
       "fieldConfig": {
         "defaults": {
@@ -3493,7 +3926,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 70
+        "y": 84
       },
       "fieldConfig": {
         "defaults": {
@@ -3578,7 +4011,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 70
+        "y": 84
       },
       "fieldConfig": {
         "defaults": {
@@ -3655,7 +4088,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 78
+        "y": 92
       },
       "fieldConfig": {
         "defaults": {
@@ -3732,7 +4165,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 78
+        "y": 92
       },
       "fieldConfig": {
         "defaults": {
@@ -3828,7 +4261,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 86
+        "y": 100
       },
       "panels": []
     },
@@ -3844,7 +4277,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 87
+        "y": 101
       },
       "fieldConfig": {
         "defaults": {
@@ -3920,7 +4353,7 @@
         "h": 7,
         "w": 16,
         "x": 8,
-        "y": 87
+        "y": 101
       },
       "fieldConfig": {
         "defaults": {
@@ -3998,7 +4431,7 @@
         "h": 7,
         "w": 16,
         "x": 0,
-        "y": 94
+        "y": 108
       },
       "fieldConfig": {
         "defaults": {
@@ -4055,7 +4488,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 94
+        "y": 108
       },
       "targets": [
         {
@@ -4170,7 +4603,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 101
+        "y": 115
       },
       "panels": []
     },
@@ -4186,7 +4619,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 102
+        "y": 116
       },
       "fieldConfig": {
         "defaults": {
@@ -4265,7 +4698,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 102
+        "y": 116
       },
       "fieldConfig": {
         "defaults": {
@@ -4355,7 +4788,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 109
+        "y": 123
       },
       "fieldConfig": {
         "defaults": {
@@ -4434,7 +4867,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 109
+        "y": 123
       },
       "fieldConfig": {
         "defaults": {
@@ -4513,7 +4946,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 116
+        "y": 130
       },
       "fieldConfig": {
         "defaults": {
@@ -4590,7 +5023,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 123
+        "y": 137
       },
       "panels": []
     },
@@ -4606,7 +5039,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4685,7 +5118,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4764,7 +5197,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 124
+        "y": 138
       },
       "fieldConfig": {
         "defaults": {
@@ -4843,7 +5276,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 131
+        "y": 145
       },
       "fieldConfig": {
         "defaults": {
@@ -4922,7 +5355,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 131
+        "y": 145
       },
       "fieldConfig": {
         "defaults": {
@@ -5001,7 +5434,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 138
+        "y": 152
       },
       "fieldConfig": {
         "defaults": {
@@ -5091,7 +5524,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 138
+        "y": 152
       },
       "fieldConfig": {
         "defaults": {
@@ -5178,7 +5611,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 145
+        "y": 159
       },
       "panels": []
     },
@@ -5194,7 +5627,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 146
+        "y": 160
       },
       "options": {
         "showTime": true,
@@ -5227,7 +5660,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 158
+        "y": 172
       },
       "panels": []
     },
@@ -5243,7 +5676,7 @@
         "h": 12,
         "w": 24,
         "x": 0,
-        "y": 159
+        "y": 173
       },
       "options": {
         "showTime": true,

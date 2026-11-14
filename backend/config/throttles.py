@@ -35,6 +35,15 @@ class ChangelogsSustainedRateThrottle(UserRateThrottle):
     scope = "changelogs_sustained"
 
 
+# Low, so a claim code cannot be guessed.
+class FrameClaimBurstRateThrottle(UserRateThrottle):
+    scope = "frame_claim_burst"
+
+
+class FrameClaimSustainedRateThrottle(UserRateThrottle):
+    scope = "frame_claim_sustained"
+
+
 class _IpScopedThrottle(SimpleRateThrottle):
     """Key on the client IP, signed in or not."""
 
@@ -43,6 +52,15 @@ class _IpScopedThrottle(SimpleRateThrottle):
             "scope": self.scope,
             "ident": self.get_ident(request),
         }
+
+
+# Claim codes are shared by all unowned frames, so many accounts on one IP must not add up.
+class FrameClaimIpBurstRateThrottle(_IpScopedThrottle):
+    scope = "frame_claim_ip_burst"
+
+
+class FrameClaimIpSustainedRateThrottle(_IpScopedThrottle):
+    scope = "frame_claim_ip_sustained"
 
 
 class UnsubscribeBurstRateThrottle(_IpScopedThrottle):

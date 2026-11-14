@@ -6,7 +6,7 @@ import { routeChanged, closeOpenDialogs } from "@/store/ui/navigation/navigation
 import { createSlice } from "@reduxjs/toolkit";
 
 type SliceState = {
-  dialogs: { register: { open: boolean, serial: string }, unregister: { open: boolean, frameId: number | null }, requestOTP: { open: boolean, frameId: number | null }, };
+  dialogs: { register: { open: boolean, code: string }, unregister: { open: boolean, frameId: number | null }, requestOTP: { open: boolean, frameId: number | null }, };
   snackbar: {
     alert: { open: boolean; message: string; severity: AlertColor };
     loading: { open: boolean; message: string; };
@@ -14,7 +14,7 @@ type SliceState = {
 };
 
 const initialState: SliceState = {
-  dialogs: { register: { open: false, serial: "" }, unregister: { open: false, frameId: null }, requestOTP: { open: false, frameId: null } },
+  dialogs: { register: { open: false, code: "" }, unregister: { open: false, frameId: null }, requestOTP: { open: false, frameId: null } },
   snackbar: {
     alert: { open: false, message: "", severity: "success" },
     loading: { open: false, message: "", },
@@ -138,13 +138,13 @@ const framesSlice = createSlice({
       })
   },
   reducers: {
-    registerFrameDialogOpened: (sliceState, action: { payload?: { serial?: string } }) => {
+    registerFrameDialogOpened: (sliceState, action: { payload?: { code?: string } }) => {
       sliceState.dialogs.register.open = true;
-      sliceState.dialogs.register.serial = action.payload?.serial ?? "";
+      sliceState.dialogs.register.code = action.payload?.code ?? "";
     },
     registerFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.register.open = false;
-      sliceState.dialogs.register.serial = "";
+      sliceState.dialogs.register.code = "";
     },
     unregisterFrameDialogOpened: (sliceState, action) => {
       sliceState.dialogs.unregister.open = true;
@@ -190,7 +190,7 @@ const framesSlice = createSlice({
   },
 });
 
-export const openRegisterFrameDialog = (payload?: { serial?: string }) => ({
+export const openRegisterFrameDialog = (payload?: { code?: string }) => ({
   type: registerFrameDialogOpened.type,
   payload,
 });

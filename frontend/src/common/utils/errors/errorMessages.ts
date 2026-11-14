@@ -3,7 +3,8 @@ import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 const ERROR_MESSAGES: Record<string, string> = {
   serial_required: "Bitte gib die Seriennummer deines Bilderrahmens ein.",
-  frame_unavailable: "Diesen Bilderrahmen können wir nicht hinzufügen. Prüfe die Seriennummer. Gehört er schon jemandem, muss er ihn zuerst entfernen.",
+  claim_code_required: "Bitte gib den Code ein, den dein Bilderrahmen anzeigt.",
+  frame_unavailable: "Kein Bilderrahmen zeigt diesen Code. Prüfe ihn oder starte den Bilderrahmen neu, um einen neuen zu bekommen.",
   frame_not_found: "Diesen Bilderrahmen gibt es in deinem Konto nicht mehr.",
   receiver_required: "Wähle mindestens einen Empfänger.",
   image_required: "Wähle ein Foto aus.",
@@ -13,6 +14,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   expiry_before_schedule: "Die Anzeigedauer muss nach dem geplanten Zeitpunkt enden.",
   image_not_found: "Dieses Foto gibt es nicht mehr.",
   receiver_not_found: "Mit dieser Person bist du nicht mehr befreundet.",
+  no_own_frame: "Füge zuerst einen eigenen Bilderrahmen hinzu.",
   friend_code_unknown: "Zu diesem Freundescode haben wir niemanden gefunden. Prüfe den Code.",
   friend_request_self: "Das ist dein eigener Freundescode.",
   friend_request_pending: "Du hast dieser Person schon eine Anfrage geschickt.",
