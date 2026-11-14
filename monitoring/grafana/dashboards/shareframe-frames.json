@@ -1042,15 +1042,15 @@
             "indexByName": {
               "serial_number": 0,
               "owner_email": 1,
-              "Active": 2,
-              "version": 3,
-              "local_ip_address": 4,
-              "Last seen": 5,
-              "Last connected": 6,
-              "Last update check": 7,
-              "Last update attempt": 8,
-              "Websocket": 9,
-              "Registered": 10
+              "Value #B": 2,
+              "Value #C": 3,
+              "Value #E": 4,
+              "Value #D": 5,
+              "version": 6,
+              "local_ip_address": 7,
+              "Value #G": 8,
+              "Value #H": 9,
+              "Value #F": 10
             }
           }
         }
