@@ -193,7 +193,7 @@ const FriendshipRequestsGallery: React.FC = () => {
     return (
         <Stack spacing={2}>
             {isSmallScreen && currentPage > 1 && renderPagination()}
-            <Box sx={{ px: 2 }}>
+            <Box>
                 {showSkeleton ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (
@@ -232,7 +232,7 @@ const FriendshipRequestsGallery: React.FC = () => {
             {renderPagination(true)}
 
             {!showSkeleton && outgoingRequests.length > 0 && (
-                <Box sx={{ px: 2 }}>
+                <Box>
                     <Typography variant="subtitle1">Gesendete Anfragen</Typography>
                     <List>
                         {outgoingRequests.map((friendship) => (

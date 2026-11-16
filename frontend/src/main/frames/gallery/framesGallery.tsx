@@ -248,7 +248,7 @@ const FramesGallery: React.FC = () => {
     return (
         <Stack spacing={2}>
             {isSmallScreen && currentPage > 1 && renderPagination()}
-            <Box sx={{ px: 2 }}>
+            <Box>
                 {showSkeleton ? (
                     <Grid container spacing={2}>
                         {Array.from({ length: ITEMS_PER_PAGE }).map((_, index) => (

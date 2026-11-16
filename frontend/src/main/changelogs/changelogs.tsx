@@ -102,7 +102,7 @@ const Changelogs: React.FC = () => {
     );
 
     return (
-        <Container maxWidth="md">
+        <Container maxWidth="md" disableGutters>
             <Typography variant="h4" component="h1" gutterBottom>
                 ✨ Neuste Änderungen
             </Typography>
