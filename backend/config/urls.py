@@ -65,6 +65,7 @@ urlpatterns = [
     path("api/", include("dashboard.urls")),
     path("api/", include("notifications.urls")),
     path("api/", include("user_accounts.urls")),
+    path("api/", include("appEmail.urls")),
 ]
 
 if not bool(settings.DEBUG):

@@ -18,3 +18,4 @@ export const grace = { email: 'seed.grace@shareframe.local', password: 'seed-gra
 // Signs in to the Django admin; its own mails go to ADMIN_NOTIFICATION_EMAIL.
 export const admin = { email: 'seed.admin@shareframe.local', password: 'seed-admin-dev-pass1', username: 'seed_admin', code: 'SEEDX001' };
 export const ADMIN_NOTIFICATION_EMAIL = 'test@shareframe.local';
+export const CONTACT_EMAIL = 'contact@shareframe.local';

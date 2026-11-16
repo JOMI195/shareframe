@@ -28,6 +28,7 @@ def send_django_mail(
     to_emails: list[str],
     images: list[dict[str, str]],
     headers: dict[str, str] | None = None,
+    reply_to: list[str] | None = None,
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -58,6 +59,7 @@ def send_django_mail(
         from_email=from_email,
         to=to_emails,
         headers=headers,
+        reply_to=reply_to,
     )
     email.attach_alternative(html_message, "text/html")
 
@@ -86,6 +88,7 @@ def send_django_mail_with_logo(
     to_emails: list[str],
     images: list[dict[str, str]] | None = None,
     headers: dict[str, str] | None = None,
+    reply_to: list[str] | None = None,
 ) -> None:
     """
     Send an HTML email using the provided template and context, with attached images.
@@ -121,6 +124,7 @@ def send_django_mail_with_logo(
         ]
         + (images or []),
         headers=headers,
+        reply_to=reply_to,
     )
 
 
@@ -139,6 +143,30 @@ def send_account_mail(
             context=context,
             from_email=from_email,
             to_emails=to_emails,
+        )
+    except (SMTPException, OSError) as exc:
+        raise self.retry(
+            exc=exc,
+            countdown=30 * 2**self.request.retries,
+            kwargsrepr=getattr(self.request, "kwargsrepr", None),
+        ) from exc
+
+
+@celery.task(bind=True, max_retries=3)
+def send_contact_mail(self, name: str, email: str, subject: str, message: str) -> None:
+    try:
+        send_django_mail_with_logo(
+            template_name="contact/contact.html",
+            context={
+                "subject": f"ShareFrame - Kontaktformular: {subject}",
+                "contact_subject": subject,
+                "name": name,
+                "email": email,
+                "message": message,
+            },
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to_emails=[settings.CONTACT_EMAIL],
+            reply_to=[email],
         )
     except (SMTPException, OSError) as exc:
         raise self.retry(

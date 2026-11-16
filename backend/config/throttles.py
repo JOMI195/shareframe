@@ -80,6 +80,15 @@ class OneClickUnsubscribeSustainedRateThrottle(_IpScopedThrottle):
     scope = "unsubscribe_one_click_sustained"
 
 
+# Anyone can post the contact form, and each post sends a mail.
+class ContactBurstRateThrottle(_IpScopedThrottle):
+    scope = "contact_burst"
+
+
+class ContactSustainedRateThrottle(_IpScopedThrottle):
+    scope = "contact_sustained"
+
+
 class FailedLoginThrottle(_IpScopedThrottle):
     """Only failed logins count; the view records them via record_failure."""
 

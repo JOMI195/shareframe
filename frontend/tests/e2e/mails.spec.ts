@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test';
 import {
   ADMIN_NOTIFICATION_EMAIL,
+  CONTACT_EMAIL,
   admin,
   carol,
   dave,
@@ -99,6 +100,22 @@ test.describe.serial('mails', () => {
     await expect(page.locator('#site-name')).toBeVisible();
     const login = await expectMail(ADMIN_NOTIFICATION_EMAIL, { subject: 'ShareFrame - Admin-Login', since });
     expect(login.text).toContain(`Konto: ${admin.email}`);
+  });
+
+  test('forwards the contact form to the contact address', async ({ page }) => {
+    const since = new Date();
+    await page.goto('/kontakt/');
+
+    await page.getByLabel('Dein Name').fill('Max Muster');
+    await page.getByLabel('E-Mail-Adresse').fill('max@example.com');
+    await page.getByLabel('Betreff').fill('Frage zum Rahmen');
+    await page.getByLabel('Nachricht').fill('Wie verbinde ich meinen Rahmen?');
+    await page.getByRole('button', { name: 'Nachricht absenden' }).click();
+    await expect(page.getByText('Nachricht gesendet')).toBeVisible();
+
+    const mail = await expectMail(CONTACT_EMAIL, { subject: 'ShareFrame - Kontaktformular: Frage zum Rahmen', since });
+    expect(mail.headers['Reply-To']).toEqual(['max@example.com']);
+    expect(mail.text).toContain('Wie verbinde ich meinen Rahmen?');
   });
 
   test('notifies group members of a changelog, unsubscribable in one click', async ({ page, request }) => {
