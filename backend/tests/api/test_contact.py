@@ -23,6 +23,14 @@ def test_a_message_is_mailed_to_the_contact_address(client, mailoutbox, settings
     assert "Wie verbinde ich meinen Rahmen?" in mail.body
 
 
+def test_the_message_cannot_inject_html(client, mailoutbox):
+    client.post(CONTACT, {**MESSAGE, "message": "<a href='x'>Klick</a>"}, format="json")
+
+    html = mailoutbox[0].alternatives[0].content
+    assert "<a href='x'>" not in html
+    assert "&lt;a href=" in html
+
+
 def test_a_signed_in_user_can_send_one_too(alice, mailoutbox, settings):
     mailoutbox.clear()
 
