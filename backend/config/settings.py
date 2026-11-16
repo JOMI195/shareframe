@@ -448,6 +448,8 @@ REST_FRAMEWORK = {
         "unsubscribe_sustained": "100/day",
         "unsubscribe_one_click_burst": "60/min",
         "unsubscribe_one_click_sustained": "1000/day",
+        "contact_burst": "3/min",
+        "contact_sustained": "20/day",
         "failed_login": "10/min",
         "auth_email_burst": "5/min",
         "auth_email_sustained": "50/day",
@@ -556,6 +558,8 @@ else:
 ADMIN_NOTIFICATION_EMAIL = os.environ.get(
     "ADMIN_NOTIFICATION_EMAIL", DEFAULT_FROM_EMAIL
 )
+# Recipient for contact form messages.
+CONTACT_EMAIL = os.environ.get("CONTACT_EMAIL", DEFAULT_FROM_EMAIL)
 # At most one failed-login warning per recipient within this many seconds.
 FAILED_LOGIN_MAIL_COOLDOWN = 15 * 60
 

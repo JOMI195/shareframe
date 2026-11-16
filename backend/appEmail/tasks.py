@@ -5,7 +5,7 @@ from email.policy import default as default_policy
 from smtplib import SMTPException
 
 from django.conf import settings
-from django.core.mail import EmailMultiAlternatives
+from django.core.mail import EmailMessage, EmailMultiAlternatives
 from django.template.loader import render_to_string
 
 from config.celery import celery
@@ -140,6 +140,24 @@ def send_account_mail(
             from_email=from_email,
             to_emails=to_emails,
         )
+    except (SMTPException, OSError) as exc:
+        raise self.retry(
+            exc=exc,
+            countdown=30 * 2**self.request.retries,
+            kwargsrepr=getattr(self.request, "kwargsrepr", None),
+        ) from exc
+
+
+@celery.task(bind=True, max_retries=3)
+def send_contact_mail(self, name: str, email: str, subject: str, message: str) -> None:
+    try:
+        EmailMessage(
+            subject=f"Kontaktformular: {subject}",
+            body=f"Von: {name} <{email}>\n\n{message}",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[settings.CONTACT_EMAIL],
+            reply_to=[email],
+        ).send(fail_silently=False)
     except (SMTPException, OSError) as exc:
         raise self.retry(
             exc=exc,
