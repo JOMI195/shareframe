@@ -46,6 +46,7 @@ export const StackedSnackbar = (props: Omit<SnackbarProps, 'anchorOrigin'>) => {
       sx={{
         position: 'static',
         transform: 'none',
+        justifyContent: 'center',
         width: { xs: '100%', sm: 'auto' },
         maxWidth: '100%',
       }}

@@ -25,6 +25,14 @@ describe('StackedSnackbar', () => {
     expect(first).toHaveStyle({ position: 'static' });
   });
 
+  // Phones stretch each snackbar across the column, so content narrower than that must not hug the left edge.
+  it('centers its content in the column', async () => {
+    renderWithProviders(<Two second={false} />);
+
+    await screen.findByText('Erste');
+    expect(snackbarOf('Erste')).toHaveStyle({ justifyContent: 'center' });
+  });
+
   it('leaves a closed snackbar out of the column', async () => {
     renderWithProviders(<Two second={false} />);
 
