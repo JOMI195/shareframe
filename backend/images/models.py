@@ -29,6 +29,35 @@ def get_image_upload_path(instance, filename, size_suffix=""):
     return os.path.join("private", "images", unique_filename)
 
 
+METADATA_KEYS = ("exif", "xmp", "XML:com.adobe.xmp", "comment", "photoshop")
+
+
+def strip_metadata(file):
+    """Re-encoded copy without EXIF/XMP/comments, or None if there is nothing to strip."""
+    file.seek(0)
+    with PILImage.open(file) as img:
+        text_chunks = getattr(img, "text", None)
+        if not text_chunks and not any(key in img.info for key in METADATA_KEYS):
+            file.seek(0)
+            return None
+
+        fmt = "PNG" if img.format == "PNG" else "JPEG"
+        icc_profile = img.info.get("icc_profile")
+        transparency = img.info.get("transparency")
+        clean = ImageOps.exif_transpose(img)
+        clean.info = {}
+
+    save_kwargs = {"quality": 95} if fmt == "JPEG" else {}
+    if icc_profile:
+        save_kwargs["icc_profile"] = icc_profile
+    if fmt == "PNG" and transparency is not None:
+        save_kwargs["transparency"] = transparency
+
+    output = BytesIO()
+    clean.save(output, format=fmt, **save_kwargs)
+    return ContentFile(output.getvalue(), name=os.path.basename(file.name))
+
+
 def get_original_upload_path(instance, filename):
     return get_image_upload_path(instance, filename)
 
@@ -136,6 +165,11 @@ class Image(models.Model):
                         variant.delete()
             except Image.DoesNotExist:
                 pass
+
+        if not self.image._committed:
+            stripped = strip_metadata(self.image)
+            if stripped:
+                self.image = stripped
 
         # set image size
         self.size = self.image.size
@@ -291,8 +325,8 @@ class Image(models.Model):
             return None
 
     def get_delivery_file(self):
-        """File to deliver to frames: prefer a downscaled variant, fall back to original."""
-        for size_name in ("large", "medium"):
+        """File to deliver to frames: the smallest variant at panel width, else the original."""
+        for size_name in ("medium", "large"):
             variant_file = self.get_variant(size_name)
             if variant_file:
                 return variant_file
