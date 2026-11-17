@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, Slider, Tooltip, Typography } from '@mui/material';
+import { Box, Button, Grid, IconButton, Slider, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
 import React from 'react';
 
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -11,9 +11,72 @@ import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CenterFocusStrongIcon from '@mui/icons-material/CenterFocusStrong';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
-import { stepRotation } from './utils';
+import FitScreenIcon from '@mui/icons-material/FitScreen';
+import { FillColor, stepRotation } from './utils';
 
 const roundZoom = (zoom: number) => Math.round(zoom * 100) / 100;
+
+const ButtonRow: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
+    <Box
+        sx={{
+            display: "flex",
+            alignItems: "center",
+            width: "100%",
+            borderRadius: 1,
+            bgcolor: (theme) => theme.palette.background.default,
+            pl: 2,
+            pr: 2,
+            py: 0.5,
+            mt: 1,
+            gap: 1
+        }}>
+        <Typography variant='body2' sx={{ width: 60, flexShrink: 0 }}>
+            {label}
+        </Typography>
+        {children}
+    </Box>
+);
+
+interface NavButtonProps {
+    label: string;
+    onClick: () => void;
+    disabled: boolean;
+    tooltip?: boolean;
+    text?: string;
+    children: React.ReactNode;
+}
+
+const NavButton: React.FC<NavButtonProps> = ({ label, onClick, disabled, tooltip, text, children }) => {
+    const button = (
+        <IconButton
+            onClick={onClick}
+            disabled={disabled}
+            aria-label={label}
+            sx={{
+                flex: '1 1 0',
+                minWidth: 0,
+                py: 0.25,
+                gap: 0.5,
+                borderRadius: 1,
+                color: 'text.secondary',
+                bgcolor: 'background.paper',
+                border: 1,
+                borderColor: 'divider',
+                '&:hover': { bgcolor: 'action.hover' }
+            }}
+        >
+            {children}
+            {text && <Typography variant="caption" component="span" sx={{ lineHeight: 1 }}>{text}</Typography>}
+        </IconButton>
+    );
+    if (!tooltip) return button;
+    // The wrapper keeps the tooltip working on a disabled button and carries the flex share.
+    return (
+        <Tooltip title={label} describeChild>
+            <Box component="span" sx={{ flex: '1 1 0', minWidth: 0, display: 'flex' }}>{button}</Box>
+        </Tooltip>
+    );
+};
 
 interface RotationControlProps {
     rotation: number;
@@ -110,8 +173,11 @@ interface NavigationProps {
     onMove: (dx: number, dy: number) => void;
     onCenter: () => void;
     onCropperReset: () => void;
+    onFitImage?: () => void;
+    fitDisabled?: boolean;
+    fill?: { color: FillColor; onChange: (color: FillColor) => void };
     disabled: boolean;
-    // centering and reset join the position row instead of taking their own
+    // photo actions get an icon row instead of the full-width buttons
     compact?: boolean;
     ZOOM_FACTOR: number;
     MIN_ZOOM: number;
@@ -126,6 +192,9 @@ export const Navigation: React.FC<NavigationProps> = ({
     onMove,
     onCenter,
     onCropperReset,
+    onFitImage,
+    fitDisabled = false,
+    fill,
     compact = false,
     ZOOM_FACTOR,
     MIN_ZOOM,
@@ -220,107 +289,52 @@ export const Navigation: React.FC<NavigationProps> = ({
                 </IconButton>
             </Box>
             {rotation && <RotationControl {...rotation} disabled={disabled} />}
-            <Box
-                sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    width: "100%",
-                    borderRadius: 1,
-                    bgcolor: (theme) => theme.palette.background.default,
-                    pl: 2,
-                    pr: 2,
-                    py: 0.5,
-                    mt: 1,
-                    gap: 1
-                }}>
-                <Typography variant='body2' sx={{
-                    width: 60
-                }}>
-                    Position
-                </Typography>
-                <IconButton
-                    onClick={() => onMove(-1, 0)}
-                    disabled={disabled}
-                    aria-label="Nach links verschieben"
-                    sx={{
-                        flex: 1,
-                        py: 0.25,
-                        borderRadius: 1,
-                        color: 'text.secondary',
-                        bgcolor: 'background.paper',
-                        border: 1,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                >
+            <ButtonRow label="Position">
+                <NavButton label="Nach links verschieben" onClick={() => onMove(-1, 0)} disabled={disabled}>
                     <ArrowBackIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                    onClick={() => onMove(0, -1)}
-                    disabled={disabled}
-                    aria-label="Nach oben verschieben"
-                    sx={{
-                        flex: 1,
-                        py: 0.25,
-                        borderRadius: 1,
-                        color: 'text.secondary',
-                        bgcolor: 'background.paper',
-                        border: 1,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                >
+                </NavButton>
+                <NavButton label="Nach oben verschieben" onClick={() => onMove(0, -1)} disabled={disabled}>
                     <ArrowUpwardIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                    onClick={() => onMove(0, 1)}
-                    disabled={disabled}
-                    aria-label="Nach unten verschieben"
-                    sx={{
-                        flex: 1,
-                        py: 0.25,
-                        borderRadius: 1,
-                        color: 'text.secondary',
-                        bgcolor: 'background.paper',
-                        border: 1,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                >
+                </NavButton>
+                <NavButton label="Nach unten verschieben" onClick={() => onMove(0, 1)} disabled={disabled}>
                     <ArrowDownwardIcon fontSize="small" />
-                </IconButton>
-                <IconButton
-                    onClick={() => onMove(1, 0)}
-                    disabled={disabled}
-                    aria-label="Nach rechts verschieben"
-                    sx={{
-                        flex: 1,
-                        py: 0.25,
-                        borderRadius: 1,
-                        color: 'text.secondary',
-                        bgcolor: 'background.paper',
-                        border: 1,
-                        borderColor: 'divider',
-                        '&:hover': { bgcolor: 'action.hover' }
-                    }}
-                >
+                </NavButton>
+                <NavButton label="Nach rechts verschieben" onClick={() => onMove(1, 0)} disabled={disabled}>
                     <ArrowForwardIcon fontSize="small" />
-                </IconButton>
-                {compact && (
-                    <>
-                        <Tooltip title="Zentrieren">
-                            <IconButton onClick={onCenter} disabled={disabled} aria-label="Zentrieren" size="small" sx={{ color: 'text.secondary' }}>
-                                <CenterFocusStrongIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                        <Tooltip title="Zurücksetzen">
-                            <IconButton onClick={onCropperReset} disabled={disabled} aria-label="Zurücksetzen" size="small" sx={{ color: 'text.secondary' }}>
-                                <RestartAltIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    </>
-                )}
-            </Box>
+                </NavButton>
+            </ButtonRow>
+            {compact && (
+                <ButtonRow label="Bild">
+                    {onFitImage && (
+                        <NavButton label="Volles Bild anzeigen" onClick={onFitImage} disabled={disabled || fitDisabled} tooltip text="Ganz">
+                            <FitScreenIcon fontSize="small" />
+                        </NavButton>
+                    )}
+                    <NavButton label="Zentrieren" onClick={onCenter} disabled={disabled} tooltip text="Zentriert">
+                        <CenterFocusStrongIcon fontSize="small" />
+                    </NavButton>
+                    <NavButton label="Zurücksetzen" onClick={onCropperReset} disabled={disabled} tooltip text="Reset">
+                        <RestartAltIcon fontSize="small" />
+                    </NavButton>
+                </ButtonRow>
+            )}
+            {fill && (
+                <ButtonRow label="Rand">
+                    <ToggleButtonGroup
+                        value={fill.color}
+                        exclusive
+                        size="small"
+                        fullWidth
+                        disabled={disabled}
+                        aria-label="Randfarbe"
+                        onChange={(_, color: FillColor | null) => color && fill.onChange(color)}
+                        sx={{ bgcolor: 'background.paper', '& .MuiToggleButton-root': { py: 0, height: 26, textTransform: 'none' } }}
+                    >
+                        <ToggleButton value="black">Schwarz</ToggleButton>
+                        <ToggleButton value="white">Weiß</ToggleButton>
+                    </ToggleButtonGroup>
+                </ButtonRow>
+            )}
             {!compact && (
                 <Grid
                     container

@@ -6,6 +6,7 @@ import PassepartoutHint from '../passepartoutHint';
 import { ImageStatus } from '../useUploadQueue';
 import { PREVIEW_ERROR_MESSAGE } from '../imagePreviewThumb';
 import { ToolCanvas, ToolControls } from '../editorLayout';
+import { FillColor } from './cropper/utils';
 
 interface ImageCroppingProps {
     currentImage: ImageStatus;
@@ -19,6 +20,8 @@ interface ImageCroppingProps {
     setZoom: React.Dispatch<React.SetStateAction<number>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
+    fillColor: FillColor;
+    setFillColor: (color: FillColor) => void;
 }
 
 const ImageCropping: React.FC<ImageCroppingProps> = ({
@@ -33,6 +36,8 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
     setZoom,
     rotation,
     setRotation,
+    fillColor,
+    setFillColor,
 }) => {
     if (previewError) {
         return (
@@ -59,6 +64,8 @@ const ImageCropping: React.FC<ImageCroppingProps> = ({
             setCroppedAreaPixels={setCroppedAreaPixels}
             rotation={rotation}
             setRotation={setRotation}
+            fillColor={fillColor}
+            setFillColor={setFillColor}
             onError={() => markPreviewBroken(currentImage.id, PREVIEW_ERROR_MESSAGE)}
         >
             <PassepartoutHint />
