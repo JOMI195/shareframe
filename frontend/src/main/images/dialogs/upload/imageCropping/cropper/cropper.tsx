@@ -1,11 +1,12 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import EasyCropper, { Area, Point } from 'react-easy-crop';
+import EasyCropper, { Area, MediaSize, Point } from 'react-easy-crop';
 import { useTheme } from '@mui/material/styles';
 import Navigation from './navigation';
 import { ToolCanvas, ToolControls } from '../../editorLayout';
 import { frameSize } from '../../frameSize';
 import { FRAME_ASPECT_RATIO } from '../../frameAspectBox';
 import { passepartoutBackground, passepartoutShade } from '../../passepartout';
+import { FillColor, containZoom } from './utils';
 
 const ZOOM_FACTOR = 0.05;
 const MOVE_STEP = 5;
@@ -25,6 +26,8 @@ interface CropperProps {
     setCroppedAreaPixels: React.Dispatch<React.SetStateAction<Area>>;
     rotation: number;
     setRotation: React.Dispatch<React.SetStateAction<number>>;
+    fillColor: FillColor;
+    setFillColor: (color: FillColor) => void;
     onError: () => void;
     children?: React.ReactNode;
 }
@@ -38,6 +41,8 @@ const Cropper: React.FC<CropperProps> = ({
     setCroppedAreaPixels,
     rotation,
     setRotation,
+    fillColor,
+    setFillColor,
     onError,
     children
 }) => {
@@ -47,6 +52,7 @@ const Cropper: React.FC<CropperProps> = ({
     const [isTouching, setIsTouching] = useState(false);
     const [cropSize, setCropSize] = useState<{ width: number; height: number } | null>(null);
     const [measured, setMeasured] = useState(false);
+    const [mediaSize, setMediaSize] = useState<MediaSize | null>(null);
 
     // The cropper rescales the kept position when its box changes size, so it has to start at the final one.
     useLayoutEffect(() => {
@@ -114,6 +120,12 @@ const Cropper: React.FC<CropperProps> = ({
 
     const onCenter = () => setCrop({ x: 0, y: 0 });
 
+    const onFitImage = () => {
+        if (!mediaSize || !cropSize) return;
+        setZoom(containZoom(mediaSize, cropSize, rotation, MIN_ZOOM, MAX_ZOOM));
+        setCrop({ x: 0, y: 0 });
+    };
+
     const onCropperReset = () => {
         setCrop({ x: 0, y: 0 });
         setZoom(1);
@@ -130,6 +142,15 @@ const Cropper: React.FC<CropperProps> = ({
                     backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
                 }}>
                     <style>{getCropperStyles()}</style>
+                    {cropSize && <div aria-hidden style={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        width: cropSize.width,
+                        height: cropSize.height,
+                        transform: 'translate(-50%, -50%)',
+                        backgroundColor: fillColor,
+                    }} />}
                     {measured && <EasyCropper
                         ref={cropperRef}
                         image={src}
@@ -152,6 +173,7 @@ const Cropper: React.FC<CropperProps> = ({
                         restrictPosition={false}
                         cropShape="rect"
                         objectFit="horizontal-cover"
+                        setMediaSize={setMediaSize}
                         mediaProps={{ onError }}
                     />}
                 </div>
@@ -164,6 +186,9 @@ const Cropper: React.FC<CropperProps> = ({
                     onMove={onMove}
                     onCenter={onCenter}
                     onCropperReset={onCropperReset}
+                    onFitImage={onFitImage}
+                    fitDisabled={!mediaSize || !cropSize}
+                    fill={{ color: fillColor, onChange: setFillColor }}
                     disabled={false}
                     compact
                     ZOOM_FACTOR={ZOOM_FACTOR}

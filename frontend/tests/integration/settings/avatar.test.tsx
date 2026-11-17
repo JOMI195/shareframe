@@ -30,7 +30,8 @@ vi.mock('react-easy-crop', async () => {
   return { default: MockCropper };
 });
 
-vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
+vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/main/images/dialogs/upload/imageCropping/cropper/utils')>()),
   getCroppedImg: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
 }));
 

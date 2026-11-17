@@ -56,8 +56,11 @@ test.describe('upload dialog on a phone', () => {
         page.getByRole('button', { name: 'Nach oben verschieben' }),
         page.getByRole('button', { name: 'Nach unten verschieben' }),
         page.getByRole('button', { name: 'Nach rechts verschieben' }),
+        page.getByRole('button', { name: 'Volles Bild anzeigen' }),
         page.getByRole('button', { name: 'Zentrieren' }),
         page.getByRole('button', { name: 'Zurücksetzen' }),
+        page.getByRole('button', { name: 'Schwarz' }),
+        page.getByRole('button', { name: 'Weiß' }),
         page.getByRole('button', { name: 'Weiter zur Vorschau' }),
       ]) {
         await expect(control).toBeInViewport({ ratio: 1 });
@@ -109,6 +112,24 @@ test.describe('upload dialog on a phone', () => {
         const now = await imageTransform(page);
         return Math.max(Math.abs(now.x - position.x), Math.abs(now.y - position.y));
       }).toBeLessThanOrEqual(1);
+    });
+
+    await test.step('the full photo fits the frame height and keeps its border colour', async () => {
+      const cropArea = page.locator('.reactEasyCrop_CropArea');
+      await page.getByRole('button', { name: 'Volles Bild anzeigen' }).click();
+      await page.getByRole('button', { name: 'Weiß' }).click();
+      await expect.poll(async () => {
+        const [image, crop] = await Promise.all([boxOf(page.locator('.reactEasyCrop_Image')), boxOf(cropArea)]);
+        return Math.abs(image.height - crop.height) + Math.abs(image.y - crop.y);
+      }).toBeLessThanOrEqual(2);
+      const zoom = await page.getByRole('slider', { name: 'Zoom' }).inputValue();
+      expect(Number(zoom)).toBeLessThan(1);
+
+      await tab(page, 'Anpassen').click();
+      await expect(page.getByRole('slider', { name: 'Kontrast' })).toBeVisible();
+      await tab(page, 'Zuschnitt').click();
+      await expect(page.getByRole('slider', { name: 'Zoom' })).toHaveValue(zoom);
+      await expect(page.getByRole('button', { name: 'Weiß' })).toHaveAttribute('aria-pressed', 'true');
     });
 
     await test.step('a text added earlier is burned in from the crop tool', async () => {

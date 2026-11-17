@@ -40,7 +40,8 @@ vi.mock('react-easy-crop', async () => {
   return { default: MockCropper };
 });
 
-vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', () => ({
+vi.mock('@/main/images/dialogs/upload/imageCropping/cropper/utils', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/main/images/dialogs/upload/imageCropping/cropper/utils')>()),
   getCroppedImg: vi.fn(async () => new Blob(['cropped'], { type: 'image/jpeg' })),
 }));
 
@@ -415,6 +416,20 @@ describe('UploadDialog crop step', () => {
 
     expect(getCroppedImg).toHaveBeenCalledTimes(2);
     expect(vi.mocked(getCroppedImg).mock.lastCall![2]).toBe(90);
+  });
+
+  it('crops again with the chosen border colour', async () => {
+    const { user } = await goToAdjust();
+    expect(vi.mocked(getCroppedImg).mock.lastCall![3]).toBe('black');
+    await user.click(tab('Zuschnitt'));
+    await screen.findByTestId('cropper');
+
+    await user.click(screen.getByRole('button', { name: 'Weiß' }));
+    await user.click(tab('Anpassen'));
+    await adjustOpen();
+
+    expect(getCroppedImg).toHaveBeenCalledTimes(2);
+    expect(vi.mocked(getCroppedImg).mock.lastCall![3]).toBe('white');
   });
 });
 

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getCroppedImg, getRadianAngle, rotateSize, stepRotation } from '@/main/images/dialogs/upload/imageCropping/cropper/utils';
+import { containZoom, getCroppedImg, getRadianAngle, rotateSize, stepRotation } from '@/main/images/dialogs/upload/imageCropping/cropper/utils';
 
 describe('getRadianAngle', () => {
   it('converts degrees to radians', () => {
@@ -28,6 +28,27 @@ describe('rotateSize', () => {
 
   it('is sign-agnostic', () => {
     expect(rotateSize(800, 600, -90)).toEqual(rotateSize(800, 600, 90));
+  });
+});
+
+describe('containZoom', () => {
+  const crop = { width: 500, height: 300 };
+
+  it('fits the height of a photo taller than the frame', () => {
+    expect(containZoom({ width: 500, height: 375 }, crop, 0, 0.1, 4)).toBeCloseTo(0.8);
+  });
+
+  it('fits the width of a panorama wider than the frame', () => {
+    expect(containZoom({ width: 1000, height: 300 }, crop, 0, 0.1, 4)).toBeCloseTo(0.5);
+  });
+
+  it('uses the rotated sides', () => {
+    expect(containZoom({ width: 500, height: 300 }, crop, 90, 0.1, 4)).toBeCloseTo(0.6);
+  });
+
+  it('stays within the zoom range', () => {
+    expect(containZoom({ width: 500, height: 30000 }, crop, 0, 0.1, 4)).toBe(0.1);
+    expect(containZoom({ width: 50, height: 30 }, crop, 0, 0.1, 4)).toBe(4);
   });
 });
 

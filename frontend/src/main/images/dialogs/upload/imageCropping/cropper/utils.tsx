@@ -1,3 +1,4 @@
+import type { Size } from 'react-easy-crop';
 import { MAX_OUTPUT_SIDE } from '../../outputSize';
 
 // Mobile Safari refuses to allocate canvases beyond these bounds and silently yields a blank one.
@@ -27,6 +28,16 @@ export function rotateSize(width: number, height: number, rotation: number) {
     }
 }
 
+export type FillColor = 'black' | 'white';
+export const DEFAULT_FILL_COLOR: FillColor = 'black';
+
+// Zoom at which the whole photo fits into the crop, given its rendered size at zoom 1.
+export const containZoom = (media: Size, crop: Size, rotation: number, min: number, max: number) => {
+    const box = rotateSize(media.width, media.height, rotation);
+    const zoom = Math.min(crop.width / box.width, crop.height / box.height);
+    return Math.min(max, Math.max(min, zoom));
+};
+
 const getOutputScale = (width: number, height: number): number => {
     const sideScale = MAX_OUTPUT_SIDE / Math.max(width, height);
     const areaScale = Math.sqrt(MAX_OUTPUT_AREA / (width * height));
@@ -37,6 +48,7 @@ export const getCroppedImg = (
     image: File,
     croppedAreaPixels: { width: number; height: number; x: number; y: number },
     rotation: number = 0,
+    fill: FillColor = DEFAULT_FILL_COLOR,
     flip = { horizontal: false, vertical: false }
 ): Promise<Blob> => {
     return new Promise((resolve, reject) => {
@@ -61,6 +73,9 @@ export const getCroppedImg = (
                 reject(new Error('Das Foto ist zu groß zum Zuschneiden.'));
                 return;
             }
+
+            ctx.fillStyle = fill
+            ctx.fillRect(0, 0, canvas.width, canvas.height)
 
             const rotRad = getRadianAngle(rotation)
             const { width: bBoxWidth, height: bBoxHeight } = rotateSize(

@@ -23,7 +23,7 @@ import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImage, IImageValidationResponse, isIImage } from '@/types'
 import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
 import { Area, Point } from 'react-easy-crop'
-import { getCroppedImg } from './imageCropping/cropper/utils'
+import { DEFAULT_FILL_COLOR, FillColor, getCroppedImg } from './imageCropping/cropper/utils'
 import ImageCropping from './imageCropping/imageCropping'
 import ImageAdjust from './imageAdjust/imageAdjust'
 import { Adjustment, NEUTRAL_ADJUSTMENT, isNeutral } from './imageAdjust/adjust'
@@ -99,6 +99,7 @@ const UploadDialog: React.FC = () => {
   const [crop, setCrop] = useState<Point>(CROPPER_PROPS_INITIAL_STATE.crop)
   const [zoom, setZoom] = useState(CROPPER_PROPS_INITIAL_STATE.zoom)
   const [rotation, setRotation] = useState(CROPPER_PROPS_INITIAL_STATE.rotation)
+  const [fillColor, setFillColor] = useState<FillColor>(DEFAULT_FILL_COLOR)
   const [croppedImage, replaceCroppedImage] = useBlobImage()
   const [croppedKey, setCroppedKey] = useState<string | null>(null)
   const [adjustment, setAdjustment] = useState<Adjustment>(NEUTRAL_ADJUSTMENT)
@@ -121,6 +122,7 @@ const UploadDialog: React.FC = () => {
     setCrop(CROPPER_PROPS_INITIAL_STATE.crop)
     setZoom(CROPPER_PROPS_INITIAL_STATE.zoom)
     setRotation(CROPPER_PROPS_INITIAL_STATE.rotation)
+    setFillColor(DEFAULT_FILL_COLOR)
     replaceCroppedImage(null)
     setCroppedKey(null)
     setAdjustment(NEUTRAL_ADJUSTMENT)
@@ -208,7 +210,7 @@ const UploadDialog: React.FC = () => {
 
   const currentImage = currentImageIndex !== null ? imageStatuses[currentImageIndex] ?? null : null
   const area = croppedAreaPixels
-  const cropKey = currentImage ? `${currentImage.id}:${area.x},${area.y},${area.width},${area.height}:${rotation}` : null
+  const cropKey = currentImage ? `${currentImage.id}:${area.x},${area.y},${area.width},${area.height}:${rotation}:${fillColor}` : null
   const adjustKey = `${cropKey}:${adjustment.brightness},${adjustment.contrast}`
   const cropMeasured = area.width >= 1 && area.height >= 1
   const editLocked = busy || exportRequested || !cropMeasured
@@ -219,7 +221,7 @@ const UploadDialog: React.FC = () => {
     if (!currentImage || area.width < 1 || area.height < 1) {
       throw new Error('Der Zuschnitt wird noch vorbereitet. Bitte kurz warten.')
     }
-    const blob = await getCroppedImg(currentImage.file, area, rotation)
+    const blob = await getCroppedImg(currentImage.file, area, rotation, fillColor)
     replaceCroppedImage(blob)
     setCroppedKey(cropKey)
     return blob
@@ -466,6 +468,8 @@ const UploadDialog: React.FC = () => {
                   setZoom={setZoom}
                   rotation={rotation}
                   setRotation={setRotation}
+                  fillColor={fillColor}
+                  setFillColor={setFillColor}
                 />
               )}
               {tool === 'adjust' && croppedImage && (
