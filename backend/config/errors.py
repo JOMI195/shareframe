@@ -3,6 +3,8 @@ import logging
 from django.http import Http404, JsonResponse
 from rest_framework import exceptions
 
+from utils.client_ip import client_ip
+
 logger = logging.getLogger("django.security.csrf")
 
 CSRF_FAILED_DETAIL = "CSRF Failed: Request rejected."
@@ -33,7 +35,13 @@ def request_too_large():
 
 
 def csrf_failure(request, reason=""):
-    logger.warning("CSRF failed on %s %s: %s", request.method, request.path, reason)
+    logger.warning(
+        "CSRF failed on %s %s from %s: %s",
+        request.method,
+        request.path,
+        client_ip(request),
+        reason,
+    )
     return _error(403, CSRF_FAILED_DETAIL)
 
 

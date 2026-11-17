@@ -23,7 +23,13 @@ def enforce_csrf(request):
     check.process_request(request)
     reason = check.process_view(request, None, (), {})
     if reason:
-        logger.warning("CSRF failed on %s %s: %s", request.method, request.path, reason)
+        logger.warning(
+            "CSRF failed on %s %s from %s: %s",
+            request.method,
+            request.path,
+            client_ip(request),
+            reason,
+        )
         raise exceptions.PermissionDenied(CSRF_FAILED_DETAIL)
 
 

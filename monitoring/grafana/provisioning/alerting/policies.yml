@@ -16,3 +16,8 @@ policies:
         group_wait: 0s
         group_interval: 1m
         repeat_interval: 5m
+      # Top sources of one burst share a single mail.
+      - receiver: shareframe-admin
+        object_matchers:
+          - ["burst", "=", "true"]
+        group_by: [alertname]
