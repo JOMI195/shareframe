@@ -6,6 +6,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.utils import timezone
 from freezegun import freeze_time
 from PIL import Image as PILImage
+from PIL.PngImagePlugin import PngInfo
 
 from images.models import Image, ImageVariant
 from tests.support import seed
@@ -162,18 +163,66 @@ class TestVariantProcessing:
         assert (variant.format, variant.mode) == ("JPEG", "RGB")
 
 
+class TestOriginalMetadata:
+    @staticmethod
+    def _stored(image):
+        image.image.open()
+        image.image.seek(0)
+        return image.image.read()
+
+    def test_exif_is_stripped_and_orientation_applied(self):
+        source = PILImage.new("RGB", (200, 100), (30, 30, 220))
+        exif = PILImage.Exif()
+        exif[0x0112] = 6
+        exif[0x010F] = "Camera"
+        buffer = io.BytesIO()
+        source.save(buffer, format="JPEG", exif=exif, comment=b"note")
+
+        image = ImageFactory(image=SimpleUploadedFile("photo.jpg", buffer.getvalue()))
+        stored = PILImage.open(io.BytesIO(self._stored(image)))
+
+        assert stored.size == (100, 200)
+        assert not stored.getexif()
+        assert "comment" not in stored.info
+        assert image.size == len(self._stored(image))
+
+    def test_a_png_loses_its_text_chunks_but_keeps_transparency(self):
+        info = PngInfo()
+        info.add_text("Author", "someone")
+        buffer = io.BytesIO()
+        PILImage.new("RGBA", (40, 30), (0, 0, 0, 0)).save(
+            buffer, format="PNG", pnginfo=info
+        )
+
+        image = ImageFactory(image=SimpleUploadedFile("clear.png", buffer.getvalue()))
+        stored = PILImage.open(io.BytesIO(self._stored(image)))
+
+        assert stored.format == "PNG"
+        assert not stored.text
+        assert stored.getpixel((10, 10))[3] == 0
+
+    def test_a_file_without_metadata_is_stored_unchanged(self):
+        upload = upload_file(name="photo.jpg", fmt="JPEG")
+        original = upload.read()
+        upload.seek(0)
+
+        image = ImageFactory(image=upload)
+
+        assert self._stored(image) == original
+
+
 def test_get_variant_returns_none_for_an_unknown_size(alice_image):
     assert alice_image.get_variant("gigantic") is None
 
 
 class TestDeliveryFile:
-    def test_prefers_the_large_variant(self, alice_image):
-        assert alice_image.get_delivery_file() == alice_image.get_variant("large")
-
-    def test_falls_back_to_medium(self, alice_image):
-        alice_image.variants.filter(image_size__name="large").delete()
-
+    def test_prefers_the_medium_variant(self, alice_image):
         assert alice_image.get_delivery_file() == alice_image.get_variant("medium")
+
+    def test_falls_back_to_large(self, alice_image):
+        alice_image.variants.filter(image_size__name="medium").delete()
+
+        assert alice_image.get_delivery_file() == alice_image.get_variant("large")
 
     def test_falls_back_to_the_original(self, alice_image):
         alice_image.variants.all().delete()
