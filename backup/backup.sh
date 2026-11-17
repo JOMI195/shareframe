@@ -52,13 +52,14 @@ finish() {
     ok=0
     last=$(previous backup.prom '^shareframe_backup_last_success_timestamp_seconds ')
     values=$(previous backup.prom '^shareframe_backup_(bytes|files|repo|snapshots)')
-    log "failed at step $step"
+    log "failed at step ${step:-start}"
   fi
   {
     echo "shareframe_backup_last_run_timestamp_seconds $now"
     echo "shareframe_backup_last_run_success $ok"
     echo "shareframe_backup_duration_seconds $((now - start))"
     echo "$last"
+    [ "$ok" = 1 ] || echo "shareframe_backup_failed_step{step=\"${step:-start}\"} 1"
     for s in $STEPS; do
       case " $completed " in
         *" $s "*) echo "shareframe_backup_step_success{step=\"$s\"} 1" ;;
