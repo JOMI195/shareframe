@@ -95,6 +95,36 @@ describe('frame list', () => {
   });
 });
 
+describe('opening the settings of a frame', () => {
+  // The tab opens on the click, before the code arrives, so no popup blocker stops it.
+  const fakeTab = () => {
+    const tab = { opener: {} as unknown, location: { href: '' } };
+    const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window);
+    return { tab, open };
+  };
+
+  it('opens the frame signed in with a fresh one-time code', async () => {
+    const { tab, open } = fakeTab();
+    const { user } = await openFrames([makeFrame({ ...frame, local_ip_address: '192.168.1.50' })]);
+
+    await user.click(screen.getByRole('button', { name: 'Öffnen' }));
+
+    expect(open).toHaveBeenCalledWith('', '_blank');
+    await waitFor(() => expect(tab.location.href).toBe('http://192.168.1.50/auth/sign-in#otp=123456'));
+    expect(tab.opener).toBeNull();
+  });
+
+  it('still opens the frame when no code can be had', async () => {
+    const { tab } = fakeTab();
+    server.use(mswHttp.post(apiUrl(frameEndpoints.getObtainFrameOtpUrl(1)), () => new HttpResponse(null, { status: 503 })));
+    const { user } = await openFrames([makeFrame({ ...frame, local_ip_address: '192.168.1.50' })]);
+
+    await user.click(screen.getByRole('button', { name: 'Öffnen' }));
+
+    await waitFor(() => expect(tab.location.href).toBe('http://192.168.1.50'));
+  });
+});
+
 describe('registering a frame', () => {
   const openDialog = async (user: ReturnType<typeof renderRoute>['user']) => {
     await user.click(screen.getByRole('button', { name: /Bilderrahmen hinzufügen/ }));

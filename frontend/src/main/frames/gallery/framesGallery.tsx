@@ -17,14 +17,14 @@ import {
     useMediaQuery,
 } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { IFrame } from "@/types";
+import { IFrame, isIFrameOTP } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import KeyIcon from '@mui/icons-material/Key';
 import WifiIcon from '@mui/icons-material/Wifi';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openRegisterFrameDialog, openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
-import { fetchframes } from "@/store/entities/frames/frames.actions";
+import { fetchframes, obtainFrameOTP } from "@/store/entities/frames/frames.actions";
 import { isFrameActive } from "@/common/utils/frame";
 import DataNotFound from "@/common/components/dataNotFound";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -86,6 +86,17 @@ const FramesGallery: React.FC = () => {
             />
         </Card>
     );
+
+    const openSettings = async (frame: IFrame) => {
+        const address = `http://${frame.local_ip_address}`;
+        // Opened on the click: a tab opened after the request would count as a popup.
+        const tab = window.open("", "_blank");
+        if (!tab) return;
+        tab.opener = null;
+        const otp = await dispatch(obtainFrameOTP(frame.id));
+        // The fragment never leaves the browser; the frame signs in with it and drops it.
+        tab.location.href = isIFrameOTP(otp) ? `${address}/auth/sign-in#otp=${encodeURIComponent(otp.otp)}` : address;
+    };
 
     const renderFrameCard = (frame: IFrame) => {
         const hasConnection = isFrameActive(frame.last_seen);
@@ -162,7 +173,7 @@ const FramesGallery: React.FC = () => {
                                         variant="contained"
                                         color={"secondary"}
                                         size="small"
-                                        onClick={() => window.open(`http://${ipAddress}`, "_blank", "noopener")}
+                                        onClick={() => void openSettings(frame)}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
                                         startIcon={<OpenInNewIcon />}
                                         sx={{ minHeight: 36 }}
