@@ -23,11 +23,11 @@ def login(user, request=None):
     return mail.outbox[-1]
 
 
-def failed(email, path="/api/auth/jwt/create/"):
+def failed(email, path="/api/auth/jwt/create/", **headers):
     user_login_failed.send(
         sender=None,
         credentials={"email": email},
-        request=RequestFactory().post(path, REMOTE_ADDR="203.0.113.5"),
+        request=RequestFactory().post(path, REMOTE_ADDR="203.0.113.5", **headers),
     )
 
 
@@ -54,6 +54,30 @@ class TestLogin:
         message = login(alice_user, request)
 
         assert "198.51.100.7" in message.body
+
+    def test_the_city_is_reported(self, alice_user):
+        request = RequestFactory().get(
+            "/", HTTP_X_GEOIP_CITY="Musterstadt", HTTP_X_GEOIP_COUNTRY="Musterland"
+        )
+
+        message = login(alice_user, request)
+
+        assert "Musterstadt" in message.body
+        assert "Musterland" not in message.body
+
+    def test_the_country_stands_in_for_an_unknown_city(self, alice_user):
+        request = RequestFactory().get(
+            "/", HTTP_X_GEOIP_CITY="unknown", HTTP_X_GEOIP_COUNTRY="Musterland"
+        )
+
+        message = login(alice_user, request)
+
+        assert "Musterland" in message.body
+
+    def test_no_location_row_without_a_location(self, alice_user):
+        message = login(alice_user)
+
+        assert "Ort (ungefähr)" not in message.body
 
 
 class TestFailedLogin:
@@ -90,6 +114,11 @@ class TestFailedLogin:
         failed(alice_user.email)
 
         assert alice_user.email in mail.outbox[-1].body
+
+    def test_the_location_is_reported(self, alice_user):
+        failed(alice_user.email, HTTP_X_GEOIP_CITY="Musterstadt")
+
+        assert "Musterstadt" in mail.outbox[-1].body
 
     def test_repeated_attempts_mail_the_owner_once(self, alice_user):
         before = len(mail.outbox)
