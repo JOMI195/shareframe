@@ -46,7 +46,7 @@ const Appearance = () => {
             />
             <SettingsSection
                 title="Saisonale Deko"
-                description="Kleine Akzente zu Halloween und anderen Anlässen"
+                description="Kleine Akzente zu Halloween, Weihnachten und anderen Anlässen"
                 action={
                     <Switch
                         checked={seasonalThemes}

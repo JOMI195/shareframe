@@ -25,7 +25,7 @@ const Header: FC<HeaderProps> = ({ username }) => {
                             Hi, {username}
                         </Typography>
                         <Typography variant="body2">
-                            {greeting ?? "Willkommen bei ShareFrame"}
+                            {(typeof greeting === 'function' ? greeting(new Date()) : greeting) ?? "Willkommen bei ShareFrame"}
                         </Typography>
                     </Box>
                     <Box sx={{ display: "flex", flexDirection: "row" }}>

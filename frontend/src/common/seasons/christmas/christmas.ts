@@ -1,0 +1,47 @@
+import type { Season } from '../seasons';
+import SantaHatIcon from './icons/santaHatIcon';
+import OrnamentIcon from './icons/ornamentIcon';
+import GiftIcon from './icons/giftIcon';
+import SnowflakeIcon from './icons/snowflakeIcon';
+import SnowmanIcon from './icons/snowmanIcon';
+import TreeIcon from './icons/treeIcon';
+import FairyLights from './overlays/fairyLights';
+import Snowfall from './overlays/snowfall';
+import PeekingReindeer from './overlays/peekingReindeer';
+import SleighFlyby from './overlays/sleighFlyby';
+import ShootingStarFlyby from './overlays/shootingStarFlyby';
+import SnowstormFlyby from './overlays/snowstormFlyby';
+import GiftDropFlyby from './overlays/giftDropFlyby';
+
+const CHRISTMAS_EVE = 24;
+
+export const christmasGreeting = (date: Date): string => {
+    const nights = CHRISTMAS_EVE - date.getDate();
+    if (nights === 1) return 'Noch einmal schlafen bis Heiligabend!';
+    if (nights > 1) return `Noch ${nights} Mal schlafen bis Heiligabend!`;
+    if (nights > -3) return 'Frohe Weihnachten!';
+    return 'Schöne Feiertage und einen guten Rutsch!';
+};
+
+const christmas: Season = {
+    id: 'christmas',
+    label: 'Weihnachten',
+    from: { month: 12, day: 1 },
+    to: { month: 12, day: 27 },
+    palette: {
+        light: { accent: '#C62828', secondary: '#2E7D32', background: '#F7F2EA' },
+        dark: { accent: '#FF6B6B', secondary: '#E8C547', background: '#1C2229' },
+    },
+    overlays: {
+        logo: [SantaHatIcon],
+        loading: [OrnamentIcon, GiftIcon, SnowflakeIcon],
+        emptyState: [SnowmanIcon, GiftIcon, TreeIcon],
+        greeting: [christmasGreeting],
+        appBar: [FairyLights],
+        screen: [Snowfall, PeekingReindeer],
+        flyby: [SleighFlyby, ShootingStarFlyby, SnowstormFlyby, GiftDropFlyby],
+    },
+    logoBadge: { size: 26, top: -14, left: -7, rotate: -22 },
+};
+
+export default christmas;

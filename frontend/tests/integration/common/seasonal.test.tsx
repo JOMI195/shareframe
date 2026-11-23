@@ -9,6 +9,7 @@ import SeasonalLogoBadge from '@/common/components/seasonal/seasonalLogoBadge';
 import SeasonalScreen from '@/common/components/seasonal/seasonalScreen';
 import SeasonalAppBar from '@/common/components/seasonal/seasonalAppBar';
 import halloween from '@/common/seasons/halloween/halloween';
+import christmas from '@/common/seasons/christmas/christmas';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
 
@@ -130,8 +131,47 @@ describe('during halloween', () => {
   });
 });
 
-describe.each([false, true])('every halloween flyby (reduced motion: %s)', (reducedMotion) => {
-  it.each(halloween.overlays.flyby.map((Flyby) => [Flyby.name, Flyby]))('%s finishes once', (_, Flyby) => {
+describe('during christmas', () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date('2026-12-10T12:00:00'));
+  });
+
+  it('counts the nights until christmas eve on the dashboard', () => {
+    renderWithProviders(<Header username="alice" />, seasonal(true));
+
+    expect(screen.getByText('Noch 14 Mal schlafen bis Heiligabend!')).toBeVisible();
+  });
+
+  it('puts a santa hat on the logo', () => {
+    renderWithProviders(<SeasonalLogoBadge>Logo</SeasonalLogoBadge>, seasonal(true));
+
+    expect(screen.getByRole('button', { name: 'Weihnachten' })).toContainElement(screen.getByTestId('SantaHatIcon'));
+  });
+
+  it('tints the secondary colour', () => {
+    renderWithProviders(<SecondaryProbe />, seasonal(true));
+
+    expect(screen.getByText('#2E7D32')).toBeInTheDocument();
+  });
+
+  it('draws every app bar and screen overlay', () => {
+    renderWithProviders(
+      <>
+        <SeasonalAppBar />
+        <SeasonalScreen />
+      </>,
+      seasonal(true),
+    );
+
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(christmas.overlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(christmas.overlays.screen.length);
+  });
+});
+
+const allFlybys = [halloween, christmas].flatMap((season) => season.overlays.flyby);
+
+describe.each([false, true])('every flyby (reduced motion: %s)', (reducedMotion) => {
+  it.each(allFlybys.map((Flyby) => [Flyby.name, Flyby]))('%s finishes once', (_, Flyby) => {
     const onDone = vi.fn();
     const { container } = renderWithProviders(<Flyby onDone={onDone} reducedMotion={reducedMotion} />);
 
