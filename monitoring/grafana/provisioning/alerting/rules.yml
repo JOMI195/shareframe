@@ -53,11 +53,11 @@ groups:
         title: GrafanaFailedLogins
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }} ({{ $labels.country }}): {{ $values.A.Value }} of {{ $values.T.Value }} failed Grafana logins in 5m'
           __dashboardUid__: shareframe-auth
@@ -149,11 +149,11 @@ groups:
         title: HostSshBruteForce
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }}: {{ $values.A.Value }} of {{ $values.T.Value }} failed SSH logins in 5m'
           __dashboardUid__: shareframe-auth
@@ -287,11 +287,11 @@ groups:
         title: AppFailedLoginBurst
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }} as ''{{ $labels.account }}'' via {{ $labels.channel }}: {{ $values.A.Value }} of {{ $values.T.Value }} failed app logins in 5m'
           __dashboardUid__: shareframe-auth
@@ -341,11 +341,11 @@ groups:
         title: AppCsrfFailures
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }} {{ $labels.method }} {{ $labels.path }} ({{ $labels.reason }}): {{ $values.A.Value }} of {{ $values.T.Value }} CSRF failures in 5m'
           __dashboardUid__: shareframe-auth
@@ -437,6 +437,7 @@ groups:
         title: AppOtpRejectedBurst
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -479,11 +480,11 @@ groups:
         title: NginxRateLimited
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }} ({{ $labels.country }}) {{ $labels.path }} by {{ $labels.limiter }}: {{ $values.A.Value }} of {{ $values.T.Value }} rate-limited requests in 5m'
           __dashboardUid__: shareframe-logs-nginx
@@ -533,11 +534,11 @@ groups:
         title: NginxAuthErrorsSpike
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.ip }} ({{ $labels.country }}) {{ $labels.status }} on {{ $labels.path }}: {{ $values.A.Value }} of {{ $values.T.Value }} backend 401/403 responses in 5m'
           __dashboardUid__: shareframe-logs-nginx
@@ -587,6 +588,7 @@ groups:
         title: NginxEgressSpike
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -866,11 +868,11 @@ groups:
         title: BackendServerErrors
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.status }} on {{ $labels.method }} {{ $labels.view }}: {{ printf "%.0f" $values.A.Value }} of {{ printf "%.0f" $values.T.Value }} 5xx responses in 10m'
           __dashboardUid__: shareframe-logs
@@ -926,7 +928,6 @@ groups:
         execErrState: Error
         labels:
           severity: warning
-          burst: "true"
         annotations:
           summary: '{{ $labels.view }} p95 {{ humanizeDuration $values.A.Value }}, overall p95 {{ humanizeDuration $values.T.Value }}'
           __dashboardUid__: shareframe-logs
@@ -978,6 +979,7 @@ groups:
         title: ContainerRestartLoop
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:
@@ -1069,6 +1071,7 @@ groups:
         title: CeleryTaskFailing
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:
@@ -1214,6 +1217,7 @@ groups:
         title: RedisEvictingKeys
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:
@@ -1618,6 +1622,7 @@ groups:
         title: FrameRebootLoop
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:
@@ -1661,6 +1666,7 @@ groups:
         title: FrameCrashing
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: Error
         labels:

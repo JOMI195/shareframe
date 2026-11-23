@@ -10,6 +10,7 @@ from django.dispatch import receiver
 
 from appEmail.tasks import send_django_mail_with_logo
 from utils.client_ip import client_ip
+from utils.client_location import client_location
 from utils.endpoint_request_cooldown import (
     check_endpoint_request_cooldown,
     set_endpoint_request_cooldown,
@@ -42,6 +43,7 @@ def _failed_login_mail_allowed(recipient_key):
 @receiver(user_logged_in)
 def on_user_logged_in(sender, request, user, **kwargs):
     ip = client_ip(request)
+    location = client_location(request)
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
     logger.info("Login: %s from %s via %s", user.email, ip, _channel(request))
@@ -55,6 +57,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
             "subject": subject,
             "user_email": user.email,
             "ip_address": ip,
+            "location": location,
             "timestamp": timestamp,
         },
         from_email=settings.DEFAULT_FROM_EMAIL,
@@ -65,6 +68,7 @@ def on_user_logged_in(sender, request, user, **kwargs):
 @receiver(user_login_failed)
 def on_user_login_failed(sender, credentials, request, **kwargs):
     ip = client_ip(request)
+    location = client_location(request)
     attempted = credentials.get("username", credentials.get("email", "unknown"))
     timestamp = datetime.now().strftime("%d.%m.%Y %H:%M:%S")
 
@@ -81,6 +85,7 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
                 "subject": "ShareFrame - Fehlgeschlagener Admin Login-Versuch",
                 "attempted_credential": attempted,
                 "ip_address": ip,
+                "location": location,
                 "timestamp": timestamp,
             },
             from_email=settings.DEFAULT_FROM_EMAIL,
@@ -99,6 +104,7 @@ def on_user_login_failed(sender, credentials, request, **kwargs):
             "subject": "ShareFrame - Fehlgeschlagener Login-Versuch",
             "attempted_credential": attempted,
             "ip_address": ip,
+            "location": location,
             "timestamp": timestamp,
         },
         from_email=settings.DEFAULT_FROM_EMAIL,
