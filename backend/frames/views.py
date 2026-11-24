@@ -6,7 +6,9 @@ from datetime import UTC, datetime, timedelta
 
 from asgiref.sync import async_to_sync
 from django.conf import settings
+from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
+from django.core.validators import validate_ipv46_address
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -638,11 +640,16 @@ class FramesViewSet(viewsets.ModelViewSet):
         local_ip_address = request.data.get("local_ip_address")
         version = request.data.get("version")
 
-        if not local_ip_address:
-            return Response(
-                {"error": "local_ip_address is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        if local_ip_address:
+            try:
+                if not isinstance(local_ip_address, str):
+                    raise ValidationError("not a string")
+                validate_ipv46_address(local_ip_address)
+            except ValidationError:
+                return Response(
+                    {"error": "local_ip_address is invalid."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
 
         if not version:
             return Response(
@@ -650,22 +657,17 @@ class FramesViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        frame.local_ip_address = local_ip_address
+        update_fields = ["version", "last_seen", "last_heartbeat", "last_telemetry"]
+        if local_ip_address:
+            frame.local_ip_address = local_ip_address
+            update_fields.append("local_ip_address")
         frame.version = version
         frame.last_seen = frame.last_heartbeat = timezone.now()
         frame.last_telemetry = {
             key: value for key, value in request.data.items() if key != "events"
         }
 
-        frame.save(
-            update_fields=[
-                "local_ip_address",
-                "version",
-                "last_seen",
-                "last_heartbeat",
-                "last_telemetry",
-            ]
-        )
+        frame.save(update_fields=update_fields)
 
         # One line per device event so Grafana can list them without unpacking the body.
         for event in request.data.get("events") or []:
