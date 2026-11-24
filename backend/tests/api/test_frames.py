@@ -757,12 +757,31 @@ class TestHeartbeat:
         assert alice_frame.last_seen is not None
         assert alice_frame.last_heartbeat == alice_frame.last_seen
 
-    def test_the_ip_is_required(self, client, alice_frame):
+    def test_without_an_ip_the_heartbeat_counts_and_the_old_ip_stays(
+        self, client, alice_frame
+    ):
+        alice_frame.local_ip_address = "192.168.1.1"
+        alice_frame.save(update_fields=["local_ip_address"])
         token = FrameTokenFactory(frame=alice_frame)
 
         response = client.post(
             self.url(),
             {"version": "8.0.0"},
+            format="json",
+            headers=token_headers(token.access_token),
+        )
+
+        assert response.status_code == 200
+        alice_frame.refresh_from_db()
+        assert alice_frame.local_ip_address == "192.168.1.1"
+        assert alice_frame.last_heartbeat is not None
+
+    def test_an_invalid_ip_is_rejected(self, client, alice_frame):
+        token = FrameTokenFactory(frame=alice_frame)
+
+        response = client.post(
+            self.url(),
+            {"local_ip_address": "not-an-ip", "version": "8.0.0"},
             format="json",
             headers=token_headers(token.access_token),
         )
