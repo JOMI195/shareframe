@@ -1,4 +1,5 @@
-import { API_URL, startStack } from './stack';
+import { waitForDatasources } from './grafana';
+import { API_URL, monitoringEnabled, startStack } from './stack';
 
 const reachable = async (url: string) => {
   try {
@@ -21,4 +22,5 @@ export default async function globalSetup() {
   await startStack();
   // `up --wait` already gates on the healthcheck; this also covers E2E_NO_STACK.
   await waitFor('The backend', `${API_URL}/auth/csrf/`);
+  if (monitoringEnabled()) await waitForDatasources();
 }

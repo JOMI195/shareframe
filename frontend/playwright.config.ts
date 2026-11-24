@@ -1,4 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
+import { monitoringEnabled } from './tests/support/e2e/stack';
 
 const BASE_URL = process.env.E2E_BASE_URL ?? 'http://localhost:3100';
 
@@ -29,8 +30,16 @@ export default defineConfig({
     stdout: 'pipe',
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] }, testIgnore: '**/*.mobile.spec.ts' },
+    {
+      name: 'chromium',
+      use: { ...devices['Desktop Chrome'] },
+      testIgnore: ['**/*.mobile.spec.ts', '**/*.monitoring.spec.ts'],
+    },
     // After the desktop run, so its uploads and sends never land between steps that read the newest item.
     { name: 'mobile', use: { ...devices['Pixel 7'] }, testMatch: '**/*.mobile.spec.ts', dependencies: ['chromium'] },
+    // Opt-in: needs the stack's monitoring profile, and the slowest scrape takes minutes.
+    ...(monitoringEnabled()
+      ? [{ name: 'monitoring', use: { ...devices['Desktop Chrome'] }, testMatch: '**/*.monitoring.spec.ts', timeout: 10 * 60_000 }]
+      : []),
   ],
 });

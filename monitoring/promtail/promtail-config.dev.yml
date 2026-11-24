@@ -11,12 +11,15 @@ scrape_configs:
   # Dev has no logs_volume and no nginx: every container ships from stdout,
   # relabelled to the same job/level/logger the prod config produces.
   - job_name: docker
+    # The socket lists every stack on the host; only this project's containers ship.
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["com.docker.compose.project=${COMPOSE_PROJECT}"]
     relabel_configs:
-      - source_labels: ["__meta_docker_container_name"]
-        regex: "/(.*)"
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
         target_label: container
       - source_labels: ["__meta_docker_container_log_stream"]
         target_label: stream
@@ -24,12 +27,12 @@ scrape_configs:
         regex: ".*"
         target_label: job
         replacement: docker
-      - source_labels: ["__meta_docker_container_name"]
-        regex: "/(backend|websockets|celery|celery-beat)-dev"
+      - source_labels: ["container"]
+        regex: "(backend|websockets|celery|celery-beat)"
         target_label: job
         replacement: backend
-      - source_labels: ["__meta_docker_container_name"]
-        regex: "/grafana-dev"
+      - source_labels: ["container"]
+        regex: "grafana"
         target_label: job
         replacement: grafana
     pipeline_stages:
@@ -51,7 +54,7 @@ scrape_configs:
           selector: '{job="backend"} |= "log - " |= "serial_number"'
           stages:
             - regex:
-                expression: "log - (?:b')?(?P<payload>\\{.*\\})'?$"
+                expression: 'log - (?:b'')?(?P<payload>\{.*\})''?$'
             - json:
                 source: payload
                 expressions:

@@ -307,6 +307,8 @@ services:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/shareframe-overview.json
       # unauthenticated endpoint, nothing scrapes it
       GF_METRICS_ENABLED: "false"
+      # Otherwise it updates the bundled datasources from grafana.com on start and unregisters each one for seconds.
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       GF_LOG_MODE: "console file"
@@ -374,6 +376,8 @@ services:
     # the image entrypoint drops to the telegraf user, which cannot read the socket
     user: "0:0"
     entrypoint: ["telegraf"]
+    environment:
+      COMPOSE_PROJECT: ${COMPOSE_PROJECT_NAME}
     volumes:
       - ./monitoring/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
@@ -399,7 +403,9 @@ services:
     container_name: promtail
     image: grafana/promtail:3.6.11
     restart: unless-stopped
-    command: -config.file=/etc/promtail/promtail-config.yml
+    command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
+    environment:
+      COMPOSE_PROJECT: ${COMPOSE_PROJECT_NAME}
     volumes:
       - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
       - promtail_positions:/positions

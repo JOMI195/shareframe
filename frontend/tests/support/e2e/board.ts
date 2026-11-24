@@ -5,6 +5,7 @@ import type { APIRequestContext } from '@playwright/test';
 import { API_URL } from './stack';
 
 interface SeedFrame {
+  name: string;
   seed_b64: string;
   owner_username: string | null;
 }
@@ -35,9 +36,13 @@ const serialOf = (seedB64: string) => {
   return base32(digest).match(/.{4}/g)!.join('-');
 };
 
-const spareSeed = () => {
-  const frames = JSON.parse(readFileSync(SEED_FRAMES, 'utf8')) as SeedFrame[];
-  return frames.find((frame) => frame.owner_username === null)!.seed_b64;
+const seedFrames = () => JSON.parse(readFileSync(SEED_FRAMES, 'utf8')) as SeedFrame[];
+
+const spareSeed = () => seedFrames().find((frame) => frame.owner_username === null)!.seed_b64;
+
+export const seedFrame = (name: string) => {
+  const frame = seedFrames().find((candidate) => candidate.name === name)!;
+  return { ...frame, serial: serialOf(frame.seed_b64) };
 };
 
 /** Asks for a token the way an unowned board does and returns the code its panel would show. */
