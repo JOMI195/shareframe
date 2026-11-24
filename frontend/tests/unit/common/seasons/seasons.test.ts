@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { activeSeason, isInWindow, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
+import { christmasGreeting } from '@/common/seasons/christmas/christmas';
 
 const on = (month: number, day: number) => new Date(2026, month - 1, day, 12);
 
@@ -32,6 +33,15 @@ describe('activeSeason', () => {
     expect(activeSeason(on(10, 22))?.id).toBe('halloween');
   });
 
+  it.each([
+    [11, 30, null],
+    [12, 1, 'christmas'],
+    [12, 27, 'christmas'],
+    [12, 28, null],
+  ])('on %i/%i is %s', (month, day, expected) => {
+    expect(activeSeason(on(month, day))?.id ?? null).toBe(expected);
+  });
+
   it('is empty outside every season', () => {
     expect(activeSeason(on(11, 1))).toBeNull();
   });
@@ -41,6 +51,19 @@ describe('activeSeason', () => {
     const second = { ...SEASONS[0], id: 'second' } as Season;
 
     expect(activeSeason(on(10, 22), [first, second])?.id).toBe('first');
+  });
+});
+
+describe('christmasGreeting', () => {
+  it.each([
+    [1, 'Noch 23 Mal schlafen bis Heiligabend!'],
+    [22, 'Noch 2 Mal schlafen bis Heiligabend!'],
+    [23, 'Noch einmal schlafen bis Heiligabend!'],
+    [24, 'Frohe Weihnachten!'],
+    [26, 'Frohe Weihnachten!'],
+    [27, 'Schöne Feiertage und einen guten Rutsch!'],
+  ])('on 12/%i says %s', (day, expected) => {
+    expect(christmasGreeting(on(12, day))).toBe(expected);
   });
 });
 

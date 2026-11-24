@@ -15,6 +15,7 @@ const SeasonalLogoBadge: React.FC<PropsWithChildren<{ size?: number }>> = ({ chi
     const LogoIcon = useSeasonPick('logo');
     const [wobbles, setWobbles] = useState(0);
     if (!season || !LogoIcon) return children;
+    const badge = season.logoBadge;
 
     return (
         <Box sx={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
@@ -25,12 +26,18 @@ const SeasonalLogoBadge: React.FC<PropsWithChildren<{ size?: number }>> = ({ chi
                     setWobbles((n) => n + 1);
                     triggerFlyby();
                 }}
-                sx={{ position: 'absolute', top: -size / 3, right: -size / 2, borderRadius: '50%' }}
+                sx={{
+                    position: 'absolute',
+                    borderRadius: '50%',
+                    ...(badge
+                        ? { top: badge.top, left: badge.left, transform: `rotate(${badge.rotate}deg)` }
+                        : { top: -size / 3, right: -size / 2 }),
+                }}
             >
                 {createElement(LogoIcon, {
                     key: wobbles,
                     sx: {
-                        fontSize: size,
+                        fontSize: badge?.size ?? size,
                         color: 'accent.main',
                         animation: wobbles ? `${wobble} 0.5s ease-in-out` : 'none',
                         '@media (prefers-reduced-motion: reduce)': { animation: 'none' },

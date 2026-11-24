@@ -1,13 +1,23 @@
-import { createElement } from 'react';
+import { createElement, useContext } from 'react';
+import { ColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
 import { useSeasonPick } from './useSeasonSlot';
 
 const SeasonalEmptyState: React.FC<{ size: number }> = ({ size }) => {
     const Icon = useSeasonPick('emptyState');
+    const look = useContext(ColorThemeContext)?.season?.emptyStateLook;
     if (!Icon) return null;
+    const scaled = size * (look?.scale ?? 1);
 
     return createElement(Icon, {
         'aria-hidden': true,
-        sx: { position: 'absolute', right: 0, bottom: 0, fontSize: size, color: 'text.secondary', opacity: 0.8 },
+        sx: {
+            position: 'absolute',
+            right: -(scaled - size) / 2,
+            bottom: 0,
+            fontSize: scaled,
+            color: 'text.secondary',
+            opacity: look?.opacity ?? 0.8,
+        },
     });
 };
 
