@@ -3,13 +3,13 @@ import SantaHatIcon from './icons/santaHatIcon';
 import OrnamentIcon from './icons/ornamentIcon';
 import GiftIcon from './icons/giftIcon';
 import SnowflakeIcon from './icons/snowflakeIcon';
-import SnowmanIcon from './icons/snowmanIcon';
-import TreeIcon from './icons/treeIcon';
+import ChristmasTreeArt from './art/christmasTreeArt';
+import SnowmanArt from './art/snowmanArt';
+import PresentsArt from './art/presentsArt';
 import FairyLights from './overlays/fairyLights';
 import Snowfall from './overlays/snowfall';
 import PeekingReindeer from './overlays/peekingReindeer';
 import SleighFlyby from './overlays/sleighFlyby';
-import ShootingStarFlyby from './overlays/shootingStarFlyby';
 import SnowstormFlyby from './overlays/snowstormFlyby';
 import GiftDropFlyby from './overlays/giftDropFlyby';
 
@@ -35,13 +35,14 @@ const christmas: Season = {
     overlays: {
         logo: [SantaHatIcon],
         loading: [OrnamentIcon, GiftIcon, SnowflakeIcon],
-        emptyState: [SnowmanIcon, GiftIcon, TreeIcon],
+        emptyState: [ChristmasTreeArt, SnowmanArt, PresentsArt],
         greeting: [christmasGreeting],
         appBar: [FairyLights],
         screen: [Snowfall, PeekingReindeer],
-        flyby: [SleighFlyby, ShootingStarFlyby, SnowstormFlyby, GiftDropFlyby],
+        flyby: [SleighFlyby, SnowstormFlyby, GiftDropFlyby],
     },
     logoBadge: { size: 26, top: -14, left: -7, rotate: -22 },
+    emptyStateLook: { scale: 1.8, opacity: 1 },
 };
 
 export default christmas;

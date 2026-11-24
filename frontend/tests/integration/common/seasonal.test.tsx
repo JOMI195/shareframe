@@ -142,6 +142,12 @@ describe('during christmas', () => {
     expect(screen.getByText('Noch 14 Mal schlafen bis Heiligabend!')).toBeVisible();
   });
 
+  it('puts a christmas tree next to empty states', () => {
+    renderWithProviders(<DataNotFound notFoundMessage="Nichts da" />, seasonal(true));
+
+    expect(screen.getByTestId('ChristmasTreeArt')).toBeInTheDocument();
+  });
+
   it('puts a santa hat on the logo', () => {
     renderWithProviders(<SeasonalLogoBadge>Logo</SeasonalLogoBadge>, seasonal(true));
 

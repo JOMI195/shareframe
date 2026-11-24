@@ -34,6 +34,7 @@ export interface Season {
     overlays: SeasonOverlays;
     // Pixels from the logo's top-left corner; without it the icon sits top-right.
     logoBadge?: { size: number; top: number; left: number; rotate: number };
+    emptyStateLook?: { scale: number; opacity: number };
 }
 
 export const SEASONS: Season[] = [halloween, christmas];
