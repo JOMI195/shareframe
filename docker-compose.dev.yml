@@ -193,6 +193,8 @@ services:
       GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/shareframe-overview.json
       # unauthenticated endpoint, nothing scrapes it
       GF_METRICS_ENABLED: "false"
+      # Otherwise it updates the bundled datasources from grafana.com on start and unregisters each one for seconds.
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
       GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
       GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
       # login alerts read the auth logger's debug lines
