@@ -10,12 +10,16 @@ clients:
 scrape_configs:
   # App containers log to stdout and to logs_volume; stdout is the ingested copy.
   - job_name: docker
+    # The socket lists every stack on the host; only this project's containers ship.
     docker_sd_configs:
       - host: unix:///var/run/docker.sock
         refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["com.docker.compose.project=${COMPOSE_PROJECT}"]
     relabel_configs:
-      - source_labels: ["__meta_docker_container_name"]
-        regex: "/(.*)"
+      # The service name, so container suffixes per stack never reach the selectors.
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
         target_label: container
       - source_labels: ["__meta_docker_container_log_stream"]
         target_label: stream
@@ -50,7 +54,7 @@ scrape_configs:
           selector: '{job="backend"} |= "log - " |= "serial_number"'
           stages:
             - regex:
-                expression: "log - (?:b')?(?P<payload>\\{.*\\})'?$"
+                expression: 'log - (?:b'')?(?P<payload>\{.*\})''?$'
             - json:
                 source: payload
                 expressions:
@@ -107,7 +111,7 @@ scrape_configs:
       # Unknown hosts collapse into one label, else any Host header mints a stream.
       - template:
           source: http_host
-          template: '{{ if regexMatch "^([a-z0-9-]+\\.)*shareframe\\.de(:[0-9]+)?$|^([a-z0-9-]+\\.)?localhost(:[0-9]+)?$|^[0-9.]+(:[0-9]+)?$" .http_host }}{{ .http_host }}{{ else }}other{{ end }}'
+          template: '{{ if regexMatch `^([a-z0-9-]+\.)*shareframe\.de(:[0-9]+)?$|^([a-z0-9-]+\.)?localhost(:[0-9]+)?$|^[0-9.]+(:[0-9]+)?$` .http_host }}{{ .http_host }}{{ else }}other{{ end }}'
       - labels:
           status:
           request_method:
