@@ -35,6 +35,9 @@ const compose = async (args: string[], timeout = 15 * 60_000, allProfiles = fals
 
 export const API_URL = process.env.E2E_API_URL ?? 'http://localhost:8100/api';
 
+// The monitoring profile's gateway, so traffic shows up in the nginx and daphne logs too.
+export const NGINX_URL = process.env.E2E_NGINX_URL ?? 'http://localhost:8180';
+
 export const stackIsExternal = () => process.env.E2E_NO_STACK === '1';
 
 export const startStack = async () => {
@@ -59,6 +62,8 @@ export const stopStack = async () => {
   await compose(['down', '-v', '--remove-orphans'], 5 * 60_000, true);
 };
 
+export const composeExec = async (service: string, command: string[]) =>
+  compose(['exec', '-T', service, ...command], 2 * 60_000);
+
 // For work that only a schedule triggers; everything else goes through the UI.
-export const runInBackend = async (code: string) =>
-  compose(['exec', '-T', 'backend', 'python', 'manage.py', 'shell', '-c', code], 2 * 60_000);
+export const runInBackend = async (code: string) => composeExec('backend', ['python', 'manage.py', 'shell', '-c', code]);
