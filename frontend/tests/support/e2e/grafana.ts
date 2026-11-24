@@ -68,11 +68,14 @@ export const loadDashboard = async (uid: string) =>
 export const panelsOf = (dashboard: Dashboard): Panel[] =>
   dashboard.panels.flatMap((panel) => (panel.type === 'row' ? (panel.panels ?? []) : [panel]));
 
-export const panelByTitle = (dashboard: Dashboard, title: string) => {
-  const panel = panelsOf(dashboard).find((candidate) => candidate.title === title);
-  if (!panel) throw new Error(`No panel "${title}" on ${dashboard.uid}`);
+/** Titles can repeat (a stat and its trend), so the type picks one. */
+export const panelByTitle = (dashboard: Dashboard, title: string, type?: string) => {
+  const panel = panelsOf(dashboard).find((candidate) => candidate.title === title && (!type || candidate.type === type));
+  if (!panel) throw new Error(`No ${type ?? ''} panel "${title}" on ${dashboard.uid}`);
   return panel;
 };
+
+type PanelSelector = QueryOptions & { refId?: string; labels?: Record<string, string>; panelType?: string };
 
 type Cell = number | string | null;
 
@@ -168,9 +171,9 @@ export const queryPanel = async (dashboard: Dashboard, panel: Panel, options: Qu
 export const panelNumber = async (
   dashboard: Dashboard,
   title: string,
-  { refId, labels = {}, ...options }: QueryOptions & { refId?: string; labels?: Record<string, string> } = {},
+  { refId, labels = {}, panelType, ...options }: PanelSelector = {},
 ) => {
-  const panel = panelByTitle(dashboard, title);
+  const panel = panelByTitle(dashboard, title, panelType);
   const targets = (panel.targets ?? []).filter((target) => !refId || target.refId === refId);
   for (const target of targets) {
     const result = await queryTarget(dashboard, target, options);
@@ -189,9 +192,9 @@ export const panelNumber = async (
 export const panelSum = async (
   dashboard: Dashboard,
   title: string,
-  { refId, labels = {}, ...options }: QueryOptions & { refId?: string; labels?: Record<string, string> } = {},
+  { refId, labels = {}, panelType, ...options }: PanelSelector = {},
 ) => {
-  const panel = panelByTitle(dashboard, title);
+  const panel = panelByTitle(dashboard, title, panelType);
   let total = 0;
   for (const target of (panel.targets ?? []).filter((candidate) => !refId || candidate.refId === refId)) {
     const result = await queryTarget(dashboard, target, options);
@@ -229,3 +232,28 @@ export const grafanaFormLogin = async (password: string) =>
       body: JSON.stringify({ user: grafanaAdmin.user, password }),
     })
   ).status;
+
+const datasourcesAnswer = async () => {
+  const probes = [
+    { refId: 'P', datasource: { type: 'prometheus', uid: 'prometheus' }, expr: 'vector(1)', instant: true },
+    { refId: 'L', datasource: { type: 'loki', uid: 'loki' }, expr: 'sum(count_over_time({job=~".+"}[1m]))', queryType: 'instant' },
+  ];
+  for (const query of probes) {
+    const response = await fetch(`${GRAFANA_URL}/api/ds/query`, {
+      method: 'POST',
+      headers: { Authorization: AUTH, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ queries: [query], from: 'now-5m', to: 'now' }),
+    });
+    if (!response.ok) return false;
+  }
+  return true;
+};
+
+/** Grafana reports healthy before its datasource plugins are registered. */
+export const waitForDatasources = async (attempts = 60) => {
+  for (let i = 0; i < attempts; i++) {
+    if (await datasourcesAnswer().catch(() => false)) return;
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  throw new Error(`Grafana datasources do not answer at ${GRAFANA_URL}.`);
+};

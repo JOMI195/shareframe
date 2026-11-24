@@ -3,7 +3,8 @@ import { seedFrame } from '../support/e2e/board';
 import { closeConnection, rejectedConnection, runFrameSession, sendHeartbeat } from '../support/e2e/frameSim';
 import { type Dashboard, loadDashboard, panelNumber, panelRows, panelSum } from '../support/e2e/grafana';
 import { expectEveryPanelHasData } from '../support/e2e/grafanaExpectedEmpty';
-import { runInBackend } from '../support/e2e/stack';
+import { expectDashboardRenders, grafanaAuthHeaders, openDashboard, renderedText } from '../support/e2e/grafanaUi';
+import { composeExec, runInBackend } from '../support/e2e/stack';
 
 const frameA = seedFrame('seed-frame-main');
 const frameB = seedFrame('seed-frame-office');
@@ -73,6 +74,8 @@ const groundTruth = async () => {
 };
 
 test.describe('grafana frames dashboard', () => {
+  test.use({ extraHTTPHeaders: grafanaAuthHeaders });
+
   test.describe.configure({ timeout: 10 * 60_000 });
 
   let dashboard: Dashboard;
@@ -88,6 +91,8 @@ test.describe('grafana frames dashboard', () => {
     await sendHeartbeat(frameB.seed_b64, frameB.serial, telemetryB);
     expect(await rejectedConnection()).toBe(403);
     expect(await closeConnection(frameB.seed_b64)).toBe(4002);
+    // The reaper runs every 15 minutes; run it once so its panel does not depend on timing.
+    await composeExec('backend', ['python', 'manage.py', 'run_celery_delete_inactive_connections_task']);
     const stats = await session;
     expect(stats.errors).toEqual([]);
     expect(stats.heartbeats.ok).toBe(1);
@@ -174,9 +179,20 @@ test.describe('grafana frames dashboard', () => {
     expect(await panelSum(dashboard, 'Heartbeat presence', { ...range, ...onlyA, labels: { serial_number: frameA.serial } })).toBe(2);
     expect(await panelRows(dashboard, 'Device events', { ...range, ...onlyA, contains: EVENT })).toBeGreaterThanOrEqual(1);
     expect(await panelRows(dashboard, 'Heartbeat payloads', { ...range, ...onlyA })).toBe(2);
+    expect(await panelSum(dashboard, 'Stale connections reaped', range)).toBeGreaterThanOrEqual(1);
   });
 
   test('every panel has data', async () => {
     await expectEveryPanelHasData(dashboard);
+  });
+
+  test('renders as users see it', async ({ page }) => {
+    await openDashboard(page, dashboard.uid);
+    await expectDashboardRenders(page, dashboard);
+
+    await openDashboard(page, dashboard.uid, { 'var-frame': frameA.serial });
+    expect(await renderedText(page, 'Avg CPU temp')).toBe('51.5 °C');
+    expect(await renderedText(page, 'Avg RAM used')).toBe('75.0%');
+    expect(await renderedText(page, 'Reboots in range')).toBe('2');
   });
 });

@@ -67,3 +67,23 @@ export const composeExec = async (service: string, command: string[]) =>
 
 // For work that only a schedule triggers; everything else goes through the UI.
 export const runInBackend = async (code: string) => composeExec('backend', ['python', 'manage.py', 'shell', '-c', code]);
+
+export interface ComposeContainer {
+  Name: string;
+  Service: string;
+  State: string;
+  Health: string;
+}
+
+export const composeContainers = async () =>
+  (await compose(['ps', '--format', 'json'], 60_000))
+    .split('\n')
+    .filter((line) => line.startsWith('{'))
+    .map((line) => JSON.parse(line) as ComposeContainer);
+
+/** Engine-wide container counts, what telegraf's docker summary reports. */
+export const dockerContainerCounts = async () => {
+  const { stdout } = await run('docker', ['info', '--format', '{{.ContainersRunning}} {{.ContainersStopped}}']);
+  const [running, stopped] = stdout.trim().split(' ').map(Number);
+  return { running, stopped };
+};

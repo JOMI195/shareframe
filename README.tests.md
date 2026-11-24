@@ -133,6 +133,20 @@ npm run test:e2e:monitoring            # *.monitoring.spec.ts, opt-in, takes min
 `E2E_MONITORING=1`. `e2e:down` and the Playwright teardown always remove the
 profile's containers too.
 
+One spec per dashboard drives its own traffic (simulated frames from
+`rest-collection/shareframe/scripts`, API calls through nginx, auth.log lines for
+promtail) and then checks three things: the panel queries return the expected
+values, every panel has data, and the rendered dashboard shows them.
+`grafanaPanels` runs every query of every dashboard and fails on any query error.
+
+- Expected values come from what the spec sent or from the source itself (the
+  backend exporter, node-exporter, `docker compose ps`, restic), never from
+  constants that drift.
+- Counts are scoped to the spec's start, so a kept stack still gives exact numbers.
+- A panel that may stay empty goes into `grafanaExpectedEmpty.ts` with its reason.
+- The business scrape runs every four minutes, so a full run takes about 20 minutes.
+  `rest-collection/shareframe` needs `npm install` once for the frame simulator.
+
 ## Pre-commit hook
 
 ```bash
