@@ -1,28 +1,64 @@
 import { SvgIcon, type SvgIconProps } from '@mui/material';
+import { url, useSvgIds } from '../svgIds';
+import { SnowBase, SnowBaseGradient } from './snowBase';
 
-const STAR = 'M12 1.1l.56 1.53 1.63.06-1.29 1 .45 1.57L12 4.35l-1.35.91.45-1.57-1.29-1 1.63-.06z';
-const BAUBLES = [
-    { x: 8.2, y: 18.4, color: '#E53935' },
-    { x: 15.4, y: 18.2, color: '#1E88E5' },
-    { x: 12, y: 15.9, color: '#FDD835' },
-    { x: 9.5, y: 13.4, color: '#1E88E5' },
-    { x: 14.6, y: 13.1, color: '#E53935' },
-    { x: 12, y: 9.9, color: '#E53935' },
+const STAR = 'M12 .8l.62 1.7 1.8.07-1.42 1.1.5 1.74L12 4.4l-1.5 1.01.5-1.74-1.42-1.1 1.8-.07z';
+const TIERS = [
+    { d: 'M3.5 20.2 12 9.3l8.5 10.9z', light: '#3FCB8A', dark: '#0F4A36' },
+    { d: 'M5.4 15.5 12 6.5l6.6 9z', light: '#4FD99A', dark: '#14573F' },
+    { d: 'M7.6 11 12 4.3l4.4 6.7z', light: '#63E6AA', dark: '#1A6649' },
+];
+const LIGHTS = [
+    [7.6, 17.9], [10.6, 18.7], [13.8, 18.5], [16.6, 17.5],
+    [8.9, 13.6], [12, 14.2], [15.1, 13.3],
+    [10.7, 9.9], [13.3, 9.7],
 ];
 
-const ChristmasTreeArt: React.FC<SvgIconProps> = (props) => (
-    <SvgIcon data-testid="ChristmasTreeArt" {...props}>
-        <ellipse cx={12} cy={22.4} rx={7.5} ry={1.3} fill="#FFFFFF" stroke="rgba(0, 0, 0, 0.1)" strokeWidth={0.3} />
-        <path d="M10.7 19.6h2.6v3h-2.6z" fill="#6D4C41" />
-        <path d="M3.5 20.2 12 9.5l8.5 10.7z" fill="#2E7D32" />
-        <path d="M5.5 15.4 12 6.6l6.5 8.8z" fill="#388E3C" />
-        <path d="M7.6 10.8 12 4.2l4.4 6.6z" fill="#43A047" />
-        <path d="M6 17.3q6 2.4 12-.6M7.7 12.7q4.3 1.8 8.6-.4" fill="none" stroke="#FFD54F" strokeWidth={0.6} strokeLinecap="round" />
-        {BAUBLES.map(({ x, y, color }, i) => (
-            <circle key={i} cx={x} cy={y} r={0.9} fill={color} />
-        ))}
-        <path d={STAR} fill="#FFC107" stroke="#F9A825" strokeWidth={0.3} strokeLinejoin="round" />
-    </SvgIcon>
-);
+const ChristmasTreeArt: React.FC<SvgIconProps> = (props) => {
+    const ids = useSvgIds('tier0', 'tier1', 'tier2', 'bark', 'star', 'halo', 'light', 'snow');
+    const tiers = [ids.tier0, ids.tier1, ids.tier2];
+    return (
+        <SvgIcon data-testid="ChristmasTreeArt" {...props}>
+            <defs>
+                {TIERS.map(({ light, dark }, i) => (
+                    <linearGradient key={i} id={tiers[i]} x1="0.2" y1="0" x2="0.8" y2="1">
+                        <stop offset="0%" stopColor={light} />
+                        <stop offset="100%" stopColor={dark} />
+                    </linearGradient>
+                ))}
+                <linearGradient id={ids.bark} x1="0" x2="1">
+                    <stop offset="0%" stopColor="#8D6142" />
+                    <stop offset="100%" stopColor="#4E3322" />
+                </linearGradient>
+                <linearGradient id={ids.star} x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor="#FFF3C4" />
+                    <stop offset="55%" stopColor="#F5C042" />
+                    <stop offset="100%" stopColor="#B57F12" />
+                </linearGradient>
+                <radialGradient id={ids.halo}>
+                    <stop offset="0%" stopColor="#FFE08A" stopOpacity={0.8} />
+                    <stop offset="100%" stopColor="#FFE08A" stopOpacity={0} />
+                </radialGradient>
+                <radialGradient id={ids.light}>
+                    <stop offset="0%" stopColor="#FFFFFF" />
+                    <stop offset="35%" stopColor="#FFE08A" />
+                    <stop offset="100%" stopColor="#FFE08A" stopOpacity={0} />
+                </radialGradient>
+                <SnowBaseGradient id={ids.snow} />
+            </defs>
+            <SnowBase id={ids.snow} />
+            <path d="M10.8 19.8h2.4v2.6h-2.4z" fill={url(ids.bark)} />
+            {TIERS.map(({ d }, i) => (
+                <path key={i} d={d} fill={url(tiers[i])} />
+            ))}
+            <path d="M6.2 17.4q5.8 2.6 11.6-.4M8.1 13q3.9 1.8 7.8-.2" fill="none" stroke="#F5C042" strokeWidth={0.35} opacity={0.8} />
+            {LIGHTS.map(([x, y]) => (
+                <circle key={`${x}-${y}`} cx={x} cy={y} r={1.1} fill={url(ids.light)} />
+            ))}
+            <circle cx={12} cy={3.3} r={3.6} fill={url(ids.halo)} />
+            <path d={STAR} fill={url(ids.star)} stroke="#A8740E" strokeWidth={0.2} strokeLinejoin="round" />
+        </SvgIcon>
+    );
+};
 
 export default ChristmasTreeArt;

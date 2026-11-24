@@ -1,7 +1,7 @@
 import { Box, keyframes, useTheme } from '@mui/material';
 import type { FlybyProps } from '../../seasons';
 import { fade, useAllEnded } from '../../motion';
-import { SNOWFLAKE } from '../icons/snowflakeIcon';
+import { SNOWFLAKE } from '../palette';
 
 const fall = keyframes`
     from { transform: translateY(-15vh); }

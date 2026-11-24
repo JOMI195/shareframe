@@ -1,9 +1,8 @@
 import type { Season } from '../seasons';
 import { BACKDROP } from './palette';
 import SantaHatIcon from './icons/santaHatIcon';
-import OrnamentIcon from './icons/ornamentIcon';
-import GiftIcon from './icons/giftIcon';
-import SnowflakeIcon from './icons/snowflakeIcon';
+import GlassOrnament from './art/glassOrnament';
+import GlowSnowflake from './art/glowSnowflake';
 import ChristmasTreeArt from './art/christmasTreeArt';
 import SnowmanArt from './art/snowmanArt';
 import PresentsArt from './art/presentsArt';
@@ -35,7 +34,7 @@ const christmas: Season = {
     },
     overlays: {
         logo: [SantaHatIcon],
-        loading: [OrnamentIcon, GiftIcon, SnowflakeIcon],
+        loading: [GlassOrnament, GlowSnowflake],
         emptyState: [ChristmasTreeArt, SnowmanArt, PresentsArt],
         greeting: [christmasGreeting],
         appBar: [FairyLights],

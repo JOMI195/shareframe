@@ -1,6 +1,5 @@
 import { Box, keyframes, useTheme } from '@mui/material';
-import { SNOWFLAKE } from '../icons/snowflakeIcon';
-import { ICE } from '../palette';
+import { ICE, SNOWFLAKE } from '../palette';
 
 const fall = keyframes`
     from { transform: translateY(-5vh); }

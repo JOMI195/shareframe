@@ -148,6 +148,12 @@ describe('during christmas', () => {
     expect(screen.getByTestId('ChristmasTreeArt')).toBeInTheDocument();
   });
 
+  it('turns the spinner into a glass ornament', () => {
+    renderWithProviders(<SeasonalSpinner />, seasonal(true));
+
+    expect(screen.getByRole('progressbar')).toContainElement(screen.getByTestId('GlassOrnament'));
+  });
+
   it('puts a santa hat on the logo', () => {
     renderWithProviders(<SeasonalLogoBadge>Logo</SeasonalLogoBadge>, seasonal(true));
 
