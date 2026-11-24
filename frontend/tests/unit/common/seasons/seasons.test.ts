@@ -87,6 +87,7 @@ describe('newYearGreeting', () => {
 
 describe('newYearNumber', () => {
   it.each([
+    [new Date(2026, 10, 24, 12), 2027],
     [new Date(2026, 11, 28, 12), 2027],
     [new Date(2027, 0, 2, 12), 2027],
   ])('on %s is %i', (date, expected) => {

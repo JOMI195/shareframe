@@ -1,2 +1,2 @@
-// The year being welcomed: in late December that is the next one.
-export const newYearNumber = (date: Date): number => date.getFullYear() + (date.getMonth() === 11 ? 1 : 0);
+// The year being welcomed: from summer on that is the next one.
+export const newYearNumber = (date: Date): number => date.getFullYear() + (date.getMonth() >= 6 ? 1 : 0);
