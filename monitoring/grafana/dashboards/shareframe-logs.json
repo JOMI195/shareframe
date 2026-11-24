@@ -1086,7 +1086,7 @@
         "type": "prometheus",
         "uid": "prometheus"
       },
-      "description": "Queries per second and p95 query time from the backend process. Needs DB_ENGINE=django_prometheus.db.backends.postgresql.",
+      "description": "Queries per second per process (web = gunicorn, websockets = daphne, celery = worker and beat) and p95 query time across all. Needs DB_ENGINE=django_prometheus.db.backends.postgresql.",
       "fieldConfig": {
         "defaults": {
           "unit": "short",
@@ -1150,8 +1150,8 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum(rate(django_db_execute_total[$__rate_interval]))",
-          "legendFormat": "queries/s",
+          "expr": "label_replace(label_replace(sum by (job) (rate(django_db_execute_total[$__rate_interval])), \"process\", \"$1\", \"job\", \"(?:django-)?(.+)\"), \"process\", \"web\", \"job\", \"django\")",
+          "legendFormat": "{{process}} queries/s",
           "instant": false,
           "range": true
         },
