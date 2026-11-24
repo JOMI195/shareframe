@@ -1,5 +1,4 @@
 from django.apps import AppConfig
-from prometheus_client import REGISTRY
 
 
 def _register(registry, collector):
@@ -21,9 +20,9 @@ class MetricsConfig(AppConfig):
             ShareframeCeleryCollector,
             ShareframeFrameCollector,
         )
-        from .registry import BUSINESS_REGISTRY
+        from .registry import APP_REGISTRY, BUSINESS_REGISTRY
 
-        _register(REGISTRY, ShareframeFrameCollector())
-        _register(REGISTRY, ShareframeCeleryCollector())
+        _register(APP_REGISTRY, ShareframeFrameCollector())
+        _register(APP_REGISTRY, ShareframeCeleryCollector())
         _register(BUSINESS_REGISTRY, ShareframeBusinessCollector())
         _register(BUSINESS_REGISTRY, ShareframeAuthCollector())

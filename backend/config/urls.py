@@ -11,7 +11,7 @@ from authentication.jwt import (
     CSRFView,
     LogoutView,
 )
-from metrics.views import business_metrics_view, metrics_view
+from metrics.views import business_metrics_view, metrics_view, process_metrics_view
 
 from .server_logs import download_server_logs
 from .views import (
@@ -38,6 +38,7 @@ urlpatterns = [
     # not exposed through nginx
     path("metrics", metrics_view, name="prometheus-metrics"),
     path("metrics/business", business_metrics_view, name="prometheus-metrics-business"),
+    path("metrics/process", process_metrics_view, name="prometheus-metrics-process"),
     # general
     path(
         "api/admin/server_logs/download/",

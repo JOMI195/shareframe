@@ -3,6 +3,7 @@ import pytest
 pytestmark = pytest.mark.django_db
 
 METRICS_URL = "/metrics"
+PROCESS_URL = "/metrics/process"
 BUSINESS_URL = "/metrics/business"
 
 
@@ -28,12 +29,20 @@ def test_the_business_endpoint_carries_the_business_gauges(client):
     assert "shareframe_auth_sessions_active" in body
 
 
-def test_the_fleet_roster_lives_on_the_default_registry(client):
-    """The frame collector is registered on REGISTRY, the business one is not."""
+def test_the_main_endpoint_carries_the_roster_but_no_business_gauges(client):
     body = client.get(METRICS_URL).content.decode()
 
     assert "shareframe_frame_info" in body
     assert "shareframe_images_total" not in body
+
+
+def test_the_process_endpoint_carries_only_the_process_metrics(client):
+    """daphne and celery serve it too, so the fleet roster must not appear twice."""
+    client.get(METRICS_URL)
+    body = client.get(PROCESS_URL).content.decode()
+
+    assert "django_http_requests_total_by_method_total" in body
+    assert "shareframe_frame_info" not in body
 
 
 def test_the_roster_names_every_frame(client):
