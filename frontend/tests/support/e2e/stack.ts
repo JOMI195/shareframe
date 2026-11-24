@@ -7,6 +7,8 @@ const run = promisify(execFile);
 const REPO_ROOT = path.resolve(import.meta.dirname, '../../../..');
 const PROJECT = 'shareframe-test';
 
+export const monitoringEnabled = () => process.env.E2E_MONITORING === '1';
+
 const composeArgs = [
   'compose',
   '-p',
@@ -17,10 +19,13 @@ const composeArgs = [
   path.join(REPO_ROOT, '.env.test'),
 ];
 
+// Teardown always names the profile, so `down -v` also removes a monitoring run's containers.
+const profile = (all: boolean) => (all || monitoringEnabled() ? ['--profile', 'monitoring'] : []);
+
 // app-command.sh is bypassed on purpose: it edits the env file in place and
-// restarts monitoring services this stack does not define.
-const compose = async (args: string[], timeout = 15 * 60_000) => {
-  const { stdout, stderr } = await run('docker', [...composeArgs, ...args], {
+// restarts services by their prod names.
+const compose = async (args: string[], timeout = 15 * 60_000, allProfiles = false) => {
+  const { stdout, stderr } = await run('docker', [...composeArgs, ...profile(allProfiles), ...args], {
     cwd: REPO_ROOT,
     timeout,
     maxBuffer: 32 * 1024 * 1024,
@@ -51,7 +56,7 @@ export const stopStack = async () => {
   }
 
   console.log('[e2e] destroying the shared test stack');
-  await compose(['down', '-v', '--remove-orphans'], 5 * 60_000);
+  await compose(['down', '-v', '--remove-orphans'], 5 * 60_000, true);
 };
 
 // For work that only a schedule triggers; everything else goes through the UI.

@@ -116,6 +116,23 @@ npm run e2e:up / npm run e2e:down      # from frontend/
 npm run db:reset                       # flushes and re-seeds the DEV database
 ```
 
+### Monitoring profile
+
+`--profile monitoring` adds what the Grafana dashboards read: daphne, celery beat,
+nginx, backup and the monitoring services, all on the real `monitoring/` configs.
+Grafana is at `localhost:3101`, nginx at `localhost:8180`. Promtail and telegraf
+only ship containers of their own compose project, so this stack, dev and
+prod.local never see each other's containers.
+
+```bash
+npm run e2e:monitoring:up              # from frontend/
+npm run test:e2e:monitoring            # *.monitoring.spec.ts, opt-in, takes minutes
+```
+
+`*.monitoring.spec.ts` run in the `monitoring` project, which exists only with
+`E2E_MONITORING=1`. `e2e:down` and the Playwright teardown always remove the
+profile's containers too.
+
 ## Pre-commit hook
 
 ```bash

@@ -4,6 +4,9 @@
 # the app database. The database lives in tmpfs, so every run starts from the seed
 # data and nothing survives. Ports are offset from the dev stack so both can run at
 # the same time.
+#
+# The `monitoring` profile adds the prod topology the Grafana dashboards read
+# (daphne, beat, nginx, backup, the monitoring services) for the *.monitoring.spec.ts run.
 services:
   backend:
     container_name: backend-test
@@ -54,6 +57,11 @@ services:
       - ./seed-data:/app/seed-data:ro
     env_file:
       - ./.env.test
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+    tmpfs:
+      - /tmp/prometheus-multiproc
     depends_on:
       backend:
         condition: service_healthy
@@ -100,6 +108,229 @@ services:
       retries: 20
     networks:
       - backend_network
+
+  # ---- monitoring profile ----
+  websockets:
+    container_name: websockets-test
+    profiles: [monitoring]
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: daphne --proxy-headers -b 0.0.0.0 -p 9000 -v 3 config.asgi:application --access-log /app/backend/logs/backend-daphne-access.log --websocket-max-message-size 16777216 --websocket-max-frame-size 16777216
+    entrypoint: []
+    volumes:
+      - ./backend/:/app/backend
+      - logs:/app/backend/logs
+    env_file:
+      - ./.env.test
+    environment:
+      DB_CONN_MAX_AGE: "60"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - backend_network
+
+  celery-beat:
+    container_name: celery-beat-test
+    profiles: [monitoring]
+    build:
+      context: ./backend
+      dockerfile: ./Dockerfile.dev
+    command: celery -A config beat --loglevel=INFO
+    entrypoint: []
+    volumes:
+      - ./backend/:/app/backend
+    env_file:
+      - ./.env.test
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - backend_network
+
+  nginx:
+    container_name: nginx-test
+    profiles: [monitoring]
+    build:
+      context: .
+      dockerfile: ./nginx/Dockerfile.prod
+    volumes:
+      - ./nginx/local:/etc/nginx/site:ro
+      - logs:/home/app/backend/logs
+    ports:
+      - 127.0.0.1:8180:80
+    networks:
+      - backend_network
+
+  backup:
+    container_name: backup-test
+    profiles: [monitoring]
+    build:
+      context: .
+      dockerfile: ./backup/Dockerfile.prod
+    hostname: backup
+    environment:
+      RESTIC_REPOSITORY: ${RESTIC_REPOSITORY:?}
+      RESTIC_PASSWORD: ${RESTIC_PASSWORD:?}
+      RESTIC_HOST: shareframe
+      RESTIC_KEEP_DAILY: ${RESTIC_KEEP_DAILY:?}
+      RESTIC_KEEP_WEEKLY: ${RESTIC_KEEP_WEEKLY:?}
+      RESTIC_KEEP_MONTHLY: ${RESTIC_KEEP_MONTHLY:?}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:?}
+      BACKUP_CHECK_SCHEDULE: ${BACKUP_CHECK_SCHEDULE:?}
+      BACKUP_CHECK_SUBSET: ${BACKUP_CHECK_SUBSET:?}
+      BACKUP_ON_START: ${BACKUP_ON_START:-false}
+      PGHOST: backend_db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pgrep", "-x", "supercronic"]
+      interval: 5s
+      timeout: 5s
+      start_period: 2m
+    tmpfs:
+      - /var/lib/postgresql/data
+      - /repo
+    volumes:
+      - backup_metrics:/metrics
+      - logs:/data/logs:ro
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - backend_network
+
+  prometheus:
+    container_name: prometheus-test
+    profiles: [monitoring]
+    image: prom/prometheus:v3.14.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+    volumes:
+      - ./monitoring/prometheus:/etc/prometheus:ro
+    tmpfs:
+      - /prometheus:uid=65534,gid=65534
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:9090/-/ready"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+    networks:
+      - backend_network
+
+  grafana:
+    container_name: grafana-test
+    profiles: [monitoring]
+    image: grafana/grafana:13.2.0
+    environment:
+      GF_SERVER_ROOT_URL: http://localhost:3101
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/shareframe-overview.json
+      GF_METRICS_ENABLED: "false"
+      GF_SECURITY_ADMIN_USER: ${GF_SECURITY_ADMIN_USER}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+      GF_LOG_MODE: "console file"
+      GF_LOG_FILTERS: "auth:debug"
+      ADMIN_NOTIFICATION_EMAIL: ${ADMIN_NOTIFICATION_EMAIL}
+      HEALTHCHECKS_PING_URL: ${HEALTHCHECKS_PING_URL}
+      GF_SMTP_ENABLED: "true"
+      GF_SMTP_HOST: "${EMAIL_HOST}:${EMAIL_PORT}"
+      GF_SMTP_FROM_ADDRESS: ${EMAIL_HOST_USER}
+      GF_SMTP_FROM_NAME: ShareFrame Monitoring
+      GF_SMTP_STARTTLS_POLICY: NoStartTLS
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_logs:/var/log/grafana
+    ports:
+      - 127.0.0.1:3101:3000
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/api/health"]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    depends_on:
+      prometheus:
+        condition: service_healthy
+      loki:
+        condition: service_started
+    networks:
+      - backend_network
+
+  node-exporter:
+    container_name: node-exporter-test
+    profiles: [monitoring]
+    image: prom/node-exporter:v1.12.1
+    command:
+      - --path.rootfs=/host
+      - --path.procfs=/host/proc
+      - --path.sysfs=/host/sys
+      - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+      - --no-collector.netdev
+      - --no-collector.netclass
+      - --no-collector.nfs
+      - --no-collector.nfsd
+      - --collector.textfile.directory=/textfile
+    pid: host
+    volumes:
+      - /:/host:ro
+      - backup_metrics:/textfile:ro
+    networks:
+      - backend_network
+
+  telegraf:
+    container_name: telegraf-test
+    profiles: [monitoring]
+    image: telegraf:1.35-alpine
+    user: "0:0"
+    entrypoint: ["telegraf"]
+    environment:
+      COMPOSE_PROJECT: ${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./monitoring/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - backend_network
+
+  loki:
+    container_name: loki-test
+    profiles: [monitoring]
+    image: grafana/loki:3.7.6
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+    tmpfs:
+      - /loki:uid=10001,gid=10001
+    networks:
+      - backend_network
+
+  promtail:
+    container_name: promtail-test
+    profiles: [monitoring]
+    image: grafana/promtail:3.6.11
+    command: -config.file=/etc/promtail/promtail-config.yml -config.expand-env=true
+    environment:
+      COMPOSE_PROJECT: ${COMPOSE_PROJECT_NAME}
+    volumes:
+      - ./monitoring/promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - logs:/logs:ro
+      - grafana_logs:/grafana-logs:ro
+    tmpfs:
+      - /positions
+    depends_on:
+      - loki
+    networks:
+      - backend_network
+
+volumes:
+  logs:
+  grafana_logs:
+  backup_metrics:
 
 networks:
   backend_network:
