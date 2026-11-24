@@ -1084,6 +1084,7 @@ groups:
           severity: warning
         annotations:
           summary: 'Celery task {{ $labels.task }} failed {{ printf "%.0f" $values.F.Value }}x in 24h, last {{ humanizeDuration $values.A.Value }} ago'
+          sort_by: F
           __dashboardUid__: shareframe-logs
           __panelId__: "13"
         data:

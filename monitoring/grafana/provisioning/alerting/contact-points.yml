@@ -11,6 +11,7 @@ contactPoints:
         settings:
           addresses: $__env{ADMIN_NOTIFICATION_EMAIL}
           singleEmail: true
+          message: '{{ template "shareframe.email" . }}'
 
   # External dead-man's switch; mails on its own when pings stop.
   - orgId: 1
