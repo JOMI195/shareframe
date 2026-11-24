@@ -9,6 +9,9 @@ import ClockIcon from './icons/clockIcon';
 import YearBanner from './overlays/yearBanner';
 import Confetti from './overlays/confetti';
 import FireworksFlyby from './overlays/fireworksFlyby';
+import ChampagnePopFlyby from './overlays/champagnePopFlyby';
+import YearBalloonsFlyby from './overlays/yearBalloonsFlyby';
+import MidnightClockFlyby from './overlays/midnightClockFlyby';
 import { newYearNumber } from './year';
 
 const SILVESTER = 31;
@@ -38,7 +41,7 @@ const newyear: Season = {
         greeting: [newYearGreeting],
         appBar: [YearBanner],
         screen: [Confetti],
-        flyby: [FireworksFlyby],
+        flyby: [FireworksFlyby, ChampagnePopFlyby, YearBalloonsFlyby, MidnightClockFlyby],
     },
     logoBadge: { size: 24, top: -11, left: -6, rotate: -22 },
     emptyStateLook: { scale: 1.8, opacity: 1 },
