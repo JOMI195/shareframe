@@ -1,6 +1,9 @@
 import type { Season } from '../seasons';
 import PartyHatIcon from './icons/partyHatIcon';
 import ChampagneGlass from './art/champagneGlass';
+import ToastArt from './art/toastArt';
+import MidnightClockArt from './art/midnightClockArt';
+import YearBalloonsArt from './art/yearBalloonsArt';
 import RocketIcon from './icons/rocketIcon';
 import ClockIcon from './icons/clockIcon';
 import YearBanner from './overlays/yearBanner';
@@ -31,13 +34,14 @@ const newyear: Season = {
     overlays: {
         logo: [PartyHatIcon],
         loading: [ChampagneGlass, RocketIcon, ClockIcon],
-        emptyState: [],
+        emptyState: [ToastArt, MidnightClockArt, YearBalloonsArt],
         greeting: [newYearGreeting],
         appBar: [YearBanner],
         screen: [Confetti],
         flyby: [FireworksFlyby],
     },
     logoBadge: { size: 24, top: -11, left: -6, rotate: -22 },
+    emptyStateLook: { scale: 1.8, opacity: 1 },
 };
 
 export default newyear;

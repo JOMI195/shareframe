@@ -209,6 +209,12 @@ describe('during silvester', () => {
     expect(screen.getByRole('button', { name: 'Silvester' })).toContainElement(screen.getByTestId('PartyHatIcon'));
   });
 
+  it('puts clinking glasses next to empty states', () => {
+    renderWithProviders(<DataNotFound notFoundMessage="Nichts da" />, seasonal(true));
+
+    expect(screen.getByTestId('ToastArt')).toBeInTheDocument();
+  });
+
   it('turns the spinner into a champagne glass', () => {
     renderWithProviders(<SeasonalSpinner />, seasonal(true));
 
