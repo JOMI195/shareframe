@@ -62,7 +62,10 @@ type ObserverCallback = (entries: { isIntersecting: boolean; target: Element }[]
 // Tests drive intersection manually; jsdom never fires it.
 export const intersectionObservers: { callback: ObserverCallback; elements: Element[] }[] = [];
 
+let intersecting = false;
+
 export const triggerIntersection = (isIntersecting = true) => {
+  intersecting = isIntersecting;
   intersectionObservers.forEach(({ callback, elements }) => {
     // A browser never reports an empty entry list, e.g. for an unmounted component.
     if (elements.length > 0) callback(elements.map((target) => ({ isIntersecting, target })));
@@ -76,8 +79,10 @@ class MockIntersectionObserver {
     this.entry = { callback, elements: [] };
     intersectionObservers.push(this.entry);
   }
+  // Like a browser, report the current state at once, so a late observer doesn't miss an earlier trigger.
   observe(element: Element) {
     this.entry.elements.push(element);
+    if (intersecting) this.entry.callback([{ isIntersecting: true, target: element }]);
   }
   unobserve(element: Element) {
     this.entry.elements = this.entry.elements.filter((e) => e !== element);
@@ -123,6 +128,7 @@ afterEach(() => {
   localStorage.clear();
   sessionStorage.clear();
   intersectionObservers.length = 0;
+  intersecting = false;
   matchMediaState.prefersDark = false;
   matchMediaState.smallScreen = false;
   darkSchemeListeners.clear();

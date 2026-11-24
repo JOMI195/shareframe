@@ -50,6 +50,15 @@ describe('AuthenticatedImage', () => {
     expect(await screen.findByAltText('Foto')).toBeInTheDocument();
   });
 
+  it('loads when it mounts after the page was already scrolled into view', async () => {
+    serveImage();
+    await scroll();
+
+    render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
+
+    expect(await screen.findByAltText('Foto')).toBeInTheDocument();
+  });
+
   it('renders the object url returned for the blob', async () => {
     serveImage();
     render(<AuthenticatedImage url={URL_PATH} alt="Foto" />);
