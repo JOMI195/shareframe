@@ -123,6 +123,17 @@ describe('during halloween', () => {
     expect(flyby()).toBeInTheDocument();
   });
 
+  it('sends another flyby every few minutes', () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] });
+    sessionStorage.setItem('seasonalFlybyShown', '1');
+    renderWithProviders(<SeasonalFlyby />, seasonal(true));
+    expect(flyby()).not.toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(3 * 60_000));
+
+    expect(flyby()).toBeInTheDocument();
+  });
+
   it('clears the flyby once it is gone', () => {
     renderWithProviders(<SeasonalFlyby />, seasonal(true));
 
@@ -231,7 +242,7 @@ describe('during silvester', () => {
   });
 });
 
-const allFlybys = [halloween, christmas].flatMap((season) => season.overlays.flyby);
+const allFlybys = [halloween, christmas, newyear].flatMap((season) => season.overlays.flyby);
 
 describe.each([false, true])('every flyby (reduced motion: %s)', (reducedMotion) => {
   it.each(allFlybys.map((Flyby) => [Flyby.name, Flyby]))('%s finishes once', (_, Flyby) => {

@@ -5,6 +5,7 @@ import { pickNext, type FlybyProps } from '@/common/seasons/seasons';
 import { useSeasonSlot } from './useSeasonSlot';
 
 const SHOWN_KEY = 'seasonalFlybyShown';
+const AGAIN_AFTER = 3 * 60_000;
 
 const shownThisSession = () => {
     try {
@@ -26,6 +27,14 @@ const SeasonalFlyby: React.FC = () => {
 
     useEffect(() => {
         if (active && !shownThisSession()) triggerFlyby();
+    }, [active]);
+
+    useEffect(() => {
+        if (!active) return;
+        const timer = setInterval(() => {
+            if (document.visibilityState === 'visible') triggerFlyby();
+        }, AGAIN_AFTER);
+        return () => clearInterval(timer);
     }, [active]);
 
     let { Flyby } = picked;
