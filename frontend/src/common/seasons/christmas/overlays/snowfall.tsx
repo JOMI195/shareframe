@@ -1,5 +1,5 @@
 import { Box, keyframes, useTheme } from '@mui/material';
-import { ICE, SNOWFLAKE } from '../palette';
+import { ICE, SNOW, SNOWFLAKE } from '../palette';
 
 const fall = keyframes`
     from { transform: translateY(-5vh); }
@@ -31,17 +31,10 @@ const flakes = LAYERS.flatMap(({ size, opacity, duration, lefts }, layer) =>
 
 const Flake: React.FC<{ size: number; dark: boolean }> = ({ size, dark }) =>
     dark ? (
-        <Box
-            sx={{
-                width: size * 2,
-                height: size * 2,
-                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 30%, rgba(255, 255, 255, 0.35) 45%, transparent 70%)',
-            }}
-        />
+        <Box sx={{ width: size * 1.4, height: size * 1.4, borderRadius: '50%', bgcolor: SNOW }} />
     ) : (
         <Box component="svg" viewBox="0 0 24 24" sx={{ display: 'block', width: size * 2.4, overflow: 'visible' }}>
-            <circle cx={12} cy={12} r={9} fill="rgba(141, 182, 224, 0.12)" />
-            <path d={SNOWFLAKE} fill="none" stroke={ICE} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
+            <path d={SNOWFLAKE} fill="none" stroke={ICE} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
         </Box>
     );
 

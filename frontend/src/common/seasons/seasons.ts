@@ -3,6 +3,7 @@ import type { SvgIconProps } from '@mui/material';
 import type { ColorMode } from '@/context/colorTheme/colorThemeContextValue';
 import halloween from './halloween/halloween';
 import christmas from './christmas/christmas';
+import newyear from './newyear/newyear';
 
 export type MonthDay = { month: number; day: number };
 
@@ -35,12 +36,9 @@ export interface Season {
     // Pixels from the logo's top-left corner; without it the icon sits top-right.
     logoBadge?: { size: number; top: number; left: number; rotate: number };
     emptyStateLook?: { scale: number; opacity: number };
-    // CSS background-image painted behind the whole app.
-    backdrop?: Record<ColorMode, string>;
-    glassAppBar?: boolean;
 }
 
-export const SEASONS: Season[] = [halloween, christmas];
+export const SEASONS: Season[] = [halloween, christmas, newyear];
 
 const ordinal = ({ month, day }: MonthDay) => month * 100 + day;
 

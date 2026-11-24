@@ -31,9 +31,9 @@ const flakes = [
 ];
 
 const Flake: React.FC<{ size: number; color: string }> = ({ size, color }) => (
-    <Box component="svg" viewBox="0 0 24 24" sx={{ display: 'block', width: size, overflow: 'visible', filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2))' }}>
-        <circle cx={12} cy={12} r={10} fill={color} opacity={0.15} />
-        <path d={SNOWFLAKE} fill="none" stroke={color} strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" />
+    <Box component="svg" viewBox="0 0 24 24" sx={{ display: 'block', width: size, overflow: 'visible' }}>
+        <path d={SNOWFLAKE} fill="none" stroke={color} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
+        <circle cx={12} cy={12} r={1.8} fill={color} />
     </Box>
 );
 
