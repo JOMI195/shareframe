@@ -52,3 +52,11 @@ def test_the_roster_names_every_frame(client):
 
     for serial in Frame.objects.values_list("public_serial_number", flat=True):
         assert serial in body
+
+
+# Prometheus scrapes plain HTTP inside the container network.
+@pytest.mark.parametrize("url", [METRICS_URL, BUSINESS_URL, PROCESS_URL])
+def test_is_exempt_from_the_https_redirect(client, settings, url):
+    settings.SECURE_SSL_REDIRECT = True
+
+    assert client.get(url).status_code == 200
