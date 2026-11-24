@@ -1,5 +1,6 @@
 import { Box, keyframes, useTheme } from '@mui/material';
 import { SNOWFLAKE } from '../icons/snowflakeIcon';
+import { ICE } from '../palette';
 
 const fall = keyframes`
     from { transform: translateY(-5vh); }
@@ -7,31 +8,41 @@ const fall = keyframes`
 `;
 
 const sway = keyframes`
-    from { transform: translateX(-12px) rotate(-40deg); }
-    to { transform: translateX(12px) rotate(40deg); }
+    from { transform: translateX(-10px) rotate(-35deg); }
+    to { transform: translateX(10px) rotate(35deg); }
 `;
 
-const flakes = [
-    { left: '4%', size: 6, duration: 14, delay: -2, sway: 3 },
-    { left: '13%', size: 4, duration: 18, delay: -11, sway: 4 },
-    { left: '22%', size: 7, duration: 15, delay: -6, sway: 3.4 },
-    { left: '33%', size: 5, duration: 20, delay: -15, sway: 4.4 },
-    { left: '44%', size: 4, duration: 16, delay: -3, sway: 3.8 },
-    { left: '53%', size: 6, duration: 19, delay: -9, sway: 3.2 },
-    { left: '62%', size: 5, duration: 14, delay: -12, sway: 4.2 },
-    { left: '71%', size: 7, duration: 17, delay: -1, sway: 3.6 },
-    { left: '80%', size: 4, duration: 21, delay: -7, sway: 4.6 },
-    { left: '89%', size: 6, duration: 15, delay: -13, sway: 3 },
-    { left: '96%', size: 5, duration: 18, delay: -5, sway: 4 },
+// Far flakes are small, faint and slow, near ones bigger and faster, which gives depth.
+const LAYERS = [
+    { size: 3, opacity: 0.4, duration: 30, lefts: [3, 15, 27, 39, 51, 63, 75, 87, 96] },
+    { size: 5, opacity: 0.65, duration: 20, lefts: [9, 22, 36, 57, 70, 83, 92] },
+    { size: 8, opacity: 0.85, duration: 13, lefts: [18, 46, 66, 88] },
 ];
 
-// White dots vanish on the light theme, so it gets small crystals instead.
+const flakes = LAYERS.flatMap(({ size, opacity, duration, lefts }, layer) =>
+    lefts.map((left, i) => ({
+        left: `${left}%`,
+        size,
+        opacity,
+        duration: duration + (i % 3) * 2,
+        delay: -((i * 7 + layer * 5) % duration),
+        sway: 3 + ((i + layer) % 3) * 0.7,
+    })),
+);
+
 const Flake: React.FC<{ size: number; dark: boolean }> = ({ size, dark }) =>
     dark ? (
-        <Box sx={{ width: size, height: size, borderRadius: '50%', bgcolor: '#FFFFFF', opacity: 0.7 }} />
+        <Box
+            sx={{
+                width: size * 2,
+                height: size * 2,
+                background: 'radial-gradient(circle, rgba(255, 255, 255, 0.95) 0 30%, rgba(255, 255, 255, 0.35) 45%, transparent 70%)',
+            }}
+        />
     ) : (
-        <Box component="svg" viewBox="0 0 24 24" sx={{ display: 'block', width: size * 2.2, opacity: 0.75 }}>
-            <path d={SNOWFLAKE} fill="none" stroke="#7FA9D4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+        <Box component="svg" viewBox="0 0 24 24" sx={{ display: 'block', width: size * 2.4, overflow: 'visible' }}>
+            <circle cx={12} cy={12} r={9} fill="rgba(141, 182, 224, 0.12)" />
+            <path d={SNOWFLAKE} fill="none" stroke={ICE} strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" />
         </Box>
     );
 
@@ -39,13 +50,14 @@ const Snowfall = () => {
     const dark = useTheme().palette.mode === 'dark';
     return (
         <Box sx={{ '@media (prefers-reduced-motion: reduce)': { display: 'none' } }}>
-            {flakes.map(({ left, size, duration, delay, sway: swaySeconds }, i) => (
+            {flakes.map(({ left, size, opacity, duration, delay, sway: swaySeconds }, i) => (
                 <Box
                     key={i}
                     sx={{
                         position: 'absolute',
                         top: 0,
                         left,
+                        opacity,
                         willChange: 'transform',
                         animation: `${fall} ${duration}s linear ${delay}s infinite`,
                     }}

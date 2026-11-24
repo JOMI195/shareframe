@@ -71,7 +71,23 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
     return (
         <ColorThemeContext.Provider value={contextValue}>
             <ThemeProvider theme={contextValue.theme}>
-                {season && <GlobalStyles styles={{ '::selection': { backgroundColor: alpha(theme.palette.secondary.main, 0.35) } }} />}
+                {season && (
+                    <GlobalStyles
+                        styles={{
+                            '::selection': { backgroundColor: alpha(theme.palette.secondary.main, 0.35) },
+                            ...(season.backdrop && {
+                                'body::before': {
+                                    content: '""',
+                                    position: 'fixed',
+                                    inset: 0,
+                                    zIndex: -1,
+                                    pointerEvents: 'none',
+                                    backgroundImage: season.backdrop[colorMode],
+                                },
+                            }),
+                        }}
+                    />
+                )}
                 {children}
             </ThemeProvider>
         </ColorThemeContext.Provider>

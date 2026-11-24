@@ -35,6 +35,9 @@ export interface Season {
     // Pixels from the logo's top-left corner; without it the icon sits top-right.
     logoBadge?: { size: number; top: number; left: number; rotate: number };
     emptyStateLook?: { scale: number; opacity: number };
+    // CSS background-image painted behind the whole app.
+    backdrop?: Record<ColorMode, string>;
+    glassAppBar?: boolean;
 }
 
 export const SEASONS: Season[] = [halloween, christmas];

@@ -157,7 +157,7 @@ describe('during christmas', () => {
   it('tints the secondary colour', () => {
     renderWithProviders(<SecondaryProbe />, seasonal(true));
 
-    expect(screen.getByText('#2E7D32')).toBeInTheDocument();
+    expect(screen.getByText('#1F7A5A')).toBeInTheDocument();
   });
 
   it('draws every app bar and screen overlay', () => {

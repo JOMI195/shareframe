@@ -5,7 +5,7 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
-import { Divider, useTheme } from '@mui/material';
+import { alpha, Divider, useTheme } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -15,7 +15,7 @@ import SeasonalLogoBadge from '../../seasonal/seasonalLogoBadge';
 import SeasonalAppBar from '../../seasonal/seasonalAppBar';
 
 function TopAppBar() {
-    const { colorMode, toggleColorMode, iconComponent: IconComponent } = useColorThemeContext();
+    const { colorMode, toggleColorMode, iconComponent: IconComponent, season } = useColorThemeContext();
     const sidebarOpen = useAppSelector(getSidebar).open;
 
     const dispatch = useAppDispatch();
@@ -32,7 +32,8 @@ function TopAppBar() {
             position="sticky"
             sx={{
                 height: theme => theme.layout.appbar.height,
-                background: theme => theme.palette.background.default,
+                background: theme => season?.glassAppBar ? alpha(theme.palette.background.default, 0.7) : theme.palette.background.default,
+                backdropFilter: season?.glassAppBar ? 'blur(14px) saturate(160%)' : undefined,
                 zIndex: theme.zIndex.drawer + 1,
             }}
         >
