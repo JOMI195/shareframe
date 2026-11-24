@@ -1,0 +1,38 @@
+apiVersion: 1
+
+templates:
+  - orgId: 1
+    name: shareframe_email
+    # Templates have no sort, so each pass picks the next alert by value (desc), ties by position.
+    # The value is the rule's sort_by annotation (a refId), A by default.
+    template: |
+      {{ define "shareframe.email.sorted" -}}
+      {{- $alerts := . -}}
+      {{- $prevV := 0.0 }}{{ $prevI := -1 -}}
+      {{- range $alerts -}}
+      {{- $bestV := 0.0 }}{{ $bestI := -1 -}}
+      {{- range $i, $a := $alerts -}}
+      {{- $v := index $a.Values (or $a.Annotations.sort_by "A") -}}
+      {{- if or (lt $prevI 0) (lt $v $prevV) (and (eq $v $prevV) (gt $i $prevI)) -}}
+      {{- if or (lt $bestI 0) (gt $v $bestV) }}{{ $bestV = $v }}{{ $bestI = $i }}{{ end -}}
+      {{- end -}}
+      {{- end }}
+      - {{ (index $alerts $bestI).Annotations.summary }}
+      {{- $prevV = $bestV }}{{ $prevI = $bestI -}}
+      {{- end -}}
+      {{- end }}
+
+      {{ define "shareframe.email" -}}
+      {{- if .Alerts.Firing -}}
+      {{ len .Alerts.Firing }} firing:{{ template "shareframe.email.sorted" .Alerts.Firing }}
+      {{ end -}}
+      {{- if .Alerts.Resolved }}
+      {{ len .Alerts.Resolved }} resolved:
+      {{ range .Alerts.Resolved }}- {{ .Annotations.summary }}
+      {{ end -}}
+      {{- end }}
+      {{ with index .Alerts 0 -}}
+      {{ if .PanelURL }}Panel: {{ .PanelURL }}{{ else if .DashboardURL }}Dashboard: {{ .DashboardURL }}{{ end }}
+      Rule: {{ .GeneratorURL }}
+      {{- end }}
+      {{- end }}

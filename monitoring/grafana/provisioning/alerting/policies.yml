@@ -5,6 +5,7 @@ policies:
   - orgId: 1
     receiver: shareframe-admin
     group_by: [grafana_folder, alertname]
+    # Event rules need keepFiringFor >= group_interval, or they resolve before the mail goes out.
     group_wait: 1m
     group_interval: 10m
     repeat_interval: 4h

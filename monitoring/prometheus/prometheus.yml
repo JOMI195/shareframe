@@ -25,6 +25,18 @@ scrape_configs:
     static_configs:
       - targets: ["backend:8000"]
 
+  # Same django counters as above, from the other processes; no fleet roster here.
+  - job_name: django-websockets
+    metrics_path: /metrics/process
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["websockets:9000"]
+
+  - job_name: celery
+    scrape_interval: 60s
+    static_configs:
+      - targets: ["celery:9808", "celery-beat:9808"]
+
   - job_name: loki
     static_configs:
       - targets: ["loki:3100"]

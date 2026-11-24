@@ -10,6 +10,7 @@ groups:
         title: GrafanaLogin
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -107,6 +108,7 @@ groups:
         title: HostSshLogin
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -203,6 +205,7 @@ groups:
         title: HostAccountChange
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -241,10 +244,12 @@ groups:
                     type: gt
                     params: [0]
 
+      # Only sudo's own lines; pam logs the same failure again without the command.
       - uid: shareframe_host_sudo_failure
         title: HostSudoFailure
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -266,7 +271,7 @@ groups:
                 uid: loki
               editorMode: code
               queryType: instant
-              expr: 'sum by (user, command) (count_over_time({job="host", program="sudo"} |~ "authentication failure|incorrect password|NOT in sudoers" | regexp `ruser=(?P<user>\S*)` | regexp `sudo(?:\[\d+\])?: +(?P<user>\S+) : ` | regexp `COMMAND=(?P<command>.{1,80})` [1m]))'
+              expr: 'sum by (user, command) (count_over_time({job="host", program="sudo"} |~ "incorrect password attempt|NOT in sudoers" | regexp `sudo(?:\[\d+\])?: +(?P<user>\S+) : ` | regexp `COMMAND=(?P<command>.{1,80})` [1m]))'
               intervalMs: 1000
               maxDataPoints: 43200
           - refId: C
@@ -395,6 +400,7 @@ groups:
         title: AppAccountChange
         condition: C
         for: 0s
+        keepFiringFor: 15m
         noDataState: OK
         execErrState: OK
         labels:
@@ -1078,6 +1084,7 @@ groups:
           severity: warning
         annotations:
           summary: 'Celery task {{ $labels.task }} failed {{ printf "%.0f" $values.F.Value }}x in 24h, last {{ humanizeDuration $values.A.Value }} ago'
+          sort_by: F
           __dashboardUid__: shareframe-logs
           __panelId__: "13"
         data:

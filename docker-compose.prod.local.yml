@@ -15,6 +15,11 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile.prod
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile - --error-logfile -
+    # Workers share their metric counters here; tmpfs starts it empty.
+    environment:
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+    tmpfs:
+      - /tmp/prometheus-multiproc
     healthcheck:
       # Host must be in ALLOWED_HOSTS, and prod has no localhost there.
       test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen(u.Request('http://localhost:8000/api/health/', headers={'Host': 'backend'}), timeout=5)"]
@@ -119,6 +124,11 @@ services:
     env_file:
       - ./.env.prod.local
     command: celery -A config worker --loglevel=info -n worker1
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+    tmpfs:
+      - /tmp/prometheus-multiproc
     depends_on:
       redis:
         condition: service_healthy
@@ -147,6 +157,8 @@ services:
     env_file:
       - ./.env.prod.local
     command: celery -A config beat --loglevel=INFO
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
     depends_on:
       redis:
         condition: service_healthy
