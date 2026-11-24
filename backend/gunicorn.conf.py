@@ -7,6 +7,8 @@ workers = max(2, multiprocessing.cpu_count())
 threads = 4
 timeout = 120
 graceful_timeout = 30
+# Unused, and $HOME is not writable for the app user.
+control_socket_disable = True
 
 _metrics_dir = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
 
