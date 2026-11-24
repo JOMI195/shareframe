@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { activeSeason, isInWindow, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
 import { christmasGreeting } from '@/common/seasons/christmas/christmas';
 import { newYearGreeting } from '@/common/seasons/newyear/newyear';
+import { newYearNumber } from '@/common/seasons/newyear/year';
 
 const on = (month: number, day: number) => new Date(2026, month - 1, day, 12);
 
@@ -81,6 +82,15 @@ describe('newYearGreeting', () => {
     [new Date(2027, 0, 2, 12), 'Frohes neues Jahr 2027!'],
   ])('on %s says %s', (date, expected) => {
     expect(newYearGreeting(date)).toBe(expected);
+  });
+});
+
+describe('newYearNumber', () => {
+  it.each([
+    [new Date(2026, 11, 28, 12), 2027],
+    [new Date(2027, 0, 2, 12), 2027],
+  ])('on %s is %i', (date, expected) => {
+    expect(newYearNumber(date)).toBe(expected);
   });
 });
 

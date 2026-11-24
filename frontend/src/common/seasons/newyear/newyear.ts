@@ -1,18 +1,20 @@
 import type { Season } from '../seasons';
 import PartyHatIcon from './icons/partyHatIcon';
 import ChampagneGlass from './art/champagneGlass';
-import LuckyClover from './art/luckyClover';
-import PartyGarland from './overlays/partyGarland';
+import RocketIcon from './icons/rocketIcon';
+import ClockIcon from './icons/clockIcon';
+import YearBanner from './overlays/yearBanner';
 import Confetti from './overlays/confetti';
-import PeekingPig from './overlays/peekingPig';
+import FireworksFlyby from './overlays/fireworksFlyby';
+import { newYearNumber } from './year';
 
 const SILVESTER = 31;
 
 export const newYearGreeting = (date: Date): string => {
-    const year = date.getFullYear();
+    const year = newYearNumber(date);
     if (date.getMonth() === 0) return `Frohes neues Jahr ${year}!`;
     const days = SILVESTER - date.getDate();
-    if (days === 0) return `Guten Rutsch ins Jahr ${year + 1}!`;
+    if (days === 0) return `Guten Rutsch ins Jahr ${year}!`;
     if (days === 1) return 'Morgen ist Silvester!';
     return `Noch ${days} Tage bis Silvester!`;
 };
@@ -28,12 +30,12 @@ const newyear: Season = {
     },
     overlays: {
         logo: [PartyHatIcon],
-        loading: [ChampagneGlass, LuckyClover],
+        loading: [ChampagneGlass, RocketIcon, ClockIcon],
         emptyState: [],
         greeting: [newYearGreeting],
-        appBar: [PartyGarland],
-        screen: [Confetti, PeekingPig],
-        flyby: [],
+        appBar: [YearBanner],
+        screen: [Confetti],
+        flyby: [FireworksFlyby],
     },
     logoBadge: { size: 24, top: -11, left: -6, rotate: -22 },
 };

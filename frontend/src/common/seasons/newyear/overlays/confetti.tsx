@@ -32,7 +32,7 @@ const pieces = LEFTS.map((left, i) => ({
 
 const Confetti = () => (
     <Box sx={{ '@media (prefers-reduced-motion: reduce)': { display: 'none' } }}>
-        {pieces.map(({ left, round, width, height, color: [light, body, shade], duration, delay, sway: swaySeconds, flip: flipSeconds }, i) => (
+        {pieces.map(({ left, round, width, height, color: [body], duration, delay, sway: swaySeconds, flip: flipSeconds }, i) => (
             <Box
                 key={i}
                 sx={{ position: 'absolute', top: 0, left, opacity: 0.9, willChange: 'transform', animation: `${fall} ${duration}s linear ${delay}s infinite` }}
@@ -43,8 +43,7 @@ const Confetti = () => (
                             width,
                             height,
                             borderRadius: round ? '50%' : '1px',
-                            background: `linear-gradient(135deg, ${light}, ${body} 45%, ${shade})`,
-                            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.15)',
+                            bgcolor: body,
                             animation: `${flip} ${flipSeconds}s linear ${delay}s infinite`,
                         }}
                     />
