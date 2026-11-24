@@ -10,6 +10,7 @@ import SeasonalScreen from '@/common/components/seasonal/seasonalScreen';
 import SeasonalAppBar from '@/common/components/seasonal/seasonalAppBar';
 import halloween from '@/common/seasons/halloween/halloween';
 import christmas from '@/common/seasons/christmas/christmas';
+import newyear from '@/common/seasons/newyear/newyear';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
 
@@ -148,10 +149,10 @@ describe('during christmas', () => {
     expect(screen.getByTestId('ChristmasTreeArt')).toBeInTheDocument();
   });
 
-  it('turns the spinner into a glass ornament', () => {
+  it('turns the spinner into an ornament', () => {
     renderWithProviders(<SeasonalSpinner />, seasonal(true));
 
-    expect(screen.getByRole('progressbar')).toContainElement(screen.getByTestId('GlassOrnament'));
+    expect(screen.getByRole('progressbar')).toContainElement(screen.getByTestId('OrnamentIcon'));
   });
 
   it('puts a santa hat on the logo', () => {
@@ -177,6 +178,56 @@ describe('during christmas', () => {
 
     expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(christmas.overlays.appBar.length);
     expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(christmas.overlays.screen.length);
+  });
+});
+
+describe('during silvester', () => {
+  beforeEach(() => {
+    vi.setSystemTime(new Date('2026-12-31T12:00:00'));
+  });
+
+  it('wishes a good slide into the new year on the dashboard', () => {
+    renderWithProviders(<Header username="alice" />, seasonal(true));
+
+    expect(screen.getByText('Guten Rutsch ins Jahr 2027!')).toBeVisible();
+  });
+
+  it('puts a party hat on the logo', () => {
+    renderWithProviders(<SeasonalLogoBadge>Logo</SeasonalLogoBadge>, seasonal(true));
+
+    expect(screen.getByRole('button', { name: 'Silvester' })).toContainElement(screen.getByTestId('PartyHatIcon'));
+  });
+
+  it('turns the spinner into a champagne glass', () => {
+    renderWithProviders(<SeasonalSpinner />, seasonal(true));
+
+    expect(screen.getByRole('progressbar')).toContainElement(screen.getByTestId('ChampagneGlass'));
+  });
+
+  it('tints the secondary colour', () => {
+    renderWithProviders(<SecondaryProbe />, seasonal(true));
+
+    expect(screen.getByText('#B7791F')).toBeInTheDocument();
+  });
+
+  it('draws every app bar and screen overlay', () => {
+    renderWithProviders(
+      <>
+        <SeasonalAppBar />
+        <SeasonalScreen />
+      </>,
+      seasonal(true),
+    );
+
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(newyear.overlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(newyear.overlays.screen.length);
+  });
+
+  it('is still on new year\'s day', () => {
+    vi.setSystemTime(new Date('2027-01-01T12:00:00'));
+    renderWithProviders(<Header username="alice" />, seasonal(true));
+
+    expect(screen.getByText('Frohes neues Jahr 2027!')).toBeVisible();
   });
 });
 

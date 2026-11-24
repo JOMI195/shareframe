@@ -1,8 +1,7 @@
 import type { Season } from '../seasons';
-import { BACKDROP } from './palette';
 import SantaHatIcon from './icons/santaHatIcon';
-import GlassOrnament from './art/glassOrnament';
-import GlowSnowflake from './art/glowSnowflake';
+import OrnamentIcon from './icons/ornamentIcon';
+import SnowflakeIcon from './icons/snowflakeIcon';
 import ChristmasTreeArt from './art/christmasTreeArt';
 import SnowmanArt from './art/snowmanArt';
 import PresentsArt from './art/presentsArt';
@@ -34,7 +33,7 @@ const christmas: Season = {
     },
     overlays: {
         logo: [SantaHatIcon],
-        loading: [GlassOrnament, GlowSnowflake],
+        loading: [OrnamentIcon, SnowflakeIcon],
         emptyState: [ChristmasTreeArt, SnowmanArt, PresentsArt],
         greeting: [christmasGreeting],
         appBar: [FairyLights],
@@ -43,8 +42,6 @@ const christmas: Season = {
     },
     logoBadge: { size: 26, top: -14, left: -7, rotate: -22 },
     emptyStateLook: { scale: 1.8, opacity: 1 },
-    backdrop: BACKDROP,
-    glassAppBar: true,
 };
 
 export default christmas;

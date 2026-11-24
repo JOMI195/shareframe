@@ -1,15 +1,8 @@
-import { url } from '../svgIds';
+import { SNOW, SNOW_SHADE } from '../palette';
 
-export const SnowBaseGradient: React.FC<{ id: string }> = ({ id }) => (
-    <radialGradient id={id} cx="0.5" cy="0.3" r="0.7">
-        <stop offset="0%" stopColor="#FFFFFF" />
-        <stop offset="100%" stopColor="#D9E4EF" />
-    </radialGradient>
-);
-
-export const SnowBase: React.FC<{ id: string; rx?: number }> = ({ id, rx = 8 }) => (
+export const SnowBase: React.FC<{ rx?: number }> = ({ rx = 8 }) => (
     <>
-        <ellipse cx={12} cy={22.9} rx={rx} ry={0.9} fill="#000000" opacity={0.12} />
-        <ellipse cx={12} cy={22.3} rx={rx} ry={1.4} fill={url(id)} />
+        <ellipse cx={12} cy={22.6} rx={rx} ry={1.5} fill={SNOW_SHADE} />
+        <ellipse cx={12} cy={22.1} rx={rx - 0.6} ry={1.1} fill={SNOW} />
     </>
 );

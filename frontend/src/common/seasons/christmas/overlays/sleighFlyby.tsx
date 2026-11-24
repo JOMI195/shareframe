@@ -1,7 +1,7 @@
 import { Box, keyframes, useTheme } from '@mui/material';
 import type { FlybyProps } from '../../seasons';
 import { fade, travel, useAllEnded } from '../../motion';
-import { url, useSvgIds } from '../svgIds';
+import { BROWN, GOLD, RED, RED_SHADE, TAN } from '../palette';
 
 const VIEW = '-40 -4 165 44';
 const REINDEER = [58, 92];
@@ -45,7 +45,7 @@ const DUST = Array.from({ length: 14 }, (_, i) => ({
     delay: (i * 0.11) % 0.9,
 }));
 
-const Reindeer: React.FC<{ x: number; ids: Record<'fur' | 'antler', string>; rudolph: boolean; halo: string }> = ({ x, ids, rudolph, halo }) => (
+const Reindeer: React.FC<{ x: number; rudolph: boolean }> = ({ x, rudolph }) => (
     <g transform={`translate(${x} 10)`}>
         <path d="M4 12.5c-1.5-.8-2.6-.4-3 .4 1 .6 2 .6 3-.4z" fill="#FFFFFF" />
         {LEGS.map(([x1, y1, x2, y2]) => (
@@ -54,10 +54,10 @@ const Reindeer: React.FC<{ x: number; ids: Record<'fur' | 'antler', string>; rud
                 <circle cx={x2} cy={y2} r={0.9} fill="#2B1F1A" />
             </g>
         ))}
-        <path d={BODY} fill={url(ids.fur)} />
+        <path d={BODY} fill={BROWN} />
         <path d="M7 14.6c3 1.4 9.5 1.4 12.5 0-3 .3-9.5.3-12.5 0z" fill="#E8CFA8" />
-        <path d={NECK} fill={url(ids.fur)} />
-        <path d={ANTLERS} fill="none" stroke={url(ids.antler)} strokeWidth={1.2} strokeLinecap="round" />
+        <path d={NECK} fill={BROWN} />
+        <path d={ANTLERS} fill="none" stroke={TAN} strokeWidth={1.2} strokeLinecap="round" />
         <path d="M24 4.6l-2.6-1.2 1.2 2.2z" fill="#8D5A3B" />
         <circle cx={26.6} cy={6} r={1.4} fill="#D9B48C" />
         <circle cx={25.4} cy={4.9} r={0.45} fill="#1E1418" />
@@ -65,11 +65,7 @@ const Reindeer: React.FC<{ x: number; ids: Record<'fur' | 'antler', string>; rud
         <circle cx={18.9} cy={15.4} r={0.95} fill="#F5C042" stroke="#A8740E" strokeWidth={0.2} />
         <circle cx={13.5} cy={8.4} r={0.8} fill="#F5C042" stroke="#A8740E" strokeWidth={0.2} />
         {rudolph ? (
-            <>
-                <circle cx={28.8} cy={5.6} r={3.2} fill={url(halo)} />
-                <circle cx={28.8} cy={5.6} r={1.4} fill="#FF2D4B" />
-                <circle cx={28.4} cy={5.2} r={0.4} fill="#FFFFFF" opacity={0.8} />
-            </>
+            <circle cx={28.8} cy={5.6} r={1.5} fill="#FF2D4B" />
         ) : (
             <circle cx={28.6} cy={5.6} r={0.9} fill="#2B1F1A" />
         )}
@@ -78,61 +74,23 @@ const Reindeer: React.FC<{ x: number; ids: Record<'fur' | 'antler', string>; rud
 
 const Sleigh: React.FC<{ animated: boolean }> = ({ animated }) => {
     const dark = useTheme().palette.mode === 'dark';
-    const ids = useSvgIds('paint', 'trim', 'sack', 'coat', 'fur', 'antler', 'halo');
 
     return (
         <Box sx={{ position: 'relative', width: { xs: 250, sm: 340 } }}>
             <Box
                 component="svg"
                 viewBox={VIEW}
-                sx={{
-                    display: 'block',
-                    width: '100%',
-                    overflow: 'visible',
-                    filter: dark ? 'drop-shadow(0 0 3px rgba(255, 255, 255, 0.3))' : 'drop-shadow(0 2px 3px rgba(0, 0, 0, 0.25))',
-                }}
+                sx={{ display: 'block', width: '100%', overflow: 'visible' }}
             >
-                <defs>
-                    <linearGradient id={ids.paint} x1="0" y1="0" x2="0.3" y2="1">
-                        <stop offset="0%" stopColor="#F0506E" />
-                        <stop offset="55%" stopColor="#C62828" />
-                        <stop offset="100%" stopColor="#7E0F22" />
-                    </linearGradient>
-                    <linearGradient id={ids.trim} x1="0" x2="1">
-                        <stop offset="0%" stopColor="#B57F12" />
-                        <stop offset="50%" stopColor="#FFE7A6" />
-                        <stop offset="100%" stopColor="#C9971E" />
-                    </linearGradient>
-                    <radialGradient id={ids.sack} cx="0.4" cy="0.3" r="0.8">
-                        <stop offset="0%" stopColor="#D9B48C" />
-                        <stop offset="100%" stopColor="#8A6440" />
-                    </radialGradient>
-                    <linearGradient id={ids.coat} x1="0" y1="0" x2="0.4" y2="1">
-                        <stop offset="0%" stopColor="#FF5A6E" />
-                        <stop offset="100%" stopColor="#A3172B" />
-                    </linearGradient>
-                    <linearGradient id={ids.fur} x1="0.2" y1="0" x2="0.6" y2="1">
-                        <stop offset="0%" stopColor="#B98258" />
-                        <stop offset="100%" stopColor="#6E4126" />
-                    </linearGradient>
-                    <linearGradient id={ids.antler} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#EAD2AC" />
-                        <stop offset="100%" stopColor="#A07A50" />
-                    </linearGradient>
-                    <radialGradient id={ids.halo}>
-                        <stop offset="0%" stopColor="#FF5C7A" stopOpacity={0.8} />
-                        <stop offset="100%" stopColor="#FF5C7A" stopOpacity={0} />
-                    </radialGradient>
-                </defs>
                 <path d="M34.5 18.6 62 18.4M76 18.4h20" fill="none" stroke="#8E1230" strokeWidth={0.6} />
                 {REINDEER.map((x, i) => (
-                    <Reindeer key={x} x={x} ids={ids} rudolph={i === REINDEER.length - 1} halo={ids.halo} />
+                    <Reindeer key={x} x={x} rudolph={i === REINDEER.length - 1} />
                 ))}
-                <path d={SACK} fill={url(ids.sack)} />
+                <path d={SACK} fill="#C9A06E" />
                 <path d="M9.6 13.4h4.4" stroke="#6E4E30" strokeWidth={0.8} strokeLinecap="round" />
                 <path d="M10.4 9.6h3.4v3.4h-3.4z" fill="#2FBF71" />
                 <path d="M11.8 9.6h.6v3.4h-.6z" fill="#F5C042" />
-                <path d={COAT} fill={url(ids.coat)} />
+                <path d={COAT} fill={RED} />
                 <path d="M21.4 20.6h11.2v1.4H21.4z" fill="#FFFFFF" />
                 <path d="M21.9 18.6h10.2v1.1H21.9z" fill="#1E1418" />
                 <path d="M26.2 18.4h1.6v1.5h-1.6z" fill="none" stroke="#F5C042" strokeWidth={0.4} />
@@ -142,13 +100,13 @@ const Sleigh: React.FC<{ animated: boolean }> = ({ animated }) => {
                 <path d={BEARD} fill="#FFFFFF" />
                 <circle cx={28.6} cy={9.2} r={0.35} fill="#1E1418" />
                 <circle cx={29.7} cy={10.3} r={0.7} fill="#F28C8C" />
-                <path d={HAT} fill={url(ids.coat)} />
+                <path d={HAT} fill={RED} />
                 <path d="M23.4 8.3h6.8" stroke="#FFFFFF" strokeWidth={1.4} strokeLinecap="round" />
                 <circle cx={22.5} cy={2.8} r={1.4} fill="#FFFFFF" />
-                <path d={SLEIGH} fill={url(ids.paint)} />
-                <path d="M2 22h34l6-6h3" fill="none" stroke={url(ids.trim)} strokeWidth={1.2} strokeLinejoin="round" />
-                <path d="M9 26.5c2-2 5-2 6 0s4 2 6 0 4-2 6 0" fill="none" stroke={url(ids.trim)} strokeWidth={0.7} strokeLinecap="round" />
-                <path d={RUNNER} fill="none" stroke={url(ids.trim)} strokeWidth={1.6} strokeLinecap="round" />
+                <path d={SLEIGH} fill={RED_SHADE} />
+                <path d="M2 22h34l6-6h3" fill="none" stroke={GOLD} strokeWidth={1.2} strokeLinejoin="round" />
+                <path d="M9 26.5c2-2 5-2 6 0s4 2 6 0 4-2 6 0" fill="none" stroke={GOLD} strokeWidth={0.7} strokeLinecap="round" />
+                <path d={RUNNER} fill="none" stroke={GOLD} strokeWidth={1.6} strokeLinecap="round" />
             </Box>
             {animated && (
                 <Box component="svg" viewBox={VIEW} sx={{ position: 'absolute', inset: 0, width: '100%', overflow: 'visible' }}>

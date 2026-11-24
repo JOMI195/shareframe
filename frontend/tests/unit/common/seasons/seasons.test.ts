@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { activeSeason, isInWindow, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
 import { christmasGreeting } from '@/common/seasons/christmas/christmas';
+import { newYearGreeting } from '@/common/seasons/newyear/newyear';
 
 const on = (month: number, day: number) => new Date(2026, month - 1, day, 12);
 
@@ -37,7 +38,10 @@ describe('activeSeason', () => {
     [11, 30, null],
     [12, 1, 'christmas'],
     [12, 27, 'christmas'],
-    [12, 28, null],
+    [12, 28, 'newyear'],
+    [12, 31, 'newyear'],
+    [1, 2, 'newyear'],
+    [1, 3, null],
   ])('on %i/%i is %s', (month, day, expected) => {
     expect(activeSeason(on(month, day))?.id ?? null).toBe(expected);
   });
@@ -64,6 +68,19 @@ describe('christmasGreeting', () => {
     [27, 'Schöne Feiertage und einen guten Rutsch!'],
   ])('on 12/%i says %s', (day, expected) => {
     expect(christmasGreeting(on(12, day))).toBe(expected);
+  });
+});
+
+describe('newYearGreeting', () => {
+  it.each([
+    [new Date(2026, 11, 28, 12), 'Noch 3 Tage bis Silvester!'],
+    [new Date(2026, 11, 29, 12), 'Noch 2 Tage bis Silvester!'],
+    [new Date(2026, 11, 30, 12), 'Morgen ist Silvester!'],
+    [new Date(2026, 11, 31, 12), 'Guten Rutsch ins Jahr 2027!'],
+    [new Date(2027, 0, 1, 12), 'Frohes neues Jahr 2027!'],
+    [new Date(2027, 0, 2, 12), 'Frohes neues Jahr 2027!'],
+  ])('on %s says %s', (date, expected) => {
+    expect(newYearGreeting(date)).toBe(expected);
   });
 });
 
