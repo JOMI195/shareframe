@@ -3,6 +3,8 @@ import os
 
 from celery import Celery
 
+from metrics import celery_exporter
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 
 celery = Celery("config")
@@ -15,3 +17,5 @@ logger.info("Initializing Celery application")
 celery.autodiscover_tasks()
 
 logger.info("Celery tasks discovered")
+
+celery_exporter.connect()

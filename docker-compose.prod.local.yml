@@ -124,6 +124,11 @@ services:
     env_file:
       - ./.env.prod.local
     command: celery -A config worker --loglevel=info -n worker1
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
+      PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+    tmpfs:
+      - /tmp/prometheus-multiproc
     depends_on:
       redis:
         condition: service_healthy
@@ -152,6 +157,8 @@ services:
     env_file:
       - ./.env.prod.local
     command: celery -A config beat --loglevel=INFO
+    environment:
+      PROMETHEUS_METRICS_PORT: "9808"
     depends_on:
       redis:
         condition: service_healthy
