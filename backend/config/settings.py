@@ -49,7 +49,7 @@ else:
     SECURE_SSL_REDIRECT = False
 
 # Prometheus and the Docker healthcheck call over plain HTTP on the container network.
-SECURE_REDIRECT_EXEMPT = [r"^metrics(/business)?$", r"^api/health/$"]
+SECURE_REDIRECT_EXEMPT = [r"^metrics(/business|/process)?$", r"^api/health/$"]
 
 # Refresh path is scoped so the cookie only reaches the token endpoints.
 AUTH_COOKIE_ACCESS_NAME = "sf_access"
