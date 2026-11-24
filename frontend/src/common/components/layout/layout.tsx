@@ -9,6 +9,7 @@ import { useEffect, useRef } from "react";
 import Lifecycle from "../lifecycle/lifecycle";
 import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
+import { useSeasonSlot } from "../seasonal/useSeasonSlot";
 import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from "./sidebar/sidebarWidth";
 
 // Own component, so a navigation state change doesn't re-render the whole shell.
@@ -32,6 +33,7 @@ const MainLayout: React.FC = () => {
     const { pathname } = useLocation();
 
     const sidebarOpen = useAppSelector(getSidebar).open;
+    const appBarDecor = useSeasonSlot('appBar').length > 0;
     const mainRef = useRef<HTMLElement>(null);
     const focusedPathname = useRef(pathname);
 
@@ -112,7 +114,8 @@ const MainLayout: React.FC = () => {
                     display: 'flex',
                     alignItems: "center",
                     flexDirection: 'column',
-                    pt: isSmallScreen ? 2 : 5,
+                    // Seasonal app bar decorations hang into the page.
+                    pt: (isSmallScreen ? 2 : 5) + (appBarDecor ? 3 : 0),
                     pb: 10,
                 }}
             >
