@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { activeSeason, isInWindow, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
+import { activeSeason, isInWindow, loadedSeasonOverlays, loadSeasonOverlays, pickNext, pickOne, SEASONS, type Season } from '@/common/seasons/seasons';
 import { christmasGreeting } from '@/common/seasons/christmas/christmas';
 import { newYearGreeting } from '@/common/seasons/newyear/newyear';
 import { newYearNumber } from '@/common/seasons/newyear/year';
@@ -112,5 +112,17 @@ describe('pickNext', () => {
 
   it.each([0, 0.5, 0.99])('never repeats the last one (random %s)', (value) => {
     expect(pickNext(['a', 'b', 'c'], 'b', () => value)).not.toBe('b');
+  });
+});
+
+describe('season art', () => {
+  it('is cached only once it has loaded', async () => {
+    const [season] = SEASONS;
+    expect(loadedSeasonOverlays(season)).toBeNull();
+
+    const overlays = await loadSeasonOverlays(season);
+
+    expect(loadedSeasonOverlays(season)).toBe(overlays);
+    expect(overlays.flyby.length).toBeGreaterThan(0);
   });
 });

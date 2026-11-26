@@ -3,7 +3,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
 import dark from '@/common/themes/darkTheme';
-import type { Season } from '@/common/seasons/seasons';
+import type { Season, SeasonOverlays } from '@/common/seasons/seasons';
 
 export type ColorMode = 'light' | 'dark';
 export type ColorPreference = ColorMode | 'system';
@@ -18,6 +18,8 @@ export interface ColorThemeContextType {
     setColorPreference: (preference: ColorPreference) => void;
     iconComponent: IconComponent;
     season: Season | null;
+    // Null until the season's art has loaded.
+    seasonOverlays: SeasonOverlays | null;
 }
 
 export const ColorThemeContext = createContext<ColorThemeContextType | undefined>(undefined);

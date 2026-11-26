@@ -103,13 +103,15 @@ describe('seasonal themes', () => {
     at('2026-10-22T12:00:00');
     await openAppSettings(true);
 
-    expect(decoration()).toBeInTheDocument();
+    // The season art is its own chunk and arrives after the first render.
+    expect(await screen.findByTestId('SeasonalScreen')).toBeInTheDocument();
     expect(logoIcon()).toBeInTheDocument();
   });
 
   it('can be switched off and on again', async () => {
     at('2026-10-22T12:00:00');
     const { user, store } = await openAppSettings(true);
+    await screen.findByTestId('SeasonalScreen');
 
     await user.click(screen.getByLabelText('Saisonale Deko'));
 

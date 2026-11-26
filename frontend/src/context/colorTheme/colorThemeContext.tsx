@@ -1,4 +1,4 @@
-import React, { PropsWithChildren, useEffect, useMemo, useSyncExternalStore } from 'react';
+import React, { PropsWithChildren, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import light from '@/common/themes/lightTheme';
@@ -7,7 +7,7 @@ import { alpha, createTheme, GlobalStyles, ThemeProvider } from '@mui/material';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { designSelected, getDesign, getSeasonalThemes } from '@/store/ui/settings/settings.slice';
 import { getIsSignedIn } from '@/store/entities/authentication/authentication.slice';
-import { activeSeason } from '@/common/seasons/seasons';
+import { activeSeason, loadedSeasonOverlays, loadSeasonOverlays } from '@/common/seasons/seasons';
 import { ColorMode, ColorPreference, ColorThemeContext, ColorThemeContextType } from './colorThemeContextValue';
 
 const DARK_QUERY = '(prefers-color-scheme: dark)';
@@ -38,6 +38,19 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
         : colorPreference;
 
     const season = seasonalThemes && signedIn ? activeSeason() : null;
+    const [, setLoadedSeasonId] = useState<string | null>(null);
+    const seasonOverlays = season ? loadedSeasonOverlays(season) : null;
+
+    useEffect(() => {
+        if (!season || loadedSeasonOverlays(season)) return;
+        let live = true;
+        loadSeasonOverlays(season)
+            .then(() => live && setLoadedSeasonId(season.id))
+            .catch(() => undefined);
+        return () => {
+            live = false;
+        };
+    }, [season]);
 
     const theme = useMemo(() => {
         const base = colorMode === 'dark' ? dark : light;
@@ -61,12 +74,13 @@ export const ColorThemeProvider: React.FC<PropsWithChildren> = ({ children }) =>
             theme,
             colorMode,
             season,
+            seasonOverlays,
             colorPreference,
             setColorPreference,
             toggleColorMode: () => setColorPreference(colorMode === 'light' ? 'dark' : 'light'),
             iconComponent: colorMode === 'dark' ? DarkModeIcon : LightModeIcon,
         };
-    }, [theme, colorMode, season, colorPreference, dispatch]);
+    }, [theme, colorMode, season, seasonOverlays, colorPreference, dispatch]);
 
     return (
         <ColorThemeContext.Provider value={contextValue}>

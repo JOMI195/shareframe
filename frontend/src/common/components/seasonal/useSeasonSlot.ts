@@ -6,7 +6,7 @@ const NONE: never[] = [];
 
 // Reads the context directly: the spinner also renders outside the theme provider.
 export const useSeasonSlot = <S extends OverlaySlot>(slot: S): SeasonOverlays[S] =>
-    useContext(ColorThemeContext)?.season?.overlays[slot] ?? NONE;
+    useContext(ColorThemeContext)?.seasonOverlays?.[slot] ?? NONE;
 
 // One random item per mount, picked again only when the slot changes.
 export const useSeasonPick = <S extends OverlaySlot>(slot: S): SeasonOverlays[S][number] | null => {
