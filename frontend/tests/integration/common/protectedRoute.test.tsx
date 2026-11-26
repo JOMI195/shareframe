@@ -104,19 +104,40 @@ describe('ProtectedRoute', () => {
     expect(requests).toHaveBeenCalledOnce();
   });
 
-  // A failed profile load must not spin forever.
-  it('renders the outlet once the profile request has failed', async () => {
+  // A failed profile load must neither spin forever nor render the page without a profile.
+  it('offers a retry once the profile request has failed twice', async () => {
     localStorage.setItem('loggedIn', 'true');
-    server.use(mswHttp.get(apiUrl(getMyUserDataUrl()), () => HttpResponse.json({ detail: 'nope' }, { status: 403 })));
+    let calls = 0;
+    server.use(mswHttp.get(apiUrl(getMyUserDataUrl()), () => {
+      calls += 1;
+      return HttpResponse.json({ detail: 'nope' }, { status: 403 });
+    }));
 
     renderWithProviders(<Guarded />, { route: '/geschuetzt/', preloadedState: buildState() });
+
+    expect(await screen.findByText('Dein Konto konnte nicht geladen werden')).toBeInTheDocument();
+    expect(screen.queryByText('Geheim')).not.toBeInTheDocument();
+    expect(calls).toBe(2);
+  });
+
+  it('renders the outlet once a retry loads the profile', async () => {
+    localStorage.setItem('loggedIn', 'true');
+    let fail = true;
+    server.use(mswHttp.get(apiUrl(getMyUserDataUrl()), () =>
+      fail ? HttpResponse.json({ detail: 'nope' }, { status: 403 }) : HttpResponse.json(seedUser),
+    ));
+
+    const { user } = renderWithProviders(<Guarded />, { route: '/geschuetzt/', preloadedState: buildState() });
+    await screen.findByText('Dein Konto konnte nicht geladen werden');
+    fail = false;
+    await user.click(screen.getByRole('button', { name: 'Erneut versuchen' }));
 
     expect(await screen.findByText('Geheim')).toBeInTheDocument();
   });
 
   // Seen on a cookieless browser: the profile request queues behind a refresh
   // another request already started, and that refresh fails.
-  it('renders the outlet when the profile request waits on a failing refresh', async () => {
+  it('does not hang when the profile request waits on a failing refresh', async () => {
     localStorage.setItem('loggedIn', 'true');
     let refreshStarted!: () => void;
     const refreshing = new Promise<void>((resolve) => (refreshStarted = resolve));
@@ -138,7 +159,7 @@ describe('ProtectedRoute', () => {
 
     renderWithProviders(<Guarded />, { route: '/geschuetzt/', store });
 
-    expect(await screen.findByText('Geheim')).toBeInTheDocument();
+    expect(await screen.findByText('Dein Konto konnte nicht geladen werden')).toBeInTheDocument();
     await background;
   });
 });
