@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { HttpResponse, http as mswHttp } from 'msw';
-import apiMiddleware from '@/store/middleware/api';
+import apiMiddleware, { shouldReportProgress } from '@/store/middleware/api';
 import { apiFailed, apiRequest, apiSuccess } from '@/common/utils/constants/api.constants';
 import { server } from '@tests/mocks/server';
 import { apiUrl } from '@tests/mocks/apiUrl';
@@ -74,6 +74,24 @@ describe('successful requests', () => {
 
     expect(result).toBe('fixed');
     expect(dispatch.mock.calls[1][0].payload).toBe('fixed');
+  });
+
+  it('attaches onSuccessMeta next to the body', async () => {
+    server.use(mswHttp.get(apiUrl(URL), () => HttpResponse.json([{ id: 1 }])));
+
+    const { dispatch } = await run(
+      apiRequest({ url: URL, onSuccess: 'frames/framesReceived', onSuccessMeta: { requestKey: URL } }),
+    );
+
+    expect(dispatch.mock.calls[1][0]).toMatchObject({ payload: [{ id: 1 }], meta: { requestKey: URL } });
+  });
+
+  it('sends no meta when none is given', async () => {
+    server.use(mswHttp.get(apiUrl(URL), () => HttpResponse.json([])));
+
+    const { dispatch } = await run(apiRequest({ url: URL, onSuccess: 'frames/framesReceived' }));
+
+    expect(dispatch.mock.calls[1][0]).not.toHaveProperty('meta');
   });
 
   it('forwards the onStart payload', async () => {
@@ -204,5 +222,23 @@ describe('failed requests', () => {
     const { result } = await fail(HttpResponse.json({ detail: 'Kaputt', code: 'something_new' }, { status: 400 }));
 
     expect(result).toBe('Kaputt');
+  });
+});
+
+describe('upload progress', () => {
+  const reported = (percents: number[]) =>
+    percents.reduce<number[]>((sent, percent) => {
+      const last = sent.length ? sent[sent.length - 1] : null;
+      return shouldReportProgress(percent, last) ? [...sent, percent] : sent;
+    }, []);
+
+  it('reports in steps instead of every percent', () => {
+    expect(reported(Array.from({ length: 101 }, (_, i) => i))).toEqual(
+      Array.from({ length: 21 }, (_, i) => i * 5),
+    );
+  });
+
+  it('always reports the first value and completion once', () => {
+    expect(reported([3, 4, 6, 100, 100])).toEqual([3, 100]);
   });
 });

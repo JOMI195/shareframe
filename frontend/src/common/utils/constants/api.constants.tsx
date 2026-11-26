@@ -12,6 +12,7 @@ export interface ApiRequestPayload {
     onUploadProgress?: string;
     onStartPayload?: unknown;
     onSuccessPayload?: unknown;
+    onSuccessMeta?: unknown;
     onErrorPayload?: unknown;
 }
 
