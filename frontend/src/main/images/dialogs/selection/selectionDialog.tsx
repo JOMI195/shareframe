@@ -16,13 +16,24 @@ const SelectionDialog = () => {
 
     if (isDesktop) return null;
 
+    const count = selectedImages.length;
+
+    // Sending is the usual next step, so it gets the big button; cancel stays one tap away.
+    const sendAction: DialogAction = {
+        icon: <SendIcon />,
+        onClick: send,
+        label: count > 0 ? `Senden (${count})` : 'Senden',
+        color: 'primary',
+        disabled: count === 0,
+    };
+
+    const cancelAction: DialogAction = {
+        icon: <CloseIcon />,
+        onClick: cancel,
+        tooltip: 'Auswahl abbrechen',
+    };
+
     const actions: DialogAction[] = [
-        {
-            icon: <SendIcon />,
-            onClick: send,
-            label: 'Ausgewählte Fotos senden',
-            color: 'primary',
-        },
         {
             icon: <DownloadIcon />,
             onClick: download,
@@ -37,18 +48,12 @@ const SelectionDialog = () => {
         }
     ]
 
-    const closeDialogAction: DialogAction = {
-        icon: <CloseIcon />,
-        onClick: cancel,
-        color: 'primary',
-        label: "Auswahl abbrechen"
-    };
-
     return (
         <BottomFloatingActions
-            actionPrimary={closeDialogAction}
+            actionPrimary={sendAction}
+            actionSecondary={cancelAction}
             actionsAdditional={actions}
-            speedDialDisabled={selectedImages.length === 0}
+            speedDialDisabled={count === 0}
         />
     );
 }

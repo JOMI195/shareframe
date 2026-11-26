@@ -202,7 +202,7 @@ describe('sending photos to a frame', () => {
     const { user, store } = await openLibrary();
     await enterSelectionMode(user);
     await selectFirstPhoto(user);
-    await clickSpeedDialAction(user, 'Ausgewählte Fotos senden');
+    await user.click(screen.getByRole('button', { name: 'Senden (1)' }));
     // The send dialog loads on first open; until then the only combobox is the page size.
     await screen.findByText(/Wähle die Empfänger/);
 
