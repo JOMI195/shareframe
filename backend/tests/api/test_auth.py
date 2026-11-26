@@ -109,6 +109,38 @@ def test_refresh_rotates_and_blacklists_the_old_token(alice):
     assert stale.post(REFRESH_URL, {}, format="json").status_code == 401
 
 
+def test_a_token_from_before_a_password_change_is_refused(alice, caplog):
+    user = User.objects.get(username=seed.ALICE)
+    user.set_password("changed-elsewhere1")
+    user.save()
+
+    with caplog.at_level("INFO", logger="admin.audit"):
+        response = alice.post(REFRESH_URL, {}, format="json")
+
+    assert response.status_code == 401
+    assert "Token refresh rejected (revoked)" in caplog.text
+    assert alice.get(ME_URL).status_code == 401
+
+
+def test_a_token_without_the_password_claim_is_refused(client):
+    """Sessions from before revocation was switched on end once."""
+    legacy = RefreshToken.for_user(User.objects.get(username=seed.ALICE))
+    del legacy["hash_password"]
+    client.get(CSRF_URL)
+    client.cookies[settings.AUTH_COOKIE_REFRESH_NAME] = str(legacy)
+
+    assert client.post(REFRESH_URL, {}, format="json").status_code == 401
+
+
+def test_the_access_cookie_lives_as_long_as_the_token(client):
+    sign_in(client)
+
+    cookie = client.cookies[settings.AUTH_COOKIE_ACCESS_NAME]
+    assert int(cookie["max-age"]) == int(
+        settings.SIMPLE_JWT["ACCESS_TOKEN_LIFETIME"].total_seconds()
+    )
+
+
 def test_refresh_without_the_cookie_is_unauthorized(client):
     client.get(CSRF_URL)
 

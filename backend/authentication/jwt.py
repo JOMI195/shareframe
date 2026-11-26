@@ -1,6 +1,7 @@
 import logging
 
 from django.conf import settings
+from django.contrib.auth import get_user_model
 from django.contrib.auth.signals import user_logged_in, user_login_failed
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import ensure_csrf_cookie
@@ -12,6 +13,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.exceptions import InvalidToken, TokenError
 from rest_framework_simplejwt.settings import api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.utils import get_md5_hash_password
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
 from config.throttles import (
@@ -32,6 +34,32 @@ def _token_user_id(raw):
         return RefreshToken(raw).get(api_settings.USER_ID_CLAIM)
     except TokenError:
         return None
+
+
+def _refresh_revoked(raw):
+    """simplejwt checks the password claim on access tokens only."""
+    if not api_settings.CHECK_REVOKE_TOKEN:
+        return False
+    try:
+        token = RefreshToken(raw)
+    except TokenError:
+        return False  # the serializer rejects it with the precise reason
+    user = (
+        get_user_model()
+        .objects.filter(
+            **{api_settings.USER_ID_FIELD: token.get(api_settings.USER_ID_CLAIM)}
+        )
+        .only("password")
+        .first()
+    )
+    return user is None or token.get(
+        api_settings.REVOKE_TOKEN_CLAIM
+    ) != get_md5_hash_password(user.password)
+
+
+def issue_auth_cookies(response, user):
+    refresh = RefreshToken.for_user(user)
+    return set_auth_cookies(response, str(refresh.access_token), str(refresh))
 
 
 class SignalTokenObtainPairView(TokenObtainPairView):
@@ -93,6 +121,12 @@ class CookieTokenRefreshView(TokenRefreshView):
                 {"detail": "Refresh cookie missing."},
                 status=status.HTTP_401_UNAUTHORIZED,
             )
+
+        if _refresh_revoked(refresh):
+            logger.warning(
+                "Token refresh rejected (revoked) from %s", client_ip(request)
+            )
+            raise InvalidToken("Token revoked.")
 
         # request.data may be an immutable QueryDict.
         serializer = self.get_serializer(data={"refresh": refresh})

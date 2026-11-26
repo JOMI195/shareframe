@@ -19,6 +19,7 @@ from appEmail.djoserEmailConfig import (
     DjoserUserDeletedEmail,
 )
 from authentication.cookies import delete_auth_cookies
+from authentication.jwt import issue_auth_cookies
 from config import error_codes
 from config.throttles import (
     AuthEmailBurstRateThrottle,
@@ -216,7 +217,8 @@ class CustomUserViewSet(BaseUserViewSet):
         logger.info(
             "Password changed: %s from %s", request.user.email, client_ip(request)
         )
-        return response
+        # The change revokes every token, this session gets fresh ones.
+        return issue_auth_cookies(response, request.user)
 
     @action(["post"], detail=False)
     def reset_password_confirm(self, request, *args, **kwargs):
