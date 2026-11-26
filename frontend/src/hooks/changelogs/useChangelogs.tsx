@@ -1,4 +1,4 @@
-import { useAppDispatch } from '@/store';
+import { RootState, useAppDispatch } from '@/store';
 import { fetchChangelogIds, fetchChangelogIdsIfStale, fetchMissingChangelogs, fetchNewestChangelog, publishedBeforeJoining } from '@/store/entities/changelogs/changelogs.actions';
 import { getUser } from '@/store/entities/authentication/authentication.slice';
 import { getApi, getChangelogIds, getChangelogs, getSortedChangelogIds } from '@/store/entities/changelogs/changelogs.slice';
@@ -9,12 +9,13 @@ import { useCallback } from 'react';
 
 export const useChangelogs = () => {
     const dispatch = useAppDispatch();
-    const api = useSelector(getApi);
+    // Primitives, so a profile or flag change elsewhere does not re-render the layout.
+    const isLoading = useSelector((state: RootState) => getApi(state).loading || getApi(state).idsLoading);
     const changelogIds = useSelector(getChangelogIds);
     const changelogs = useSelector(getChangelogs);
     const sortedChangelogIds = useSelector(getSortedChangelogIds);
     const deactivatedIds = useSelector(getDeactivatedIds);
-    const dateJoined = useSelector(getUser).me.date_joined;
+    const dateJoined = useSelector((state: RootState) => getUser(state).me.date_joined);
 
     const loadChangelogIds = useCallback(() => {
         dispatch(fetchChangelogIds());
@@ -66,7 +67,7 @@ export const useChangelogs = () => {
     };
 
     return {
-        isLoading: api.loading || api.idsLoading,
+        isLoading,
         changelogIds,
         changelogs,
         sortedChangelogIds,
