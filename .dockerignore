@@ -13,3 +13,13 @@ backend/celerybeat-schedule
 **/__pycache__/
 **/*.pyc
 .env*
+
+# Local runtime data; the containers get it from volumes.
+backend/db.sqlite3
+backend/mediafiles/
+backend/staticfiles/
+backend/logs/
+frontend/build/
+frontend/coverage/
+frontend/playwright-report/
+frontend/test-results/
