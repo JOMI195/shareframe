@@ -525,7 +525,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             frame = self.scope.get("frame")
             frame_id = frame.id if frame else "unknown"
 
-            logger.info(f"Received message type '{message_type}' from frame {frame_id}")
+            logger.debug(
+                f"Received message type '{message_type}' from frame {frame_id}"
+            )
 
             if message_type == "close_connection":
                 await self.close_connection()
