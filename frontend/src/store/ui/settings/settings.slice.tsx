@@ -16,6 +16,8 @@ type SliceState = {
     consentExpiry: number | null;
   };
   pwa: { installPromptDismissed: boolean; pushPromptDismissed: boolean };
+  // The last choice in the upload dialog, kept for the next upload.
+  upload: { autoDelete: boolean };
 };
 
 const initialState: SliceState = {
@@ -27,7 +29,8 @@ const initialState: SliceState = {
     analyticsCookies: JSON.parse(localStorage.getItem('analyticsCookies') || 'false'),
     consentExpiry: JSON.parse(localStorage.getItem('consentExpiry') || 'null'),
   },
-  pwa: { installPromptDismissed: false, pushPromptDismissed: false }
+  pwa: { installPromptDismissed: false, pushPromptDismissed: false },
+  upload: { autoDelete: true },
 };
 
 const settingsSlice = createSlice({
@@ -81,7 +84,10 @@ const settingsSlice = createSlice({
     },
     pushPromptReset: (state) => {
       state.pwa.pushPromptDismissed = false;
-    }
+    },
+    uploadAutoDeleteSet: (state, action: PayloadAction<boolean>) => {
+      state.upload.autoDelete = action.payload;
+    },
   },
 });
 
@@ -106,7 +112,8 @@ export const {
   allCookiesDeclined,
   installPromptDismissed,
   pushPromptDismissed,
-  pushPromptReset
+  pushPromptReset,
+  uploadAutoDeleteSet,
 } = settingsSlice.actions;
 
 export default settingsSlice.reducer;
@@ -115,3 +122,4 @@ export const getDesign = (state: RootState) => state.ui.settings.design.colorThe
 export const getSeasonalThemes = (state: RootState) => state.ui.settings.design.seasonalThemes;
 export const getCookies = (state: RootState) => state.ui.settings.cookies;
 export const getPwa = (state: RootState) => state.ui.settings.pwa;
+export const getUploadAutoDelete = (state: RootState) => state.ui.settings.upload.autoDelete;

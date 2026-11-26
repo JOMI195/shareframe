@@ -723,6 +723,18 @@ describe('UploadDialog text presets', () => {
 });
 
 describe('UploadDialog preview and upload step', () => {
+  // Kept in the persisted settings, so a cleared box stays cleared for the next upload.
+  it('remembers the auto-delete choice', async () => {
+    const { user, store } = await goToPreview();
+    const autoDelete = screen.getByRole('checkbox', { name: /aus der Galerie löschen/ });
+    expect(autoDelete).toBeChecked();
+
+    await user.click(autoDelete);
+
+    expect(autoDelete).not.toBeChecked();
+    expect(store.getState().ui.settings.upload.autoDelete).toBe(false);
+  });
+
   it('shows the final photo before uploading', async () => {
     await goToPreview();
 
