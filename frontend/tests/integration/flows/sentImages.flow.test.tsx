@@ -85,6 +85,21 @@ describe('activity list', () => {
     ).toBeInTheDocument();
   });
 
+  it('offers to reset filters that match nothing', async () => {
+    server.use(...withSentImages([]));
+    const { user, store } = renderRoute('/aktivitaeten/', {
+      preloadedState: signedInState({
+        entities: { images: { sentImagesFilters: { status: 'active', shipping: 'all', sender: '', receiver: '' } } },
+      }),
+    });
+
+    const emptyState = (await screen.findByText('Keine Aktivitäten zu diesen Filtern')).parentElement!;
+    await user.click(within(emptyState).getByRole('button', { name: 'Filter zurücksetzen' }));
+
+    expect(store.getState().entities.images.sentImagesFilters.status).toBe('all');
+    expect(await screen.findByText('Noch keine gesendeten oder erhaltenen Fotos')).toBeInTheDocument();
+  });
+
   it('shows the pictures of sender and receiver next to their names', async () => {
     await openActivity([
       { ...received, sender_avatar: '/media/avatars/bob.jpg', reciever_avatar: null },

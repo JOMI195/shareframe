@@ -24,6 +24,8 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import AuthenticatedImage from "@/common/components/authenticatedImage";
 import { formatGermanDateTime } from "@/common/components/dateUtils";
 import SendIcon from '@mui/icons-material/Send';
+import FilterListOffIcon from '@mui/icons-material/FilterListOff';
+import { resetFilters } from "@/store/ui/sentImages/sentImages.slice";
 import { ISentImage, ISentImagesFilters } from "@/types";
 import FilterControls from "./filters/filters";
 import { getDialogs, openPreviewSentImageDialog } from "@/store/ui/sentImages/sentImages.slice";
@@ -90,6 +92,11 @@ const SentImagesGallery = () => {
         }));
 
         dispatch(setSentImagesPaginatedPage(1));
+    };
+
+    const clearFilters = () => {
+        dispatch(resetFilters());
+        handleFiltersChange({ status: 'all', shipping: 'all', sender: '', receiver: '' });
     };
 
     const renderSenderReceiverInfo = (sentImage: ISentImage) => {
@@ -276,10 +283,15 @@ const SentImagesGallery = () => {
                         notFoundMessage={"Aktivitäten konnten nicht geladen werden"}
                         action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchSentImagesPaginated(currentPage, pageSize, appliedFilters)) }}
                     />
-                ) : (
+                ) : unfiltered ? (
                     <DataNotFound
                         notFoundMessage={"Noch keine gesendeten oder erhaltenen Fotos"}
-                        action={unfiltered ? { label: "Foto senden", icon: <SendIcon />, onClick: () => navigate("/" + getImageUrl()) } : undefined}
+                        action={{ label: "Foto senden", icon: <SendIcon />, onClick: () => navigate("/" + getImageUrl()) }}
+                    />
+                ) : (
+                    <DataNotFound
+                        notFoundMessage={"Keine Aktivitäten zu diesen Filtern"}
+                        action={{ label: "Filter zurücksetzen", icon: <FilterListOffIcon />, onClick: clearFilters }}
                     />
                 )
             )}
