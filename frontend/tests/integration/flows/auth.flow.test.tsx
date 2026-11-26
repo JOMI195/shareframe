@@ -48,7 +48,7 @@ describe('signing in', () => {
   it('explains a rejected sign-in and stays on the page', async () => {
     server.use(
       mswHttp.post(apiUrl(authEndpoints.getTokenCreateUrl()), () =>
-        HttpResponse.json({ detail: 'No active account found' }, { status: 401 }),
+        HttpResponse.json({ detail: 'No active account found', code: 'no_active_account' }, { status: 401 }),
       ),
     );
     const { user, router } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
@@ -61,6 +61,19 @@ describe('signing in', () => {
     // Only the password has to be typed again.
     expect(screen.getByLabelText('E-Mail-Adresse')).toHaveValue('alice@example.com');
     expect(screen.getByLabelText('Passwort')).toHaveValue('');
+  });
+
+  // Only a rejected password reads like one; the rest says what really went wrong.
+  it('reports a server error as such', async () => {
+    server.use(
+      mswHttp.post(apiUrl(authEndpoints.getTokenCreateUrl()), () => HttpResponse.json({ detail: 'boom' }, { status: 500 })),
+    );
+    const { user } = renderRoute('/auth/sign-in/', { preloadedState: buildState() });
+
+    await signInAs(user, 'alice@example.com', 'richtig');
+
+    expect(await screen.findByText('Auf dem Server ist ein Fehler aufgetreten.')).toBeInTheDocument();
+    expect(screen.queryByText(/E-Mail-Adresse oder Passwort stimmen nicht/)).not.toBeInTheDocument();
   });
 
   it('asks for both fields', async () => {

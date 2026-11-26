@@ -26,6 +26,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   password_mismatch: "Die neuen Passwörter stimmen nicht überein.",
   reset_link_invalid: "Der Link ist abgelaufen oder wurde schon benutzt.",
   throttled: "Zu viele Versuche. Bitte warte kurz.",
+  no_active_account: "E-Mail-Adresse oder Passwort stimmen nicht. Achte auf Groß- und Kleinschreibung.",
 };
 
 export const errorMessageFor = (code: unknown): string | undefined =>

@@ -1,3 +1,4 @@
+import { errorMessageFor } from "@/common/utils/errors/errorMessages";
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import {
@@ -108,9 +109,10 @@ export default function SignIn() {
     enableReinitialize: true,
     onSubmit: async (values) => {
       setErrorMessage("");
-      await dispatch(authenticateUser(values));
+      const result: unknown = await dispatch(authenticateUser(values));
       if (localStorage.getItem("loggedIn") !== "true") {
-        setErrorMessage("E-Mail-Adresse oder Passwort stimmen nicht. Achte auf Groß- und Kleinschreibung.");
+        // Offline, throttled or a server error must not read like a wrong password.
+        setErrorMessage(typeof result === "string" ? result : errorMessageFor("no_active_account") ?? "");
         signInForm.setFieldValue("password", "", false);
         signInForm.setFieldTouched("password", false, false);
         return;
