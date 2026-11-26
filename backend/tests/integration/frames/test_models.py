@@ -95,6 +95,12 @@ class TestOTP:
         assert not Frame.objects.get(pk=frame.pk).verify_otp(code)
         assert not FrameOTP.objects.filter(frame=frame).exists()
 
+    def test_a_code_that_is_not_a_string_is_rejected(self, frame):
+        code = frame.generate_otp()
+
+        assert not frame.verify_otp(int(code))
+        assert FrameOTP.objects.filter(frame=frame).exists()
+
     def test_verifying_without_an_otp_is_false(self, frame):
         assert not frame.verify_otp("123456")
 

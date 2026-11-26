@@ -1,6 +1,5 @@
 import base64
 import os
-import random
 import secrets
 import string
 import uuid
@@ -11,6 +10,7 @@ from django.db import IntegrityError, models, transaction
 from django.db.models.signals import post_delete
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.crypto import constant_time_compare
 
 from .keys import public_key_fingerprint
 
@@ -141,7 +141,7 @@ class Frame(models.Model):
         try:
             otp = self.frame_otp
 
-            if otp.code != code:
+            if not isinstance(code, str) or not constant_time_compare(otp.code, code):
                 return False
 
             if timezone.now() > otp.expires_at:
@@ -214,7 +214,7 @@ class FrameOTP(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.code:
-            self.code = "".join(random.choices(string.digits, k=6))
+            self.code = "".join(secrets.choice(string.digits) for _ in range(6))
         super().save(*args, **kwargs)
 
     def is_valid(self):
