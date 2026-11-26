@@ -11,6 +11,7 @@ import SeasonalScreen from "../seasonal/seasonalScreen";
 import SeasonalFlyby from "../seasonal/seasonalFlyby";
 import { useSeasonSlot } from "../seasonal/useSeasonSlot";
 import { SIDEBAR_ICON_WIDTH, SIDEBAR_WIDTH } from "./sidebar/sidebarWidth";
+import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 
 // Own component, so a navigation state change doesn't re-render the whole shell.
 const NavigationProgress: React.FC = () => {
@@ -62,14 +63,21 @@ const MainLayout: React.FC = () => {
         loadChangelogIds();
     }, [loadChangelogIds]);
 
+    // Feeds the friend request badge in the menu.
+    useEffect(() => {
+        dispatch(fetchFriendshipsIfStale());
+    }, [dispatch]);
+
     // A resumed PWA keeps its route, so the effect above would not run again.
     useEffect(() => {
         const onVisible = () => {
-            if (document.visibilityState === 'visible') refreshChangelogIds();
+            if (document.visibilityState !== 'visible') return;
+            refreshChangelogIds();
+            dispatch(fetchFriendshipsIfStale());
         };
         document.addEventListener('visibilitychange', onVisible);
         return () => document.removeEventListener('visibilitychange', onVisible);
-    }, [refreshChangelogIds]);
+    }, [refreshChangelogIds, dispatch]);
 
     useEffect(() => {
         loadNewestChangelog();

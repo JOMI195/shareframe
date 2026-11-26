@@ -25,7 +25,8 @@ export const sidebarMenuItems: IAppBarMenuItem[] = [
     {
         name: "Freunde",
         url: getFriendsUrl(),
-        icon: <GroupIcon />
+        icon: <GroupIcon />,
+        showsFriendRequests: true,
     },
     {
         name: "Bilderrahmen",
