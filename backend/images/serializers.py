@@ -2,6 +2,7 @@ import logging
 import os
 
 from django.conf import settings
+from PIL import Image as PILImage
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
@@ -29,6 +30,11 @@ class ImagesValidationMixin:
                 f"File validation failed: file size exceeds limit for {file.name}"
             )
             raise ValidationError("The file size is too large")
+        if not self.respects_pixel_limit(file):
+            logger.warning(
+                f"File validation failed: too many pixels or unreadable for {file.name}"
+            )
+            raise ValidationError("The image dimensions are too large")
         if not self.verify_checksum(file, expected_hash):
             logger.warning(
                 f"File validation failed: checksum verification failed for {file.name}"
@@ -52,6 +58,17 @@ class ImagesValidationMixin:
         if not max_file_size:
             return True
         return size <= max_file_size
+
+    def respects_pixel_limit(self, file):
+        try:
+            file.seek(0)
+            with PILImage.open(file) as img:
+                width, height = img.size
+        except (OSError, PILImage.DecompressionBombError):
+            return False
+        finally:
+            file.seek(0)
+        return width * height <= settings.IMAGES_MAX_PIXELS
 
     def verify_checksum(self, file, expected_hash):
         computed_hash = get_sha256_sum_from_file(file)
