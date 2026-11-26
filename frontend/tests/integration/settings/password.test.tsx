@@ -73,6 +73,15 @@ describe('password settings', () => {
     expect(screen.getByLabelText('Neues Passwort')).toHaveValue(VALID);
   });
 
+  // The profile load on opening the settings must not look like a save in progress.
+  it('keeps the save button ready while the profile loads', () => {
+    renderWithProviders(<Password />, {
+      preloadedState: signedInState({ auth: { user: { api: { loading: true } } } }),
+    });
+
+    expect(screen.getByRole('button', { name: 'Speichern' })).toBeEnabled();
+  });
+
   it('shows the password rules before anything is typed', () => {
     render();
 

@@ -5,7 +5,7 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
-import { getApi, getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
+import { getMyUserDetails } from "@/store/entities/authentication/authentication.slice";
 import { requestEmailChange } from "@/store/entities/authentication/authentication.actions";
 import { IRequestEmailChangeForm, IUser } from "@/types";
 import SettingsSection from "@/common/components/settings/settingsSection";
@@ -29,7 +29,6 @@ const validationSchema = yup.object({
 const Email = () => {
     const dispatch = useAppDispatch();
     const me: IUser = useAppSelector(getMyUserDetails);
-    const authApi = useAppSelector(getApi);
 
     const [editing, setEditing] = useState(false);
     const [pendingEmail, setPendingEmail] = useState("");
@@ -133,7 +132,7 @@ const Email = () => {
                         <Button
                             type='submit'
                             variant='contained'
-                            disabled={authApi.loading}
+                            loading={form.isSubmitting}
                         >
                             {'Bestätigungslink senden'}
                         </Button>
