@@ -440,6 +440,8 @@ REST_FRAMEWORK = {
         # images
         "images_burst": "3000/min",
         "images_sustained": "10000/day",
+        "image_upload_burst": "30/min",
+        "image_upload_sustained": "300/day",
         # media views
         "media_burst": "3000/min",
         "media_sustained": "10000/day",

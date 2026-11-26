@@ -6,6 +6,7 @@ from frames.models import Frame
 from tests.support import seed
 from tests.support.factories import FrameTokenFactory, ReleaseFactory
 from tests.support.helpers.frames import token_headers
+from tests.support.helpers.images import upload_with_checksum
 
 pytestmark = pytest.mark.django_db
 
@@ -185,3 +186,25 @@ def test_password_reset_mails_trip_the_limit(client, throttled):
 
     assert codes[:AUTH_EMAIL_LIMIT] == [204] * AUTH_EMAIL_LIMIT
     assert codes[-1] == 429
+
+
+UPLOAD_LIMIT = 30  # image_upload_burst
+
+
+def test_uploads_have_their_own_tighter_limit(alice, throttled):
+    def upload():
+        image, checksum = upload_with_checksum()
+        return alice.post(
+            IMAGES_URL,
+            {
+                "image": image,
+                "upload_image_sha256_hex_hash": checksum,
+                "auto_delete_after_period": "true",
+            },
+            format="multipart",
+        ).status_code
+
+    codes = [upload() for _ in range(UPLOAD_LIMIT + 1)]
+
+    assert codes[-1] == 429
+    assert alice.get(IMAGES_URL).status_code == 200

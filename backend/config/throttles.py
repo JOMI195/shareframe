@@ -18,6 +18,15 @@ class ImagesSustainedRateThrottle(UserRateThrottle):
     scope = "images_sustained"
 
 
+# Each upload re-encodes the photo and renders every variant.
+class ImageUploadBurstRateThrottle(UserRateThrottle):
+    scope = "image_upload_burst"
+
+
+class ImageUploadSustainedRateThrottle(UserRateThrottle):
+    scope = "image_upload_sustained"
+
+
 # media access
 class MediaBurstRateThrottle(UserRateThrottle):
     scope = "media_burst"

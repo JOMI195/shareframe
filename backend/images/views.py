@@ -9,7 +9,12 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
-from config.throttles import ImagesBurstRateThrottle, ImagesSustainedRateThrottle
+from config.throttles import (
+    ImagesBurstRateThrottle,
+    ImagesSustainedRateThrottle,
+    ImageUploadBurstRateThrottle,
+    ImageUploadSustainedRateThrottle,
+)
 from sent_images.models import SentImage
 from user_stats.counters import bump
 
@@ -46,6 +51,15 @@ class ImagesViewSet(ModelViewSet):
         elif self.action == "destroy":
             return ImageDestroySerializer
         return self.serializer_class
+
+    def get_throttles(self):
+        throttles = super().get_throttles()
+        if self.action == "create":
+            throttles += [
+                ImageUploadBurstRateThrottle(),
+                ImageUploadSustainedRateThrottle(),
+            ]
+        return throttles
 
     def get_permissions(self):
         if self.action == "create":
