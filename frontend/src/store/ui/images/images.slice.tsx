@@ -16,10 +16,11 @@ type SliceState = {
       open: boolean;
       selectedImage: IImage | null
     },
-    sendToFrame: { open: boolean, imagesToSend: IImage[] },
+    sendToFrame: { open: boolean, imagesToSend: IImage[], presetReceivers: string[] },
     deactivate: { open: boolean, sentImageId: number | null },
     scheduledAction: { open: boolean, sentImageId: number | null, action: ScheduledSentImageAction | null },
-    selection: { open: boolean, selectedImages: IImage[] },
+    // receiver: set when the selection was started for one friend.
+    selection: { open: boolean, selectedImages: IImage[], receiver?: string | null },
   };
   // Set from another page to open the editor once the photos page is shown.
   uploadRequested: boolean;
@@ -37,10 +38,10 @@ const initialState: SliceState = {
       open: false,
       selectedImage: null
     },
-    sendToFrame: { open: false, imagesToSend: [] },
+    sendToFrame: { open: false, imagesToSend: [], presetReceivers: [] },
     deactivate: { open: false, sentImageId: null },
     scheduledAction: { open: false, sentImageId: null, action: null },
-    selection: { open: false, selectedImages: [] },
+    selection: { open: false, selectedImages: [], receiver: null },
   },
   uploadRequested: false,
   snackbar: {
@@ -282,6 +283,8 @@ const imagesSlice = createSlice({
     sendImageToUserFrameDialogOpened: {
       reducer: (sliceState, action: PayloadAction<{ images: IImage[] } | undefined>) => {
         sliceState.dialogs.sendToFrame.imagesToSend = action.payload?.images ?? sliceState.dialogs.selection.selectedImages;
+        const receiver = action.payload?.images ? null : sliceState.dialogs.selection.receiver;
+        sliceState.dialogs.sendToFrame.presetReceivers = receiver ? [receiver] : [];
         sliceState.dialogs.sendToFrame.open = true;
       },
       prepare: (payload?: { images: IImage[] }) => ({ payload }),
@@ -289,6 +292,7 @@ const imagesSlice = createSlice({
     sendImageToUserFrameDialogClosed: (sliceState) => {
       sliceState.dialogs.sendToFrame.open = false;
       sliceState.dialogs.sendToFrame.imagesToSend = [];
+      sliceState.dialogs.sendToFrame.presetReceivers = [];
     },
     deactivateSendImageToUserFrameDialogOpened: (sliceState, action) => {
       sliceState.dialogs.deactivate.open = true;
@@ -305,13 +309,15 @@ const imagesSlice = createSlice({
       sliceState.dialogs.scheduledAction.open = false;
       sliceState.dialogs.scheduledAction.sentImageId = null;
     },
-    selectionDialogOpened: (sliceState) => {
+    selectionDialogOpened: (sliceState, action: PayloadAction<{ receiver?: string } | undefined>) => {
       sliceState.dialogs.selection.selectedImages = [];
+      sliceState.dialogs.selection.receiver = action.payload?.receiver ?? null;
       sliceState.dialogs.selection.open = true;
     },
     selectionDialogClosed: (sliceState) => {
       sliceState.dialogs.selection.open = false;
       sliceState.dialogs.selection.selectedImages = [];
+      sliceState.dialogs.selection.receiver = null;
     },
     imageSelected: (sliceState, action: PayloadAction<{ image: IImage; keepImageOnReSelect?: boolean }>) => {
       const { image, keepImageOnReSelect = false } = action.payload;
@@ -420,8 +426,9 @@ export const closeScheduledSentImageDialog = () => ({
   type: scheduledSentImageDialogClosed.type,
 });
 
-export const openSelectionDialog = () => ({
+export const openSelectionDialog = (payload?: { receiver?: string }) => ({
   type: selectionDialogOpened.type,
+  payload,
 });
 
 export const closeSelectionDialog = () => ({

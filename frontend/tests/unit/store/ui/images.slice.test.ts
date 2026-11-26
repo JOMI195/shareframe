@@ -12,6 +12,7 @@ import reducer, {
   loadingSnackbarOpened,
   openPreviewImageDialog,
   openSelectionDialog,
+  openSendImageToUserFrameDialog,
   previewImageDialogClosed,
   previewImageDialogOpened,
   selectImage,
@@ -120,12 +121,21 @@ describe('preview dialog', () => {
 describe('selection and deactivate dialogs', () => {
   it('starts and ends with an empty selection', () => {
     const state = reducer(withSelection(), openSelectionDialog());
-    expect(state.dialogs.selection).toEqual({ open: true, selectedImages: [] });
+    expect(state.dialogs.selection).toEqual({ open: true, selectedImages: [], receiver: null });
 
     expect(reducer(withSelection(), closeSelectionDialog()).dialogs.selection).toEqual({
       open: false,
       selectedImages: [],
+      receiver: null,
     });
+  });
+
+  it('hands the friend a selection was started for on to the send dialog', () => {
+    const started = reducer(withSelection(), openSelectionDialog({ receiver: 'bob' }));
+    expect(started.dialogs.selection.receiver).toBe('bob');
+
+    expect(reducer(started, openSendImageToUserFrameDialog()).dialogs.sendToFrame.presetReceivers).toEqual(['bob']);
+    expect(reducer(started, openSendImageToUserFrameDialog({ images: [] })).dialogs.sendToFrame.presetReceivers).toEqual([]);
   });
 
   it('tracks the sent image being deactivated', () => {

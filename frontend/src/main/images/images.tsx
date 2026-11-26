@@ -7,7 +7,8 @@ import { fetchImages, setImagesPaginatedPage } from "@/store/entities/images/ima
 import { fetchFriendshipsIfStale } from "@/store/entities/friendships/friendships.actions";
 import ImagesGallery from "./gallery/imagesGallery";
 import { getImagesPaginated, getImagesPaginatedPageSize } from "@/store/entities/images/images.slice";
-import { closeSelectionDialog, getUploadRequested, openCreateImageDialog } from "@/store/ui/images/images.slice";
+import { closeSelectionDialog, getUploadRequested, openCreateImageDialog, openSelectionDialog } from "@/store/ui/images/images.slice";
+import { useLocation, useNavigate } from "react-router";
 import HiddenPageTitle from "@/common/components/hiddenPageTitle";
 
 const Images: React.FC = () => {
@@ -20,6 +21,17 @@ const Images: React.FC = () => {
     useEffect(() => {
         if (uploadRequested) dispatch(openCreateImageDialog());
     }, [dispatch, uploadRequested]);
+
+    // Sent here from a friend card: pick photos for that friend.
+    const location = useLocation();
+    const navigate = useNavigate();
+    const sendTo = (location.state as { sendTo?: string } | null)?.sendTo;
+    useEffect(() => {
+        if (!sendTo) return;
+        dispatch(openSelectionDialog({ receiver: sendTo }));
+        // Cleared, so going back or reloading does not start it again.
+        navigate(location.pathname, { replace: true, state: null });
+    }, [dispatch, navigate, location.pathname, sendTo]);
 
     // Reset on leave, not on entry: a reset on entry refetches after the first fetch.
     useEffect(() => () => {

@@ -5,7 +5,7 @@ import { getImagesPaginated } from "@/store/entities/images/images.slice";
 
 const SelectionBar = () => {
     const dispatch = useAppDispatch();
-    const selectedImages = useAppSelector(getDialogs).selection.selectedImages;
+    const { selectedImages, receiver } = useAppSelector(getDialogs).selection;
     const pageImages = useAppSelector(getImagesPaginated).results;
 
     const selectedIds = new Set(selectedImages.map((image) => image.id));
@@ -31,9 +31,9 @@ const SelectionBar = () => {
                 <Typography variant="subtitle2">
                     {count === 0 ? "Nichts ausgewählt" : `${count} ausgewählt`}
                 </Typography>
-                {count === 0 && (
+                {(count === 0 || receiver) && (
                     <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                        Wähle Fotos aus, um sie zu senden oder zu löschen
+                        {receiver ? `Wähle Fotos für ${receiver}` : "Wähle Fotos aus, um sie zu senden oder zu löschen"}
                     </Typography>
                 )}
             </Box>

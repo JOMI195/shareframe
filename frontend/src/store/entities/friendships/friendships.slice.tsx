@@ -7,6 +7,8 @@ type SliceState = {
   api: {
     loading: boolean;
     lastFetch: number | null;
+    // A failed list load, so the page can offer a retry instead of looking empty.
+    failed: boolean;
   };
   friendships: IFriendship[];
 };
@@ -15,6 +17,7 @@ const initialState: SliceState = {
   api: {
     loading: false,
     lastFetch: null,
+    failed: false,
   },
   friendships: []
 };
@@ -25,6 +28,7 @@ const friendshipsSlice = createSlice({
   reducers: {
     friendshipsRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.failed = false;
     },
     friendshipsReceived: (sliceState, action) => {
       sliceState.friendships = action.payload;
@@ -33,6 +37,7 @@ const friendshipsSlice = createSlice({
     },
     friendshipsRequestFailed: (sliceState) => {
       sliceState.api.loading = false;
+      sliceState.api.failed = true;
     },
     sendFriendshipRequestPending: (sliceState) => {
       sliceState.api.loading = true;

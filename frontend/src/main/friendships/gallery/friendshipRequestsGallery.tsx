@@ -224,6 +224,11 @@ const FriendshipRequestsGallery: React.FC = () => {
                             ))}
                     </Grid>
 
+                ) : friendshipsApi.failed ? (
+                    <DataNotFound
+                        notFoundMessage={"Anfragen konnten nicht geladen werden"}
+                        action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchFriendships()) }}
+                    />
                 ) : (
                     <DataNotFound notFoundMessage={"Keine Freundschaftsanfragen vorhanden"} />
                 )}

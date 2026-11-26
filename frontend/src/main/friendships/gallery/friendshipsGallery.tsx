@@ -20,6 +20,10 @@ import { getUser } from "@/store/entities/authentication/authentication.slice";
 import { openCreateFriendshipsDialog, openDeleteFriendshipsDialog } from "@/store/ui/friendships/friendships.slice";
 import { IFriendship } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
+import SendIcon from '@mui/icons-material/Send';
+import { useNavigate } from "react-router";
+import { getImageUrl } from "@/assets/endpoints/app/appEndpoints";
+import { fetchFriendships } from "@/store/entities/friendships/friendships.actions";
 import DataNotFound from "@/common/components/dataNotFound";
 import UserAvatar from "@/common/components/userAvatar";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
@@ -29,6 +33,7 @@ const ITEMS_PER_PAGE = 6;
 
 const FriendshipsGallery: React.FC = () => {
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const theme = useTheme();
 
     const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
@@ -112,7 +117,17 @@ const FriendshipsGallery: React.FC = () => {
                         height: "100%",
                         width: "100%"
                     }}>
-                        <Stack direction="row">
+                        <Stack direction="row" spacing={1}>
+                            <Tooltip title={`Foto an ${friend} senden`}>
+                                <IconButton
+                                    onClick={() => navigate("/" + getImageUrl(), { state: { sendTo: friend } })}
+                                    aria-label={`Foto an ${friend} senden`}
+                                    color="primary"
+                                    sx={{ width: 44, height: 44 }}
+                                >
+                                    <SendIcon />
+                                </IconButton>
+                            </Tooltip>
                             <Tooltip title={"Freundschaft beenden"}>
                                 <IconButton
                                     onClick={() => { deleteFriendButtonClickHandle(friendship) }}
@@ -202,6 +217,11 @@ const FriendshipsGallery: React.FC = () => {
                                 </Grid>
                             ))}
                     </Grid>
+                ) : friendshipsApi.failed ? (
+                    <DataNotFound
+                        notFoundMessage={"Freunde konnten nicht geladen werden"}
+                        action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchFriendships()) }}
+                    />
                 ) : (
                     <DataNotFound
                         notFoundMessage={"Keine Freundschaften vorhanden"}
