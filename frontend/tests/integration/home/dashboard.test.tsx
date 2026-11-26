@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { HttpResponse, http as mswHttp } from 'msw';
+import { getDashboardStatsUrl } from '@/assets/endpoints/api/dashboardEndpoints';
+import { apiUrl } from '@tests/mocks/apiUrl';
 import { screen, waitFor } from '@testing-library/react';
 import Home from '@/main/home/home';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
@@ -10,6 +13,24 @@ import { getFramesUrl } from '@/assets/endpoints/app/appEndpoints';
 const render = () => renderWithProviders(<Home />, { preloadedState: signedInState() });
 
 describe('dashboard', () => {
+  // Zeros would read as an empty account.
+  it('offers a retry instead of zeros when the statistics fail', async () => {
+    let fail = true;
+    server.use(
+      mswHttp.get(apiUrl(getDashboardStatsUrl()), () =>
+        fail ? HttpResponse.json({ detail: 'boom' }, { status: 500 }) : HttpResponse.json(makeDashboardData()),
+      ),
+    );
+    const { user } = render();
+
+    const retry = await screen.findByRole('button', { name: 'Erneut versuchen' });
+    expect(screen.getByText('Statistiken konnten nicht geladen werden')).toBeInTheDocument();
+    fail = false;
+    await user.click(retry);
+
+    await waitFor(() => expect(screen.queryByText('Statistiken konnten nicht geladen werden')).not.toBeInTheDocument());
+  });
+
   it('greets the signed-in user', async () => {
     render();
 

@@ -13,6 +13,8 @@ import QuickAccess from "./quickAccess/quickAccess";
 import StatsSection from "./stats/stats";
 import { getDashboardData, getApi as getDashboardApi } from "@/store/entities/dashboard/dashboard.slice";
 import { useMinimumLoading } from "@/hooks/loading/useMinimumLoading";
+import DataNotFound from "@/common/components/dataNotFound";
+import { fetchDashboardStats } from "@/store/entities/dashboard/dashboard.actions";
 
 const Dashboard: React.FC = () => {
     const user = useAppSelector(getUser);
@@ -65,6 +67,11 @@ const Dashboard: React.FC = () => {
             </Typography>
             {showSkeleton ? (
                 <LoadingSkeleton count={1} />
+            ) : dashboardApi.failed && !dashboardStats ? (
+                <DataNotFound
+                    notFoundMessage="Statistiken konnten nicht geladen werden"
+                    action={{ label: "Erneut versuchen", onClick: () => dispatch(fetchDashboardStats()) }}
+                />
             ) : (
                 <StatsSection
                     toMeSentImagesCount={toMeSentImagesCount}

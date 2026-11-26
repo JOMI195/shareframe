@@ -7,6 +7,8 @@ type SliceState = {
   api: {
     loading: boolean;
     lastFetch: number | null;
+    // Without it a failed load would show zeros, as if the account were empty.
+    failed: boolean;
   };
   dashboardData: IDashboardData | null;
 };
@@ -15,6 +17,7 @@ const initialState: SliceState = {
   api: {
     loading: false,
     lastFetch: null,
+    failed: false,
   },
   dashboardData: null,
 };
@@ -29,6 +32,7 @@ const dashboardSlice = createSlice({
   reducers: {
     dashboardStatsRequested: (sliceState) => {
       sliceState.api.loading = true;
+      sliceState.api.failed = false;
     },
     dashboardStatsReceived: (sliceState, action) => {
       sliceState.dashboardData = action.payload;
@@ -37,6 +41,7 @@ const dashboardSlice = createSlice({
     },
     dashboardStatsRequestFailed: (sliceState) => {
       resetApiState(sliceState);
+      sliceState.api.failed = true;
     },
   },
   extraReducers: (builder) => {
