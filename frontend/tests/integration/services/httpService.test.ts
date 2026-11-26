@@ -247,3 +247,111 @@ describe('CSRF re-seeding', () => {
     expect(calls).toEqual([PROTECTED]);
   });
 });
+
+describe('another tab rotated the refresh cookie', () => {
+  it('replays the request instead of failing it', async () => {
+    const { calls, handler } = counting();
+    let first = true;
+    server.use(
+      handler(PROTECTED, () =>
+        first ? ((first = false), HttpResponse.json({ detail: 'expired' }, { status: 401 })) : HttpResponse.json([{ id: 1 }]),
+      ),
+      handler(getTokenRefreshUrl(), () => HttpResponse.json({ detail: 'blacklisted' }, { status: 401 })),
+      handler(getTokenLogoutUrl(), () => HttpResponse.json({})),
+    );
+
+    const { http, dispatch } = await loadHttp();
+    const response = await http.get(PROTECTED);
+
+    expect(response.data).toEqual([{ id: 1 }]);
+    expect(calls).toEqual([PROTECTED, getTokenRefreshUrl(), PROTECTED]);
+    expect(dispatch).not.toHaveBeenCalledWith(expect.objectContaining({ type: 'user/signedOut' }));
+  });
+
+  it('releases requests queued behind the failed refresh', async () => {
+    let rotated = false;
+    server.use(
+      mswHttp.all(apiUrl(PROTECTED), () =>
+        rotated ? HttpResponse.json({ ok: true }) : HttpResponse.json({ detail: 'expired' }, { status: 401 }),
+      ),
+      mswHttp.post(apiUrl(getTokenRefreshUrl()), async () => {
+        await delay(20);
+        rotated = true;
+        return HttpResponse.json({ detail: 'blacklisted' }, { status: 401 });
+      }),
+    );
+
+    const { http } = await loadHttp();
+    const results = await Promise.allSettled([http.get(PROTECTED), http.get(PROTECTED)]);
+
+    expect(results.map((r) => r.status)).toEqual(['fulfilled', 'fulfilled']);
+  });
+});
+
+describe('robustness', () => {
+  it('passes on an error that carries no request config', async () => {
+    const { http } = await loadHttp();
+    const { default: axiosInstance } = await import('@/services/api');
+    const id = axiosInstance.interceptors.request.use(() => {
+      throw new Error('boom');
+    });
+
+    await expect(http.get(PROTECTED)).rejects.toThrow('boom');
+    axiosInstance.interceptors.request.eject(id);
+  });
+
+  it('fetches one csrf token for concurrent csrf failures', async () => {
+    const { calls, handler } = counting();
+    const failed = new Set<number>();
+    let attempt = 0;
+    server.use(
+      handler(PROTECTED, () => {
+        attempt += 1;
+        if (attempt <= 2) {
+          failed.add(attempt);
+          return HttpResponse.json({ detail: 'CSRF Failed: token missing' }, { status: 403 });
+        }
+        return HttpResponse.json({ ok: true });
+      }),
+      mswHttp.get(apiUrl(getCsrfUrl()), async () => {
+        calls.push(getCsrfUrl());
+        await delay(20);
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    const { http } = await loadHttp();
+    await Promise.all([http.post(PROTECTED, {}), http.post(PROTECTED, {})]);
+
+    expect(calls.filter((c) => c === getCsrfUrl())).toHaveLength(1);
+  });
+});
+
+describe('csrf header', () => {
+  const seen = () => {
+    const headers: Record<string, string | null> = {};
+    return {
+      headers,
+      record: (key: string) => ({ request }: { request: Request }) => {
+        headers[key] = request.headers.get('X-CSRFToken');
+        return HttpResponse.json({});
+      },
+    };
+  };
+
+  it('goes to the api but never to another origin', async () => {
+    document.cookie = 'csrftoken=test-token; path=/';
+    const { headers, record } = seen();
+    server.use(
+      mswHttp.post(apiUrl(PROTECTED), record('api')),
+      mswHttp.post('https://elsewhere.example/hook', record('other')),
+    );
+
+    const { http } = await loadHttp();
+    await http.post(PROTECTED, {});
+    await http.post('https://elsewhere.example/hook', {});
+
+    expect(headers.api).toBe('test-token');
+    expect(headers.other).toBeNull();
+  });
+});

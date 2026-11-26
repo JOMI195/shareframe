@@ -1,5 +1,6 @@
 import { Store } from "redux";
 import { Persistor } from "redux-persist";
+import axios from "axios";
 import axiosInstance from "./api";
 import {
   signedOut,
@@ -28,6 +29,12 @@ let serverDown = false;
 let loggingOut = false;
 // Must always settle, else callers awaiting a queued request hang forever.
 let refreshSubscribers: Array<(error?: unknown) => void> = [];
+let csrfRequest: Promise<unknown> | null = null;
+
+const reseedCsrf = () =>
+  (csrfRequest ??= axiosInstance.get(getCsrfUrl()).finally(() => {
+    csrfRequest = null;
+  }));
 
 const subscribeTokenRefresh = (cb: (error?: unknown) => void) => {
   refreshSubscribers.push(cb);
@@ -79,6 +86,7 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
       }
 
       const originalRequest = error.config;
+      if (!originalRequest) return Promise.reject(error);
 
       const isCsrfFailure =
         error.response?.status === 403 &&
@@ -91,7 +99,11 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
         !originalRequest._csrfRetry
       ) {
         originalRequest._csrfRetry = true;
-        await axiosInstance.get(getCsrfUrl());
+        try {
+          await reseedCsrf();
+        } catch {
+          return Promise.reject(error);
+        }
         return axiosInstance(originalRequest);
       }
 
@@ -128,6 +140,18 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
           return axiosInstance(originalRequest);
         } catch (refreshError) {
           isRefreshing = false;
+
+          // Another tab may have just rotated the shared refresh cookie.
+          if (axios.isAxiosError(refreshError) && refreshError.response?.status === 401) {
+            try {
+              const response = await axiosInstance({ ...originalRequest, _rotatedElsewhere: true });
+              settleRefreshSubscribers();
+              return response;
+            } catch {
+              // Still unauthorized: the session really is gone.
+            }
+          }
+
           settleRefreshSubscribers(refreshError);
           authFailureCount++;
 
@@ -141,7 +165,7 @@ const apiSetup = (store: Store<RootState>, persistor: Persistor) => {
 
       // Auth endpoints are excluded: a failed refresh is already counted by the
       // catch above, and counting it twice signs out on a single expired session.
-      if (error.response?.status === 401 && !isAuthEndpoint) {
+      if (error.response?.status === 401 && !isAuthEndpoint && !originalRequest._rotatedElsewhere) {
         authFailureCount++;
 
         if (authFailureCount >= MAX_AUTH_FAILURES) {
