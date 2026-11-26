@@ -15,9 +15,12 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile.prod
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile - --error-logfile -
-    # Workers share their metric counters here; tmpfs starts it empty.
     environment:
+      # Workers share their metric counters here; tmpfs starts it empty.
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+      # Every gunicorn thread keeps one DB connection open, so workers x 4 threads stays well under max_connections.
+      GUNICORN_WORKERS: "3"
+      DB_CONN_MAX_AGE: "60"
     tmpfs:
       - /tmp/prometheus-multiproc
     healthcheck:
@@ -62,7 +65,7 @@ services:
       - 9000
     env_file:
       - ./.env.prod.local
-    # One DB thread serves all frames; gunicorn stays at 0 so its many threads don't exhaust max_connections.
+    # One DB thread serves all frames.
     environment:
       DB_CONN_MAX_AGE: "60"
     depends_on:

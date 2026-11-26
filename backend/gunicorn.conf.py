@@ -3,8 +3,12 @@ import os
 from pathlib import Path
 
 worker_class = "gthread"
-workers = max(2, multiprocessing.cpu_count())
+# cpu_count sees the host, not the container; with persistent DB connections each thread holds one.
+workers = int(os.environ.get("GUNICORN_WORKERS", max(2, multiprocessing.cpu_count())))
 threads = 4
+# Recycles workers so memory Pillow leaves behind does not pile up.
+max_requests = 1000
+max_requests_jitter = 100
 timeout = 120
 graceful_timeout = 30
 # Unused, and $HOME is not writable for the app user.
