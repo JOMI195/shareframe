@@ -31,6 +31,8 @@ pytestmark = pytest.mark.django_db
 
 URL = "/api/frames/"
 ALICE_FRAME = "seed-frame-alice-living"
+# frame_auth_ip_burst, keyed on the client IP.
+FRAME_AUTH_IP_LIMIT = 60
 
 
 @pytest.fixture
@@ -593,6 +595,53 @@ class TestObtainToken:
 
         assert response.status_code == 404
 
+    def test_the_legacy_ws_route_refuses_an_inactive_frame(
+        self, client, alice_entry, inactive_alice_frame
+    ):
+        response = client.post(
+            f"{URL}obtain-frame-ws-auth-token/",
+            {"private_serial_number": alice_entry["private_serial_number"]},
+            format="json",
+        )
+
+        assert response.status_code == 404
+
+    def test_the_legacy_ws_route_is_throttled_per_ip(self, client, throttled):
+        codes = [
+            client.post(
+                f"{URL}obtain-frame-ws-auth-token/",
+                {"private_serial_number": "NOPE"},
+                format="json",
+            ).status_code
+            for _ in range(FRAME_AUTH_IP_LIMIT + 1)
+        ]
+
+        assert codes[-1] == 429
+
+    def test_an_inactive_frame_gets_no_token(
+        self, client, alice_entry, inactive_alice_frame
+    ):
+        response = client.post(
+            f"{URL}obtain-frame-token/",
+            {},
+            format="json",
+            headers=signature_headers(alice_entry["seed_b64"]),
+        )
+
+        assert response.status_code == 403
+
+    def test_an_inactive_frame_gets_no_legacy_hmac_token(
+        self, client, alice_entry, inactive_alice_frame
+    ):
+        response = client.post(
+            f"{URL}obtain-frame-auth-token/",
+            {},
+            format="json",
+            headers=hmac_headers(alice_entry["private_serial_number"]),
+        )
+
+        assert response.status_code == 403
+
 
 @pytest.mark.parametrize("path", ["verify-frame-token", "verify-frame-auth-token"])
 class TestVerifyToken:
@@ -626,6 +675,29 @@ class TestVerifyToken:
         )
 
         assert response.status_code == 401
+
+    def test_an_inactive_frames_token_is_unauthorized(
+        self, client, inactive_alice_frame, path
+    ):
+        token = FrameTokenFactory(frame=inactive_alice_frame)
+
+        response = client.post(
+            f"{URL}{path}/", {"access_token": token.access_token}, format="json"
+        )
+
+        assert response.status_code == 401
+
+    def test_guessing_tokens_is_throttled_per_ip(self, client, path, throttled):
+        codes = [
+            client.post(
+                f"{URL}{path}/",
+                {"access_token": "11111111-2222-3333-4444-555555555555"},
+                format="json",
+            ).status_code
+            for _ in range(FRAME_AUTH_IP_LIMIT + 1)
+        ]
+
+        assert codes[-1] == 429
 
 
 class TestOTP:
@@ -782,6 +854,21 @@ class TestHeartbeat:
         response = client.post(
             self.url(),
             {"local_ip_address": "not-an-ip", "version": "8.0.0"},
+            format="json",
+            headers=token_headers(token.access_token),
+        )
+
+        assert response.status_code == 400
+
+    @pytest.mark.parametrize("version", ["x" * 101, 5])
+    def test_a_version_that_does_not_fit_is_rejected(
+        self, client, alice_frame, version
+    ):
+        token = FrameTokenFactory(frame=alice_frame)
+
+        response = client.post(
+            self.url(),
+            {"local_ip_address": "192.168.9.9", "version": version},
             format="json",
             headers=token_headers(token.access_token),
         )

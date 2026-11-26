@@ -158,6 +158,24 @@ async def test_config_updates_the_ip_and_version():
     await communicator.disconnect()
 
 
+async def test_config_ignores_an_invalid_ip_and_version():
+    frame = await make_frame()
+    before = await reload(frame)
+    communicator, _, _ = await connect(await make_token(frame))
+
+    await communicator.send_to(
+        text_data=json.dumps(
+            {"type": "config", "local_ip_address": "evil.example", "version": "x" * 101}
+        )
+    )
+    await communicator.receive_nothing(timeout=0.3)
+
+    reloaded = await reload(frame)
+    assert reloaded.local_ip_address == before.local_ip_address
+    assert reloaded.version == before.version
+    await communicator.disconnect()
+
+
 async def test_close_connection_closes_with_the_revoked_code():
     communicator, _, _ = await connect(await make_token(await make_frame()))
 

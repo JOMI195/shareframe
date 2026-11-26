@@ -1,7 +1,7 @@
 import time
 
 import pytest
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, Throttled
 from rest_framework.test import APIRequestFactory
 
 from frames.auth import (
@@ -17,6 +17,8 @@ from tests.support.helpers.frames import hmac_headers, signature_headers, token_
 pytestmark = pytest.mark.django_db
 
 ALICE_FRAME = "seed-frame-alice-living"
+# failed_frame_hmac, keyed on the client IP.
+FAILED_HMAC_LIMIT = 10
 
 
 def request_with(headers):
@@ -31,6 +33,12 @@ def entry():
 @pytest.fixture
 def frame(entry):
     return Frame.objects.get(private_serial_number=entry["private_serial_number"])
+
+
+@pytest.fixture
+def inactive_frame(frame):
+    Frame.objects.filter(pk=frame.pk).update(is_active=False)
+    return frame
 
 
 class TestSignatureAuth:
@@ -115,6 +123,12 @@ class TestSignatureAuth:
         with pytest.raises(AuthenticationFailed):
             FrameSignatureAuthentication().authenticate(request_with(headers))
 
+    def test_an_inactive_frame_is_rejected(self, entry, inactive_frame):
+        with pytest.raises(AuthenticationFailed):
+            FrameSignatureAuthentication().authenticate(
+                request_with(signature_headers(entry["seed_b64"]))
+            )
+
 
 class TestLegacyHmacAuth:
     def test_a_valid_digest_authenticates(self, entry, frame):
@@ -158,6 +172,30 @@ class TestLegacyHmacAuth:
                 )
             )
 
+    def test_an_inactive_frame_is_rejected(self, entry, inactive_frame):
+        with pytest.raises(AuthenticationFailed):
+            FrameHTTPAuthentication().authenticate(
+                request_with(hmac_headers(entry["private_serial_number"]))
+            )
+
+    def test_repeated_failures_lock_out_even_a_valid_digest(self, entry, throttled):
+        for _ in range(FAILED_HMAC_LIMIT):
+            with pytest.raises(AuthenticationFailed):
+                FrameHTTPAuthentication().authenticate(
+                    request_with(hmac_headers("NOPE-0000"))
+                )
+
+        with pytest.raises(Throttled):
+            FrameHTTPAuthentication().authenticate(
+                request_with(hmac_headers(entry["private_serial_number"]))
+            )
+
+    def test_successes_do_not_count(self, entry, throttled):
+        for _ in range(FAILED_HMAC_LIMIT + 2):
+            FrameHTTPAuthentication().authenticate(
+                request_with(hmac_headers(entry["private_serial_number"]))
+            )
+
 
 class TestTokenAuth:
     def test_a_valid_token_authenticates(self, frame):
@@ -197,6 +235,14 @@ class TestTokenAuth:
 
     def test_an_expired_token_is_rejected(self, frame):
         token = FrameTokenFactory(frame=frame, expired=True)
+
+        with pytest.raises(AuthenticationFailed):
+            FrameTokenAuthentication().authenticate(
+                request_with(token_headers(token.access_token))
+            )
+
+    def test_an_inactive_frames_token_is_rejected(self, inactive_frame):
+        token = FrameTokenFactory(frame=inactive_frame)
 
         with pytest.raises(AuthenticationFailed):
             FrameTokenAuthentication().authenticate(
