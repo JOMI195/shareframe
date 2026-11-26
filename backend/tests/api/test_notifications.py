@@ -21,7 +21,7 @@ KIND = NotificationKind.INACTIVITY_REMINDER
 EMAIL = NotificationChannel.EMAIL
 PUSH = NotificationChannel.PUSH
 SUBSCRIPTION = {
-    "endpoint": "https://push.example.com/abc",
+    "endpoint": "https://fcm.googleapis.com/fcm/send/abc",
     "p256dh": "key",
     "auth": "secret",
 }
@@ -58,6 +58,23 @@ class TestPushSubscriptions:
             PushSubscription.objects.get(endpoint=SUBSCRIPTION["endpoint"]).account
             == user.account
         )
+
+    @pytest.mark.parametrize(
+        "endpoint",
+        [
+            "https://backend:8000/api/metrics/",
+            "http://fcm.googleapis.com/fcm/send/abc",
+        ],
+    )
+    def test_an_endpoint_outside_the_push_services_is_rejected(
+        self, client_as, user, endpoint
+    ):
+        response = client_as(user).post(
+            SUBSCRIPTIONS_URL, {**SUBSCRIPTION, "endpoint": endpoint}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert not PushSubscription.objects.filter(endpoint=endpoint).exists()
 
     def test_the_same_browser_moves_to_the_next_account(self, client_as, user):
         other = UserFactory(is_active=True)

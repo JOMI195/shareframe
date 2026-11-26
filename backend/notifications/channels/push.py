@@ -5,6 +5,7 @@ from django.conf import settings
 from pywebpush import WebPushException, webpush
 
 from ..models import PushSubscription
+from ..push_endpoints import is_push_service_url
 from .base import Channel
 
 logger = logging.getLogger(__name__)
@@ -32,6 +33,11 @@ class PushChannel(Channel):
         return delivered
 
     def _send_one(self, subscription: PushSubscription, payload: str) -> bool:
+        if not is_push_service_url(subscription.endpoint):
+            logger.warning(
+                "Skipped push to unknown service, subscription %s", subscription.pk
+            )
+            return False
         try:
             webpush(
                 subscription_info={
