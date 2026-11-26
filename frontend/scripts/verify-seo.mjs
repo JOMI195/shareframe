@@ -1,4 +1,5 @@
 import { readFileSync, existsSync } from "node:fs";
+import { brotliDecompressSync, gunzipSync } from "node:zlib";
 import { join, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -12,6 +13,18 @@ const prerendered = paths.filter((path) =>
 );
 
 const failures = [];
+
+// nginx serves these siblings as they are, so a stale one hides the real page.
+const checkCompressed = (file, label) => {
+  const html = readFileSync(file);
+  for (const [ext, decode] of [[".br", brotliDecompressSync], [".gz", gunzipSync]]) {
+    if (!existsSync(file + ext)) {
+      failures.push(`${label}: missing ${ext} sibling`);
+    } else if (!decode(readFileSync(file + ext)).equals(html)) {
+      failures.push(`${label}: ${ext} sibling is stale`);
+    }
+  }
+};
 const seen = { title: new Map(), description: new Map() };
 
 const readTag = (html, pattern, label, file) => {
@@ -35,9 +48,7 @@ for (const path of prerendered) {
     failures.push(`${relative}: not generated`);
     continue;
   }
-  if (!existsSync(`${file}.br`)) {
-    failures.push(`${relative}: missing brotli sibling`);
-  }
+  checkCompressed(file, relative);
 
   const html = readFileSync(file, "utf-8");
 
@@ -107,6 +118,17 @@ for (const path of prerendered) {
   if (/Deine Vorteile mit ShareFrame/.test(html)) {
     failures.push(`${relative}: old duplicated <noscript> block still present`);
   }
+}
+
+const appShell = join(outDir, "app.html");
+if (!existsSync(appShell)) {
+  failures.push("app.html: not generated");
+} else {
+  checkCompressed(appShell, "app.html");
+  const shell = readFileSync(appShell, "utf-8");
+  if (!/<div id="root"><\/div>/.test(shell)) failures.push("app.html: carries prerendered markup");
+  if (/rel="canonical"/.test(shell)) failures.push("app.html: carries a canonical link");
+  if (!/<meta name="robots" content="noindex/.test(shell)) failures.push("app.html: not noindex");
 }
 
 const sitemapFile = join(outDir, "sitemap.xml");
