@@ -8,6 +8,7 @@
 {% endblock %}
 
 {% block content %}
+{% if busy %}<p class="errornote">An archive is already being prepared. Try again in a minute.</p>{% endif %}
 <p>The archive holds every server log, including email and IP addresses. Handle it with care.</p>
 
 <form method="post" id="server-logs-form">{% csrf_token %}

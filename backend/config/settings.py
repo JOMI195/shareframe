@@ -161,6 +161,10 @@ ASGI_APPLICATION = "config.asgi.application"
 LOGS_DIR = os.path.join(BASE_DIR, "logs")
 os.makedirs(LOGS_DIR, exist_ok=True)
 
+# Bounds the admin log archive so it never exhausts memory or CPU.
+SERVER_LOGS_MAX_FILE_BYTES = 100 * 1024 * 1024  # 100 MB
+SERVER_LOGS_MAX_TOTAL_BYTES = 300 * 1024 * 1024  # 300 MB
+
 LOG_FILES = {
     "default": "backend-default.log",
     "application": "backend-application.log",
