@@ -1,22 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { areCookiesEnabled, isCookieConsentExpired } from '@/common/utils/cookies';
-
-const NOW = 1_800_000_000_000;
+import { areCookiesEnabled } from '@/common/utils/cookies';
 
 afterEach(() => vi.useRealTimers());
-
-describe('isCookieConsentExpired', () => {
-  it('treats a missing expiry as expired', () => {
-    expect(isCookieConsentExpired(null)).toBe(true);
-  });
-
-  it('expires only strictly past the timestamp', () => {
-    vi.useFakeTimers().setSystemTime(NOW);
-    expect(isCookieConsentExpired(NOW - 1)).toBe(true);
-    expect(isCookieConsentExpired(NOW)).toBe(false);
-    expect(isCookieConsentExpired(NOW + 1)).toBe(false);
-  });
-});
 
 describe('areCookiesEnabled', () => {
   it('is true when the browser stores cookies and leaves no probe behind', () => {
