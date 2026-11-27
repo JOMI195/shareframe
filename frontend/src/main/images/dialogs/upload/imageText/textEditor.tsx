@@ -1,3 +1,4 @@
+import { canvasBackground } from '@/common/utils/canvas/canvasBackground';
 import React, { useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Konva from 'konva';
 import { Image as KonvaImage, Label, Layer, Rect, Stage, Tag, Text, Transformer } from 'react-konva';
@@ -292,7 +293,7 @@ const TextEditor: React.FC<TextEditorProps> = ({
                 position: 'relative',
                 outline: 'none',
                 '&:focus-visible': { outline: `2px solid ${theme.palette.primary.main}`, outlineOffset: 2 },
-                backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                backgroundColor: canvasBackground(theme),
                 touchAction: 'none',
             }}
         >

@@ -1,4 +1,4 @@
-import { Box, Button, Grid, IconButton, Slider, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from '@mui/material';
+import { alpha, Box, Button, Grid, IconButton, Slider, ToggleButton, ToggleButtonGroup, Tooltip, Typography, type Theme } from '@mui/material';
 import React from 'react';
 
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -56,6 +56,7 @@ const NavButton: React.FC<NavButtonProps> = ({ label, onClick, disabled, tooltip
                 flex: '1 1 0',
                 minWidth: 0,
                 py: 0.25,
+                minHeight: 36,
                 gap: 0.5,
                 borderRadius: 1,
                 color: 'text.secondary',
@@ -124,8 +125,7 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 onClick={() => rotate(-1)}
                 disabled={disabled}
                 aria-label="Nach links drehen"
-                size="small"
-                sx={{ color: 'text.secondary', mr: 1 }}
+                sx={{ color: 'text.secondary', mr: 1, width: 40, height: 40 }}
             >
                 <RotateLeftIcon />
             </IconButton>
@@ -145,7 +145,7 @@ const RotationControl: React.FC<RotationControlProps> = ({
                         width: 20,
                         height: 20,
                         '&:hover, &.Mui-focusVisible': {
-                            boxShadow: '0px 0px 0px 8px rgba(25, 118, 210, 0.16)',
+                            boxShadow: (theme: Theme) => `0px 0px 0px 8px ${alpha(theme.palette.primary.main, 0.16)}`,
                         },
                     },
                     '& .MuiSlider-rail': {
@@ -157,8 +157,7 @@ const RotationControl: React.FC<RotationControlProps> = ({
                 onClick={() => rotate(1)}
                 disabled={disabled}
                 aria-label="Nach rechts drehen"
-                size="small"
-                sx={{ color: 'text.secondary', ml: 1 }}
+                sx={{ color: 'text.secondary', ml: 1, width: 40, height: 40 }}
             >
                 <RotateRightIcon />
             </IconButton>
@@ -249,8 +248,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     onClick={handleZoomOut}
                     disabled={!!disabled || zoom <= MIN_ZOOM}
                     aria-label="Verkleinern"
-                    size="small"
-                    sx={{ color: 'text.secondary', mr: 1 }}
+                    sx={{ color: 'text.secondary', mr: 1, width: 40, height: 40 }}
                 >
                     <ZoomOutIcon />
                 </IconButton>
@@ -270,7 +268,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                             width: 20,
                             height: 20,
                             '&:hover, &.Mui-focusVisible': {
-                                boxShadow: '0px 0px 0px 8px rgba(25, 118, 210, 0.16)',
+                                boxShadow: (theme: Theme) => `0px 0px 0px 8px ${alpha(theme.palette.primary.main, 0.16)}`,
                             },
                         },
                         '& .MuiSlider-rail': {
@@ -282,8 +280,7 @@ export const Navigation: React.FC<NavigationProps> = ({
                     onClick={handleZoomIn}
                     disabled={!!disabled || zoom >= MAX_ZOOM}
                     aria-label="Vergrößern"
-                    size="small"
-                    sx={{ color: 'text.secondary', ml: 1 }}
+                    sx={{ color: 'text.secondary', ml: 1, width: 40, height: 40 }}
                 >
                     <ZoomInIcon />
                 </IconButton>

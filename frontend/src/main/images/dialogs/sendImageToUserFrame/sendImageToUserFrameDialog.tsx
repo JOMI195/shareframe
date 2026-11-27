@@ -205,7 +205,7 @@ const SendImageToUserFrameDialog = () => {
                             key={image.id}
                             url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
                             alt={image.display_name || image.name}
-                            style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+                            style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: theme.shape.borderRadius, flexShrink: 0 }}
                         />
                     ))}
                 </Box>

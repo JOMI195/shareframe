@@ -11,6 +11,7 @@ import { openAuthAlertSnackbar } from "@/store/ui/authentication/authentication.
 import { SlideTransition, ZoomTransition } from "@/common/components/dialogTransitions";
 import Navigation from "@/main/images/dialogs/upload/imageCropping/cropper/navigation";
 import { getCroppedImg } from "@/main/images/dialogs/upload/imageCropping/cropper/utils";
+import { canvasBackground } from '@/common/utils/canvas/canvasBackground';
 
 const ZOOM_FACTOR = 0.1;
 const MIN_ZOOM = 1;
@@ -102,7 +103,7 @@ const CropAvatarDialog = ({ file, onClose }: CropAvatarDialogProps) => {
                         position: 'relative',
                         width: '100%',
                         height: { xs: 300, sm: 360 },
-                        bgcolor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                        bgcolor: canvasBackground(theme),
                     }}
                 >
                     {src && entered && (

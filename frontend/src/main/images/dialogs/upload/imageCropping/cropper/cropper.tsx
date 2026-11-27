@@ -7,6 +7,7 @@ import { frameSize } from '../../frameSize';
 import { FRAME_ASPECT_RATIO } from '../../frameAspectBox';
 import { passepartoutBackground, passepartoutShade } from '../../passepartout';
 import { FillColor, containZoom } from './utils';
+import { canvasBackground } from '@/common/utils/canvas/canvasBackground';
 
 const ZOOM_FACTOR = 0.05;
 const MOVE_STEP = 5;
@@ -139,7 +140,7 @@ const Cropper: React.FC<CropperProps> = ({
                     position: 'relative',
                     alignSelf: 'stretch',
                     width: '100%',
-                    backgroundColor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                    backgroundColor: canvasBackground(theme),
                 }}>
                     <style>{getCropperStyles()}</style>
                     {cropSize && <div aria-hidden style={{

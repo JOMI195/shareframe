@@ -46,7 +46,7 @@ const PreviewImage: React.FC<{ image: IImage; details?: PreviewDetails }> = ({ i
 
     // Sized from the known ratio so the skeleton already takes the photo's box.
     const box = (boxRatio: number) => ({ width: `min(100%, calc(${maxHeight} * ${boxRatio}))`, aspectRatio: `${boxRatio}` });
-    const fill = { display: "block", width: "100%", height: "100%", objectFit: "contain", borderRadius: 8 } as const;
+    const fill = { display: "block", width: "100%", height: "100%", objectFit: "contain", borderRadius: theme.shape.borderRadius } as const;
 
     return (
         <PreviewLayout details={details} toggle={<EpaperToggle value={view} onChange={setView} />}>
