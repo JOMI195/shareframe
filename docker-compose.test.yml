@@ -194,9 +194,9 @@ services:
     tmpfs:
       - /var/lib/postgresql/data
       - /repo
+      - /data/media
     volumes:
       - backup_metrics:/metrics
-      - logs:/data/logs:ro
     depends_on:
       backend:
         condition: service_healthy

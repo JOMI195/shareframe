@@ -1,6 +1,6 @@
 # Backup
 
-The `backup` service runs [restic](https://restic.net) on a cron schedule (UTC). Each run stores two snapshots, a `pg_dumpall` of Postgres (tag `postgres`) and the media and logs volumes (tag `files`), then applies the retention policy. A weekly `restic check` reads a sample of the stored data.
+The `backup` service runs [restic](https://restic.net) on a cron schedule (UTC). Each run stores two snapshots, a `pg_dumpall` of Postgres (tag `postgres`) and the media volume (tag `files`), then applies the retention policy. A weekly `restic check` reads a sample of the stored data.
 
 Each run also writes its result, sizes and failed step to the `backup_metrics` volume, which node-exporter exports. The Grafana `Backup` dashboard and the `backup` alert group read them. Output of scheduled runs goes to Loki, manual `docker exec` runs only print to the terminal.
 
