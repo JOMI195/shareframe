@@ -5,7 +5,8 @@ import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
 import Tooltip from '@mui/material/Tooltip';
 import { useColorThemeContext } from '@/context/colorTheme/colorThemeContextValue';
-import { Divider, useTheme } from '@mui/material';
+import { Badge, Divider, useTheme } from '@mui/material';
+import { useIncomingRequestCount } from '@/hooks/friendships/useIncomingRequestCount';
 import { useAppDispatch, useAppSelector } from '@/store';
 import { closeSidebar, getSidebar, openSidedbar } from '@/store/ui/navigation/navigation.slice';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -20,6 +21,7 @@ function TopAppBar() {
 
     const dispatch = useAppDispatch();
     const theme = useTheme();
+    const incomingRequests = useIncomingRequestCount();
 
 
     const handleSidebarButtonClick = () => {
@@ -39,13 +41,15 @@ function TopAppBar() {
             <SeasonalAppBar />
             <Toolbar sx={{ height: "100%" }}>
                 <IconButton
-                    aria-label={`Menü ${sidebarOpen ? "schließen" : "öffnen"}`}
+                    aria-label={`Menü ${sidebarOpen ? "schließen" : "öffnen"}${!sidebarOpen && incomingRequests > 0 ? `, ${incomingRequests} offene Freundschaftsanfragen` : ""}`}
                     aria-expanded={sidebarOpen}
                     onClick={handleSidebarButtonClick}
                     className='ignore-clickaway'
                     sx={{ mr: 1, width: 44, height: 44 }}
                 >
-                    {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+                    <Badge variant="dot" color="primary" invisible={sidebarOpen || incomingRequests === 0}>
+                        {sidebarOpen ? <MenuOpenIcon /> : <MenuIcon />}
+                    </Badge>
                 </IconButton>
                 <SeasonalLogoBadge>
                     <Logo

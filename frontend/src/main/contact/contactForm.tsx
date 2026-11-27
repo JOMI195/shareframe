@@ -6,6 +6,7 @@ import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import Link from "@mui/material/Link";
 import { getIn, useFormik } from "formik";
 import * as yup from "yup";
 import { useAppDispatch, useAppSelector } from "@/store";
@@ -85,7 +86,7 @@ export default function ContactForm() {
         />
     );
 
-    const mailLink = <a href="mailto:info@shareframe.de">info@shareframe.de</a>;
+    const mailLink = <Link href="mailto:info@shareframe.de">info@shareframe.de</Link>;
 
     if (loggedIn) {
         return (

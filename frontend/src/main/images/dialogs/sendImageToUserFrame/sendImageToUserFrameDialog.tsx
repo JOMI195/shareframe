@@ -14,7 +14,11 @@ import {
     Box,
     OutlinedInput,
     SelectChangeEvent,
+    Stack,
 } from "@mui/material";
+import { useNavigate } from 'react-router';
+import PersonAddIcon from '@mui/icons-material/PersonAdd';
+import AddToQueueIcon from '@mui/icons-material/AddToQueue';
 import { useAppDispatch, useAppSelector } from "@/store";
 import { closeSelectionDialog, closeSendImageToUserFrameDialog, getDialogs, sendToFramesFinished } from "@/store/ui/images/images.slice";
 import { getApi } from "@/store/entities/images/images.slice";
@@ -35,7 +39,7 @@ import { fetchFramesIfStale } from '@/store/entities/frames/frames.actions';
 import { getApi as getFramesApi, getFrames } from '@/store/entities/frames/frames.slice';
 import AuthenticatedImage from '@/common/components/authenticatedImage';
 import { getVariantUrl } from '@/common/utils/images';
-import { getActivityUrl } from '@/assets/endpoints/app/appEndpoints';
+import { getActivityUrl, getFramesUrl, getFriendsUrl } from '@/assets/endpoints/app/appEndpoints';
 
 const MEDIA_BASE_URL = import.meta.env.VITE_API_MEDIA_BASE_URL;
 
@@ -54,6 +58,7 @@ const MENU_PROPS = {
 const SendImageToUserFrameDialog = () => {
     const theme = useTheme();
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
 
     const { sendToFrame: sendDialog } = useAppSelector(getDialogs);
     const loading = useAppSelector(getApi).sending;
@@ -79,6 +84,14 @@ const SendImageToUserFrameDialog = () => {
         if (sendDialog.open) dispatch(fetchFramesIfStale());
     }, [dispatch, sendDialog.open]);
 
+    // Applied once per opening; the store hands a new array each time.
+    const presetReceivers = sendDialog.presetReceivers;
+    const [appliedPreset, setAppliedPreset] = useState<string[] | null>(null);
+    if (sendDialog.open && presetReceivers.length > 0 && appliedPreset !== presetReceivers) {
+        setAppliedPreset(presetReceivers);
+        setPickedReceiverUsernames(presetReceivers);
+    }
+
     const receiverAvatars = getFriendAvatars(friendships, user.me);
     // Sending to yourself needs a frame of your own.
     const availableReceivers = [...receiverAvatars.keys()].filter(
@@ -94,6 +107,12 @@ const SendImageToUserFrameDialog = () => {
             setExpirationHours(DEFAULT_EXPIRATION_HOURS);
             handleScheduleEnabledChange(false);
         }
+    };
+
+    const leaveFor = (url: string) => {
+        handleDialogClose();
+        dispatch(closeSelectionDialog());
+        navigate("/" + url);
     };
 
     const handleScheduleEnabledChange = (enabled: boolean) => {
@@ -186,7 +205,7 @@ const SendImageToUserFrameDialog = () => {
                             key={image.id}
                             url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
                             alt={image.display_name || image.name}
-                            style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: 8, flexShrink: 0 }}
+                            style={{ width: 64, height: 64, objectFit: 'cover', borderRadius: theme.shape.borderRadius, flexShrink: 0 }}
                         />
                     ))}
                 </Box>
@@ -195,9 +214,19 @@ const SendImageToUserFrameDialog = () => {
                 </Typography>
 
                 {availableReceivers.length === 0 && (
-                    <Typography color="text.secondary" sx={{ mb: 2 }}>
-                        Noch keine Empfänger: füge unter Freunde einen Freund hinzu oder registriere einen eigenen Bilderrahmen.
-                    </Typography>
+                    <Box sx={{ mb: 3 }}>
+                        <Typography color="text.secondary" sx={{ mb: 2 }}>
+                            Noch keine Empfänger: füge einen Freund hinzu oder registriere einen eigenen Bilderrahmen.
+                        </Typography>
+                        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                            <Button variant="outlined" startIcon={<PersonAddIcon />} onClick={() => leaveFor(getFriendsUrl())}>
+                                Freund hinzufügen
+                            </Button>
+                            <Button variant="outlined" startIcon={<AddToQueueIcon />} onClick={() => leaveFor(getFramesUrl())}>
+                                Bilderrahmen hinzufügen
+                            </Button>
+                        </Stack>
+                    </Box>
                 )}
 
                 <FormControl fullWidth sx={{ mb: 1 }}>

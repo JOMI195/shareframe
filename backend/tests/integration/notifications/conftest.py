@@ -23,7 +23,7 @@ def account():
 
 @pytest.fixture
 def subscribe():
-    def _subscribe(account, endpoint="https://push.example.com/abc"):
+    def _subscribe(account, endpoint="https://fcm.googleapis.com/fcm/send/abc"):
         return PushSubscription.objects.create(
             account=account, endpoint=endpoint, p256dh="key", auth="secret"
         )

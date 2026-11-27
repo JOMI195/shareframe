@@ -12,6 +12,7 @@ export interface IAppBarMenuItem {
     name: string;
     url: string;
     icon: JSX.Element;
+    showsFriendRequests?: boolean;
 }
 
 export interface DialogAction {

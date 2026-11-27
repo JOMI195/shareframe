@@ -128,6 +128,13 @@ class Image(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+        indexes = [
+            # The gallery: one user's visible photos, newest first.
+            models.Index(
+                fields=["user", "markedAsDeleted", "-created_at"],
+                name="image_user_visible_created",
+            ),
+        ]
 
     def __str__(self):
         if self.display_name:

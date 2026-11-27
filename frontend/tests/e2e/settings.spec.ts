@@ -240,7 +240,7 @@ test.describe('email address', () => {
 test.describe('account deletion', () => {
   test('deletes the account and locks the credentials out', async ({ page }) => {
     await signIn(page, mallory);
-    await openUserSettings(page, 'Löschen');
+    await openUserSettings(page, 'Konto löschen');
 
     await expect(page.getByText('Diese Aktion ist unwiderruflich.')).toBeVisible();
     const panel = page.getByRole('tabpanel');
@@ -268,7 +268,7 @@ test.describe('account deletion', () => {
 
   test('keeps the account when the confirmation is cancelled', async ({ page }) => {
     await signIn(page, erin);
-    await openUserSettings(page, 'Löschen');
+    await openUserSettings(page, 'Konto löschen');
 
     const panel = page.getByRole('tabpanel');
     await panel.getByRole('button', { name: 'Mein Konto löschen' }).click();
@@ -283,7 +283,7 @@ test.describe('account deletion', () => {
 
   test('keeps the user on the page when the password is wrong', async ({ page }) => {
     await signIn(page, erin);
-    await openUserSettings(page, 'Löschen');
+    await openUserSettings(page, 'Konto löschen');
 
     const panel = page.getByRole('tabpanel');
     await panel.getByRole('button', { name: 'Mein Konto löschen' }).click();

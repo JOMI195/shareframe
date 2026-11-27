@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import type { UnknownAction } from '@reduxjs/toolkit';
 import reducer, {
   createImageFailed,
   createImageFulfilled,
@@ -52,7 +53,7 @@ describe('images slice api flags', () => {
     ['deleteImagePending', deleteImagePending, { loading: false, sending: true }],
     ['sendImageToUserFramePending', sendImageToUserFramePending, { loading: false, sending: true }],
   ])('%s sets the right flag', (_name, action, expected) => {
-    expect(reducer(initial(), action()).api).toMatchObject(expected);
+    expect(reducer(initial(), (action as () => UnknownAction)()).api).toMatchObject(expected);
   });
 
   // resetApiState clears BOTH flags, so a failing upload also clears a concurrent fetch.
@@ -111,6 +112,26 @@ describe('getApiState', () => {
 
     state.entities.images.api = { ...state.entities.images.api, loading: true, sending: false };
     expect(getApiState(state)).toBe(true);
+  });
+});
+
+describe('out-of-order list responses', () => {
+  const answering = <A extends UnknownAction>(action: A, requestKey: string) => ({ ...action, meta: { requestKey } });
+
+  it.each([
+    ['photos', imagesRequested, imagesReceived, (s: ReturnType<typeof initial>) => s.imagesPaginated],
+    ['activities', sentImagesRequested, sentImagesReceived, (s: ReturnType<typeof initial>) => s.sentImagesPaginated],
+  ])('drops an overtaken %s response and keeps the latest', (_name, requested, received, list) => {
+    let state = reducer(initial(), requested('page-2'));
+    state = reducer(state, requested('page-3'));
+
+    state = reducer(state, answering(received(makePage([], { count: 99 }) as never), 'page-2'));
+    expect(list(state).count).not.toBe(99);
+    expect(state.api.loading).toBe(true);
+
+    state = reducer(state, answering(received(makePage([], { count: 7 }) as never), 'page-3'));
+    expect(list(state).count).toBe(7);
+    expect(state.api.loading).toBe(false);
   });
 });
 

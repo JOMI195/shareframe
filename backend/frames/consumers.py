@@ -17,6 +17,7 @@ from user_core.models import User
 from .close_codes import WS_CLOSE_AUTH_REJECTED, WS_CLOSE_TOKEN_REVOKED
 from .commands import record_result
 from .models import Frame, FrameWebsocketConnection
+from .validators import is_valid_local_ip, is_valid_version
 
 logger = logging.getLogger("websockets.frames")
 
@@ -373,15 +374,22 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
 
     async def handle_config_transmit(self, message):
         frame = self.scope.get("frame")
-        logger.debug(f"Received config for frame {frame.id if frame else 'unknown'}")
+        frame_id = frame.id if frame else "unknown"
+        logger.debug(f"Received config for frame {frame_id}")
 
         local_ip_address = message.get("local_ip_address")
         if local_ip_address:
-            await self.update_connection_ip(local_ip_address)
+            if is_valid_local_ip(local_ip_address):
+                await self.update_connection_ip(local_ip_address)
+            else:
+                logger.warning("Ignored invalid local IP from frame %s", frame_id)
 
         version = message.get("version")
         if version:
-            await self.update_version(version)
+            if is_valid_version(version):
+                await self.update_version(version)
+            else:
+                logger.warning("Ignored invalid version from frame %s", frame_id)
 
     @classmethod
     async def send_clear_specific_images_to_user_frames(
@@ -517,7 +525,9 @@ class FrameWebSocketConsumer(AsyncWebsocketConsumer):
             frame = self.scope.get("frame")
             frame_id = frame.id if frame else "unknown"
 
-            logger.info(f"Received message type '{message_type}' from frame {frame_id}")
+            logger.debug(
+                f"Received message type '{message_type}' from frame {frame_id}"
+            )
 
             if message_type == "close_connection":
                 await self.close_connection()

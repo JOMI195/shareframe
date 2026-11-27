@@ -14,6 +14,7 @@ const colorTheme: ColorThemeContextType = {
   colorMode: "light",
   colorPreference: "light",
   season: null,
+  seasonOverlays: null,
   setColorPreference: () => undefined,
   toggleColorMode: () => undefined,
   iconComponent: LightModeIcon,

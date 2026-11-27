@@ -1,4 +1,4 @@
-import { constants, brotliCompress } from "node:zlib";
+import { constants, brotliCompress, gzip } from "node:zlib";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
@@ -16,7 +16,10 @@ import {
 import { prerenderMarkup } from "../src/seo/prerenderMarkup.ts";
 import type { RenderedPage } from "../src/seo/ssrEntry.tsx";
 
-const compress = promisify(brotliCompress);
+const brotli = promisify(brotliCompress);
+const gzipAsync = promisify(gzip);
+
+const APP_SHELL = "app.html";
 
 const STRIPPED_HEAD_TAGS = [
   /[ \t]*<!--\s*(SEO Meta Tags|Social|Robots)\s*-->\r?\n?/gi,
@@ -121,10 +124,7 @@ const renderPage = (ssr: SsrModule, page: PageMeta): RenderedPage => {
 };
 
 const buildPage = (template: string, page: PageMeta, rendered: RenderedPage) => {
-  const stripped = STRIPPED_HEAD_TAGS.reduce(
-    (html, pattern) => html.replace(pattern, ""),
-    template,
-  );
+  const stripped = stripHead(template);
 
   const jsonLd = page.path === "/" ? siteJsonLd() : "";
   const withHead = stripped.replace(
@@ -155,16 +155,29 @@ const sitemap = (entries: { page: PageMeta; html: string }[]) => {
   ].join("\n");
 };
 
-const writeWithBrotli = async (target: string, content: string) => {
+// Both siblings, since nginx serves a stale .gz from the compression plugin otherwise.
+const writeCompressed = async (target: string, content: string) => {
+  const buffer = Buffer.from(content);
   await mkdir(dirname(target), { recursive: true });
   await writeFile(target, content, "utf-8");
   await writeFile(
     `${target}.br`,
-    await compress(Buffer.from(content), {
+    await brotli(buffer, {
       params: { [constants.BROTLI_PARAM_QUALITY]: constants.BROTLI_MAX_QUALITY },
     }),
   );
+  await writeFile(`${target}.gz`, await gzipAsync(buffer, { level: constants.Z_BEST_COMPRESSION }));
 };
+
+const stripHead = (template: string) =>
+  STRIPPED_HEAD_TAGS.reduce((html, pattern) => html.replace(pattern, ""), template);
+
+// The fallback for app routes, so they never carry the landing page's markup or canonical.
+const appShell = (template: string) =>
+  stripHead(template).replace(
+    "</head>",
+    `  <title>${SITE_NAME}</title>\n  <meta name="robots" content="noindex, nofollow" />\n</head>`,
+  );
 
 const prerenderPlugin = (): Plugin => {
   let config: ResolvedConfig;
@@ -184,16 +197,18 @@ const prerenderPlugin = (): Plugin => {
       const ssr = await loadSsrModule(config);
       const rendered: { page: PageMeta; html: string }[] = [];
 
+      await writeCompressed(join(outDir, APP_SHELL), appShell(template));
+
       for (const page of prerenderedPages) {
         const relative = page.path === "/" ? "index.html" : `${page.path.slice(1)}index.html`;
         const html = buildPage(template, page, renderPage(ssr, page));
 
-        await writeWithBrotli(join(outDir, relative), html);
+        await writeCompressed(join(outDir, relative), html);
         rendered.push({ page, html });
         config.logger.info(`prerendered ${relative}`);
       }
 
-      await writeWithBrotli(join(outDir, "sitemap.xml"), sitemap(rendered));
+      await writeCompressed(join(outDir, "sitemap.xml"), sitemap(rendered));
 
       await rm(resolve(config.root, SSR_OUT_DIR), { recursive: true, force: true });
     },

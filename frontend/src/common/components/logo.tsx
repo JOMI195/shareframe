@@ -23,10 +23,12 @@ const Logo: React.FC<LogoProps> = ({
     marginRight = 16,
     clickable = true,
     linkUrl: homeUrl = "/",
-    alt = "Logo",
+    alt,
     width,
     height,
 }) => {
+    // Decorative unless it is a link, which needs a name.
+    const label = alt ?? (clickable ? "ShareFrame" : "");
     const isDarkMode = useTheme().palette.mode === 'dark';
     const logoSrc = isDarkMode ? darkLogoSrc : lightLogoSrc;
 
@@ -34,7 +36,7 @@ const Logo: React.FC<LogoProps> = ({
         <Link to={homeUrl} style={{ display: 'inline-flex', alignItems: 'center', textDecoration: 'none' }}>
             <img
                 src={logoSrc}
-                alt={alt}
+                alt={label}
                 width={width}
                 height={height}
                 style={{
@@ -49,7 +51,7 @@ const Logo: React.FC<LogoProps> = ({
     ) : (
         <img
             src={logoSrc}
-            alt={alt}
+            alt={label}
             width={width}
             height={height}
             style={{

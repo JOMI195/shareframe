@@ -15,11 +15,15 @@ services:
       context: .
       dockerfile: ./backend/Dockerfile.prod
     command: gunicorn config.wsgi:application --bind 0.0.0.0:8000 --log-level info --access-logfile - --error-logfile -
-    # Workers share their metric counters here; tmpfs starts it empty.
     environment:
+      # Workers share their metric counters here; tmpfs starts it empty.
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
+      # Every gunicorn thread keeps one DB connection open, so workers x 4 threads stays well under max_connections.
+      GUNICORN_WORKERS: "3"
+      DB_CONN_MAX_AGE: "60"
+    # Owned by the app user; a restarted container otherwise gets it back root-only and every worker fails.
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=101,gid=101
     healthcheck:
       # Host must be in ALLOWED_HOSTS, and prod has no localhost there.
       test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen(u.Request('http://localhost:8000/api/health/', headers={'Host': 'backend'}), timeout=5)"]
@@ -62,7 +66,7 @@ services:
       - 9000
     env_file:
       - ./.env.prod.local
-    # One DB thread serves all frames; gunicorn stays at 0 so its many threads don't exhaust max_connections.
+    # One DB thread serves all frames.
     environment:
       DB_CONN_MAX_AGE: "60"
     depends_on:
@@ -96,7 +100,7 @@ services:
     logging: *default-logging
     container_name: redis
     image: redis:8.2-alpine
-    command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice --maxmemory 512mb --maxmemory-policy allkeys-lru
+    command: redis-server --appendonly yes --appendfsync everysec --save 60 1 --loglevel notice --maxmemory 512mb --maxmemory-policy volatile-lru
     expose:
       - 6379
     restart: unless-stopped
@@ -128,7 +132,7 @@ services:
       PROMETHEUS_METRICS_PORT: "9808"
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=101,gid=101
     depends_on:
       redis:
         condition: service_healthy

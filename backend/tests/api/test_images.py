@@ -144,6 +144,20 @@ class TestCreate:
 
         assert response.status_code == 400
 
+    def test_an_image_over_the_pixel_limit_is_rejected(self, alice, settings):
+        settings.IMAGES_MAX_PIXELS = 40 * 30 - 1
+        before = Image.objects.count()
+
+        response = upload(alice)
+
+        assert response.status_code == 400
+        assert Image.objects.count() == before
+
+    def test_an_image_at_the_pixel_limit_is_accepted(self, alice, settings):
+        settings.IMAGES_MAX_PIXELS = 40 * 30
+
+        assert upload(alice).status_code == 201
+
     def test_the_library_limit_is_enforced(self, alice, settings):
         settings.IMAGES_MAX_IMAGES_NUMBER = len(seed.images_of(seed.ALICE))
 

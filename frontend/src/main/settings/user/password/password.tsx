@@ -1,7 +1,6 @@
 import { Button, IconButton, InputAdornment, Stack, TextField } from "@mui/material";
 import * as yup from "yup";
-import { useAppDispatch, useAppSelector } from "@/store";
-import { getApi } from "@/store/entities/authentication/authentication.slice";
+import { useAppDispatch } from "@/store";
 import { useState } from "react";
 import { getIn, useFormik } from "formik";
 import { ISetUserPasswortForm } from "@/types";
@@ -14,7 +13,6 @@ import { PASSWORD_RULES } from "@/common/utils/constants/password";
 
 const Security = () => {
     const dispatch = useAppDispatch();
-    const getAuthApi = useAppSelector(getApi);
 
     const [showPassword, setShowPassword] = useState({
         new_password: false,
@@ -133,7 +131,7 @@ const Security = () => {
                     <Button
                         type="button"
                         variant="outlined"
-                        color="secondary"
+                        color="inherit"
                         onClick={() => setUserPasswordForm.resetForm()}
                     >
                         {"Verwerfen"}
@@ -141,7 +139,7 @@ const Security = () => {
                     <Button
                         type='submit'
                         variant='contained'
-                        loading={getAuthApi.loading}
+                        loading={setUserPasswordForm.isSubmitting}
                     >
                         {'Speichern'}
                     </Button>

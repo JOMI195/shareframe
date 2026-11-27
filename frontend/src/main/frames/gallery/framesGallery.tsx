@@ -21,6 +21,7 @@ import { IFrame, isIFrameOTP } from "@/types";
 import DeleteIcon from '@mui/icons-material/Delete';
 import KeyIcon from '@mui/icons-material/Key';
 import WifiIcon from '@mui/icons-material/Wifi';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { getApi, getFrames } from "@/store/entities/frames/frames.slice";
 import { openRegisterFrameDialog, openRequestOTPDialog, openUnregisterFrameDialog } from "@/store/ui/frames/frames.slice";
@@ -143,9 +144,9 @@ const FramesGallery: React.FC = () => {
                                     Status:
                                 </Typography>
                                 <Chip
-                                    icon={<WifiIcon />}
+                                    icon={hasConnection ? <WifiIcon /> : <WifiOffIcon />}
                                     label={hasConnection ? "Online" : "Offline"}
-                                    color={hasConnection ? "success" : "error"}
+                                    color={hasConnection ? "success" : "default"}
                                     size="small"
                                     sx={{
                                         height: "28px"
@@ -164,14 +165,14 @@ const FramesGallery: React.FC = () => {
                                         Einstellungen
                                     </Typography>
                                     <Typography variant="caption" sx={{ color: "text.secondary" }}>
-                                        {ipAddress ? "Nur im selben WLAN erreichbar" : "Der Rahmen hat noch keine Adresse gemeldet"}
+                                        {ipAddress ? "Nur im selben WLAN erreichbar" : "Der Bilderrahmen hat noch keine Adresse gemeldet"}
                                     </Typography>
                                 </Box>
                                 <Tooltip title={"Einstellungen des Bilderrahmens öffnen"}>
                                     <span>
                                     <Button
-                                        variant="contained"
-                                        color={"secondary"}
+                                        variant="outlined"
+                                        color="primary"
                                         size="small"
                                         onClick={() => void openSettings(frame)}
                                         disabled={(ipAddress === null || ipAddress === undefined) ? true : false}
@@ -200,7 +201,7 @@ const FramesGallery: React.FC = () => {
                                         <DeleteIcon />
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title={"Einmal-Code für den Rahmen anzeigen"}>
+                                <Tooltip title={"Einmal-Code für den Bilderrahmen anzeigen"}>
                                     <IconButton
                                         aria-label="Einmal-Code anzeigen"
                                         sx={{ width: 44, height: 44 }}

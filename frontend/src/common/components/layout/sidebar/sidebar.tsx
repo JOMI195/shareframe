@@ -11,8 +11,10 @@ import {
     useMediaQuery,
     Typography,
     Link,
-    Tooltip
+    Tooltip,
+    Badge
 } from '@mui/material';
+import { useIncomingRequestCount } from '@/hooks/friendships/useIncomingRequestCount';
 import {
     Settings as SettingsIcon,
 } from '@mui/icons-material';
@@ -39,6 +41,7 @@ const Sidebar: React.FC = () => {
     const location = useLocation();
 
     const user = useAppSelector(getUser);
+    const incomingRequests = useIncomingRequestCount();
 
     const isDesktop = useMediaQuery(theme.breakpoints.up('lg'), { noSsr: true });
     const shouldShowIconsOnly = isDesktop && !open;
@@ -90,13 +93,13 @@ const Sidebar: React.FC = () => {
                         alignItems: "flex-start"
                     }}
                 >
-                    <Link component={RouterLink} to={getContactUrl()} color="inherit">
+                    <Link component={RouterLink} to={getContactUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Kontakt"}
                     </Link>
-                    <Link component={RouterLink} to={getImprintUrl()} color="inherit">
+                    <Link component={RouterLink} to={getImprintUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Impressum"}
                     </Link>
-                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
+                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Datenschutzerklärung"}
                     </Link>
                 </Box>
@@ -143,7 +146,16 @@ const Sidebar: React.FC = () => {
                         //mr: shouldShowIconsOnly ? 0 : 2,
                     }}
                 >
-                    {item.icon}
+                    {item.showsFriendRequests && incomingRequests > 0 ? (
+                        <Badge
+                            badgeContent={incomingRequests}
+                            color="primary"
+                            aria-label={`${incomingRequests} offene Freundschaftsanfragen`}
+                            sx={isActive ? { '& .MuiBadge-badge': { bgcolor: 'primary.contrastText', color: 'primary.main' } } : undefined}
+                        >
+                            {item.icon}
+                        </Badge>
+                    ) : item.icon}
                 </ListItemIcon>
                 {!shouldShowIconsOnly && <ListItemText primary={item.name} />}
             </ListItem>

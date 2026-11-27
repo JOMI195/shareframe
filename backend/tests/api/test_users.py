@@ -20,6 +20,12 @@ SET_PASSWORD_URL = "/api/auth/users/set_password/"
 REQUEST_EMAIL_CHANGE_URL = "/api/auth/users/request_email_change/"
 CONFIRM_EMAIL_CHANGE_URL = "/api/auth/users/confirm_email_change/"
 RESET_PASSWORD_CONFIRM_URL = "/api/auth/users/reset_password_confirm/"
+REFRESH_URL = "/api/auth/jwt/refresh/"
+NEW_PASSWORD = {
+    "current_password": "factory-pass1",
+    "new_password": "brand-new-pass1",
+    "re_new_password": "brand-new-pass1",
+}
 
 
 def test_me_requires_authentication(client):
@@ -205,6 +211,36 @@ class TestSetPassword:
         assert response.status_code == 204
         assert User.objects.get(pk=user.pk).check_password("brand-new-pass1")
 
+    def test_other_sessions_end(self, client_as):
+        user = UserFactory(is_active=True)
+        changer, other = client_as(user), client_as(user)
+
+        changer.post(SET_PASSWORD_URL, NEW_PASSWORD, format="json")
+
+        assert other.get(ME_URL).status_code == 401
+        assert other.post(REFRESH_URL, {}, format="json").status_code == 401
+
+    def test_the_changing_session_stays_signed_in(self, client_as):
+        user = UserFactory(is_active=True)
+        changer = client_as(user)
+
+        changer.post(SET_PASSWORD_URL, NEW_PASSWORD, format="json")
+
+        assert changer.get(ME_URL).status_code == 200
+        assert changer.post(REFRESH_URL, {}, format="json").status_code == 200
+
+    def test_a_rejected_change_keeps_every_session(self, client_as):
+        user = UserFactory(is_active=True)
+        changer, other = client_as(user), client_as(user)
+
+        changer.post(
+            SET_PASSWORD_URL,
+            {**NEW_PASSWORD, "current_password": "wrong-pass1"},
+            format="json",
+        )
+
+        assert other.get(ME_URL).status_code == 200
+
     def test_the_change_is_audited(self, client_as, caplog):
         user = UserFactory(is_active=True)
 
@@ -321,6 +357,17 @@ class TestResetPasswordConfirm:
 
         assert self.confirm(client, user).status_code == 204
         assert User.objects.get(pk=user.pk).check_password("brand-new-pass1")
+
+    def test_every_session_ends(self, client, client_as):
+        user = UserFactory(is_active=True)
+        session = client_as(user)
+        # Signing in moved last_login, which the reset token is derived from.
+        user.refresh_from_db()
+
+        self.confirm(client, user)
+
+        assert session.get(ME_URL).status_code == 401
+        assert session.post(REFRESH_URL, {}, format="json").status_code == 401
 
     def test_a_spent_token_is_coded(self, client):
         user = UserFactory(is_active=True)

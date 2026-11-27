@@ -209,7 +209,11 @@ describe('api request actions', () => {
           "payload": {
             "onError": "images/imagesRequestFailed",
             "onStart": "images/imagesRequested",
+            "onStartPayload": "images/?page=2&page_size=20",
             "onSuccess": "images/imagesReceived",
+            "onSuccessMeta": {
+              "requestKey": "images/?page=2&page_size=20",
+            },
             "url": "images/?page=2&page_size=20",
           },
           "type": "api/request",

@@ -285,6 +285,32 @@ describe('SendImageToUserFrameDialog', () => {
     expect(screen.getByRole('button', { name: /an 1 Empfänger senden/ })).toBeEnabled();
   });
 
+  it('points the way to a first receiver when there is none', async () => {
+    const { store, user } = renderWithProviders(<SendImageToUserFrameDialog />, {
+      preloadedState: signedInState({
+        entities: { friendships: { friendships: [] }, frames: { frames: [], api: { lastFetch: Date.now() } } },
+        ui: { images: { dialogs: { sendToFrame: { open: true, imagesToSend: [photo] }, selection: { open: true, selectedImages: [photo] } } } },
+      }),
+    });
+
+    expect(screen.getByRole('button', { name: 'Bilderrahmen hinzufügen' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Freund hinzufügen' }));
+
+    expect(store.getState().ui.images.dialogs.sendToFrame.open).toBe(false);
+    expect(store.getState().ui.images.dialogs.selection.open).toBe(false);
+  });
+
+  it('starts with the friend the selection was made for', async () => {
+    renderWithProviders(<SendImageToUserFrameDialog />, {
+      preloadedState: signedInState({
+        entities: { friendships: { friendships }, frames: { frames: [makeFrame()], api: { lastFetch: Date.now() } } },
+        ui: { images: { dialogs: { sendToFrame: { open: true, imagesToSend: [photo], presetReceivers: ['bob'] } } } },
+      }),
+    });
+
+    expect(await screen.findByRole('button', { name: /an 1 Empfänger senden/ })).toBeEnabled();
+  });
+
   it('closes from the header without a separate cancel button', async () => {
     const { user, store } = render();
 

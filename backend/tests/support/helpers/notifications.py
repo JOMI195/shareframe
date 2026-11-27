@@ -6,7 +6,7 @@ def enable_channels(kind, *channels):
     ChannelSetting.objects.filter(kind=kind, channel__in=channels).update(enabled=True)
 
 
-def subscribe_push(account, endpoint="https://push.example.com/abc"):
+def subscribe_push(account, endpoint="https://fcm.googleapis.com/fcm/send/abc"):
     return PushSubscription.objects.create(
         account=account, endpoint=endpoint, p256dh="key", auth="secret"
     )

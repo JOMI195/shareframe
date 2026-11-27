@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, CircularProgress } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
+import { canvasBackground } from '@/common/utils/canvas/canvasBackground';
 
 export const FRAME_ASPECT_RATIO = 800 / 480;
 
@@ -17,7 +18,7 @@ const FrameAspectBox: React.FC<{ children?: React.ReactNode }> = ({ children }) 
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                bgcolor: theme.palette.mode === 'light' ? '#e0e0e0' : '#000000',
+                bgcolor: canvasBackground(theme),
                 border: theme.palette.mode === 'light' ? `1px solid ${theme.palette.divider}` : 'none',
             }}
         >

@@ -75,6 +75,13 @@ const getErrorCode = (error: unknown): string | undefined => {
   return typeof code === "string" ? code : undefined;
 };
 
+// Each report redraws the upload snackbar, so whole percents are too many for a large file.
+const PROGRESS_STEP = 5;
+
+export const shouldReportProgress = (percent: number, lastReported: number | null) =>
+  lastReported === null ||
+  (percent !== lastReported && (percent === 100 || percent - lastReported >= PROGRESS_STEP));
+
 const apiMiddleware: Middleware =
   ({ dispatch }) =>
     (next) =>
@@ -92,6 +99,7 @@ const apiMiddleware: Middleware =
           onUploadProgress,
           onStartPayload,
           onSuccessPayload,
+          onSuccessMeta,
           onErrorPayload,
         } = action.payload;
 
@@ -105,7 +113,7 @@ const apiMiddleware: Middleware =
         next(action);
 
         try {
-          let lastPercent = -1;
+          let lastPercent: number | null = null;
           const response = await http.request({
             url,
             method,
@@ -115,7 +123,7 @@ const apiMiddleware: Middleware =
               ? ({ loaded, total }) => {
                 if (!total) return;
                 const percent = Math.round((loaded * 100) / total);
-                if (percent === lastPercent) return;
+                if (!shouldReportProgress(percent, lastPercent)) return;
                 lastPercent = percent;
                 dispatch({ type: onUploadProgress, payload: percent });
               }
@@ -126,6 +134,7 @@ const apiMiddleware: Middleware =
             dispatch({
               type: onSuccess,
               payload: onSuccessPayload ?? response.data,
+              ...(onSuccessMeta !== undefined && { meta: onSuccessMeta }),
             });
           }
           return onSuccessPayload ?? response.data;

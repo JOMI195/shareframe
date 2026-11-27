@@ -152,7 +152,7 @@ export default function PasswordReset() {
               type="button"
               fullWidth
               variant="outlined"
-              color="secondary"
+              color="inherit"
               onClick={handleCancel}
             >
               {"Abbrechen"}

@@ -6,6 +6,7 @@ import AccessAlarmIcon from '@mui/icons-material/AccessAlarm';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import FilterFramesIcon from '@mui/icons-material/FilterFrames';
 import WifiIcon from '@mui/icons-material/Wifi';
+import WifiOffIcon from '@mui/icons-material/WifiOff';
 import AddIcon from '@mui/icons-material/Add';
 import { Link as RouterLink } from "react-router";
 import { getFramesUrl } from "@/assets/endpoints/app/appEndpoints";
@@ -75,9 +76,9 @@ const StatsSection: FC<StatsSectionProps> = ({ toMeSentImagesCount, latestExpiri
                                 return (
                                     <Chip
                                         key={index}
-                                        icon={<WifiIcon />}
+                                        icon={hasConnection ? <WifiIcon /> : <WifiOffIcon />}
                                         label={hasConnection ? "Online" : "Offline"}
-                                        color={hasConnection ? "success" : "error"}
+                                        color={hasConnection ? "success" : "default"}
                                         size="small"
                                         sx={{
                                             height: "28px"

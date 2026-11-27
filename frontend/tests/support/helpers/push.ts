@@ -1,6 +1,6 @@
 import { vi } from 'vitest';
 
-export const PUSH_ENDPOINT = 'https://push.example.com/abc';
+export const PUSH_ENDPOINT = 'https://fcm.googleapis.com/fcm/send/abc';
 
 // jsdom has no Push API; this builds the browser shape push.ts relies on.
 export const stubPush = (

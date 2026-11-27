@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
-import { server, withFrames, withUser } from '@tests/mocks';
-import { makeFrame, seedUser } from '@tests/fixtures';
+import { server, withFrames, withFriendships, withUser } from '@tests/mocks';
+import { makeFrame, makeFriendship, seedUser } from '@tests/fixtures';
 import { renderRoute } from '@tests/helpers/renderRoute';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
 import { desktopViewport, floatingButton } from '@tests/helpers/viewport';
@@ -149,6 +149,22 @@ describe('side menu on a phone', () => {
     await new Promise((resolve) => setTimeout(resolve, 50));
     expect(router.state.location.pathname).toBe('/fotos/');
     expect(store.getState().ui.navigation.sidebar.open).toBe(false);
+  });
+});
+
+describe('friend requests in the menu', () => {
+  it('flags an unanswered request on the menu button and the friends link', async () => {
+    server.use(
+      ...withFrames([]),
+      ...withFriendships([makeFriendship({ id: 9, sender: 'dave', reciever: seedUser.username, status: 'pending' })]),
+    );
+    const { user } = renderRoute('/dashboard/', { preloadedState: signedInState() });
+
+    const button = await screen.findByRole('button', { name: 'Menü öffnen, 1 offene Freundschaftsanfragen' });
+    await user.click(button);
+    const menu = await screen.findByRole('navigation', { name: 'Hauptmenü' });
+
+    expect(within(menu).getByLabelText('1 offene Freundschaftsanfragen')).toBeInTheDocument();
   });
 });
 

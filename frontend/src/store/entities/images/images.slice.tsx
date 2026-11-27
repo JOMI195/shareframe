@@ -14,6 +14,9 @@ type SliceState = {
     // The stored results belong to another page or filter, so the gallery must not show them.
     imagesStale: boolean;
     sentImagesStale: boolean;
+    // The latest list request; an older response that lands after it is dropped.
+    imagesRequestKey: string | null;
+    sentImagesRequestKey: string | null;
   };
   imagesPaginated: IImagesPaginated;
   imagesPaginatedPageSize: number;
@@ -36,6 +39,8 @@ const initialState: SliceState = {
     sentImagesFailed: false,
     imagesStale: false,
     sentImagesStale: false,
+    imagesRequestKey: null,
+    sentImagesRequestKey: null,
   },
   imagesPaginated: {
     count: 0,
@@ -80,15 +85,22 @@ const resetApiState = (sliceState: SliceState) => {
   sliceState.api.sending = false;
 };
 
+const isOutdated = (latestKey: string | null, action: unknown) => {
+  const requestKey = (action as { meta?: { requestKey?: string } }).meta?.requestKey;
+  return Boolean(latestKey && requestKey && requestKey !== latestKey);
+};
+
 const imagesSlice = createSlice({
   name: "images",
   initialState,
   reducers: {
-    imagesRequested: (sliceState) => {
+    imagesRequested: (sliceState, action: PayloadAction<string | undefined>) => {
       sliceState.api.loading = true;
       sliceState.api.imagesFailed = false;
+      sliceState.api.imagesRequestKey = action.payload ?? null;
     },
     imagesReceived: (sliceState, action) => {
+      if (isOutdated(sliceState.api.imagesRequestKey, action)) return;
       sliceState.imagesPaginated = {
         ...action.payload,
         page: sliceState.imagesPaginated.page,
@@ -145,11 +157,13 @@ const imagesSlice = createSlice({
     },
     downloadImageFailed: (_sliceState) => {
     },
-    sentImagesRequested: (sliceState) => {
+    sentImagesRequested: (sliceState, action: PayloadAction<string | undefined>) => {
       sliceState.api.loading = true;
       sliceState.api.sentImagesFailed = false;
+      sliceState.api.sentImagesRequestKey = action.payload ?? null;
     },
     sentImagesReceived: (sliceState, action) => {
+      if (isOutdated(sliceState.api.sentImagesRequestKey, action)) return;
       sliceState.sentImagesPaginated = {
         ...action.payload,
         page: sliceState.sentImagesPaginated.page,

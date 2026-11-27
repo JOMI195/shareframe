@@ -32,7 +32,8 @@ export interface Season {
     from: MonthDay;
     to: MonthDay;
     palette: Record<ColorMode, { accent: string; secondary: string; background: string }>;
-    overlays: SeasonOverlays;
+    // Split off, so the art only downloads while its season runs.
+    loadOverlays: () => Promise<{ default: SeasonOverlays }>;
     // Pixels from the logo's top-left corner; without it the icon sits top-right.
     logoBadge?: { size: number; top: number; left: number; rotate: number };
     emptyStateLook?: { scale: number; opacity: number };
@@ -52,6 +53,16 @@ export const isInWindow = (date: Date, from: MonthDay, to: MonthDay): boolean =>
 
 export const activeSeason = (date: Date = new Date(), seasons: Season[] = SEASONS): Season | null =>
     seasons.find((season) => isInWindow(date, season.from, season.to)) ?? null;
+
+const loaded = new Map<string, SeasonOverlays>();
+
+export const loadedSeasonOverlays = (season: Season): SeasonOverlays | null => loaded.get(season.id) ?? null;
+
+export const loadSeasonOverlays = async (season: Season): Promise<SeasonOverlays> => {
+    const overlays = (await season.loadOverlays()).default;
+    loaded.set(season.id, overlays);
+    return overlays;
+};
 
 export const pickOne = <T>(items: readonly T[], random: () => number = Math.random): T | null =>
     items.length ? items[Math.floor(random() * items.length)] : null;

@@ -104,7 +104,7 @@ const Changelogs: React.FC = () => {
     return (
         <Container maxWidth="md" disableGutters>
             <Typography variant="h4" component="h1" gutterBottom>
-                ✨ Neuste Änderungen
+                ✨ Neueste Änderungen
             </Typography>
             <Typography sx={{
                 marginBottom: "16px"
@@ -173,7 +173,7 @@ const Changelogs: React.FC = () => {
                                                     </Typography>
                                                     {isNewest && (
                                                         <Chip
-                                                            label="Neuste Änderung"
+                                                            label="Neueste Änderung"
                                                             size="small"
                                                             color="primary"
                                                             variant="filled"
@@ -195,7 +195,7 @@ const Changelogs: React.FC = () => {
                                             </Box>
                                             {isNewest && (
                                                 <Chip
-                                                    label="Neuste Änderung"
+                                                    label="Neueste Änderung"
                                                     size="small"
                                                     color="primary"
                                                     variant="filled"

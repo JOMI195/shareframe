@@ -109,7 +109,7 @@ const FriendshipCreateDialog: React.FC = () => {
               <Typography variant="subtitle1" sx={{
                 fontWeight: "bold"
               }}>
-                Von Nutzern eine Anfrage erhalten:
+                Anfragen von anderen erhalten
               </Typography>
               <Typography variant="body2" sx={{
                 color: "text.secondary"
@@ -164,7 +164,7 @@ const FriendshipCreateDialog: React.FC = () => {
             <Typography variant="subtitle2" sx={{
               color: "text.secondary"
             }}>
-              ODER
+              oder
             </Typography>
           </Divider>
 

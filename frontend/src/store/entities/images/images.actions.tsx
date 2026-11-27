@@ -9,13 +9,17 @@ import { ITextPresetDraft } from "@/types";
 export const fetchImages = (
   page: number = 1,
   page_size: number = 10
-) =>
-  apiRequest({
-    url: ImagesEndpoints.getImagesPaginatedUrl(page, page_size),
+) => {
+  const url = ImagesEndpoints.getImagesPaginatedUrl(page, page_size);
+  return apiRequest({
+    url,
     onStart: ImagesSlice.imagesRequested.type,
+    onStartPayload: url,
     onSuccess: ImagesSlice.imagesReceived.type,
+    onSuccessMeta: { requestKey: url },
     onError: ImagesSlice.imagesRequestFailed.type,
   });
+};
 
 export const setImagesPaginatedPage = (page: number) => ({
   type: ImagesSlice.imagesPageSet.type,
@@ -95,10 +99,13 @@ export const fetchSentImagesPaginated = (
     }
   }
 
+  const url = `${ImagesEndpoints.getSentImagesUrl()}?${params.toString()}`;
   return apiRequest({
-    url: `${ImagesEndpoints.getSentImagesUrl()}?${params.toString()}`,
+    url,
     onStart: ImagesSlice.sentImagesRequested.type,
+    onStartPayload: url,
     onSuccess: ImagesSlice.sentImagesReceived.type,
+    onSuccessMeta: { requestKey: url },
     onError: ImagesSlice.sentImagesRequestFailed.type,
   });
 };

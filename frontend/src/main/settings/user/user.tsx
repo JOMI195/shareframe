@@ -48,7 +48,7 @@ const UserSettings = () => {
       content: <Security />,
     },
     {
-      label: "Löschen",
+      label: "Konto löschen",
       id: "delete",
       icon: <DeleteIcon />,
       content: <Delete />,

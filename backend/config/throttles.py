@@ -18,6 +18,15 @@ class ImagesSustainedRateThrottle(UserRateThrottle):
     scope = "images_sustained"
 
 
+# Each upload re-encodes the photo and renders every variant.
+class ImageUploadBurstRateThrottle(UserRateThrottle):
+    scope = "image_upload_burst"
+
+
+class ImageUploadSustainedRateThrottle(UserRateThrottle):
+    scope = "image_upload_sustained"
+
+
 # media access
 class MediaBurstRateThrottle(UserRateThrottle):
     scope = "media_burst"
@@ -89,10 +98,8 @@ class ContactSustainedRateThrottle(_IpScopedThrottle):
     scope = "contact_sustained"
 
 
-class FailedLoginThrottle(_IpScopedThrottle):
-    """Only failed logins count; the view records them via record_failure."""
-
-    scope = "failed_login"
+class _FailureOnlyIpThrottle(_IpScopedThrottle):
+    """Only failures count; the caller records them via record_failure."""
 
     def throttle_success(self):
         return True
@@ -104,6 +111,24 @@ class FailedLoginThrottle(_IpScopedThrottle):
         now = self.timer()
         history = [t for t in self.cache.get(key, []) if t > now - self.duration]
         self.cache.set(key, [now, *history], self.duration)
+
+
+class FailedLoginThrottle(_FailureOnlyIpThrottle):
+    scope = "failed_login"
+
+
+# Checked inside the authenticator, because DRF throttles never see a failed authentication.
+class FailedFrameHmacThrottle(_FailureOnlyIpThrottle):
+    scope = "failed_frame_hmac"
+
+
+# Device endpoints that answer without any credentials.
+class FrameAuthIpBurstRateThrottle(_IpScopedThrottle):
+    scope = "frame_auth_ip_burst"
+
+
+class FrameAuthIpSustainedRateThrottle(_IpScopedThrottle):
+    scope = "frame_auth_ip_sustained"
 
 
 class AuthEmailBurstRateThrottle(_IpScopedThrottle):

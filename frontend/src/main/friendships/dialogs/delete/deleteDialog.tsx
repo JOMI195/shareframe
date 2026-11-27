@@ -20,14 +20,10 @@ const FriendshipDeleteDialog = () => {
         dispatch(closeDeleteFriendshipsDialog());
     };
 
+    // Awaited, so the dialog shows its loading state; a failure arrives as a snackbar.
     const handleConfirmDelete = async () => {
-        try {
-            if (friendshipToDelete !== undefined) dispatch(deleteFriendship(friendshipToDelete.id))
-        } catch {
-            // cleanup happens in finally
-        } finally {
-            handleDialogClose();
-        }
+        if (friendshipToDelete !== undefined) await dispatch(deleteFriendship(friendshipToDelete.id));
+        handleDialogClose();
     };
 
     return (

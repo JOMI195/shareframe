@@ -6,9 +6,7 @@ from datetime import UTC, datetime, timedelta
 
 from asgiref.sync import async_to_sync
 from django.conf import settings
-from django.core.exceptions import ValidationError
 from django.core.files.base import ContentFile
-from django.core.validators import validate_ipv46_address
 from django.db import transaction
 from django.db.models import Q
 from django.utils import timezone
@@ -21,6 +19,8 @@ from rest_framework.response import Response
 from config import error_codes
 from config.throttles import (
     BurstRateThrottle,
+    FrameAuthIpBurstRateThrottle,
+    FrameAuthIpSustainedRateThrottle,
     FrameBurstRateThrottle,
     FrameClaimBurstRateThrottle,
     FrameClaimIpBurstRateThrottle,
@@ -55,6 +55,7 @@ from .models import (
 )
 from .permissions import IsSignedFrame
 from .serializers import FrameRetrieveSerializer
+from .validators import is_valid_local_ip, is_valid_version
 
 telemetry_logger = logging.getLogger("frames.telemetry")
 audit_logger = logging.getLogger("admin.audit")
@@ -394,7 +395,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="obtain-frame-ws-auth-token",
-        throttle_classes=[],
+        throttle_classes=[
+            FrameAuthIpBurstRateThrottle,
+            FrameAuthIpSustainedRateThrottle,
+        ],
     )
     def obtain_frame_ws_auth_token(self, request):
         private_serial_number = request.data.get("private_serial_number")
@@ -406,7 +410,9 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            frame = Frame.objects.get(private_serial_number=private_serial_number)
+            frame = Frame.objects.get(
+                private_serial_number=private_serial_number, is_active=True
+            )
         except Frame.DoesNotExist:
             return Response(
                 {"error": "Frame not found or invalid serial number."},
@@ -467,7 +473,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="verify-frame-token",
-        throttle_classes=[],
+        throttle_classes=[
+            FrameAuthIpBurstRateThrottle,
+            FrameAuthIpSustainedRateThrottle,
+        ],
     )
     def verify_frame_token(self, request):
         access_token = request.data.get("access_token")
@@ -479,7 +488,9 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            frame_token = FrameToken.objects.get(access_token=access_token)
+            frame_token = FrameToken.objects.get(
+                access_token=access_token, frame__is_active=True
+            )
         except FrameToken.DoesNotExist:
             return Response(
                 {"error": "Invalid access token."},
@@ -504,6 +515,10 @@ class FramesViewSet(viewsets.ModelViewSet):
         methods=["POST"],
         permission_classes=[AllowAny],
         url_path="verify-frame-auth-token",
+        throttle_classes=[
+            FrameAuthIpBurstRateThrottle,
+            FrameAuthIpSustainedRateThrottle,
+        ],
     )
     def verify_frame_auth_token(self, request):
         access_token = request.data.get("access_token")
@@ -515,7 +530,9 @@ class FramesViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            frame_token = FrameToken.objects.get(access_token=access_token)
+            frame_token = FrameToken.objects.get(
+                access_token=access_token, frame__is_active=True
+            )
         except FrameToken.DoesNotExist:
             return Response(
                 {"error": "Invalid access token."},
@@ -640,20 +657,20 @@ class FramesViewSet(viewsets.ModelViewSet):
         local_ip_address = request.data.get("local_ip_address")
         version = request.data.get("version")
 
-        if local_ip_address:
-            try:
-                if not isinstance(local_ip_address, str):
-                    raise ValidationError("not a string")
-                validate_ipv46_address(local_ip_address)
-            except ValidationError:
-                return Response(
-                    {"error": "local_ip_address is invalid."},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
+        if local_ip_address and not is_valid_local_ip(local_ip_address):
+            return Response(
+                {"error": "local_ip_address is invalid."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
         if not version:
             return Response(
                 {"error": "version is required."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        if not is_valid_version(version):
+            return Response(
+                {"error": "version is invalid."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 

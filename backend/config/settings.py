@@ -434,9 +434,14 @@ REST_FRAMEWORK = {
         "frame_claim_sustained": "50/day",
         "frame_claim_ip_burst": "20/min",
         "frame_claim_ip_sustained": "200/day",
+        "frame_auth_ip_burst": "60/min",
+        "frame_auth_ip_sustained": "3000/day",
+        "failed_frame_hmac": "10/min",
         # images
         "images_burst": "3000/min",
         "images_sustained": "10000/day",
+        "image_upload_burst": "30/min",
+        "image_upload_sustained": "300/day",
         # media views
         "media_burst": "3000/min",
         "media_sustained": "10000/day",
@@ -457,8 +462,10 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(hours=12),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
+    # Tokens carry a hash of the password hash, so a password change ends every session.
+    "CHECK_REVOKE_TOKEN": True,
     "ROTATE_REFRESH_TOKENS": True,
     "BLACKLIST_AFTER_ROTATION": True,
     "UPDATE_LAST_LOGIN": True,
@@ -483,7 +490,6 @@ PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
     "django.contrib.auth.hashers.Argon2PasswordHasher",
     "django.contrib.auth.hashers.BCryptSHA256PasswordHasher",
-    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
 
 _frontend_base_url = urlparse(os.environ.get("FRONTEND_BASE_URL", ""))
@@ -568,6 +574,8 @@ IMAGES_ALLOWED_FORMATS = ["jpg", "png", "jpeg"]
 IMAGES_MAX_FILE_SIZE = (
     int(os.environ.get("DJANGO_IMAGES_UPLOADED_FILES_MAX_SIZE_MB", 20)) * 1024 * 1024
 )
+# Matches the editor's output cap, so only uploads that bypass the app hit it.
+IMAGES_MAX_PIXELS = 4096 * 4096
 IMAGES_MAX_IMAGES_NUMBER = int(
     os.environ.get("DJANGO_IMAGES_UPLOADED_FILES_MAX_FILES_TOTAL", 100)
 )

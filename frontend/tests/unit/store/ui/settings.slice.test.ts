@@ -26,6 +26,7 @@ describe('initial state', () => {
       design: { colorTheme: 'system', seasonalThemes: true },
       cookies: { analyticsCookies: false, consentExpiry: null },
       pwa: { installPromptDismissed: false, pushPromptDismissed: false },
+      upload: { autoDelete: true },
     });
   });
 

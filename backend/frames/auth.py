@@ -10,8 +10,10 @@ from django.conf import settings
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.authentication import BaseAuthentication
-from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.exceptions import AuthenticationFailed, Throttled
 from rest_framework.response import Response
+
+from config.throttles import FailedFrameHmacThrottle
 
 from .models import Frame, FrameToken
 
@@ -57,6 +59,7 @@ class FrameSignatureAuthentication(BaseAuthentication):
             frame = Frame.objects.get(
                 public_serial_number=frame_id,
                 public_key__isnull=False,
+                is_active=True,
             )
         except Frame.DoesNotExist as e:
             raise AuthenticationFailed("Invalid authorization credentials.") from e
@@ -133,24 +136,19 @@ class FrameHTTPAuth:
 
     def _authenticate_hmac(self, received_hash, timestamp):
         """Authenticate using HMAC-SHA256 (legacy method for Python boards)."""
-        frames = Frame.objects.all()
-        matching_frame = None
+        received = received_hash.encode()
+        candidates = Frame.objects.filter(is_active=True).values_list(
+            "id", "private_serial_number"
+        )
+        for frame_id, serial in candidates:
+            expected = self._generate_hmac_hash(serial, timestamp).encode()
+            if hmac.compare_digest(received, expected):
+                return True, Frame.objects.select_related("user").get(pk=frame_id)
 
-        for frame in frames:
-            expected_hash = self._generate_hmac_hash(
-                frame.private_serial_number, timestamp
-            )
-            if hmac.compare_digest(received_hash, expected_hash):
-                matching_frame = frame
-                break
-
-        if not matching_frame:
-            return False, Response(
-                {"error": "Invalid authorization credentials."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
-
-        return True, matching_frame
+        return False, Response(
+            {"error": "Invalid authorization credentials."},
+            status=status.HTTP_401_UNAUTHORIZED,
+        )
 
     def _generate_hmac_hash(self, private_serial_number, timestamp):
         """Generate HMAC-SHA256 hash for legacy auth."""
@@ -170,11 +168,17 @@ class FrameHTTPAuthentication(BaseAuthentication):
         if not auth_header.startswith("Auth-Hash "):
             return None
 
+        # Each attempt hashes every active serial, so failures are capped per IP.
+        throttle = FailedFrameHmacThrottle()
+        if not throttle.allow_request(request, None):
+            raise Throttled(throttle.wait())
+
         is_authenticated, result = FrameHTTPAuth().authenticate_frame_from_headers(
             request
         )
 
         if not is_authenticated:
+            throttle.record_failure(request, None)
             raise AuthenticationFailed(
                 result.data.get("error", "Authentication failed")
             )
@@ -200,7 +204,7 @@ class FrameTokenAuthentication(BaseAuthentication):
 
         try:
             frame_token = FrameToken.objects.select_related("frame").get(
-                access_token=access_token
+                access_token=access_token, frame__is_active=True
             )
 
             if not frame_token.is_access_token_valid():

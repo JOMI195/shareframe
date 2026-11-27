@@ -64,8 +64,8 @@ def test_push_reaches_every_subscription_with_the_payload(
     account, enable, subscribe, webpush, message
 ):
     enable(PUSH)
-    subscribe(account, "https://push.example.com/one")
-    subscribe(account, "https://push.example.com/two")
+    subscribe(account, "https://fcm.googleapis.com/fcm/send/one")
+    subscribe(account, "https://fcm.googleapis.com/fcm/send/two")
 
     notify(account, KIND, message)
 
@@ -76,6 +76,16 @@ def test_push_reaches_every_subscription_with_the_payload(
         "url": "/fotos/",
         "tag": KIND,
     }
+
+
+def test_push_skips_a_stored_endpoint_outside_the_push_services(
+    account, enable, subscribe, webpush, message
+):
+    enable(PUSH)
+    subscribe(account, "https://backend:8000/api/metrics/")
+
+    assert notify(account, KIND, message) == []
+    assert webpush == []
 
 
 def test_a_gone_subscription_is_deleted(

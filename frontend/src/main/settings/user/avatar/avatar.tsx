@@ -44,7 +44,7 @@ const ProfileAvatar = () => {
                     {me.account.avatar && (
                         <Button
                             variant="outlined"
-                            color="secondary"
+                            color="error"
                             startIcon={<DeleteIcon />}
                             disabled={getAuthApi.loading}
                             onClick={() => setDeleteDialogOpen(true)}

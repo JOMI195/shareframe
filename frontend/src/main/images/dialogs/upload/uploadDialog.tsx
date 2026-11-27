@@ -22,6 +22,7 @@ import { uploadImage } from '@/store/entities/images/images.actions'
 import { fileToSha256Hex } from '@/common/utils/files/getFileHash.helpers'
 import { IImage, IImageValidationResponse, isIImage } from '@/types'
 import { getApi, getImagesPaginated } from '@/store/entities/images/images.slice'
+import { getUploadAutoDelete, uploadAutoDeleteSet } from '@/store/ui/settings/settings.slice'
 import { Area, Point } from 'react-easy-crop'
 import { DEFAULT_FILL_COLOR, FillColor, getCroppedImg } from './imageCropping/cropper/utils'
 import ImageCropping from './imageCropping/imageCropping'
@@ -93,7 +94,8 @@ const UploadDialog: React.FC = () => {
   const [entered, setEntered] = useState(false)
   const [exportRequested, setExportRequested] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState<number | null>(null);
-  const [autoDeleteAfterPeriod, setAutoDeleteAfterPeriod] = useState(true);
+  const autoDeleteAfterPeriod = useAppSelector(getUploadAutoDelete);
+  const setAutoDeleteAfterPeriod = (value: boolean) => dispatch(uploadAutoDeleteSet(value));
 
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area>(CROPPER_PROPS_INITIAL_STATE.croppedAreaPixels)
   const [crop, setCrop] = useState<Point>(CROPPER_PROPS_INITIAL_STATE.crop)
@@ -144,7 +146,6 @@ const UploadDialog: React.FC = () => {
     dispatch(closeCreateImageDialog());
     resetQueue();
     setCurrentImageIndex(null);
-    setAutoDeleteAfterPeriod(true);
     resetCropperState();
   }
 

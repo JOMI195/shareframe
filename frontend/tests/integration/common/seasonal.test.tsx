@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, screen } from '@testing-library/react';
 import { useTheme } from '@mui/material';
 import Header from '@/main/home/dashboard/header/header';
@@ -11,6 +11,10 @@ import SeasonalAppBar from '@/common/components/seasonal/seasonalAppBar';
 import halloween from '@/common/seasons/halloween/halloween';
 import christmas from '@/common/seasons/christmas/christmas';
 import newyear from '@/common/seasons/newyear/newyear';
+import halloweenOverlays from '@/common/seasons/halloween/halloweenOverlays';
+import christmasOverlays from '@/common/seasons/christmas/christmasOverlays';
+import newyearOverlays from '@/common/seasons/newyear/newyearOverlays';
+import { loadSeasonOverlays } from '@/common/seasons/seasons';
 import { renderWithProviders } from '@tests/helpers/renderWithProviders';
 import { buildState, signedInState } from '@tests/helpers/preloadedState';
 
@@ -36,6 +40,11 @@ const preferReducedMotion = () => {
       : matchMedia(query),
   );
 };
+
+// Loaded once up front, so the provider finds the art cached on its first render.
+beforeAll(async () => {
+  await Promise.all([halloween, christmas, newyear].map(loadSeasonOverlays));
+});
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] }).setSystemTime(new Date('2026-10-22T12:00:00'));
@@ -94,8 +103,8 @@ describe('during halloween', () => {
       seasonal(true),
     );
 
-    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(halloween.overlays.appBar.length);
-    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(halloween.overlays.screen.length);
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(halloweenOverlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(halloweenOverlays.screen.length);
   });
 
   it('lets a flyby pass once per session', () => {
@@ -187,8 +196,8 @@ describe('during christmas', () => {
       seasonal(true),
     );
 
-    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(christmas.overlays.appBar.length);
-    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(christmas.overlays.screen.length);
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(christmasOverlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(christmasOverlays.screen.length);
   });
 });
 
@@ -236,8 +245,8 @@ describe('during silvester', () => {
       seasonal(true),
     );
 
-    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(newyear.overlays.appBar.length);
-    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(newyear.overlays.screen.length);
+    expect(screen.getByTestId('SeasonalAppBar').children).toHaveLength(newyearOverlays.appBar.length);
+    expect(screen.getByTestId('SeasonalScreen').children).toHaveLength(newyearOverlays.screen.length);
   });
 
   it('is still on new year\'s day', () => {
@@ -248,7 +257,7 @@ describe('during silvester', () => {
   });
 });
 
-const allFlybys = [halloween, christmas, newyear].flatMap((season) => season.overlays.flyby);
+const allFlybys = [halloweenOverlays, christmasOverlays, newyearOverlays].flatMap((overlays) => overlays.flyby);
 
 describe.each([false, true])('every flyby (reduced motion: %s)', (reducedMotion) => {
   it.each(allFlybys.map((Flyby) => [Flyby.name, Flyby]))('%s finishes once', (_, Flyby) => {
