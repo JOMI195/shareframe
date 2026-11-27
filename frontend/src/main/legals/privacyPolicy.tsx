@@ -3,7 +3,8 @@ import { Box, Typography, type Theme } from "@mui/material";
 // The text comes from a generator as raw HTML, so it is styled here instead of rewritten.
 const legalTextSx = (theme: Theme) => ({
     wordBreak: 'break-word',
-    '& h2': { ...theme.typography.h6, mt: 5, mb: 1 },
+    // Keeps anchor targets clear of the sticky app bar.
+    '& h2': { ...theme.typography.h6, mt: 5, mb: 1, scrollMarginTop: theme.spacing(10) },
     '& h3': { ...theme.typography.subtitle1, fontWeight: 600, mt: 3, mb: 1 },
     '& a': { color: theme.palette.primary.main },
     '& ul': { pl: 3 },

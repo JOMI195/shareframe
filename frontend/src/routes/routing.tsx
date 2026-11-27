@@ -49,14 +49,6 @@ export const routes = [
                 element: <FeatureSelectorWrapper feature="legals" />,
                 children: [
                   {
-                    path: getPrivacyPolicyUrl(),
-                    ...lazyPage(() => import('@/main/legals/privacyPolicy')),
-                  },
-                  {
-                    path: getImprintUrl(),
-                    ...lazyPage(() => import('@/main/legals/impressum')),
-                  },
-                  {
                     path: getUnsubscribePageUrl() + ":token",
                     ...lazyPage(() => import('@/main/notifications/unsubscribe')),
                   },
@@ -73,6 +65,14 @@ export const routes = [
                   {
                     path: getContactUrl(),
                     ...lazyPage(() => import('@/main/contact/contactForm')),
+                  },
+                  {
+                    path: getPrivacyPolicyUrl(),
+                    ...lazyPage(() => import('@/main/legals/privacyPolicy')),
+                  },
+                  {
+                    path: getImprintUrl(),
+                    ...lazyPage(() => import('@/main/legals/impressum')),
                   },
                 ],
               },
