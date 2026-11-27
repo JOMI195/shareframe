@@ -31,7 +31,6 @@ export default defineConfig({
       VITE_API_MEDIA_BASE_URL: 'http://localhost:8000',
       VITE_APP_PRODUCTION: 'False',
       VITE_APP_BUILD_VERSION: 'test-build',
-      VITE_APP_COOKIE_CONSENT_LIFETIME: '30',
       VITE_APP_IMAGES_AUTO_DELETE_INTERVAL_HOURS: '3',
       VITE_APP_UPLOADED_FILES_FILE_FORMATS: 'jpg jpeg png',
       VITE_APP_UPLOADED_FILES_MAX_FILES_ONCE: '15',

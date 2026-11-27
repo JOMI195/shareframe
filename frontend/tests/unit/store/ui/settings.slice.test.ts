@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const NOW = Date.parse('2026-01-01T00:00:00Z');
-const THIRTY_DAYS = 30 * 24 * 60 * 60 * 1000;
 
 // The slice reads localStorage at module scope, so it must be imported per test.
 const loadSlice = async () => {
@@ -18,13 +17,12 @@ afterEach(() => {
 });
 
 describe('initial state', () => {
-  it('defaults to the system theme with no consent', async () => {
+  it('defaults to the system theme', async () => {
     const { default: reducer } = await loadSlice();
     const state = reducer(undefined, { type: '@@init' });
 
     expect(state).toEqual({
       design: { colorTheme: 'system', seasonalThemes: true },
-      cookies: { analyticsCookies: false, consentExpiry: null },
       pwa: { installPromptDismissed: false, pushPromptDismissed: false },
       upload: { autoDelete: true },
     });
@@ -32,14 +30,11 @@ describe('initial state', () => {
 
   it('hydrates from localStorage', async () => {
     localStorage.setItem('colorTheme', 'dark');
-    localStorage.setItem('analyticsCookies', 'true');
-    localStorage.setItem('consentExpiry', String(NOW + 1000));
 
     const { default: reducer } = await loadSlice();
     const state = reducer(undefined, { type: '@@init' });
 
     expect(state.design.colorTheme).toBe('dark');
-    expect(state.cookies).toEqual({ analyticsCookies: true, consentExpiry: NOW + 1000 });
   });
 });
 
@@ -61,37 +56,6 @@ describe('seasonalThemesSelected', () => {
     const state = reducer(reducer(undefined, { type: '@@init' }), seasonalThemesSelected(false));
 
     expect(state.design.seasonalThemes).toBe(false);
-  });
-});
-
-describe('cookie consent', () => {
-  it('records acceptance and a fresh expiry', async () => {
-    const { default: reducer, analyticsCookiesAccepted } = await loadSlice();
-
-    const state = reducer(reducer(undefined, { type: '@@init' }), analyticsCookiesAccepted());
-
-    expect(state.cookies).toEqual({ analyticsCookies: true, consentExpiry: NOW + THIRTY_DAYS });
-    expect(localStorage.getItem('analyticsCookies')).toBe('true');
-    expect(JSON.parse(localStorage.getItem('consentExpiry')!)).toBe(NOW + THIRTY_DAYS);
-  });
-
-  it('records a decline but still refreshes the expiry', async () => {
-    const { default: reducer, analyticsCookiesDeclined } = await loadSlice();
-
-    const state = reducer(reducer(undefined, { type: '@@init' }), analyticsCookiesDeclined());
-
-    expect(state.cookies).toEqual({ analyticsCookies: false, consentExpiry: NOW + THIRTY_DAYS });
-    expect(localStorage.getItem('analyticsCookies')).toBe('false');
-  });
-
-  // allCookies* currently behave identically to their analytics counterparts.
-  it('treats the "all cookies" variants the same', async () => {
-    const { default: reducer, allCookiesAccepted, allCookiesDeclined, analyticsCookiesAccepted, analyticsCookiesDeclined } =
-      await loadSlice();
-    const base = reducer(undefined, { type: '@@init' });
-
-    expect(reducer(base, allCookiesAccepted()).cookies).toEqual(reducer(base, analyticsCookiesAccepted()).cookies);
-    expect(reducer(base, allCookiesDeclined()).cookies).toEqual(reducer(base, analyticsCookiesDeclined()).cookies);
   });
 });
 

@@ -1,5 +1,6 @@
 import { Box, Container, LinearProgress, Link, useMediaQuery, useTheme } from "@mui/material";
 import { Outlet, ScrollRestoration, useLocation, useNavigation } from "react-router";
+import { scrollRestorationKey } from "@/common/utils/scroll";
 import { useAppDispatch, useAppSelector } from "@/store";
 import { getSidebar, routeChanged } from "@/store/ui/navigation/navigation.slice";
 import TopAppbar from "./topLayout/topAppBar";
@@ -105,7 +106,7 @@ const MainLayout: React.FC = () => {
             <NavigationProgress />
             <TopAppbar />
             <Sidebar />
-            <ScrollRestoration />
+            <ScrollRestoration getKey={scrollRestorationKey} />
             <Container
                 component="main"
                 id="main"

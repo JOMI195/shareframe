@@ -35,17 +35,21 @@ describe('public routes', () => {
   });
 });
 
-describe('contact page', () => {
+describe.each([
+  ['/kontakt/', 'Kontaktiere uns'],
+  ['/impressum/', 'Impressum'],
+  ['/datenschutzerklaerung/', 'Datenschutzerklärung'],
+])('%s', (path, heading) => {
   it('keeps the app bar for a signed-in user', async () => {
-    renderRoute('/kontakt/', { preloadedState: signedInState() });
+    renderRoute(path, { preloadedState: signedInState() });
 
-    expect(await screen.findByRole('heading', { level: 1, name: 'Kontaktiere uns' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 1, name: heading })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Menü öffnen' })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Anmelden' })).not.toBeInTheDocument();
   });
 
   it('shows the public header and footer when signed out', async () => {
-    renderRoute('/kontakt/', { preloadedState: buildState() });
+    renderRoute(path, { preloadedState: buildState() });
 
     expect(await screen.findByRole('link', { name: 'Anmelden' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Impressum' })).toBeInTheDocument();
