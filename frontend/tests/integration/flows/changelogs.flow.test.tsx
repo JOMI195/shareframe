@@ -29,7 +29,7 @@ const openChangelogs = async (entries = [older, newest]) => {
       ui: { changelogs: { deactivatedIds: entries.map((entry) => entry.id) } },
     }),
   });
-  await screen.findByText('✨ Neuste Änderungen');
+  await screen.findByText('✨ Neueste Änderungen');
   return view;
 };
 

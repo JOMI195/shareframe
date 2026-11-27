@@ -14,7 +14,7 @@ const ActivityDayBar: FC<ActivityDayBarProps> = ({ day, sentCount, receivedCount
     return (
         <Box
             role="img"
-            aria-label={`${day}: ${sentCount} gesendet, ${receivedCount} empfangen`}
+            aria-label={`${day}: ${sentCount} gesendet, ${receivedCount} erhalten`}
             sx={{ display: "flex", flexDirection: "column", alignItems: "center" }}
         >
             <Stack direction="column" spacing={0} sx={{

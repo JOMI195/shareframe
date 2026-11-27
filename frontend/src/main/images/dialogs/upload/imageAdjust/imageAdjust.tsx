@@ -65,7 +65,7 @@ const ImageAdjust: React.FC<ImageAdjustProps> = ({ epaper, croppedImage, fileNam
                 ))}
                 <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 1, px: 1 }}>
                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                        Mehr Kontrast macht das Foto auf dem Schwarz-Weiß-Rahmen klarer.
+                        Mehr Kontrast macht das Foto auf dem Schwarz-Weiß-Display klarer.
                     </Typography>
                     <Button
                         size="small"
