@@ -180,36 +180,22 @@ for key, filename in LOG_FILES.items():
 
 DJANGO_LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
 
+# Several processes share these files, so logrotate in the nginx container rotates them.
 LOGGING_FILE_HANDLER_DEFAULTS = {
     "level": DJANGO_LOG_LEVEL,
-    "class": "logging.handlers.RotatingFileHandler",
-    "maxBytes": 10 * 1024 * 1024,  # 10 MB
-    "backupCount": 2,
+    "class": "logging.handlers.WatchedFileHandler",
     "formatter": "default",
 }
 
 
-# Function to generate file handlers with common configuration
-def create_file_handlers(handler_configs=None):
-    """
-    Create file handlers with default settings that can be overridden.
-    """
-    handler_configs = handler_configs or {}
-    handlers = {}
-
-    for handler_name, log_file in LOG_FILES.items():
-        handler_key = f"{handler_name}-file" if handler_name != "default" else "file"
-
-        handler_config = LOGGING_FILE_HANDLER_DEFAULTS.copy()
-
-        handler_config["filename"] = log_file
-
-        if handler_key in handler_configs:
-            handler_config.update(handler_configs[handler_key])
-
-        handlers[handler_key] = handler_config
-
-    return handlers
+def create_file_handlers():
+    return {
+        (f"{name}-file" if name != "default" else "file"): {
+            **LOGGING_FILE_HANDLER_DEFAULTS,
+            "filename": log_file,
+        }
+        for name, log_file in LOG_FILES.items()
+    }
 
 
 LOGGING = {
@@ -232,27 +218,7 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "default",
         },
-        **create_file_handlers(
-            {
-                # overriding defaults for specific handlers
-                "application-file": {
-                    "maxBytes": 20 * 1024 * 1024,
-                    "backupCount": 3,
-                },
-                "celery-file": {
-                    "maxBytes": 20 * 1024 * 1024,
-                    "backupCount": 3,
-                },
-                "websockets-file": {
-                    "maxBytes": 20 * 1024 * 1024,
-                    "backupCount": 3,
-                },
-                "django-file": {
-                    "maxBytes": 20 * 1024 * 1024,
-                    "backupCount": 3,
-                },
-            }
-        ),  # Add all file handlers with ability to override defaults
+        **create_file_handlers(),
     },
     "loggers": {
         # application servers
@@ -332,6 +298,7 @@ LOGGING = {
 REQUEST_LOGGING_DATA_LOG_LEVEL = getattr(
     logging, DJANGO_LOG_LEVEL.upper(), logging.INFO
 )
+DJANGO_REQUEST_LOGGING_LOG_HEADERS_DEFAULT_VALUE = False
 DJANGO_REQUEST_LOGGING_LOG_BODY_DEFAULT_VALUE = True
 DJANGO_REQUEST_LOGGING_LOG_RESPONSE_DEFAULT_VALUE = False
 REQUEST_LOGGING_ENABLE_COLORIZE = False

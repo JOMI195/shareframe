@@ -20,3 +20,12 @@ def test_configured_loggers_do_not_repeat_their_lines_through_root():
 
 def test_the_celery_worker_keeps_the_django_root_logger():
     assert celeryconfig.worker_hijack_root_logger is False
+
+
+def test_log_files_are_left_to_logrotate_because_several_processes_write_them():
+    file_handlers = [h for h in LOGGING["handlers"].values() if "filename" in h]
+
+    assert file_handlers
+    assert {h["class"] for h in file_handlers} == {
+        "logging.handlers.WatchedFileHandler"
+    }
