@@ -1,20 +1,29 @@
+# Retention is promised in the privacy policy: keep maxage in sync with it.
 /home/app/backend/logs/nginx-*.log {
-    size 25M
-    rotate 4
+    daily
+    maxsize 50M
+    rotate 14
+    maxage 14
+    dateext
+    dateformat -%Y%m%d-%H%M%S
     compress
     delaycompress
     missingok
     notifempty
     sharedscripts
     postrotate
-        [ -f /var/run/nginx.pid ] && kill -USR1 "$(cat /var/run/nginx.pid)"
+        if [ -f /var/run/nginx.pid ]; then kill -USR1 "$(cat /var/run/nginx.pid)"; fi
     endscript
 }
 
-# daphne runs in another container, so no signal can reach it.
-/home/app/backend/logs/backend-daphne-access.log {
-    size 20M
-    rotate 3
+# Written by other containers, so no signal can reach the writers.
+/home/app/backend/logs/backend-*.log {
+    daily
+    maxsize 50M
+    rotate 14
+    maxage 14
+    dateext
+    dateformat -%Y%m%d-%H%M%S
     compress
     delaycompress
     missingok

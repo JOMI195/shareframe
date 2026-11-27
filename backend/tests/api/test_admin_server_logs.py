@@ -1,8 +1,10 @@
 import tarfile
 
 import pytest
+from django.core.cache import cache
 from django.test import Client
 
+from config.server_logs import BUILD_LOCK
 from tests.support.factories import UserFactory
 
 pytestmark = pytest.mark.django_db
@@ -108,3 +110,23 @@ def test_anonymous_is_sent_to_the_login(client, log_files):
 def test_the_admin_index_links_the_download_for_admins_only(admin_client, staff_client):
     assert URL in admin_client.get("/api/admin/").content.decode()
     assert URL not in staff_client.get("/api/admin/").content.decode()
+
+
+def test_a_download_while_another_builds_is_turned_away(
+    admin_client, log_files, settings
+):
+    cache.add(BUILD_LOCK, 1)
+    try:
+        response = admin_client.post(URL)
+    finally:
+        cache.delete(BUILD_LOCK)
+
+    assert response.status_code == 409
+    assert "already being prepared" in response.content.decode()
+    assert not (settings.MEDIA_ROOT / "server_logs").exists()
+
+
+def test_a_finished_download_frees_the_next_one(admin_client, log_files):
+    admin_client.post(URL)
+
+    assert admin_client.post(URL).status_code == 200

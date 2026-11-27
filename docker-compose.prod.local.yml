@@ -269,7 +269,6 @@ services:
       - backup_repo:/repo
       - backup_metrics:/metrics
       - media_volume:/data/media:ro
-      - logs_volume:/data/logs:ro
     depends_on:
       backend_db:
         condition: service_healthy

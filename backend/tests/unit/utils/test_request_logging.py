@@ -195,6 +195,20 @@ def test_the_health_route_is_not_logged(caplog):
     assert "/api/health/" not in logged(caplog, RequestFactory().get("/api/health/"))
 
 
+def test_prometheus_scrapes_are_not_logged(caplog):
+    for path in ("/metrics", "/metrics/process", "/metrics/business"):
+        assert path not in logged(caplog, RequestFactory().get(path))
+
+
+def test_request_headers_are_not_logged(caplog):
+    request = RequestFactory().get("/api/frames/", HTTP_USER_AGENT="agent-under-test")
+
+    text = logged(caplog, request)
+
+    assert "/api/frames/" in text
+    assert "agent-under-test" not in text
+
+
 def levels_for(caplog, status):
     request = RequestFactory().post(
         LOGIN_PATH, json.dumps({"email": "x"}), content_type="application/json"
