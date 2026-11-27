@@ -157,12 +157,12 @@ const ImagesGallery: React.FC = () => {
                                     >
                                         <AuthenticatedImage
                                             url={`${MEDIA_BASE_URL}${getVariantUrl(image, "thumbnail")}`}
-                                            alt={image.name}
+                                            alt=""
                                             style={{
                                                 width: "100%",
                                                 height: "100%",
                                                 objectFit: "cover",
-                                                borderRadius: 8
+                                                borderRadius: theme.shape.borderRadius
                                             }}
                                         />
                                     </SelectableElement>

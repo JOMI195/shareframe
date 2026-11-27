@@ -89,7 +89,13 @@ describe('photo library', () => {
     await act(async () => triggerIntersection(true));
 
     // Each thumbnail resolves its own blob, so they arrive one by one.
-    await waitFor(() => expect(screen.getAllByAltText(/^photo-\d+\.jpg$/)).toHaveLength(3), { timeout: 10_000 });
+    // The tile carries the name, so its image is decorative.
+    await waitFor(() => {
+      for (const photo of library) {
+        const tile = screen.getByRole('button', { name: photo.display_name || photo.name });
+        expect(within(tile).getByRole('presentation')).toBeInTheDocument();
+      }
+    }, { timeout: 10_000 });
   });
 
   it('opens a photo from the keyboard', async () => {

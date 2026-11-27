@@ -93,13 +93,13 @@ const Sidebar: React.FC = () => {
                         alignItems: "flex-start"
                     }}
                 >
-                    <Link component={RouterLink} to={getContactUrl()} color="inherit">
+                    <Link component={RouterLink} to={getContactUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Kontakt"}
                     </Link>
-                    <Link component={RouterLink} to={getImprintUrl()} color="inherit">
+                    <Link component={RouterLink} to={getImprintUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Impressum"}
                     </Link>
-                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit">
+                    <Link component={RouterLink} to={getPrivacyPolicyUrl()} color="inherit" sx={{ py: 0.5 }}>
                         {"Datenschutzerklärung"}
                     </Link>
                 </Box>

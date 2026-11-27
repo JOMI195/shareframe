@@ -43,6 +43,8 @@ export const commonThemeOptions = {
         '@media (prefers-reduced-motion: reduce)': {
           '*, *::before, *::after': {
             transitionDuration: '0.01ms !important',
+            animationDuration: '0.01ms !important',
+            animationIterationCount: '1 !important',
             scrollBehavior: 'auto !important',
           },
         },

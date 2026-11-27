@@ -239,7 +239,7 @@ const SentImagesGallery = () => {
 
                         return (
                             <ImageListItem key={sentImage.id}>
-                                {/* Named by its visible text: photo, sender or receiver, date and status. */}
+                                {/* Named by its visible text: sender or receiver, date and status. */}
                                 <Box
                                     onClick={() => handleImageClick(sentImage)}
                                     role="button"
@@ -249,17 +249,17 @@ const SentImagesGallery = () => {
                                 >
                                 <AuthenticatedImage
                                     url={`${MEDIA_BASE_URL}${getVariantUrl(sentImage.image, "thumbnail")}`}
-                                    alt={sentImage.image.name}
+                                    alt=""
                                     style={{
                                         width: "100%",
                                         height: "100%",
                                         objectFit: "cover",
-                                        borderRadius: 8,
+                                        borderRadius: theme.shape.borderRadius,
                                     }}
                                     hideToYouFilter={shouldHide}
                                 />
                                 <ImageListItemBar
-                                    sx={{ borderBottomLeftRadius: 2, borderBottomRightRadius: 2 }}
+                                    sx={{ borderBottomLeftRadius: 1, borderBottomRightRadius: 1 }}
                                     title={
                                         renderSenderReceiverInfo(sentImage)
                                     }
