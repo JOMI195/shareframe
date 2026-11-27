@@ -131,7 +131,7 @@ const Security = () => {
                     <Button
                         type="button"
                         variant="outlined"
-                        color="secondary"
+                        color="inherit"
                         onClick={() => setUserPasswordForm.resetForm()}
                     >
                         {"Verwerfen"}

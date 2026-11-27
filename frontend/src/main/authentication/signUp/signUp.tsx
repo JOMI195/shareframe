@@ -286,7 +286,7 @@ export default function SignUp() {
               type="button"
               fullWidth
               variant="outlined"
-              color="secondary"
+              color="inherit"
               onClick={handleCancel}
             >
               {"Abbrechen"}

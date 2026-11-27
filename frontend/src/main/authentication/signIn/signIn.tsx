@@ -253,7 +253,7 @@ export default function SignIn() {
               to={getHomeUrl()}
               fullWidth
               variant="outlined"
-              color="secondary"
+              color="inherit"
             >
               {"Zurück zur Startseite"}
             </Button>

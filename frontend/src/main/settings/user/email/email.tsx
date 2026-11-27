@@ -124,7 +124,7 @@ const Email = () => {
                         <Button
                             type="button"
                             variant="outlined"
-                            color="secondary"
+                            color="inherit"
                             onClick={handleCancel}
                         >
                             {"Abbrechen"}

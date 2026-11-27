@@ -59,7 +59,7 @@ export default function SignOut() {
             <Typography variant="body1" sx={{
               textAlign: "center"
             }}>
-              {"Bist du dir wirklich sicher, dass du dich abmelden willst?"}
+              {"Möchtest du dich abmelden?"}
             </Typography>
           </Grid>
           <Grid size={12}>
@@ -80,7 +80,7 @@ export default function SignOut() {
               type="button"
               fullWidth
               variant="outlined"
-              color="secondary"
+              color="inherit"
               onClick={handleCancel}
               disabled={busy}
             >

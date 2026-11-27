@@ -44,7 +44,7 @@ test.describe('authentication', () => {
   // /auth/sign-out/ is a confirmation page; the session ends on the button click.
   test('signs out after confirming', async ({ signedInPage }) => {
     await signedInPage.goto('/auth/sign-out/');
-    await expect(signedInPage.getByText('Bist du dir wirklich sicher, dass du dich abmelden willst?')).toBeVisible();
+    await expect(signedInPage.getByText('Möchtest du dich abmelden?')).toBeVisible();
 
     await signedInPage.getByRole('button', { name: 'Abmelden', exact: true }).click();
 

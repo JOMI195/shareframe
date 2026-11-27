@@ -73,7 +73,7 @@ const SignUpConfirmation: React.FC = () => {
                     </Typography>
                 </Grid>
                 <Grid size={12}>
-                    <Button component={RouterLink} to={getDashboardUrl()} fullWidth variant="outlined" color="secondary">
+                    <Button component={RouterLink} to={getDashboardUrl()} fullWidth variant="outlined" color="inherit">
                         {"Zum Dashboard"}
                     </Button>
                 </Grid>
@@ -128,7 +128,7 @@ const SignUpConfirmation: React.FC = () => {
                         </Grid>
                     )}
                     <Grid size={12}>
-                        <Button component={RouterLink} to={getAuthenticationUrl() + getSignInUrl()} fullWidth variant="outlined" color="secondary">
+                        <Button component={RouterLink} to={getAuthenticationUrl() + getSignInUrl()} fullWidth variant="outlined" color="inherit">
                             {"Zur Anmeldung"}
                         </Button>
                     </Grid>

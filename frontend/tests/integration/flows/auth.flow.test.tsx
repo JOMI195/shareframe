@@ -132,7 +132,7 @@ describe('signing out', () => {
     const { user, router } = renderRoute('/auth/sign-out/', { preloadedState: signedInState() });
 
     expect(
-      await screen.findByText('Bist du dir wirklich sicher, dass du dich abmelden willst?'),
+      await screen.findByText('Möchtest du dich abmelden?'),
     ).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Abmelden' }));
 

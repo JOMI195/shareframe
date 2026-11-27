@@ -84,7 +84,7 @@ const Profile = () => {
                         <Button
                             type="button"
                             variant="outlined"
-                            color="secondary"
+                            color="inherit"
                             disabled={!userPatchForm.dirty}
                             onClick={() => userPatchForm.resetForm()}
                         >

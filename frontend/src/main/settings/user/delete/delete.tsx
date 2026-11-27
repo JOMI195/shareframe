@@ -59,7 +59,7 @@ const Delete = () => {
         <>
             <SettingsSection title="Konto löschen" tone="error">
                 <Typography variant="body1" color="textSecondary">
-                    Deine Fotos, Freundschaften und gesendeten Bilder werden endgültig gelöscht und deine Rahmen von deinem Konto getrennt.
+                    Deine Fotos, Freundschaften und gesendeten Fotos werden endgültig gelöscht und deine Bilderrahmen von deinem Konto getrennt.
                 </Typography>
                 <Typography variant="body1" color="textSecondary">
                     Diese Aktion ist unwiderruflich.
@@ -118,7 +118,7 @@ const Delete = () => {
                             }}
                         />
                         <FormActions>
-                            <Button type="button" variant="outlined" color="secondary" onClick={handleCancel}>
+                            <Button type="button" variant="outlined" color="inherit" onClick={handleCancel}>
                                 Abbrechen
                             </Button>
                             <Button type="submit" variant="contained" color="error">
