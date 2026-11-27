@@ -21,8 +21,9 @@ services:
       # Every gunicorn thread keeps one DB connection open, so workers x 4 threads stays well under max_connections.
       GUNICORN_WORKERS: "3"
       DB_CONN_MAX_AGE: "60"
+    # Owned by the app user; a restarted container otherwise gets it back root-only and every worker fails.
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=101,gid=101
     healthcheck:
       # Host must be in ALLOWED_HOSTS, and prod has no localhost there.
       test: ["CMD", "python", "-c", "import urllib.request as u; u.urlopen(u.Request('http://localhost:8000/api/health/', headers={'Host': 'backend'}), timeout=5)"]
@@ -131,7 +132,7 @@ services:
       PROMETHEUS_METRICS_PORT: "9808"
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=101,gid=101
     depends_on:
       redis:
         condition: service_healthy

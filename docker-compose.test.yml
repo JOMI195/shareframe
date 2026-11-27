@@ -61,7 +61,7 @@ services:
       PROMETHEUS_METRICS_PORT: "9808"
       PROMETHEUS_MULTIPROC_DIR: /tmp/prometheus-multiproc
     tmpfs:
-      - /tmp/prometheus-multiproc
+      - /tmp/prometheus-multiproc:uid=101,gid=101
     depends_on:
       backend:
         condition: service_healthy
