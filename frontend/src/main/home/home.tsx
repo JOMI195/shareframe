@@ -12,7 +12,7 @@ const Home: React.FC = () => {
     }, [dispatch]);
 
     return (
-        <Container maxWidth={"sm"} disableGutters>
+        <Container maxWidth={"md"} disableGutters>
             <Box
                 sx={{
                     height: "100%",
