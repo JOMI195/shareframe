@@ -35,7 +35,9 @@ RUN apk add --no-cache logrotate
 COPY ./nginx/logrotate-shareframe /etc/logrotate.d/shareframe
 COPY ./nginx/logrotate-cron /etc/periodic/15min/logrotate
 COPY ./nginx/start-crond.sh /docker-entrypoint.d/99-start-crond.sh
-RUN chmod +x /etc/periodic/15min/logrotate /docker-entrypoint.d/98-seed-geoip.sh /docker-entrypoint.d/99-start-crond.sh
+# Checkout umask must not leak in: logrotate ignores group-writable configs.
+RUN chmod 0644 /etc/logrotate.d/shareframe \
+ && chmod 0755 /etc/periodic/15min/logrotate /docker-entrypoint.d/98-seed-geoip.sh /docker-entrypoint.d/99-start-crond.sh
 
 EXPOSE 80 443
 
