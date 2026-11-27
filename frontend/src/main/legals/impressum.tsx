@@ -23,8 +23,8 @@ const Impressum = () => {
                 Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes
                 bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind
                 nur für den privaten, nicht kommerziellen Gebrauch gestattet. Soweit die Inhalte auf dieser Seite nicht vom Betreiber
-                erstellt wurden, werden die Urheberrechte Dritter beachtet. Insbesondere werden Inhalte Dritter als solche gekennzeichnet.
-                Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitte ich um einen entsprechenden Hinweis.
+                erstellt wurden, werden die Urheberrechte Dritter beachtet. Von Nutzern hochgeladene Fotos und Texte sind nicht öffentlich
+                und liegen in der Verantwortung der jeweiligen Nutzer. Sollten Sie trotzdem auf eine Urheberrechtsverletzung aufmerksam werden, bitte ich um einen entsprechenden Hinweis.
                 Bei Bekanntwerden von Rechtsverletzungen werde ich derartige Inhalte umgehend entfernen.
             </Typography>
 
@@ -32,8 +32,8 @@ const Impressum = () => {
                 Hinweis
             </Typography>
             <Typography variant="body1" gutterBottom>
-                Für Vollständigkeit, Fehler redaktioneller und technischer Art, Auslassungen usw. sowie die Richtigkeit der Eintragungen
-                kann keine Haftung übernommen werden. Ich behalte mir das Recht vor, ohne vorherige Ankündigung die bereitgestellten
+                Für die Vollständigkeit und Richtigkeit der bereitgestellten Informationen wird keine Gewähr übernommen. Im Übrigen hafte
+                ich nach den gesetzlichen Vorschriften. Ich behalte mir das Recht vor, ohne vorherige Ankündigung die bereitgestellten
                 Informationen zu ändern, zu ergänzen oder zu entfernen.
             </Typography>
 
